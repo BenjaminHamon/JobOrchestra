@@ -75,5 +75,8 @@ def _get_status(job_identifier, build_identifier):
 def _retrieve_log(job_identifier, build_identifier, step_index, step_name):
 	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
 	log_file_name = "step_{index}_{name}.log".format(index = step_index, name = step_name)
-	with open(os.path.join(build_directory, log_file_name)) as log_file:
+	log_fith_path = os.path.join(build_directory, log_file_name)
+	if not os.path.isfile(log_fith_path):
+		return ""
+	with open(log_fith_path) as log_file:
 		return log_file.read()
