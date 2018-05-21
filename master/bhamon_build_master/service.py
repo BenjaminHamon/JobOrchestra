@@ -71,6 +71,12 @@ def get_build_step(build_identifier, step_index):
 	return flask.jsonify(application.database.get_build_step(build_identifier, step_index))
 
 
+@application.route("/build/<build_identifier>/step/<int:step_index>/log", methods = [ "GET" ])
+def get_build_step_log(build_identifier, step_index):
+	log_text = application.database.get_build_step_log(build_identifier, step_index)
+	return flask.Response(log_text, mimetype = "text/plain")
+
+
 @application.route("/worker_collection", methods = [ "GET" ])
 def get_worker_collection():
 	return flask.jsonify(application.database.get_worker_collection())

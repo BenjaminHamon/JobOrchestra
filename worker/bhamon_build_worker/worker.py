@@ -46,6 +46,8 @@ def _execute_command(worker_data, command, parameters):
 		return _execute(worker_data["executor_script"], parameters["job_identifier"], parameters["build_identifier"], parameters["job"])
 	elif command == "status":
 		return _get_status(parameters["job_identifier"], parameters["build_identifier"])
+	elif command == "log":
+		return _retrieve_log(parameters["job_identifier"], parameters["build_identifier"], parameters["step_index"], parameters["step_name"])
 	else:
 		raise ValueError("Unknown command " + command)
 
@@ -68,3 +70,10 @@ def _get_status(job_identifier, build_identifier):
 	status_file_path = os.path.join(build_directory, "status.json")
 	with open(status_file_path) as status_file:
 		return json.load(status_file)
+
+
+def _retrieve_log(job_identifier, build_identifier, step_index, step_name):
+	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
+	log_file_name = "step_{index}_{name}.log".format(index = step_index, name = step_name)
+	with open(os.path.join(build_directory, log_file_name)) as log_file:
+		return log_file.read()

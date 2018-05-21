@@ -86,6 +86,24 @@ class JsonDatabase(database.Database):
 		self._save_data("build_steps", all_build_steps)
 
 
+	def _get_build_step_log_path(self, build_identifier, step_index):
+		build = self.get_build(build_identifier)
+		build_step = self.get_build_step(build_identifier, step_index)
+		return os.path.join("{job}_{identifier}".format(**build), "step_{index}_{name}".format(**build_step))
+
+
+	def has_build_step_log(self, build_identifier, step_index):
+		return self._has_log(self._get_build_step_log_path(build_identifier, step_index))
+
+
+	def get_build_step_log(self, build_identifier, step_index):
+		return self._load_log(self._get_build_step_log_path(build_identifier, step_index))
+
+
+	def set_build_step_log(self, build_identifier, step_index, log_text):
+		self._save_log(self._get_build_step_log_path(build_identifier, step_index), log_text)
+
+
 	def get_worker_collection(self):
 		return self._load_data("workers", [])
 
@@ -153,6 +171,30 @@ class JsonDatabase(database.Database):
 			os.makedirs(os.path.dirname(file_path))
 		with open(file_path + ".tmp", "w") as data_file:
 			json.dump(data, data_file, indent = 4)
+		if os.path.exists(file_path):
+			os.remove(file_path)
+		os.rename(file_path + ".tmp", file_path)
+
+
+	def _has_log(self, file_path):
+		file_path = os.path.join(self._data_directory, "logs", file_path + ".log")
+		return os.path.isfile(file_path)
+
+
+	def _load_log(self, file_path):
+		file_path = os.path.join(self._data_directory, "logs", file_path + ".log")
+		if not os.path.exists(file_path):
+			return ""
+		with open(file_path) as log_file:
+			return log_file.read()
+
+
+	def _save_log(self, file_path, data):
+		file_path = os.path.join(self._data_directory, "logs", file_path + ".log")
+		if not os.path.exists(os.path.dirname(file_path)):
+			os.makedirs(os.path.dirname(file_path))
+		with open(file_path + ".tmp", "w") as log_file:
+			log_file.write(data)
 		if os.path.exists(file_path):
 			os.remove(file_path)
 		os.rename(file_path + ".tmp", file_path)

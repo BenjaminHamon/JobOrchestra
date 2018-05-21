@@ -44,6 +44,18 @@ class Database(abc.ABC):
 		pass
 
 	@abc.abstractmethod
+	def has_build_step_log(self, build_identifier, step_index):
+		pass
+
+	@abc.abstractmethod
+	def get_build_step_log(self, build_identifier, step_index):
+		pass
+
+	@abc.abstractmethod
+	def set_build_step_log(self, build_identifier, step_index, log_text):
+		pass
+
+	@abc.abstractmethod
 	def get_worker_collection(self):
 		pass
 

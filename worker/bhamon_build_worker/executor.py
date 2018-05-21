@@ -62,6 +62,8 @@ def _execute_step(environment, build_directory, workspace, step_index, step, is_
 
 	if is_skipping:
 		step_status = "skipped"
+		with open(os.path.join(build_directory, log_file_name), "w") as log_file:
+			pass
 	else:
 		update_status_handler(step_index, "running")
 		try:
