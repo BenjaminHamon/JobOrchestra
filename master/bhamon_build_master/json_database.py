@@ -43,11 +43,11 @@ class JsonDatabase(database.Database):
 		return next(build for build in all_builds if build["identifier"] == identifier)
 
 
-	def create_build(self, job, parameters):
+	def create_build(self, job_identifier, parameters):
 		now = JsonDatabase._utc_now_as_string()
 		new_build = {
 			"identifier": str(uuid.uuid4()),
-			"job": job,
+			"job": job_identifier,
 			"parameters": parameters,
 			"status": "pending",
 			"creation_date": now,
@@ -122,6 +122,7 @@ class JsonDatabase(database.Database):
 			job_data = {
 				"identifier": job["identifier"],
 				"description": job["description"],
+				"parameters": job["parameters"],
 				"is_enabled": True,
 			}
 

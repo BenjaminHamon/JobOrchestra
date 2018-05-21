@@ -44,7 +44,12 @@ class Worker:
 		logger.info("(%s) Starting build %s %s", self.identifier, self.build["job"], self.build["identifier"])
 
 		try:
-			execute_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"], "job": self.job }
+			execute_request = {
+				"job_identifier": self.build["job"],
+				"build_identifier": self.build["identifier"],
+				"job": self.job,
+				"parameters": self.build["parameters"],
+			}
 			await Worker._execute_remote_command(self._connection, self.identifier, "execute", execute_request)
 
 			status_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }

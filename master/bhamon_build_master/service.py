@@ -44,8 +44,8 @@ def get_job(identifier):
 @application.route("/job/<identifier>/trigger", methods = [ "POST" ])
 def trigger_job(identifier):
 	logger.info("Creating build %s", identifier)
-	request_data = flask.request.get_json()
-	build_identifier = application.database.create_build(identifier, request_data["parameters"])
+	parameters = flask.request.get_json()
+	build_identifier = application.database.create_build(identifier, parameters)
 	return flask.jsonify(build_identifier)
 
 

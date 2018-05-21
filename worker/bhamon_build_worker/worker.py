@@ -43,11 +43,11 @@ def _execute_command(worker_data, command, parameters):
 	if command == "authenticate":
 		return _authenticate(worker_data["identifier"])
 	elif command == "execute":
-		return _execute(worker_data["executor_script"], parameters["job_identifier"], parameters["build_identifier"], parameters["job"])
+		return _execute(executor_script = worker_data["executor_script"], **parameters)
 	elif command == "status":
-		return _get_status(parameters["job_identifier"], parameters["build_identifier"])
+		return _get_status(**parameters)
 	elif command == "log":
-		return _retrieve_log(parameters["job_identifier"], parameters["build_identifier"], parameters["step_index"], parameters["step_name"])
+		return _retrieve_log(**parameters)
 	else:
 		raise ValueError("Unknown command " + command)
 
@@ -56,12 +56,13 @@ def _authenticate(worker_identifier):
 	return { "identifier": worker_identifier }
 
 
-def _execute(executor_script, job_identifier, build_identifier, job):
+def _execute(executor_script, job_identifier, build_identifier, job, parameters):
 	logger.info("Request to execute %s %s", job_identifier, build_identifier)
 	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
 	os.makedirs(build_directory)
+	build_request = { "job_identifier": job_identifier, "build_identifier": build_identifier, "job": job, "parameters": parameters }
 	with open(os.path.join(build_directory, "request.json"), "w") as request_file:
-		json.dump({ "job_identifier": job_identifier, "build_identifier": build_identifier, "job": job }, request_file, indent = 4)
+		json.dump(build_request, request_file, indent = 4)
 	subprocess.Popen([ sys.executable, executor_script, job_identifier + "_" + build_identifier ])
 
 

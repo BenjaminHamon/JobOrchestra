@@ -24,7 +24,7 @@ class Database(abc.ABC):
 		pass
 
 	@abc.abstractmethod
-	def create_build(self, job, parameters):
+	def create_build(self, job_identifier, parameters):
 		pass
 
 	@abc.abstractmethod

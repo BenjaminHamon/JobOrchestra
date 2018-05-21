@@ -41,7 +41,7 @@ def run(build_identifier, environment):
 		build_final_status = "succeeded"
 		is_skipping = False
 		for step_index, step in enumerate(build_request["job"]["steps"]):
-			step_status = _execute_step(environment, build_directory, workspace, step_index, step, is_skipping, update_step_status)
+			step_status = _execute_step(build_directory, workspace, step_index, step, environment, build_request["parameters"], is_skipping, update_step_status)
 			if not is_skipping and step_status in [ "failed", "exception" ]:
 				build_final_status = step_status
 				is_skipping = True
@@ -56,7 +56,7 @@ def run(build_identifier, environment):
 	logger.info("Build completed with status %s", build_status["status"])
 
 
-def _execute_step(environment, build_directory, workspace, step_index, step, is_skipping, update_status_handler):
+def _execute_step(build_directory, workspace, step_index, step, environment, parameters, is_skipping, update_status_handler):
 	logger.info("Step %s running", step["name"])
 	step_status = "running"
 	update_status_handler(step_index, step_status)
@@ -67,7 +67,7 @@ def _execute_step(environment, build_directory, workspace, step_index, step, is_
 		if is_skipping:
 			step_status = "skipped"
 		else:
-			step_command = [ argument.format(env = environment) for argument in step["command"] ]
+			step_command = [ argument.format(env = environment, parameters = parameters) for argument in step["command"] ]
 			logger.info("Step command: %s", " ".join(step_command))
 			with open(os.path.join(build_directory, log_file_name), "w") as log_file:
 				result = subprocess.call(step_command, cwd = workspace, stdout = log_file, stderr = subprocess.STDOUT)
