@@ -38,11 +38,14 @@ def run(build_identifier, environment):
 			build_status["steps"][step_index]["status"] = status
 			_save_status(build_directory, build_status)
 
-		build_success = True
+		build_final_status = "succeeded"
+		is_skipping = False
 		for step_index, step in enumerate(build_request["job"]["steps"]):
-			step_success = _execute_step(environment, build_directory, workspace, step_index, step, not build_success, update_step_status)
-			build_success = build_success and step_success
-		build_status["status"] = "succeeded" if build_success else "failed"
+			step_status = _execute_step(environment, build_directory, workspace, step_index, step, is_skipping, update_step_status)
+			if not is_skipping and step_status in [ "failed", "exception" ]:
+				build_final_status = step_status
+				is_skipping = True
+		build_status["status"] = build_final_status
 		_save_status(build_directory, build_status)
 
 	except:
@@ -55,12 +58,11 @@ def run(build_identifier, environment):
 
 def _execute_step(environment, build_directory, workspace, step_index, step, is_skipping, update_status_handler):
 	logger.info("Step %s running", step["name"])
+	step_status = "running"
+	update_status_handler(step_index, step_status)
+
 	log_file_name = "step_{index}_{name}.log".format(index = step_index, name = step["name"])
 
-	step_success = False
-	step_status = "running"
-
-	update_status_handler(step_index, "running")
 	try:
 		if is_skipping:
 			step_status = "skipped"
@@ -69,16 +71,14 @@ def _execute_step(environment, build_directory, workspace, step_index, step, is_
 			logger.info("Step command: %s", " ".join(step_command))
 			with open(os.path.join(build_directory, log_file_name), "w") as log_file:
 				result = subprocess.call(step_command, cwd = workspace, stdout = log_file, stderr = subprocess.STDOUT)
-			step_success = result == 0
-			step_status = "succeeded" if step_success else "failed"
+			step_status = "succeeded" if result == 0 else "failed"
 	except:
 		logger.error("Failed to execute step", exc_info = True)
-		step_success = False
 		step_status = "exception"
 
 	update_status_handler(step_index, step_status)
 	logger.info("Step %s completed with status %s", step["name"], step_status)
-	return step_success
+	return step_status
 
 
 def _save_status(build_directory, build_status):
