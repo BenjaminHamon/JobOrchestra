@@ -60,23 +60,23 @@ def _execute_step(environment, build_directory, workspace, step_index, step, is_
 	step_success = False
 	step_status = "running"
 
-	if is_skipping:
-		step_status = "skipped"
-		with open(os.path.join(build_directory, log_file_name), "w") as log_file:
-			pass
-	else:
-		update_status_handler(step_index, "running")
-		try:
+	update_status_handler(step_index, "running")
+	try:
+		if is_skipping:
+			with open(os.path.join(build_directory, log_file_name), "w") as log_file:
+				pass
+			step_status = "skipped"
+		else:
 			step_command = [ argument.format(env = environment) for argument in step["command"] ]
 			logger.info("Step command: %s", " ".join(step_command))
 			with open(os.path.join(build_directory, log_file_name), "w") as log_file:
 				result = subprocess.call(step_command, cwd = workspace, stdout = log_file, stderr = subprocess.STDOUT)
 			step_success = result == 0
 			step_status = "succeeded" if step_success else "failed"
-		except:
-			logger.error("Failed to execute command", exc_info = True)
-			step_success = False
-			step_status = "exception"
+	except:
+		logger.error("Failed to execute step", exc_info = True)
+		step_success = False
+		step_status = "exception"
 
 	update_status_handler(step_index, step_status)
 	logger.info("Step %s completed with status %s", step["name"], step_status)
