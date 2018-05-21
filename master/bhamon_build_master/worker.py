@@ -1,0 +1,83 @@
+import asyncio
+import json
+import logging
+
+
+logger = logging.getLogger("Worker")
+
+run_interval_seconds = 5
+status_interval_seconds = 5
+
+
+class Worker:
+
+
+	def __init__(self, identifier, connection, database):
+		self.identifier = identifier
+		self._connection = connection
+		self._database = database
+		self.build = None
+		self.job = None
+
+
+	def is_idle(self):
+		return self.build is None
+
+
+	def assign_build(self, job, build):
+		if self.build is not None:
+			raise RuntimeError("Worker %s is already building %s %s" % (self.identifier, self.build["job"], self.build["identifier"]))
+		self.job = job
+		self.build = build
+
+
+	async def run(self):
+		while True:
+			if self.build is None:
+				await self._connection.ping()
+				await asyncio.sleep(run_interval_seconds)
+			else:
+				await self._process_build()
+
+
+	async def _process_build(self):
+		logger.info("(%s) Starting build %s %s", self.identifier, self.build["job"], self.build["identifier"])
+
+		try:
+			execute_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"], "job": self.job }
+			await Worker._execute_remote_command(self._connection, self.identifier, "execute", execute_request)
+
+			status_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
+			while self.build["status"] == "running":
+				await asyncio.sleep(status_interval_seconds)
+				status_response = await Worker._execute_remote_command(self._connection, self.identifier, "status", status_request)
+				self.build["status"] = status_response["status"]
+				build_steps = status_response["steps"]
+				self._database.update_build(self.build)
+				self._database.update_build_steps(self.build["identifier"], build_steps)
+
+		except:
+			logger.error("(%s) Failed to process build %s %s", self.identifier, self.build["job"], self.build["identifier"], exc_info = True)
+			self.build["status"] = "exception"
+			self._database.update_build(self.build)
+
+		logger.info("(%s) Completed build %s %s with status %s", self.identifier, self.build["job"], self.build["identifier"], self.build["status"])
+		self.job = None
+		self.build = None
+
+
+	@staticmethod
+	async def authenticate(connection):
+		return await Worker._execute_remote_command(connection, None, "authenticate", None)
+
+
+	@staticmethod
+	async def _execute_remote_command(connection, worker_identifier, command, parameters):
+		request = { "command": command, "parameters": parameters }
+		logger.debug("(%s) > %s", worker_identifier, request)
+		await connection.send(json.dumps(request))
+		response = json.loads(await connection.recv())
+		logger.debug("(%s) < %s", worker_identifier, response)
+		if "error" in response:
+			raise RuntimeError("Worker error: " + response["error"])
+		return response["result"]
