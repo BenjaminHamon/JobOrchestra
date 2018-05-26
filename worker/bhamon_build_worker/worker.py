@@ -4,25 +4,45 @@ import logging
 import os
 import subprocess
 import sys
+import time
 
 import websockets
 
 
 logger = logging.getLogger("Worker")
 
+connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
+
 
 def run(master_address, worker_data):
-	logger.info("Starting build worker")
 
 	async def run_client():
-		logger.info("Connecting to master on %s", master_address)
-		async with websockets.connect("ws://" + master_address) as connection:
-			logger.info("Connected to master, waiting for commands")
-			while True:
-				await _process_message(connection, worker_data)
-		logger.info("Closed connection to master")
+		is_running = True
+		connection_attempt_index = 0
 
+		while is_running:
+			try:
+				connection_attempt_index += 1
+				logger.info("Connecting to master on %s (Attempt: %s)", master_address, connection_attempt_index)
+				async with websockets.connect("ws://" + master_address) as connection:
+					logger.info("Connected to master, waiting for commands")
+					connection_attempt_index = 0
+					while True:
+						await _process_message(connection, worker_data)
+				logger.info("Closed connection to master")
+				is_running = False
+
+			except (OSError, websockets.exceptions.ConnectionClosed):
+				try:
+					connection_attempt_delay = connection_attempt_delay_collection[connection_attempt_index]
+				except IndexError:
+					connection_attempt_delay = connection_attempt_delay_collection[-1]
+				logger.error("Connection to master failed, retrying in %s seconds", connection_attempt_delay, exc_info = True)
+				time.sleep(connection_attempt_delay)
+
+	logger.info("Starting build worker")
 	asyncio.get_event_loop().run_until_complete(run_client())
+	logger.info("Exiting build worker")
 
 
 async def _process_message(connection, worker_data):
