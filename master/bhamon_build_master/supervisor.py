@@ -33,14 +33,38 @@ class Supervisor:
 
 
 	async def _process_connection(self, connection, path):
-		logger.info("Processing connection: %s", connection)
-		authentication_result = await worker.Worker.authenticate(connection)
-		worker_instance = worker.Worker(authentication_result["identifier"], connection, self._database)
-		logger.info("Accepted connection from worker %s", worker_instance.identifier)
-		self._all_workers.append(worker_instance)
+		worker_identifier = None
+
 		try:
-			await worker_instance.run()
+			logger.info("Processing connection: %s", connection)
+
+			worker_data = await worker.Worker.authenticate(connection)
+			worker_identifier = worker_data["identifier"]
+			is_authenticated, reason = self._authenticate_worker(worker_identifier)
+			if not is_authenticated:
+				logger.warning("Refused connection from worker %s: %s", worker_identifier, reason)
+
+			else:
+				logger.info("Accepted connection from worker %s", worker_identifier)
+				worker_instance = worker.Worker(worker_identifier, connection, self._database)
+				self._all_workers.append(worker_instance)
+
+				try:
+					await worker_instance.run()
+				except:
+					logger.error("Worker %s execution raised an exception", worker_identifier, exc_info = True)
+
+				self._all_workers.remove(worker_instance)
+				logger.info("Closing connection with worker %s", worker_identifier)
+
 		except:
-			logger.error("Worker %s raised an exception", worker_instance.identifier, exc_info = True)
-		self._all_workers.remove(worker_instance)
-		logger.info("Closing connection with worker %s", worker_instance.identifier)
+			logger.error("Connection with worker %s raised an exception", worker_identifier, exc_info = True)
+
+
+	def _authenticate_worker(self, worker_identifier):
+		known_workers = [ worker["identifier"] for worker in self._database.get_worker_collection() ]
+		if worker_identifier not in known_workers:
+			return False, "Worker is unknown"
+		if any(worker.identifier == worker_identifier for worker in self._all_workers):
+			return False, "Worker is already connected"
+		return True, ''
