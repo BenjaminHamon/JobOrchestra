@@ -11,6 +11,7 @@ logger.info("Starting build master service")
 
 application = flask.Flask(__name__)
 application.database = None
+application.task_provider = None
 
 
 @application.errorhandler(Exception)
@@ -43,10 +44,11 @@ def get_job(identifier):
 
 @application.route("/job/<identifier>/trigger", methods = [ "POST" ])
 def trigger_job(identifier):
-	logger.info("Creating build %s", identifier)
+	logger.info("TriggerJob %s", identifier)
 	parameters = flask.request.get_json()
 	build_identifier = application.database.create_build(identifier, parameters)
-	return flask.jsonify(build_identifier)
+	task_identifier = application.task_provider.create("trigger_build", { "build_identifier": build_identifier })
+	return flask.jsonify({ "build_identifier": build_identifier, "task_identifier": task_identifier })
 
 
 @application.route("/build_collection", methods = [ "GET" ])

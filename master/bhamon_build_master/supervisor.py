@@ -13,10 +13,11 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, database):
+	def __init__(self, host, port, configuration, database):
 		self._all_workers = []
 		self._host = host
 		self._port = port
+		self._configuration = configuration
 		self._database = database
 
 
@@ -30,6 +31,21 @@ class Supervisor:
 	def get_available_worker(self, job, job_workers):
 		all_available_workers = [ worker for worker in self._all_workers if worker.is_idle() ]
 		return next((worker for worker in all_available_workers if worker.identifier in job_workers), None)
+
+
+	def trigger_build(self, build_identifier):
+		build = self._database.get_build(build_identifier)
+		job = self._configuration.job_collection[build["job"]]
+		job_workers = self._configuration.workers_by_job[build["job"]]
+
+		all_available_workers = [ worker for worker in self._all_workers if worker.is_idle() ]
+		available_worker = next((worker for worker in all_available_workers if worker.identifier in job_workers), None)
+		if available_worker is None:
+			return False
+
+		logger.info("Assigning build %s %s to worker %s", build["job"], build["identifier"], available_worker.identifier)
+		available_worker.assign_build(job, build)
+		return True
 
 
 	async def _process_connection(self, connection, path):

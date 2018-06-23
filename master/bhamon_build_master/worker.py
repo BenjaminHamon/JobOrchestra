@@ -44,6 +44,10 @@ class Worker:
 		logger.info("(%s) Starting build %s %s", self.identifier, self.build["job"], self.build["identifier"])
 
 		try:
+			self.build["worker"] = self.identifier
+			self.build["status"] = "running"
+			self._database.update_build(self.build)
+
 			execute_request = {
 				"job_identifier": self.build["job"],
 				"build_identifier": self.build["identifier"],
