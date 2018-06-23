@@ -44,7 +44,7 @@ def get_job(identifier):
 
 @application.route("/job/<identifier>/trigger", methods = [ "POST" ])
 def trigger_job(identifier):
-	logger.info("TriggerJob %s", identifier)
+	logger.info("Triggering job %s", identifier)
 	parameters = flask.request.get_json()
 	build_identifier = application.database.create_build(identifier, parameters)
 	task_identifier = application.task_provider.create("trigger_build", { "build_identifier": build_identifier })
@@ -77,6 +77,13 @@ def get_build_step(build_identifier, step_index):
 def get_build_step_log(build_identifier, step_index):
 	log_text = application.database.get_build_step_log(build_identifier, step_index)
 	return flask.Response(log_text, mimetype = "text/plain")
+
+
+@application.route("/build/<build_identifier>/abort", methods = [ "POST" ])
+def abort_build(build_identifier):
+	logger.info("Aborting build %s", build_identifier)
+	task_identifier = application.task_provider.create("abort_build", { "build_identifier": build_identifier })
+	return flask.jsonify({ "build_identifier": build_identifier, "task_identifier": task_identifier })
 
 
 @application.route("/worker_collection", methods = [ "GET" ])

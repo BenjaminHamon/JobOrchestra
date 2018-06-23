@@ -1,13 +1,22 @@
 import json
 import logging
 import os
+import signal
 import subprocess
+import time
 
 
 logger = logging.getLogger("Executor")
 
+termination_timeout_seconds = 30
+
+should_exit = False
+
 
 def run(build_identifier, environment):
+	signal.signal(signal.SIGTERM, _handle_termination)
+	signal.signal(signal.SIGBREAK, _handle_termination)
+
 	logger.info("Executing %s", build_identifier)
 	build_directory = os.path.join("builds", build_identifier)
 	with open(os.path.join(build_directory, "request.json")) as build_request_file:
@@ -42,7 +51,7 @@ def run(build_identifier, environment):
 		is_skipping = False
 		for step_index, step in enumerate(build_request["job"]["steps"]):
 			step_status = _execute_step(build_directory, workspace, step_index, step, environment, build_request["parameters"], is_skipping, update_step_status)
-			if not is_skipping and step_status in [ "failed", "exception" ]:
+			if not is_skipping and step_status in [ "failed", "aborted", "exception" ]:
 				build_final_status = step_status
 				is_skipping = True
 		build_status["status"] = build_final_status
@@ -70,8 +79,10 @@ def _execute_step(build_directory, workspace, step_index, step, environment, par
 			step_command = [ argument.format(env = environment, parameters = parameters) for argument in step["command"] ]
 			logger.info("Step command: %s", " ".join(step_command))
 			with open(os.path.join(build_directory, log_file_name), "w") as log_file:
-				result = subprocess.call(step_command, cwd = workspace, stdout = log_file, stderr = subprocess.STDOUT)
-			step_status = "succeeded" if result == 0 else "failed"
+				child_process = subprocess.Popen(step_command, cwd = workspace, stdout = log_file, stderr = subprocess.STDOUT,
+					creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
+				step_status = _wait_process(child_process)
+
 	except:
 		logger.error("Failed to execute step", exc_info = True)
 		step_status = "exception"
@@ -81,6 +92,23 @@ def _execute_step(build_directory, workspace, step_index, step, environment, par
 	return step_status
 
 
+def _wait_process(child_process):
+	result = None
+	while result is None:
+		if should_exit:
+			logger.info("Terminating child process")
+			os.kill(child_process.pid, signal.CTRL_BREAK_EVENT)
+			try:
+				result = child_process.wait(timeout = termination_timeout_seconds)
+			except subprocess.TimeoutExpired:
+				logger.warning("Terminating child process (force)")
+				child_process.kill()
+			return "aborted"
+		time.sleep(1)
+		result = child_process.poll()
+	return "succeeded" if result == 0 else "failed"
+
+
 def _save_status(build_directory, build_status):
 	status_file_path = os.path.join(build_directory, "status.json")
 	with open(status_file_path + ".tmp", "w") as status_file:
@@ -88,3 +116,8 @@ def _save_status(build_directory, build_status):
 	if os.path.exists(status_file_path):
 		os.remove(status_file_path)
 	os.rename(status_file_path + ".tmp", status_file_path)
+
+
+def _handle_termination(signal_number, frame):
+	global should_exit
+	should_exit = True

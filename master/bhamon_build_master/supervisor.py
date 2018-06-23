@@ -48,6 +48,15 @@ class Supervisor:
 		return True
 
 
+	def abort_build(self, build_identifier):
+		build_worker = next((worker for worker in self._all_workers if worker.build is not None and worker.build["identifier"] == build_identifier), None)
+		if build_worker is None:
+			return False
+
+		build_worker.abort_build()
+		return True
+
+
 	async def _process_connection(self, connection, path):
 		worker_identifier = None
 

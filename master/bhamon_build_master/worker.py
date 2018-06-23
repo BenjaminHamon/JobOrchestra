@@ -18,6 +18,7 @@ class Worker:
 		self._database = database
 		self.build = None
 		self.job = None
+		self._should_abort = False
 
 
 	def is_idle(self):
@@ -29,6 +30,11 @@ class Worker:
 			raise RuntimeError("Worker %s is already building %s %s" % (self.identifier, self.build["job"], self.build["identifier"]))
 		self.job = job
 		self.build = build
+		self._should_abort = False
+
+
+	def abort_build(self):
+		self._should_abort = True
 
 
 	async def run(self):
@@ -56,9 +62,15 @@ class Worker:
 			}
 			await Worker._execute_remote_command(self._connection, self.identifier, "execute", execute_request)
 
-			status_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
 			while self.build["status"] == "running":
+
+				if self._should_abort:
+					abort_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
+					await Worker._execute_remote_command(self._connection, self.identifier, "abort", abort_request)
+
 				await asyncio.sleep(status_interval_seconds)
+
+				status_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
 				status_response = await Worker._execute_remote_command(self._connection, self.identifier, "status", status_request)
 				self.build["status"] = status_response["status"]
 				build_steps = status_response["steps"]
@@ -67,7 +79,6 @@ class Worker:
 				await self._retrieve_logs(build_steps)
 
 			await self._retrieve_logs(build_steps)
-
 
 		except:
 			logger.error("(%s) Failed to process build %s %s", self.identifier, self.build["job"], self.build["identifier"], exc_info = True)

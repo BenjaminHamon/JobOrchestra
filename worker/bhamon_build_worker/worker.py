@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -14,7 +15,12 @@ logger = logging.getLogger("Worker")
 connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
 
 
-def run(master_address, worker_data):
+def run(master_address, worker_identifier, executor_script):
+	worker_data = {
+		"identifier": worker_identifier,
+		"executor_script": executor_script,
+		"active_executors": {}
+	}
 
 	async def run_client():
 		is_running = True
@@ -61,9 +67,11 @@ async def _process_message(connection, worker_data):
 
 def _execute_command(worker_data, command, parameters):
 	if command == "authenticate":
-		return _authenticate(worker_data["identifier"])
+		return _authenticate(worker_data)
 	elif command == "execute":
-		return _execute(executor_script = worker_data["executor_script"], **parameters)
+		return _execute(worker_data, **parameters)
+	elif command == "abort":
+		return _abort(worker_data, **parameters)
 	elif command == "status":
 		return _get_status(**parameters)
 	elif command == "log":
@@ -72,18 +80,26 @@ def _execute_command(worker_data, command, parameters):
 		raise ValueError("Unknown command " + command)
 
 
-def _authenticate(worker_identifier):
-	return { "identifier": worker_identifier }
+def _authenticate(worker_data):
+	return { "identifier": worker_data["identifier"] }
 
 
-def _execute(executor_script, job_identifier, build_identifier, job, parameters):
-	logger.info("Request to execute %s %s", job_identifier, build_identifier)
+def _execute(worker_data, job_identifier, build_identifier, job, parameters):
+	logger.info("Executing %s %s", job_identifier, build_identifier)
 	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
 	os.makedirs(build_directory)
 	build_request = { "job_identifier": job_identifier, "build_identifier": build_identifier, "job": job, "parameters": parameters }
 	with open(os.path.join(build_directory, "request.json"), "w") as request_file:
 		json.dump(build_request, request_file, indent = 4)
-	subprocess.Popen([ sys.executable, executor_script, job_identifier + "_" + build_identifier ])
+	executor_command = [ sys.executable, worker_data["executor_script"], job_identifier + "_" + build_identifier ]
+	executor_process = subprocess.Popen(executor_command, creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
+	worker_data["active_executors"][build_identifier] = executor_process
+
+
+def _abort(worker_data, job_identifier, build_identifier):
+	logger.info("Aborting %s %s", job_identifier, build_identifier)
+	executor_process = worker_data["active_executors"][build_identifier]
+	os.kill(executor_process.pid, signal.CTRL_BREAK_EVENT)
 
 
 def _get_status(job_identifier, build_identifier):
