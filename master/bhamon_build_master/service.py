@@ -87,3 +87,10 @@ def get_worker_collection():
 @application.route("/worker/<identifier>", methods = [ "GET" ])
 def get_worker(identifier):
 	return flask.jsonify(application.database.get_worker(identifier))
+
+
+@application.route("/task_collection", methods = [ "GET" ])
+def get_task_collection():
+	task_collection = list(application.task_provider.get_all().values())
+	task_collection.sort(key = lambda task: task["update_date"], reverse = True)
+	return flask.jsonify(task_collection)
