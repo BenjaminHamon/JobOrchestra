@@ -12,7 +12,7 @@ def run(host, port, configuration, database, data_providers):
 	logger.info("Starting build master")
 
 	configuration.reload()
-	supervisor_instance = supervisor.Supervisor(host, port, configuration, database)
+	supervisor_instance = supervisor.Supervisor(host, port, configuration, database, data_providers["worker"])
 	task_processor_instance = task_processor.TaskProcessor(data_providers["task"])
 
 	task_processor_instance.register_handler("abort_build", 90, lambda parameters: _abort_build(parameters, supervisor_instance))

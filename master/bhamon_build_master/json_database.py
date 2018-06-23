@@ -17,15 +17,6 @@ class JsonDatabase(database.Database):
 		self._data_directory = data_directory
 
 
-	def get_job_collection(self):
-		return self._load_data("jobs", [])
-
-
-	def get_job(self, identifier):
-		all_jobs = self._load_data("jobs", [])
-		return next(job for job in all_jobs if job["identifier"] == identifier)
-
-
 	def get_build_collection(self, sort_by_date, limit):
 		all_builds = self._load_data("builds", [])
 		if sort_by_date:
@@ -102,60 +93,6 @@ class JsonDatabase(database.Database):
 
 	def set_build_step_log(self, build_identifier, step_index, log_text):
 		self._save_log(self._get_build_step_log_path(build_identifier, step_index), log_text)
-
-
-	def get_worker_collection(self):
-		return self._load_data("workers", [])
-
-
-	def get_worker(self, identifier):
-		all_workers = self._load_data("workers", [])
-		return next(worker for worker in all_workers if worker["identifier"] == identifier)
-
-
-	def update_configuration(self, job_collection, worker_collection):
-		saved_job_collection = self._load_data("jobs", [])
-		saved_worker_collection = self._load_data("workers", [])
-
-		updated_job_collection = []
-		for job in job_collection.values():
-			job_data = {
-				"identifier": job["identifier"],
-				"description": job["description"],
-				"parameters": job["parameters"],
-				"is_enabled": True,
-			}
-
-			saved_job_data = next((data for data in saved_job_collection if data["identifier"] == job["identifier"]), None)
-			if saved_job_data is not None:
-				job_data["is_enabled"] = saved_job_data["is_enabled"]
-			job_data["update_date"] = JsonDatabase._utc_now_as_string()
-
-			updated_job_collection.append(job_data)
-
-		updated_worker_collection = []
-		for worker in worker_collection.values():
-			worker_data = {
-				"identifier": worker["identifier"],
-				"description": worker["description"],
-				"is_enabled": True,
-				"is_active": False,
-			}
-
-			saved_worker_data = next((data for data in saved_worker_collection if data["identifier"] == worker["identifier"]), None)
-			if saved_worker_data is not None:
-				worker_data["is_enabled"] = saved_worker_data["is_enabled"]
-				worker_data["is_active"] = saved_worker_data["is_active"]
-			worker_data["update_date"] = JsonDatabase._utc_now_as_string()
-
-			updated_worker_collection.append(worker_data)
-
-		updated_job_collection.sort(key = lambda job: job["identifier"])
-		updated_worker_collection.sort(key = lambda worker: worker["identifier"])
-
-		self._save_data("jobs", updated_job_collection)
-		self._save_data("workers", updated_worker_collection)
-
 
 
 	def _load_data(self, file_name, default_value):

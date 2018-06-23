@@ -11,7 +11,9 @@ logger.info("Starting build master service")
 
 application = flask.Flask(__name__)
 application.database = None
+application.job_provider = None
 application.task_provider = None
+application.worker_provider = None
 
 
 @application.errorhandler(Exception)
@@ -34,19 +36,19 @@ def home():
 
 @application.route("/job_collection", methods = [ "GET" ])
 def get_job_collection():
-	return flask.jsonify(application.database.get_job_collection())
+	return flask.jsonify(list(application.job_provider.get_all().values()))
 
 
-@application.route("/job/<identifier>", methods = [ "GET" ])
-def get_job(identifier):
-	return flask.jsonify(application.database.get_job(identifier))
+@application.route("/job/<job_identifier>", methods = [ "GET" ])
+def get_job(job_identifier):
+	return flask.jsonify(application.job_provider.get(job_identifier))
 
 
-@application.route("/job/<identifier>/trigger", methods = [ "POST" ])
-def trigger_job(identifier):
-	logger.info("Triggering job %s", identifier)
+@application.route("/job/<job_identifier>/trigger", methods = [ "POST" ])
+def trigger_job(job_identifier):
+	logger.info("Triggering job %s", job_identifier)
 	parameters = flask.request.get_json()
-	build_identifier = application.database.create_build(identifier, parameters)
+	build_identifier = application.database.create_build(job_identifier, parameters)
 	task_identifier = application.task_provider.create("trigger_build", { "build_identifier": build_identifier })
 	return flask.jsonify({ "build_identifier": build_identifier, "task_identifier": task_identifier })
 
@@ -88,12 +90,12 @@ def abort_build(build_identifier):
 
 @application.route("/worker_collection", methods = [ "GET" ])
 def get_worker_collection():
-	return flask.jsonify(application.database.get_worker_collection())
+	return flask.jsonify(list(application.worker_provider.get_all().values()))
 
 
-@application.route("/worker/<identifier>", methods = [ "GET" ])
-def get_worker(identifier):
-	return flask.jsonify(application.database.get_worker(identifier))
+@application.route("/worker/<worker_identifier>", methods = [ "GET" ])
+def get_worker(worker_identifier):
+	return flask.jsonify(application.worker_provider.get(worker_identifier))
 
 
 @application.route("/task_collection", methods = [ "GET" ])

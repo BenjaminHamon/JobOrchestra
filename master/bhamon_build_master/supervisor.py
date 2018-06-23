@@ -13,12 +13,13 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, configuration, database):
-		self._all_workers = []
+	def __init__(self, host, port, configuration, database, worker_provider):
+		self._all_workers = {}
 		self._host = host
 		self._port = port
 		self._configuration = configuration
 		self._database = database
+		self._worker_provider = worker_provider
 
 
 	async def run_server(self):
@@ -28,17 +29,12 @@ class Supervisor:
 				await asyncio.sleep(1)
 
 
-	def get_available_worker(self, job, job_workers):
-		all_available_workers = [ worker for worker in self._all_workers if worker.is_idle() ]
-		return next((worker for worker in all_available_workers if worker.identifier in job_workers), None)
-
-
 	def trigger_build(self, build_identifier):
 		build = self._database.get_build(build_identifier)
 		job = self._configuration.job_collection[build["job"]]
 		job_workers = self._configuration.workers_by_job[build["job"]]
 
-		all_available_workers = [ worker for worker in self._all_workers if worker.is_idle() ]
+		all_available_workers = [ worker for worker in self._all_workers.values() if worker.is_idle() ]
 		available_worker = next((worker for worker in all_available_workers if worker.identifier in job_workers), None)
 		if available_worker is None:
 			return False
@@ -49,7 +45,8 @@ class Supervisor:
 
 
 	def abort_build(self, build_identifier):
-		build_worker = next((worker for worker in self._all_workers if worker.build is not None and worker.build["identifier"] == build_identifier), None)
+		worker_condition = lambda worker: worker.build is not None and worker.build["identifier"] == build_identifier
+		build_worker = next((worker for worker in self._all_workers.values() if worker_condition(worker)), None)
 		if build_worker is None:
 			return False
 
@@ -72,14 +69,14 @@ class Supervisor:
 			else:
 				logger.info("Accepted connection from worker %s", worker_identifier)
 				worker_instance = worker.Worker(worker_identifier, connection, self._database)
-				self._all_workers.append(worker_instance)
+				self._all_workers[worker_identifier] = worker_instance
 
 				try:
 					await worker_instance.run()
 				except:
 					logger.error("Worker %s execution raised an exception", worker_identifier, exc_info = True)
 
-				self._all_workers.remove(worker_instance)
+				del self._all_workers[worker_identifier]
 				logger.info("Closing connection with worker %s", worker_identifier)
 
 		except:
@@ -87,9 +84,8 @@ class Supervisor:
 
 
 	def _authenticate_worker(self, worker_identifier):
-		known_workers = [ worker["identifier"] for worker in self._database.get_worker_collection() ]
-		if worker_identifier not in known_workers:
+		if not self._worker_provider.exists(worker_identifier):
 			return False, "Worker is unknown"
-		if any(worker.identifier == worker_identifier for worker in self._all_workers):
+		if worker_identifier in self._all_workers:
 			return False, "Worker is already connected"
 		return True, ''

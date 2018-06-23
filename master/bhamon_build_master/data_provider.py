@@ -3,11 +3,15 @@ import abc
 class DataProvider(abc.ABC):
 
 	@abc.abstractmethod
+	def get_all(self):
+		pass
+
+	@abc.abstractmethod
 	def get(self, key):
 		pass
 
 	@abc.abstractmethod
-	def get_all(self):
+	def exists(self, key):
 		pass
 
 	@abc.abstractmethod

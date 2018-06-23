@@ -1,15 +1,16 @@
 class Configuration:
 
 
-	def __init__(self, database, loader):
-		self._database = database
+	def __init__(self, loader, job_provider, worker_provider):
 		self._loader = loader
+		self._job_provider = job_provider
+		self._worker_provider = worker_provider
 		self._data = ConfigurationData([], [], [])
 
 
 	def reload(self):
 		self._data = self._loader()
-		self._database.update_configuration(self.job_collection, self.worker_collection)
+		self._update_database()
 
 
 	@property
@@ -24,6 +25,12 @@ class Configuration:
 	def workers_by_job(self):
 		return self._data.workers_by_job
 
+
+	def _update_database(self):
+		for job in self.job_collection.values():
+			self._job_provider.create_or_update(job["identifier"], job["description"], job["parameters"])
+		for worker in self.worker_collection.values():
+			self._worker_provider.create_or_update(worker["identifier"], worker["description"])
 
 
 class ConfigurationData:

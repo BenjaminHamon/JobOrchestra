@@ -4,14 +4,6 @@ import abc
 class Database(abc.ABC):
 
 	@abc.abstractmethod
-	def get_job_collection(self):
-		pass
-
-	@abc.abstractmethod
-	def get_job(self, identifier):
-		pass
-
-	@abc.abstractmethod
 	def get_build_collection(self, sort_by_date, limit):
 		pass
 
@@ -53,16 +45,4 @@ class Database(abc.ABC):
 
 	@abc.abstractmethod
 	def set_build_step_log(self, build_identifier, step_index, log_text):
-		pass
-
-	@abc.abstractmethod
-	def get_worker_collection(self):
-		pass
-
-	@abc.abstractmethod
-	def get_worker(self, identifier):
-		pass
-
-	@abc.abstractmethod
-	def update_configuration(self, job_collection, worker_collection):
 		pass

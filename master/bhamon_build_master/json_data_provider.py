@@ -13,12 +13,16 @@ class JsonDataProvider(data_provider.DataProvider):
 		self._collection_name = collection_name
 
 
+	def get_all(self):
+		return self._load()
+
+
 	def get(self, key):
 		return self._load()[key]
 
 
-	def get_all(self):
-		return self._load()
+	def exists(self, key):
+		return key in self._load()
 
 
 	def create(self, key, data):
