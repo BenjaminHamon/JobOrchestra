@@ -60,8 +60,8 @@ class Supervisor:
 		try:
 			logger.info("Processing connection: %s", connection)
 
-			worker_data = await worker.Worker.authenticate(connection)
-			worker_identifier = worker_data["identifier"]
+			worker_authentication_response = await worker.Worker.authenticate(connection)
+			worker_identifier = worker_authentication_response["identifier"]
 			is_authenticated, reason = self._authenticate_worker(worker_identifier)
 			if not is_authenticated:
 				logger.warning("Refused connection from worker %s: %s", worker_identifier, reason)
@@ -69,6 +69,7 @@ class Supervisor:
 			else:
 				logger.info("Accepted connection from worker %s", worker_identifier)
 				worker_instance = worker.Worker(worker_identifier, connection, self._database)
+				self._worker_provider.update(worker_identifier, is_active = True)
 				self._all_workers[worker_identifier] = worker_instance
 
 				try:
@@ -77,6 +78,7 @@ class Supervisor:
 					logger.error("Worker %s execution raised an exception", worker_identifier, exc_info = True)
 
 				del self._all_workers[worker_identifier]
+				self._worker_provider.update(worker_identifier, is_active = False)
 				logger.info("Closing connection with worker %s", worker_identifier)
 
 		except:

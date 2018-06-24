@@ -37,3 +37,13 @@ class WorkerProvider:
 				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 			}
 			self.database_client.create(worker_identifier, worker)
+
+
+	def update(self, worker_identifier, is_active = None, is_enabled = None):
+		worker = self.get(worker_identifier)
+		if is_active is not None:
+			worker["is_active"] = is_active
+		if is_enabled is not None:
+			worker["is_enabled"] = is_enabled
+		worker["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+		self.database_client.update(worker_identifier, worker)
