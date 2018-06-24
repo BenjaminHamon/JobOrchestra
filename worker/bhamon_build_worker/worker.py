@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -70,6 +71,8 @@ def _execute_command(worker_data, command, parameters):
 		return _authenticate(worker_data)
 	elif command == "execute":
 		return _execute(worker_data, **parameters)
+	elif command == "clean":
+		return _clean(worker_data, **parameters)
 	elif command == "abort":
 		return _abort(worker_data, **parameters)
 	elif command == "status":
@@ -77,7 +80,7 @@ def _execute_command(worker_data, command, parameters):
 	elif command == "log":
 		return _retrieve_log(**parameters)
 	else:
-		raise ValueError("Unknown command " + command)
+		raise ValueError("Unknown command %s" % command)
 
 
 def _authenticate(worker_data):
@@ -94,6 +97,19 @@ def _execute(worker_data, job_identifier, build_identifier, job, parameters):
 	executor_command = [ sys.executable, worker_data["executor_script"], job_identifier + "_" + build_identifier ]
 	executor_process = subprocess.Popen(executor_command, creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
 	worker_data["active_executors"][build_identifier] = executor_process
+
+
+def _clean(worker_data, job_identifier, build_identifier):
+	logger.info("Cleaning %s %s", job_identifier, build_identifier)
+
+	if build_identifier in worker_data["active_executors"]:
+		executor_process = worker_data["active_executors"][build_identifier]
+		if executor_process.poll() is None:
+			raise RuntimeError("Executor is still running for build %s" % build_identifier)
+		del worker_data["active_executors"][build_identifier]
+
+	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
+	shutil.rmtree(build_directory)
 
 
 def _abort(worker_data, job_identifier, build_identifier):

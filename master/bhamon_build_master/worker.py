@@ -80,6 +80,9 @@ class Worker:
 
 			await self._retrieve_logs(build_steps)
 
+			clean_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
+			await Worker._execute_remote_command(self._connection, self.identifier, "clean", clean_request)
+
 		except:
 			logger.error("(%s) Failed to process build %s %s", self.identifier, self.build["job"], self.build["identifier"], exc_info = True)
 			self.build["status"] = "exception"
