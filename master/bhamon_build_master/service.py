@@ -31,7 +31,17 @@ for exception in werkzeug.exceptions.default_exceptions:
 
 @application.route("/", methods = [ "GET" ])
 def home():
-	return ""
+	return flask.jsonify({})
+
+
+@application.route("/help", methods = [ "GET" ])
+def help():
+	route_collection = []
+	for rule in application.url_map.iter_rules():
+		if not rule.rule.startswith("/static/"):
+			route_collection.append(rule.rule)
+	route_collection.sort()
+	return flask.jsonify(route_collection)
 
 
 @application.route("/job_collection", methods = [ "GET" ])
