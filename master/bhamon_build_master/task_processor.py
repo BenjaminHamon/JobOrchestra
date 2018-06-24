@@ -25,7 +25,7 @@ class TaskProcessor:
 		while True:
 			all_tasks = self._task_provider.get_all()
 			all_tasks = [ task for task in all_tasks.values() if task["status"] == "pending" ]
-			all_tasks.sort(key = lambda task: ( - self._handler_collection[task["type"]]["order"], task["creation_date"] ))
+			all_tasks.sort(key = self._get_task_order)
 
 			for task in all_tasks:
 				logger.info("Processing task %s (Type: %s, Parameters: %s)", task["identifier"], task["type"], task["parameters"])
@@ -43,3 +43,10 @@ class TaskProcessor:
 					self._task_provider.update(task)
 
 			await asyncio.sleep(process_delay_seconds)
+
+
+	def _get_task_order(self, task):
+		try:
+			return (self._handler_collection[task["type"]]["order"], task["creation_date"])
+		except KeyError:
+			return (99999, task["creation_date"])
