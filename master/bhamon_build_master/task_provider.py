@@ -13,6 +13,10 @@ class TaskProvider:
 		return self.database_client.get_all()
 
 
+	def get(self, task_identifier):
+		return self.database_client.get(task_identifier)
+
+
 	def create(self, type, parameters):
 		task = {
 			"identifier": str(uuid.uuid4()),
@@ -31,7 +35,4 @@ class TaskProvider:
 		task["status"] = status
 		task["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
 		self.database_client.update(task["identifier"], task)
-
-
-	def cancel(self, task_identifier):
-		pass
+		return task

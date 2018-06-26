@@ -120,3 +120,11 @@ def get_task_collection():
 	task_collection = list(application.task_provider.get_all().values())
 	task_collection.sort(key = lambda task: task["update_date"], reverse = True)
 	return flask.jsonify(task_collection)
+
+
+@application.route("/task/<task_identifier>/cancel", methods = [ "POST" ])
+def cancel_task(task_identifier):
+	task = application.task_provider.get(task_identifier)
+	if task["status"] == "pending":
+		task = application.task_provider.update(task_identifier, "cancelled")
+	return flask.jsonify(task)
