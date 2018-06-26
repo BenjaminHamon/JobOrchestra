@@ -31,16 +31,13 @@ class TaskProcessor:
 				logger.info("Processing task %s (Type: %s, Parameters: %s)", task["identifier"], task["type"], task["parameters"])
 
 				try:
-					task["status"] = "running"
-					self._task_provider.update(task)
+					self._task_provider.update(task["identifier"], "running")
 					end_status = self._handler_collection[task["type"]]["handler"](task["parameters"])
-					task["status"] = end_status
-					self._task_provider.update(task)
+					self._task_provider.update(task["identifier"], end_status)
 
 				except:
 					logger.warning("Failed to process task %s", task["identifier"], exc_info = True)
-					task["status"] = "exception"
-					self._task_provider.update(task)
+					self._task_provider.update(task["identifier"], "exception")
 
 			await asyncio.sleep(process_delay_seconds)
 
