@@ -14,8 +14,9 @@ should_exit = False
 
 
 def run(build_identifier, environment):
-	signal.signal(signal.SIGTERM, _handle_termination)
+	signal.signal(signal.SIGINT, _handle_termination)
 	signal.signal(signal.SIGBREAK, _handle_termination)
+	signal.signal(signal.SIGTERM, _handle_termination)
 
 	logger.info("Executing %s", build_identifier)
 	build_directory = os.path.join("builds", build_identifier)

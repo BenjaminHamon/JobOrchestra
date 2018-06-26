@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import json
 import logging
 import os
@@ -6,7 +7,6 @@ import shutil
 import signal
 import subprocess
 import sys
-import time
 
 import websockets
 
@@ -14,30 +14,35 @@ import websockets
 logger = logging.getLogger("Worker")
 
 connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
+termination_delay_seconds = 5
+termination_timeout_seconds = 30
 
 
 def run(master_address, worker_identifier, executor_script):
 	worker_data = {
 		"identifier": worker_identifier,
 		"executor_script": executor_script,
-		"active_executors": {}
+		"active_executors": {},
+		"should_exit": False,
 	}
 
+	signal.signal(signal.SIGBREAK, lambda signal_number, frame: _shutdown(worker_data))
+	signal.signal(signal.SIGINT, lambda signal_number, frame: _shutdown(worker_data))
+	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(worker_data))
+
 	async def run_client():
-		is_running = True
 		connection_attempt_index = 0
 
-		while is_running:
+		while not worker_data["should_exit"]:
 			try:
 				connection_attempt_index += 1
 				logger.info("Connecting to master on %s (Attempt: %s)", master_address, connection_attempt_index)
 				async with websockets.connect("ws://" + master_address) as connection:
 					logger.info("Connected to master, waiting for commands")
 					connection_attempt_index = 0
-					while True:
-						await _process_message(connection, worker_data)
+					await _process_connection(connection, worker_data)
 				logger.info("Closed connection to master")
-				is_running = False
+				worker_data["should_exit"] = True
 
 			except (OSError, websockets.exceptions.ConnectionClosed):
 				try:
@@ -45,25 +50,50 @@ def run(master_address, worker_identifier, executor_script):
 				except IndexError:
 					connection_attempt_delay = connection_attempt_delay_collection[-1]
 				logger.error("Connection to master failed, retrying in %s seconds", connection_attempt_delay, exc_info = True)
-				time.sleep(connection_attempt_delay)
+				await asyncio.sleep(connection_attempt_delay)
 
 	logger.info("Starting build worker")
-	asyncio.get_event_loop().run_until_complete(run_client())
+	coroutine_set = asyncio.wait([ run_client(), _handle_termination(worker_data) ])
+	asyncio.get_event_loop().run_until_complete(coroutine_set)
 	logger.info("Exiting build worker")
 
 
-async def _process_message(connection, worker_data):
-	request = json.loads(await connection.recv())
-	logger.debug("< %s", request)
+async def _process_connection(connection, worker_data):
+	# When terminating, the connection is kept opened until all the builds are aborted and cleaned
+	while not worker_data["should_exit"] or len(worker_data["active_executors"]) > 0:
+		try:
+			# Timeout to ensure the loop condition is checked once in a while
+			request = json.loads(await asyncio.wait_for(connection.recv(), timeout = 10))
+		except asyncio.TimeoutError:
+			await asyncio.wait_for(await connection.ping(), timeout = 10)
+			continue
+		logger.debug("< %s", request)
 
-	try:
-		result = _execute_command(worker_data, request["command"], request["parameters"])
-		response = { "result": result }
-	except Exception as exception:
-		logger.error("Failed to process request %s", request, exc_info = True)
-		response = { "error": str(exception) }
-	logger.debug("> %s", response)
-	await connection.send(json.dumps(response))
+		try:
+			result = _execute_command(worker_data, request["command"], request["parameters"])
+			response = { "result": result }
+		except Exception as exception:
+			logger.error("Failed to process request %s", request, exc_info = True)
+			response = { "error": str(exception) }
+
+		logger.debug("> %s", response)
+		await connection.send(json.dumps(response))
+
+
+async def _handle_termination(worker_data):
+	while not worker_data["should_exit"]:
+		await asyncio.sleep(termination_delay_seconds)
+
+	logger.info("Terminating build worker")
+	termination_start_time = datetime.datetime.utcnow()
+	for build_identifier in worker_data["active_executors"]:
+		_abort(worker_data, build_identifier)
+	while (len(worker_data["active_executors"]) > 0) and ((datetime.datetime.utcnow() - termination_start_time).total_seconds() < termination_timeout_seconds):
+		await asyncio.sleep(termination_delay_seconds)
+	for build_identifier, executor_process in worker_data["active_executors"].items():
+		logger.warning("Executor is still running (Build: %s, Process: %s)", build_identifier, executor_process.pid)
+	# Force the connection to close by discarding remaining executors
+	worker_data["active_executors"].clear()
 
 
 def _execute_command(worker_data, command, parameters):
@@ -112,10 +142,16 @@ def _clean(worker_data, job_identifier, build_identifier):
 	shutil.rmtree(build_directory)
 
 
-def _abort(worker_data, job_identifier, build_identifier):
-	logger.info("Aborting %s %s", job_identifier, build_identifier)
+def _abort(worker_data, build_identifier):
+	logger.info("Aborting %s", build_identifier)
 	executor_process = worker_data["active_executors"][build_identifier]
 	os.kill(executor_process.pid, signal.CTRL_BREAK_EVENT)
+	# The executor should terminate nicely, if it does not it will stays as running and should be investigated
+	# Forcing termination here would leave orphan processes and the status as running
+
+
+def _shutdown(worker_data):
+	worker_data["should_exit"] = True
 
 
 def _get_status(job_identifier, build_identifier):
