@@ -19,13 +19,16 @@ class Worker:
 		self.build = None
 		self.job = None
 		self._should_abort = False
+		self._should_exit = False
 
 
 	def is_idle(self):
-		return self.build is None
+		return not self._should_exit and self.build is None
 
 
 	def assign_build(self, job, build):
+		if self._should_exit:
+			raise RuntimeError("Worker %s is stopping" % self.identifier)
 		if self.build is not None:
 			raise RuntimeError("Worker %s is already building %s %s" % (self.identifier, self.build["job"], self.build["identifier"]))
 		self.job = job
@@ -37,8 +40,12 @@ class Worker:
 		self._should_abort = True
 
 
+	def stop(self):
+		self._should_exit = True
+
+
 	async def run(self):
-		while True:
+		while not self._should_exit:
 			if self.build is None:
 				await self._connection.ping()
 				await asyncio.sleep(run_interval_seconds)

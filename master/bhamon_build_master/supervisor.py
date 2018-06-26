@@ -29,6 +29,13 @@ class Supervisor:
 				await asyncio.sleep(1)
 
 
+	def stop_worker(self, worker_identifier):
+		if not worker_identifier in self._all_workers:
+			return False
+		self._all_workers[worker_identifier].stop()
+		return True
+
+
 	def trigger_build(self, build_identifier):
 		build = self._database.get_build(build_identifier)
 		job = self._configuration.job_collection[build["job"]]

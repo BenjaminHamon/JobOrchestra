@@ -43,12 +43,16 @@ async def _run_client(master_address, worker_data):
 		try:
 			connection_attempt_counter += 1
 			logger.info("Connecting to master on %s (Attempt: %s)", master_address, connection_attempt_counter)
-			async with websockets.connect("ws://" + master_address) as connection:
-				logger.info("Connected to master, waiting for commands")
-				connection_attempt_counter = 0
-				await _process_connection(connection, worker_data)
+			try:
+				async with websockets.connect("ws://" + master_address) as connection:
+					logger.info("Connected to master, waiting for commands")
+					connection_attempt_counter = 0
+					await _process_connection(connection, worker_data)
+			except websockets.exceptions.ConnectionClosed as exception:
+				if exception.code not in [ 1000, 1001 ]:
+					raise
+				worker_data["should_exit"] = True
 			logger.info("Closed connection to master")
-			worker_data["should_exit"] = True
 
 		except (OSError, websockets.exceptions.ConnectionClosed):
 			try:
@@ -110,6 +114,8 @@ def _execute_command(worker_data, command, parameters):
 		return _get_status(**parameters)
 	elif command == "log":
 		return _retrieve_log(**parameters)
+	elif command == "shutdown":
+		return _shutdown(worker_data)
 	else:
 		raise ValueError("Unknown command %s" % command)
 

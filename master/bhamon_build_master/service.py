@@ -108,6 +108,13 @@ def get_worker(worker_identifier):
 	return flask.jsonify(application.worker_provider.get(worker_identifier))
 
 
+@application.route("/worker/<worker_identifier>/stop", methods = [ "POST" ])
+def stop_worker(worker_identifier):
+	logger.info("Stopping worker %s", worker_identifier)
+	task_identifier = application.task_provider.create("stop_worker", { "worker_identifier": worker_identifier })
+	return flask.jsonify({ "worker_identifier": worker_identifier, "task_identifier": task_identifier })
+
+
 @application.route("/task_collection", methods = [ "GET" ])
 def get_task_collection():
 	task_collection = list(application.task_provider.get_all().values())
