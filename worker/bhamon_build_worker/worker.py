@@ -30,32 +30,33 @@ def run(master_address, worker_identifier, executor_script):
 	signal.signal(signal.SIGINT, lambda signal_number, frame: _shutdown(worker_data))
 	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(worker_data))
 
-	async def run_client():
-		connection_attempt_index = 0
-
-		while not worker_data["should_exit"]:
-			try:
-				connection_attempt_index += 1
-				logger.info("Connecting to master on %s (Attempt: %s)", master_address, connection_attempt_index)
-				async with websockets.connect("ws://" + master_address) as connection:
-					logger.info("Connected to master, waiting for commands")
-					connection_attempt_index = 0
-					await _process_connection(connection, worker_data)
-				logger.info("Closed connection to master")
-				worker_data["should_exit"] = True
-
-			except (OSError, websockets.exceptions.ConnectionClosed):
-				try:
-					connection_attempt_delay = connection_attempt_delay_collection[connection_attempt_index]
-				except IndexError:
-					connection_attempt_delay = connection_attempt_delay_collection[-1]
-				logger.error("Connection to master failed, retrying in %s seconds", connection_attempt_delay, exc_info = True)
-				await asyncio.sleep(connection_attempt_delay)
-
 	logger.info("Starting build worker")
-	coroutine_set = asyncio.wait([ run_client(), _handle_termination(worker_data) ])
+	coroutine_set = asyncio.wait([ _run_client(master_address, worker_data), _handle_termination(worker_data) ])
 	asyncio.get_event_loop().run_until_complete(coroutine_set)
 	logger.info("Exiting build worker")
+
+
+async def _run_client(master_address, worker_data):
+	connection_attempt_counter = 0
+
+	while not worker_data["should_exit"]:
+		try:
+			connection_attempt_counter += 1
+			logger.info("Connecting to master on %s (Attempt: %s)", master_address, connection_attempt_counter)
+			async with websockets.connect("ws://" + master_address) as connection:
+				logger.info("Connected to master, waiting for commands")
+				connection_attempt_counter = 0
+				await _process_connection(connection, worker_data)
+			logger.info("Closed connection to master")
+			worker_data["should_exit"] = True
+
+		except (OSError, websockets.exceptions.ConnectionClosed):
+			try:
+				connection_attempt_delay = connection_attempt_delay_collection[connection_attempt_counter]
+			except IndexError:
+				connection_attempt_delay = connection_attempt_delay_collection[-1]
+			logger.error("Connection to master failed, retrying in %s seconds", connection_attempt_delay, exc_info = True)
+			await asyncio.sleep(connection_attempt_delay)
 
 
 async def _process_connection(connection, worker_data):
