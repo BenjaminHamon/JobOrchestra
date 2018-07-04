@@ -31,8 +31,8 @@ def run(master_address, worker_identifier, executor_script):
 	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(worker_data))
 
 	logger.info("Starting build worker")
-	coroutine_set = asyncio.wait([ _run_client(master_address, worker_data), _handle_termination(worker_data) ])
-	asyncio.get_event_loop().run_until_complete(coroutine_set)
+	main_future = asyncio.gather(_run_client(master_address, worker_data), _handle_termination(worker_data))
+	asyncio.get_event_loop().run_until_complete(main_future)
 	logger.info("Exiting build worker")
 
 

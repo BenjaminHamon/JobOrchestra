@@ -19,8 +19,8 @@ def run(host, port, configuration, database, data_providers):
 	task_processor_instance.register_handler("abort_build", 90, lambda parameters: _abort_build(parameters, supervisor_instance))
 	task_processor_instance.register_handler("trigger_build", 100, lambda parameters: _trigger_build(parameters, supervisor_instance))
 
-	coroutine_set = asyncio.wait([ supervisor_instance.run_server(), task_processor_instance.run() ])
-	asyncio.get_event_loop().run_until_complete(coroutine_set)
+	main_future = asyncio.gather(supervisor_instance.run_server(), task_processor_instance.run())
+	asyncio.get_event_loop().run_until_complete(main_future)
 
 
 def _stop_worker(parameters, supervisor_instance):
