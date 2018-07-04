@@ -23,6 +23,9 @@ class Supervisor:
 
 
 	async def run_server(self):
+		for worker_identifier in self._worker_provider.get_all().keys():
+			self._worker_provider.update(worker_identifier, is_active = False)
+
 		logger.info("Listening for workers on %s:%s", self._host, self._port)
 		async with websockets.serve(self._process_connection, self._host, self._port):
 			while True:
