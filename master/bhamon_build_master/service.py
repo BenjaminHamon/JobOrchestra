@@ -59,8 +59,8 @@ def trigger_job(job_identifier):
 	logger.info("Triggering job %s", job_identifier)
 	parameters = flask.request.get_json()
 	build_identifier = application.database.create_build(job_identifier, parameters)
-	task_identifier = application.task_provider.create("trigger_build", { "build_identifier": build_identifier })
-	return flask.jsonify({ "build_identifier": build_identifier, "task_identifier": task_identifier })
+	task = application.task_provider.create("trigger_build", { "build_identifier": build_identifier })
+	return flask.jsonify({ "build_identifier": build_identifier, "task_identifier": task["identifier"] })
 
 
 @application.route("/build_collection", methods = [ "GET" ])
@@ -94,8 +94,8 @@ def get_build_step_log(build_identifier, step_index):
 @application.route("/build/<build_identifier>/abort", methods = [ "POST" ])
 def abort_build(build_identifier):
 	logger.info("Aborting build %s", build_identifier)
-	task_identifier = application.task_provider.create("abort_build", { "build_identifier": build_identifier })
-	return flask.jsonify({ "build_identifier": build_identifier, "task_identifier": task_identifier })
+	task = application.task_provider.create("abort_build", { "build_identifier": build_identifier })
+	return flask.jsonify({ "build_identifier": build_identifier, "task_identifier": task["identifier"] })
 
 
 @application.route("/worker_collection", methods = [ "GET" ])
@@ -111,8 +111,8 @@ def get_worker(worker_identifier):
 @application.route("/worker/<worker_identifier>/stop", methods = [ "POST" ])
 def stop_worker(worker_identifier):
 	logger.info("Stopping worker %s", worker_identifier)
-	task_identifier = application.task_provider.create("stop_worker", { "worker_identifier": worker_identifier })
-	return flask.jsonify({ "worker_identifier": worker_identifier, "task_identifier": task_identifier })
+	task = application.task_provider.create("stop_worker", { "worker_identifier": worker_identifier })
+	return flask.jsonify({ "worker_identifier": worker_identifier, "task_identifier": task["identifier"] })
 
 
 @application.route("/task_collection", methods = [ "GET" ])

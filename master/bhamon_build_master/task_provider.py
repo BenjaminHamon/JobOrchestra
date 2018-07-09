@@ -27,7 +27,8 @@ class TaskProvider:
 			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 		}
 
-		return self.database_client.create(task["identifier"], task)
+		self.database_client.create(task["identifier"], task)
+		return task
 
 
 	def update(self, task_identifier, status):
