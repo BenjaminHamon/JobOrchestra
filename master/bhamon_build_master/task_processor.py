@@ -15,10 +15,14 @@ class TaskProcessor:
 		self._handler_collection = {}
 
 
-	def register_handler(self, task_type, order, handler):
+	def register_handler(self, task_type, order, execution_handler, cancellation_handler = None):
 		if task_type in self._handler_collection:
 			raise KeyError("[TaskProcessor] An handler is already registered for task type '%s'" % task_type)
-		self._handler_collection[task_type] = { "order": order, "handler": handler }
+		self._handler_collection[task_type] = {
+			"order": order,
+			"execution_handler": execution_handler,
+			"cancellation_handler": cancellation_handler,
+		}
 
 
 	async def run(self):
@@ -32,7 +36,13 @@ class TaskProcessor:
 
 				try:
 					self._task_provider.update(task["identifier"], "running")
-					end_status = self._handler_collection[task["type"]]["handler"](task["parameters"])
+					if task["should_cancel"]:
+						cancellation_handler = self._handler_collection[task["type"]]["cancellation_handler"]
+						if cancellation_handler:
+							cancellation_handler(task["parameters"])
+						end_status = "cancelled"
+					else:
+						end_status = self._handler_collection[task["type"]]["execution_handler"](task["parameters"])
 					self._task_provider.update(task["identifier"], end_status)
 
 				except:

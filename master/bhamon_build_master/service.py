@@ -134,5 +134,5 @@ def get_task(task_identifier):
 def cancel_task(task_identifier):
 	task = application.task_provider.get(task_identifier)
 	if task["status"] == "pending":
-		task = application.task_provider.update(task_identifier, "cancelled")
+		task = application.task_provider.update(task_identifier, should_cancel = True)
 	return flask.jsonify(task)

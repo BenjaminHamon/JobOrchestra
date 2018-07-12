@@ -23,6 +23,7 @@ class TaskProvider:
 			"type": type,
 			"parameters": parameters,
 			"status": "pending",
+			"should_cancel": False,
 			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 		}
@@ -31,9 +32,12 @@ class TaskProvider:
 		return task
 
 
-	def update(self, task_identifier, status):
+	def update(self, task_identifier, status = None, should_cancel = None):
 		task = self.database_client.get(task_identifier)
-		task["status"] = status
+		if status is not None:
+			task["status"] = status
+		if should_cancel is not None:
+			task["should_cancel"] = should_cancel
 		task["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
 		self.database_client.update(task["identifier"], task)
 		return task
