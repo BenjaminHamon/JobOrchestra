@@ -124,6 +124,12 @@ def get_task_collection():
 	return flask.jsonify(task_collection)
 
 
+@application.route("/task/<task_identifier>", methods = [ "GET" ])
+def get_task(task_identifier):
+	task = application.task_provider.get(task_identifier)
+	return flask.jsonify(task)
+
+
 @application.route("/task/<task_identifier>/cancel", methods = [ "POST" ])
 def cancel_task(task_identifier):
 	task = application.task_provider.get(task_identifier)
