@@ -11,6 +11,7 @@ class BuildProvider:
 		self.file_storage = file_storage
 		self.build_table = "build"
 		self.step_table = "build_step"
+		self.result_table = "build_result"
 
 
 	def get_all(self):
@@ -32,6 +33,7 @@ class BuildProvider:
 		}
 
 		self.database_client.create(self.build_table, build["identifier"], build)
+		self.database_client.create(self.result_table, build["identifier"], {})
 		return build
 
 
@@ -83,3 +85,11 @@ class BuildProvider:
 
 	def set_step_log(self, build_identifier, step_index, log_text):
 		self.file_storage.save(self._get_step_log_path(build_identifier, step_index), log_text)
+
+
+	def get_results(self, build_identifier):
+		return self.database_client.get(self.result_table, build_identifier)
+
+
+	def set_results(self, build_identifier, results):
+		self.database_client.update(self.result_table, build_identifier, results)

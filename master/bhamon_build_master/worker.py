@@ -80,8 +80,10 @@ class Worker:
 				self._build_provider.update(self.build, status = status_response["status"])
 				self._build_provider.update_steps(self.build["identifier"], status_response["steps"])
 				await self._retrieve_logs(status_response["steps"])
+				await self._retrieve_results()
 
 			await self._retrieve_logs(status_response["steps"])
+			await self._retrieve_results()
 
 			clean_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
 			await Worker._execute_remote_command(self._connection, self.identifier, "clean", clean_request)
@@ -108,6 +110,12 @@ class Worker:
 				}
 				log_text = await Worker._execute_remote_command(self._connection, self.identifier, "log", log_request)
 				self._build_provider.set_step_log(self.build["identifier"], build_step["index"], log_text)
+
+
+	async def _retrieve_results(self):
+		results_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"], }
+		results = await Worker._execute_remote_command(self._connection, self.identifier, "results", results_request)
+		self._build_provider.set_results(self.build["identifier"], results)
 
 
 	@staticmethod

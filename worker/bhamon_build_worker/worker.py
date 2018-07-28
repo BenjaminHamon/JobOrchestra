@@ -114,6 +114,8 @@ def _execute_command(worker_data, command, parameters):
 		return _get_status(**parameters)
 	elif command == "log":
 		return _retrieve_log(**parameters)
+	elif command == "results":
+		return _retrieve_results(**parameters)
 	elif command == "shutdown":
 		return _shutdown(worker_data)
 	else:
@@ -131,7 +133,7 @@ def _execute(worker_data, job_identifier, build_identifier, job, parameters):
 	build_request = { "job_identifier": job_identifier, "build_identifier": build_identifier, "job": job, "parameters": parameters }
 	with open(os.path.join(build_directory, "request.json"), "w") as request_file:
 		json.dump(build_request, request_file, indent = 4)
-	executor_command = [ sys.executable, worker_data["executor_script"], job_identifier + "_" + build_identifier ]
+	executor_command = [ sys.executable, worker_data["executor_script"], job_identifier, build_identifier ]
 	executor_process = subprocess.Popen(executor_command, creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
 	worker_data["active_executors"][build_identifier] = executor_process
 
@@ -176,3 +178,13 @@ def _retrieve_log(job_identifier, build_identifier, step_index, step_name):
 		return ""
 	with open(log_fith_path) as log_file:
 		return log_file.read()
+
+
+def _retrieve_results(job_identifier, build_identifier):
+	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
+	result_file_path = os.path.join(build_directory, "results.json")
+	if not os.path.isfile(result_file_path):
+		return {}
+	with open(result_file_path) as result_file:
+		return json.load(result_file)
+
