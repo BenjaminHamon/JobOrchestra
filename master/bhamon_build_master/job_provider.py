@@ -29,6 +29,7 @@ class JobProvider:
 			job = {
 				"identifier": job_identifier,
 				"description": description,
+				"parameters": parameters,
 				"is_enabled": True,
 				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
