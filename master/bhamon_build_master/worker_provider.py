@@ -6,18 +6,19 @@ class WorkerProvider:
 
 	def __init__(self, database_client):
 		self.database_client = database_client
+		self.table = "worker"
 
 
 	def get_all(self):
-		return self.database_client.get_all()
+		return self.database_client.get_all(self.table)
 
 
 	def get(self, worker_identifier):
-		return self.database_client.get(worker_identifier)
+		return self.database_client.get(self.table, worker_identifier)
 
 
 	def exists(self, worker_identifier):
-		return self.database_client.exists(worker_identifier)
+		return self.database_client.exists(self.table, worker_identifier)
 
 
 	def create_or_update(self, worker_identifier, description):
@@ -25,7 +26,7 @@ class WorkerProvider:
 			worker = self.get(worker_identifier)
 			worker["description"] = description
 			worker["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
-			self.database_client.update(worker_identifier, worker)
+			self.database_client.update(self.table, worker_identifier, worker)
 		
 		except KeyError:
 			worker = {
@@ -36,7 +37,7 @@ class WorkerProvider:
 				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 			}
-			self.database_client.create(worker_identifier, worker)
+			self.database_client.create(self.table, worker_identifier, worker)
 
 
 	def update(self, worker_identifier, is_active = None, is_enabled = None):
@@ -46,4 +47,4 @@ class WorkerProvider:
 		if is_enabled is not None:
 			worker["is_enabled"] = is_enabled
 		worker["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
-		self.database_client.update(worker_identifier, worker)
+		self.database_client.update(self.table, worker_identifier, worker)

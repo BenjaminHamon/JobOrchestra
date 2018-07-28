@@ -7,14 +7,15 @@ class TaskProvider:
 
 	def __init__(self, database_client):
 		self.database_client = database_client
+		self.table = "task"
 
 
 	def get_all(self):
-		return self.database_client.get_all()
+		return self.database_client.get_all(self.table)
 
 
 	def get(self, task_identifier):
-		return self.database_client.get(task_identifier)
+		return self.database_client.get(self.table, task_identifier)
 
 
 	def create(self, type, parameters):
@@ -28,7 +29,7 @@ class TaskProvider:
 			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 		}
 
-		self.database_client.create(task["identifier"], task)
+		self.database_client.create(self.table, task["identifier"], task)
 		return task
 
 
@@ -38,5 +39,5 @@ class TaskProvider:
 		if should_cancel is not None:
 			task["should_cancel"] = should_cancel
 		task["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
-		self.database_client.update(task["identifier"], task)
+		self.database_client.update(self.table, task["identifier"], task)
 		return task
