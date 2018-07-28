@@ -35,7 +35,7 @@ class TaskProcessor:
 				logger.info("Processing task %s (Type: %s, Parameters: %s)", task["identifier"], task["type"], task["parameters"])
 
 				try:
-					self._task_provider.update(task["identifier"], "running")
+					self._task_provider.update(task, status = "running")
 					if task["should_cancel"]:
 						cancellation_handler = self._handler_collection[task["type"]]["cancellation_handler"]
 						if cancellation_handler:
@@ -43,11 +43,11 @@ class TaskProcessor:
 						end_status = "cancelled"
 					else:
 						end_status = self._handler_collection[task["type"]]["execution_handler"](task["parameters"])
-					self._task_provider.update(task["identifier"], end_status)
+					self._task_provider.update(task, status = end_status)
 
 				except:
 					logger.warning("Failed to process task %s", task["identifier"], exc_info = True)
-					self._task_provider.update(task["identifier"], "exception")
+					self._task_provider.update(task, status = "exception")
 
 			await asyncio.sleep(process_delay_seconds)
 

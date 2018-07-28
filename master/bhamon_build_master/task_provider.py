@@ -32,8 +32,7 @@ class TaskProvider:
 		return task
 
 
-	def update(self, task_identifier, status = None, should_cancel = None):
-		task = self.database_client.get(task_identifier)
+	def update(self, task, status = None, should_cancel = None):
 		if status is not None:
 			task["status"] = status
 		if should_cancel is not None:
