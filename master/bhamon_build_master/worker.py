@@ -12,10 +12,10 @@ status_interval_seconds = 5
 class Worker:
 
 
-	def __init__(self, identifier, connection, database):
+	def __init__(self, identifier, connection, build_provider):
 		self.identifier = identifier
 		self._connection = connection
-		self._database = database
+		self._build_provider = build_provider
 		self.build = None
 		self.job = None
 		self._should_abort = False
@@ -57,9 +57,7 @@ class Worker:
 		logger.info("(%s) Starting build %s %s", self.identifier, self.build["job"], self.build["identifier"])
 
 		try:
-			self.build["worker"] = self.identifier
-			self.build["status"] = "running"
-			self._database.update_build(self.build)
+			self._build_provider.update(self.build, worker = self.identifier, status = "running")
 
 			execute_request = {
 				"job_identifier": self.build["job"],
@@ -79,21 +77,18 @@ class Worker:
 
 				status_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
 				status_response = await Worker._execute_remote_command(self._connection, self.identifier, "status", status_request)
-				self.build["status"] = status_response["status"]
-				build_steps = status_response["steps"]
-				self._database.update_build(self.build)
-				self._database.update_build_steps(self.build["identifier"], build_steps)
-				await self._retrieve_logs(build_steps)
+				self._build_provider.update(self.build, status = status_response["status"])
+				self._build_provider.update_steps(self.build["identifier"], status_response["steps"])
+				await self._retrieve_logs(status_response["steps"])
 
-			await self._retrieve_logs(build_steps)
+			await self._retrieve_logs(status_response["steps"])
 
 			clean_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
 			await Worker._execute_remote_command(self._connection, self.identifier, "clean", clean_request)
 
 		except:
 			logger.error("(%s) Failed to process build %s %s", self.identifier, self.build["job"], self.build["identifier"], exc_info = True)
-			self.build["status"] = "exception"
-			self._database.update_build(self.build)
+			self._build_provider.update(self.build, status = "exception")
 
 		logger.info("(%s) Completed build %s %s with status %s", self.identifier, self.build["job"], self.build["identifier"], self.build["status"])
 		self.job = None
@@ -103,7 +98,7 @@ class Worker:
 	async def _retrieve_logs(self, build_step_collection):
 		for build_step in build_step_collection:
 			is_completed = build_step["status"] not in [ "pending", "running" ]
-			has_log = self._database.has_build_step_log(self.build["identifier"], build_step["index"])
+			has_log = self._build_provider.has_step_log(self.build["identifier"], build_step["index"])
 			if is_completed and not has_log:
 				log_request = {
 					"job_identifier": self.build["job"],
@@ -112,7 +107,7 @@ class Worker:
 					"step_name": build_step["name"],
 				}
 				log_text = await Worker._execute_remote_command(self._connection, self.identifier, "log", log_request)
-				self._database.set_build_step_log(self.build["identifier"], build_step["index"], log_text)
+				self._build_provider.set_step_log(self.build["identifier"], build_step["index"], log_text)
 
 
 	@staticmethod

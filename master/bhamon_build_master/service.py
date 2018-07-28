@@ -10,7 +10,7 @@ logging.getLogger("werkzeug").setLevel(logging.WARNING)
 logger.info("Starting build master service")
 
 application = flask.Flask(__name__)
-application.database = None
+application.build_provider = None
 application.job_provider = None
 application.task_provider = None
 application.worker_provider = None
@@ -51,7 +51,7 @@ def help():
 
 @application.route("/job_collection", methods = [ "GET" ])
 def get_job_collection():
-	return flask.jsonify(list(application.job_provider.get_all().values()))
+	return flask.jsonify(application.job_provider.get_all())
 
 
 @application.route("/job/<job_identifier>", methods = [ "GET" ])
@@ -62,36 +62,34 @@ def get_job(job_identifier):
 @application.route("/job/<job_identifier>/trigger", methods = [ "POST" ])
 def trigger_job(job_identifier):
 	parameters = flask.request.get_json()
-	build_identifier = application.database.create_build(job_identifier, parameters)
-	task = application.task_provider.create("trigger_build", { "build_identifier": build_identifier })
-	return flask.jsonify({ "build_identifier": build_identifier, "task_identifier": task["identifier"] })
+	build = application.build_provider.create(job_identifier, parameters)
+	task = application.task_provider.create("trigger_build", { "build_identifier": build["identifier"] })
+	return flask.jsonify({ "build_identifier": build["identifier"], "task_identifier": task["identifier"] })
 
 
 @application.route("/build_collection", methods = [ "GET" ])
 def get_build_collection():
-	sort_by_date = flask.request.args.get("sort_by_date", True, bool)
-	limit = flask.request.args.get("limit", 50, int)
-	return flask.jsonify(application.database.get_build_collection(sort_by_date, limit))
+	return flask.jsonify(application.build_provider.get_all())
 
 
-@application.route("/build/<identifier>", methods = [ "GET" ])
-def get_build(identifier):
-	return flask.jsonify(application.database.get_build(identifier))
+@application.route("/build/<build_identifier>", methods = [ "GET" ])
+def get_build(build_identifier):
+	return flask.jsonify(application.build_provider.get(build_identifier))
 
 
-@application.route("/build/<identifier>/step_collection", methods = [ "GET" ])
-def get_build_step_collection(identifier):
-	return flask.jsonify(application.database.get_build_step_collection(identifier))
+@application.route("/build/<build_identifier>/step_collection", methods = [ "GET" ])
+def get_build_step_collection(build_identifier):
+	return flask.jsonify(application.build_provider.get_all_steps(build_identifier))
 
 
 @application.route("/build/<build_identifier>/step/<int:step_index>", methods = [ "GET" ])
 def get_build_step(build_identifier, step_index):
-	return flask.jsonify(application.database.get_build_step(build_identifier, step_index))
+	return flask.jsonify(application.build_provider.get_step(build_identifier, step_index))
 
 
 @application.route("/build/<build_identifier>/step/<int:step_index>/log", methods = [ "GET" ])
 def get_build_step_log(build_identifier, step_index):
-	log_text = application.database.get_build_step_log(build_identifier, step_index)
+	log_text = application.build_provider.get_step_log(build_identifier, step_index)
 	return flask.Response(log_text, mimetype = "text/plain")
 
 
@@ -103,7 +101,7 @@ def abort_build(build_identifier):
 
 @application.route("/worker_collection", methods = [ "GET" ])
 def get_worker_collection():
-	return flask.jsonify(list(application.worker_provider.get_all().values()))
+	return flask.jsonify(application.worker_provider.get_all())
 
 
 @application.route("/worker/<worker_identifier>", methods = [ "GET" ])
@@ -119,9 +117,7 @@ def stop_worker(worker_identifier):
 
 @application.route("/task_collection", methods = [ "GET" ])
 def get_task_collection():
-	task_collection = list(application.task_provider.get_all().values())
-	task_collection.sort(key = lambda task: task["update_date"], reverse = True)
-	return flask.jsonify(task_collection)
+	return flask.jsonify(application.task_provider.get_all())
 
 
 @application.route("/task/<task_identifier>", methods = [ "GET" ])

@@ -8,11 +8,11 @@ import bhamon_build_master.task_processor as task_processor
 logger = logging.getLogger("Master")
 
 
-def run(host, port, configuration, database, data_providers):
+def run(host, port, configuration, data_providers):
 	logger.info("Starting build master")
 
 	configuration.reload()
-	supervisor_instance = supervisor.Supervisor(host, port, configuration, database, data_providers["worker"])
+	supervisor_instance = supervisor.Supervisor(host, port, configuration, data_providers["worker"], data_providers["build"])
 	task_processor_instance = task_processor.TaskProcessor(data_providers["task"])
 
 	task_processor_instance.register_handler("stop_worker", 50,
@@ -21,7 +21,7 @@ def run(host, port, configuration, database, data_providers):
 		lambda parameters: _abort_build(supervisor_instance, **parameters))
 	task_processor_instance.register_handler("trigger_build", 100,
 		lambda parameters: _trigger_build(supervisor_instance, **parameters),
-		lambda parameters: _cancel_build(database, **parameters))
+		lambda parameters: _cancel_build(data_providers["build"], **parameters))
 
 	main_future = asyncio.gather(supervisor_instance.run_server(), task_processor_instance.run())
 	asyncio.get_event_loop().run_until_complete(main_future)
@@ -37,11 +37,10 @@ def _trigger_build(supervisor_instance, build_identifier):
 	return "succeeded" if was_triggered else "pending"
 
 
-def _cancel_build(database, build_identifier):
-	build = database.get_build(build_identifier)
+def _cancel_build(build_provider, build_identifier):
+	build = build_provider.get(build_identifier)
 	if build["status"] == "pending":
-		build["status"] = "cancelled"
-	database.update_build(build)
+		build_provider.update(build, "cancelled")
 
 
 def _abort_build(supervisor_instance, build_identifier):

@@ -13,13 +13,13 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, configuration, database, worker_provider):
+	def __init__(self, host, port, configuration, worker_provider, build_provider):
 		self._all_workers = {}
 		self._host = host
 		self._port = port
 		self._configuration = configuration
-		self._database = database
 		self._worker_provider = worker_provider
+		self._build_provider = build_provider
 
 
 	async def run_server(self):
@@ -40,7 +40,7 @@ class Supervisor:
 
 
 	def trigger_build(self, build_identifier):
-		build = self._database.get_build(build_identifier)
+		build = self._build_provider.get(build_identifier)
 		job = self._configuration.job_collection[build["job"]]
 		job_workers = self._configuration.workers_by_job[build["job"]]
 
@@ -78,7 +78,7 @@ class Supervisor:
 
 			else:
 				logger.info("Accepted connection from worker %s", worker_identifier)
-				worker_instance = worker.Worker(worker_identifier, connection, self._database)
+				worker_instance = worker.Worker(worker_identifier, connection, self._build_provider)
 				self._worker_provider.update(worker_identifier, is_active = True)
 				self._all_workers[worker_identifier] = worker_instance
 
