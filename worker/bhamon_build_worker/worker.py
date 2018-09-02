@@ -96,7 +96,9 @@ async def _handle_termination(worker_data):
 	while (len(worker_data["active_executors"]) > 0) and ((datetime.datetime.utcnow() - termination_start_time).total_seconds() < termination_timeout_seconds):
 		await asyncio.sleep(termination_delay_seconds)
 	for build_identifier, executor_process in worker_data["active_executors"].items():
-		logger.warning("Executor is still running (Build: %s, Process: %s)", build_identifier, executor_process.pid)
+		logger.warning("Build %s was not cleaned", build_identifier)
+		if executor_process.poll() is None:
+			logger.warning("Build %s executor is still running (Process: %s)", build_identifier, executor_process.pid)
 	# Force the connection to close by discarding remaining executors
 	worker_data["active_executors"].clear()
 
