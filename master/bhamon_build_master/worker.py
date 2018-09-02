@@ -19,16 +19,16 @@ class Worker:
 		self.build = None
 		self.job = None
 		self._should_abort = False
-		self._should_exit = False
+		self._should_shutdown = False
 
 
 	def is_idle(self):
-		return not self._should_exit and self.build is None
+		return not self._should_shutdown and self.build is None
 
 
 	def assign_build(self, job, build):
-		if self._should_exit:
-			raise RuntimeError("Worker %s is stopping" % self.identifier)
+		if self._should_shutdown:
+			raise RuntimeError("Worker %s is shutting down" % self.identifier)
 		if self.build is not None:
 			raise RuntimeError("Worker %s is already building %s %s" % (self.identifier, self.build["job"], self.build["identifier"]))
 		self.job = job
@@ -40,12 +40,12 @@ class Worker:
 		self._should_abort = True
 
 
-	def stop(self):
-		self._should_exit = True
+	def shutdown(self):
+		self._should_shutdown = True
 
 
 	async def run(self):
-		while not self._should_exit:
+		while not self._should_shutdown:
 			if self.build is None:
 				await self._connection.ping()
 				await asyncio.sleep(run_interval_seconds)
@@ -70,6 +70,7 @@ class Worker:
 			while self.build["status"] == "running":
 
 				if self._should_abort:
+					logger.info("(%s) Aborting build %s %s", self.identifier, self.build["job"], self.build["identifier"])
 					abort_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
 					await Worker._execute_remote_command(self._connection, self.identifier, "abort", abort_request)
 

@@ -35,7 +35,8 @@ class Supervisor:
 	def stop_worker(self, worker_identifier):
 		if not worker_identifier in self._all_workers:
 			return False
-		self._all_workers[worker_identifier].stop()
+		logger.info("Requesting worker %s to shutdown", worker_identifier)
+		self._all_workers[worker_identifier].shutdown()
 		return True
 
 
@@ -58,7 +59,7 @@ class Supervisor:
 		build_worker = next((worker for worker in self._all_workers.values() if worker_condition(worker)), None)
 		if build_worker is None:
 			return False
-
+		logger.info("Requesting worker %s to abort build %s", build_worker.identifier, build_identifier)
 		build_worker.abort_build()
 		return True
 
