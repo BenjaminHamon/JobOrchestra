@@ -92,7 +92,7 @@ async def _handle_termination(worker_data):
 	logger.info("Terminating build worker")
 	termination_start_time = datetime.datetime.utcnow()
 	for build_identifier in worker_data["active_executors"]:
-		_abort(worker_data, build_identifier)
+		_abort(worker_data, "(unknown_job)", build_identifier)
 	while (len(worker_data["active_executors"]) > 0) and ((datetime.datetime.utcnow() - termination_start_time).total_seconds() < termination_timeout_seconds):
 		await asyncio.sleep(termination_delay_seconds)
 	for build_identifier, executor_process in worker_data["active_executors"].items():
@@ -151,8 +151,8 @@ def _clean(worker_data, job_identifier, build_identifier):
 	shutil.rmtree(build_directory)
 
 
-def _abort(worker_data, build_identifier):
-	logger.info("Aborting %s", build_identifier)
+def _abort(worker_data, job_identifier, build_identifier):
+	logger.info("Aborting %s %s", job_identifier, build_identifier)
 	executor_process = worker_data["active_executors"][build_identifier]
 	os.kill(executor_process.pid, signal.CTRL_BREAK_EVENT)
 	# The executor should terminate nicely, if it does not it will stays as running and should be investigated
