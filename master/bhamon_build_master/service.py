@@ -49,6 +49,12 @@ def help():
 	return flask.jsonify(route_collection)
 
 
+@application.route("/admin/reload", methods = [ "POST" ])
+def reload():
+	task = application.task_provider.create("reload_configuration", {})
+	return flask.jsonify({ "task_identifier": task["identifier"] })
+
+
 @application.route("/job_collection", methods = [ "GET" ])
 def get_job_collection():
 	return flask.jsonify(application.job_provider.get_all())

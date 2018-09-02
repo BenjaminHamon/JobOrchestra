@@ -14,6 +14,8 @@ def run(host, port, configuration_loader, data_providers):
 	supervisor_instance = supervisor.Supervisor(host, port, data_providers["worker"], data_providers["job"], data_providers["build"])
 	task_processor_instance = task_processor.TaskProcessor(data_providers["task"])
 
+	task_processor_instance.register_handler("reload_configuration", 20,
+		lambda parameters: _reload_configuration(configuration_loader, data_providers["worker"], data_providers["job"], supervisor_instance))
 	task_processor_instance.register_handler("stop_worker", 50,
 		lambda parameters: _stop_worker(supervisor_instance, **parameters))
 	task_processor_instance.register_handler("abort_build", 90,
@@ -48,6 +50,8 @@ def _reload_configuration(configuration_loader, worker_provider, job_provider):
 	for job in configuration["jobs"]:
 		logger.info("Adding/Updating job %s", job["identifier"])
 		job_provider.create_or_update(job["identifier"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["workers"], job["description"])
+
+	return "succeeded"
 
 
 def _stop_worker(supervisor_instance, worker_identifier):
