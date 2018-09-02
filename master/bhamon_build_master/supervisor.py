@@ -88,7 +88,8 @@ class Supervisor:
 					logger.error("Worker %s execution raised an exception", worker_identifier, exc_info = True)
 
 				del self._all_workers[worker_identifier]
-				self._worker_provider.update(worker_identifier, is_active = False)
+				if self._worker_provider.exists(worker_identifier):
+					self._worker_provider.update(worker_identifier, is_active = False)
 				logger.info("Closing connection with worker %s", worker_identifier)
 
 		except:

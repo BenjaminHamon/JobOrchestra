@@ -24,12 +24,12 @@ def run(host, port, configuration_loader, data_providers):
 		lambda parameters: _trigger_build(supervisor_instance, **parameters),
 		lambda parameters: _cancel_build(data_providers["build"], **parameters))
 
-	_reload_configuration(configuration_loader, data_providers["worker"], data_providers["job"])
+	_reload_configuration(configuration_loader, data_providers["worker"], data_providers["job"], supervisor_instance)
 	main_future = asyncio.gather(supervisor_instance.run_server(), task_processor_instance.run())
 	asyncio.get_event_loop().run_until_complete(main_future)
 
 
-def _reload_configuration(configuration_loader, worker_provider, job_provider):
+def _reload_configuration(configuration_loader, worker_provider, job_provider, supervisor_instance):
 	logger.info("Reloading configuration")
 	configuration = configuration_loader()
 
@@ -38,6 +38,7 @@ def _reload_configuration(configuration_loader, worker_provider, job_provider):
 		if existing_worker_identifier not in [ worker["identifier"] for worker in configuration["workers"] ]:
 			logger.info("Removing worker %s", existing_worker_identifier)
 			worker_provider.delete(existing_worker_identifier)
+			supervisor_instance.stop_worker(existing_worker_identifier)
 	all_existing_jobs = job_provider.get_all()
 	for existing_job_identifier in all_existing_jobs.keys():
 		if existing_job_identifier not in [ job["identifier"] for job in configuration["jobs"] ]:
