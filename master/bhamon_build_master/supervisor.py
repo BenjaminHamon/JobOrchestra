@@ -13,12 +13,12 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, configuration, worker_provider, build_provider):
+	def __init__(self, host, port, worker_provider, job_provider, build_provider):
 		self._all_workers = {}
 		self._host = host
 		self._port = port
-		self._configuration = configuration
 		self._worker_provider = worker_provider
+		self._job_provider = job_provider
 		self._build_provider = build_provider
 
 
@@ -41,11 +41,10 @@ class Supervisor:
 
 	def trigger_build(self, build_identifier):
 		build = self._build_provider.get(build_identifier)
-		job = self._configuration.job_collection[build["job"]]
-		job_workers = self._configuration.workers_by_job[build["job"]]
+		job = self._job_provider.get(build["job"])
 
 		all_available_workers = [ worker for worker in self._all_workers.values() if worker.is_idle() ]
-		available_worker = next((worker for worker in all_available_workers if worker.identifier in job_workers), None)
+		available_worker = next((worker for worker in all_available_workers if worker.identifier in job["workers"]), None)
 		if available_worker is None:
 			return False
 

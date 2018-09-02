@@ -21,16 +21,18 @@ class WorkerProvider:
 		return self.database_client.exists(self.table, worker_identifier)
 
 
-	def create_or_update(self, worker_identifier, description):
+	def create_or_update(self, worker_identifier, properties, description):
 		try:
 			worker = self.get(worker_identifier)
+			worker["properties"] = properties
 			worker["description"] = description
 			worker["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
 			self.database_client.update(self.table, worker_identifier, worker)
-		
+
 		except KeyError:
 			worker = {
 				"identifier": worker_identifier,
+				"properties": properties,
 				"description": description,
 				"is_enabled": True,
 				"is_active": False,
@@ -48,3 +50,7 @@ class WorkerProvider:
 			worker["is_enabled"] = is_enabled
 		worker["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
 		self.database_client.update(self.table, worker_identifier, worker)
+
+
+	def delete(self, worker_identifier):
+		return self.database_client.delete(self.table, worker_identifier)
