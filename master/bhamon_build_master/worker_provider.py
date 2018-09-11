@@ -42,7 +42,7 @@ class WorkerProvider:
 			self.database_client.create(self.table, worker_identifier, worker)
 
 
-	def update(self, worker_identifier, is_active = None, is_enabled = None):
+	def update_status(self, worker_identifier, is_active = None, is_enabled = None):
 		worker = self.get(worker_identifier)
 		if is_active is not None:
 			worker["is_active"] = is_active

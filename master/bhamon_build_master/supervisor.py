@@ -24,7 +24,7 @@ class Supervisor:
 
 	async def run_server(self):
 		for worker_identifier in self._worker_provider.get_all().keys():
-			self._worker_provider.update(worker_identifier, is_active = False)
+			self._worker_provider.update_status(worker_identifier, is_active = False)
 
 		logger.info("Listening for workers on %s:%s", self._host, self._port)
 		async with websockets.serve(self._process_connection, self._host, self._port):
@@ -79,21 +79,24 @@ class Supervisor:
 			else:
 				logger.info("Accepted connection from worker %s", worker_identifier)
 				worker_instance = worker.Worker(worker_identifier, connection, self._build_provider)
-				self._worker_provider.update(worker_identifier, is_active = True)
+				self._worker_provider.update_status(worker_identifier, is_active = True)
 				self._all_workers[worker_identifier] = worker_instance
 
 				try:
 					await worker_instance.run()
+				except websockets.exceptions.ConnectionClosed as exception:
+					if exception.code not in [ 1000, 1001 ]:
+						logger.error("Worker %s execution raised an exception", worker_identifier, exc_info = True)
 				except:
 					logger.error("Worker %s execution raised an exception", worker_identifier, exc_info = True)
 
 				del self._all_workers[worker_identifier]
 				if self._worker_provider.exists(worker_identifier):
-					self._worker_provider.update(worker_identifier, is_active = False)
+					self._worker_provider.update_status(worker_identifier, is_active = False)
 				logger.info("Closing connection with worker %s", worker_identifier)
 
 		except:
-			logger.error("Connection with worker %s raised an exception", worker_identifier, exc_info = True)
+			logger.error("Worker %s handler raised an exception", worker_identifier, exc_info = True)
 
 
 	def _authenticate_worker(self, worker_identifier):
