@@ -22,7 +22,7 @@ def run(master_address, worker_identifier, executor_script):
 	worker_data = {
 		"identifier": worker_identifier,
 		"executor_script": executor_script,
-		"active_executors": {},
+		"active_executors": [],
 		"should_exit": False,
 	}
 
@@ -91,14 +91,14 @@ async def _handle_termination(worker_data):
 
 	logger.info("Terminating build worker")
 	termination_start_time = datetime.datetime.utcnow()
-	for build_identifier in worker_data["active_executors"]:
-		_abort(worker_data, "(unknown_job)", build_identifier)
+	for executor in worker_data["active_executors"]:
+		_abort(worker_data, executor["job_identifier"], executor["build_identifier"])
 	while (len(worker_data["active_executors"]) > 0) and ((datetime.datetime.utcnow() - termination_start_time).total_seconds() < termination_timeout_seconds):
 		await asyncio.sleep(termination_delay_seconds)
-	for build_identifier, executor_process in worker_data["active_executors"].items():
-		logger.warning("Build %s was not cleaned", build_identifier)
-		if executor_process.poll() is None:
-			logger.warning("Build %s executor is still running (Process: %s)", build_identifier, executor_process.pid)
+	for executor in worker_data["active_executors"]:
+		logger.warning("Build %s was not cleaned", executor["build_identifier"])
+		if executor["process"].poll() is None:
+			logger.warning("Build %s executor is still running (Process: %s)", executor["build_identifier"], executor["process"].pid)
 	# Force the connection to close by discarding remaining executors
 	worker_data["active_executors"].clear()
 
@@ -137,17 +137,19 @@ def _execute(worker_data, job_identifier, build_identifier, job, parameters):
 		json.dump(build_request, request_file, indent = 4)
 	executor_command = [ sys.executable, worker_data["executor_script"], job_identifier, build_identifier ]
 	executor_process = subprocess.Popen(executor_command, creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
-	worker_data["active_executors"][build_identifier] = executor_process
+	executor = { "job_identifier": job_identifier, "build_identifier": build_identifier, "process": executor_process }
+	worker_data["active_executors"].append(executor)
 
 
 def _clean(worker_data, job_identifier, build_identifier):
 	logger.info("Cleaning %s %s", job_identifier, build_identifier)
 
-	if build_identifier in worker_data["active_executors"]:
-		executor_process = worker_data["active_executors"][build_identifier]
-		if executor_process.poll() is None:
-			raise RuntimeError("Executor is still running for build %s" % build_identifier)
-		del worker_data["active_executors"][build_identifier]
+	for executor in list(worker_data["active_executors"]):
+		if executor["build_identifier"] == build_identifier:
+			if executor["process"].poll() is None:
+				raise RuntimeError("Executor is still running for build %s" % build_identifier)
+			worker_data["active_executors"].remove(executor)
+			break
 
 	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
 	shutil.rmtree(build_directory)
@@ -155,8 +157,10 @@ def _clean(worker_data, job_identifier, build_identifier):
 
 def _abort(worker_data, job_identifier, build_identifier):
 	logger.info("Aborting %s %s", job_identifier, build_identifier)
-	executor_process = worker_data["active_executors"][build_identifier]
-	os.kill(executor_process.pid, signal.CTRL_BREAK_EVENT)
+	for executor in worker_data["active_executors"]:
+		if executor["build_identifier"] == build_identifier:
+			os.kill(executor["process"].pid, signal.CTRL_BREAK_EVENT)
+			break
 	# The executor should terminate nicely, if it does not it will stays as running and should be investigated
 	# Forcing termination here would leave orphan processes and the status as running
 
