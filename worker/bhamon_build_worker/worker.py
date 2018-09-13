@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import json
 import logging
 import os
@@ -7,6 +6,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import time
 
 import websockets
 
@@ -90,10 +90,10 @@ async def _handle_termination(worker_data):
 		await asyncio.sleep(termination_delay_seconds)
 
 	logger.info("Terminating build worker")
-	termination_start_time = datetime.datetime.utcnow()
+	termination_start_time = time.time()
 	for executor in worker_data["active_executors"]:
 		_abort(worker_data, executor["job_identifier"], executor["build_identifier"])
-	while (len(worker_data["active_executors"]) > 0) and ((datetime.datetime.utcnow() - termination_start_time).total_seconds() < termination_timeout_seconds):
+	while (len(worker_data["active_executors"]) > 0) and (time.time() - termination_start_time < termination_timeout_seconds):
 		await asyncio.sleep(termination_delay_seconds)
 	for executor in worker_data["active_executors"]:
 		logger.warning("Build %s was not cleaned", executor["build_identifier"])
