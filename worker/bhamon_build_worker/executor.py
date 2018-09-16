@@ -19,7 +19,7 @@ def run(job_identifier, build_identifier, environment):
 	signal.signal(signal.SIGBREAK, _handle_termination)
 	signal.signal(signal.SIGTERM, _handle_termination)
 
-	logger.info("Executing %s %s", job_identifier, build_identifier)
+	logger.info("(%s) Executing %s", build_identifier, job_identifier)
 	executor_build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
 	with open(os.path.join(executor_build_directory, "request.json")) as build_request_file:
 		build_request = json.load(build_request_file)
@@ -27,19 +27,24 @@ def run(job_identifier, build_identifier, environment):
 	build_status = {
 		"job_identifier": build_request["job_identifier"],
 		"build_identifier": build_request["build_identifier"],
-		"status": "running",
-		"steps": [],
+		"status": "pending",
+		"steps": [
+			{
+				"index": step_index,
+				"name": step["name"],
+				"command": step["command"],
+				"status": "pending",
+			}
+			for step_index, step in enumerate(build_request["job"]["steps"])
+		],
 	}
-	for step_index, step in enumerate(build_request["job"]["steps"]):
-		build_status["steps"].append({
-			"index": step_index,
-			"name": step["name"],
-			"command": step["command"],
-			"status": "pending",
-		})
-	_save_status(executor_build_directory, build_status)
+
+	logger.info("(%s) Build is starting", build_identifier)
 
 	try:
+		
+		build_status["status"] = "running"
+		_save_status(executor_build_directory, build_status)
 
 		workspace = os.path.join("workspaces", build_request["job"]["workspace"])
 		if not os.path.exists(workspace):
@@ -61,15 +66,15 @@ def run(job_identifier, build_identifier, environment):
 		_save_status(executor_build_directory, build_status)
 
 	except:
-		logger.error("Failed to execute build", exc_info = True)
+		logger.error("(%s) Build raised an exception", build_identifier, exc_info = True)
 		build_status["status"] = "exception"
 		_save_status(executor_build_directory, build_status)
 
-	logger.info("Build completed with status %s", build_status["status"])
+	logger.info("(%s) Build completed with status %s", build_identifier, build_status["status"])
 
 
 def _execute_step(workspace, step_index, step, job_identifier, build_identifier, environment, parameters, is_skipping, update_status_handler):
-	logger.info("Step %s running", step["name"])
+	logger.info("(%s) Step %s is starting", build_identifier, step["name"])
 	step_status = "running"
 	update_status_handler(step_index, step_status)
 
@@ -87,14 +92,14 @@ def _execute_step(workspace, step_index, step, job_identifier, build_identifier,
 				"parameters": parameters,
 			}
 			step_command = [ argument.format(**step_parameters) for argument in step["command"] ]
-			logger.info("Step command: %s", " ".join(step_command))
+			logger.info("(%s) + %s", build_identifier, " ".join(step_command))
 			with open(os.path.join(executor_build_directory, log_file_name), "w") as log_file:
 				child_process = subprocess.Popen(step_command, cwd = workspace, stdout = log_file, stderr = subprocess.STDOUT,
 						creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
-				step_status = _wait_process(child_process)
+				step_status = _wait_process(build_identifier, child_process)
 
 	except:
-		logger.error("Failed to execute step", exc_info = True)
+		logger.error("(%s) Step %s raised an exception", build_identifier, step["name"], exc_info = True)
 		step_status = "exception"
 
 	build_result_file_path = os.path.join(executor_build_directory, "results.json")
@@ -105,20 +110,20 @@ def _execute_step(workspace, step_index, step, job_identifier, build_identifier,
 		shutil.move(build_result_file_path + ".tmp", build_result_file_path)
 
 	update_status_handler(step_index, step_status)
-	logger.info("Step %s completed with status %s", step["name"], step_status)
+	logger.info("(%s) Step %s completed with status %s", build_identifier, step["name"], step_status)
 	return step_status
 
 
-def _wait_process(child_process):
+def _wait_process(build_identifier, child_process):
 	result = None
 	while result is None:
 		if should_exit:
-			logger.info("Terminating child process")
+			logger.info("(%s) Terminating child process", build_identifier)
 			os.kill(child_process.pid, signal.CTRL_BREAK_EVENT)
 			try:
 				result = child_process.wait(timeout = termination_timeout_seconds)
 			except subprocess.TimeoutExpired:
-				logger.warning("Terminating child process (force)")
+				logger.warning("(%s) Terminating child process (force)", build_identifier)
 				child_process.kill()
 			return "aborted"
 		time.sleep(1)
