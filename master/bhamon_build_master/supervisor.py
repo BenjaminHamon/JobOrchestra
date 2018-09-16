@@ -44,7 +44,7 @@ class Supervisor:
 		build = self._build_provider.get(build_identifier)
 		job = self._job_provider.get(build["job"])
 
-		all_available_workers = [ worker for worker in self._all_workers.values() if worker.is_idle() ]
+		all_available_workers = [ worker for worker in self._all_workers.values() if worker.can_assign_build() ]
 		available_worker = next((worker for worker in all_available_workers if worker.identifier in job["workers"]), None)
 		if available_worker is None:
 			return False
@@ -55,12 +55,8 @@ class Supervisor:
 
 
 	def abort_build(self, build_identifier):
-		worker_condition = lambda worker: worker.build is not None and worker.build["identifier"] == build_identifier
-		build_worker = next((worker for worker in self._all_workers.values() if worker_condition(worker)), None)
-		if build_worker is None:
-			return False
-		logger.info("Requesting worker %s to abort build %s", build_worker.identifier, build_identifier)
-		build_worker.abort_build()
+		for worker in self._all_workers.values():
+			worker.abort_build(build_identifier)
 		return True
 
 

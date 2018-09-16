@@ -172,6 +172,8 @@ def _shutdown(worker_data):
 def _get_status(job_identifier, build_identifier):
 	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
 	status_file_path = os.path.join(build_directory, "status.json")
+	if not os.path.exists(status_file_path):
+		return None
 	with open(status_file_path) as status_file:
 		return json.load(status_file)
 

@@ -6,7 +6,6 @@ import logging
 logger = logging.getLogger("Worker")
 
 run_interval_seconds = 5
-status_interval_seconds = 5
 
 
 class Worker:
@@ -16,28 +15,23 @@ class Worker:
 		self.identifier = identifier
 		self._connection = connection
 		self._build_provider = build_provider
-		self.build = None
-		self.job = None
-		self._should_abort = False
 		self._should_shutdown = False
+		self.executors = []
 
 
-	def is_idle(self):
-		return not self._should_shutdown and self.build is None
+	def can_assign_build(self):
+		return not self._should_shutdown
 
 
 	def assign_build(self, job, build):
-		if self._should_shutdown:
-			raise RuntimeError("Worker %s is shutting down" % self.identifier)
-		if self.build is not None:
-			raise RuntimeError("Worker %s is already building %s %s" % (self.identifier, self.build["job"], self.build["identifier"]))
-		self.job = job
-		self.build = build
-		self._should_abort = False
+		executor = { "job": job, "build": build, "should_abort": False }
+		self.executors.append(executor)
 
 
-	def abort_build(self):
-		self._should_abort = True
+	def abort_build(self, build_identifier):
+		for executor in self.executors:
+			if executor["build"]["identifier"] == build_identifier:
+				executor["should_abort"] = True
 
 
 	def shutdown(self):
@@ -45,78 +39,82 @@ class Worker:
 
 
 	async def run(self):
-		while not self._should_shutdown:
-			if self.build is None:
-				await self._connection.ping()
-				await asyncio.sleep(run_interval_seconds)
-			else:
-				await self._process_build()
+		while not self._should_shutdown or len(self.executors) > 0:
+			await self._connection.ping()
+			all_executors = list(self.executors)
+			for executor in all_executors:
+				await self._process_executor(executor)
+			await asyncio.sleep(run_interval_seconds)
 
 
-	async def _process_build(self):
-		logger.info("(%s) Starting build %s %s", self.identifier, self.build["job"], self.build["identifier"])
-
+	async def _process_executor(self, executor):
 		try:
-			self._build_provider.update(self.build, worker = self.identifier, status = "running")
-
-			execute_request = {
-				"job_identifier": self.build["job"],
-				"build_identifier": self.build["identifier"],
-				"job": self.job,
-				"parameters": self.build["parameters"],
-			}
-			await Worker._execute_remote_command(self._connection, self.identifier, "execute", execute_request)
-
-			while self.build["status"] == "running":
-
-				if self._should_abort:
-					logger.info("(%s) Aborting build %s %s", self.identifier, self.build["job"], self.build["identifier"])
-					abort_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
-					await Worker._execute_remote_command(self._connection, self.identifier, "abort", abort_request)
-
-				await asyncio.sleep(status_interval_seconds)
-
-				status_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
-				status_response = await Worker._execute_remote_command(self._connection, self.identifier, "status", status_request)
-				self._build_provider.update(self.build, status = status_response["status"])
-				self._build_provider.update_steps(self.build["identifier"], status_response["steps"])
-				await self._retrieve_logs(status_response["steps"])
-				await self._retrieve_results()
-
-			await self._retrieve_logs(status_response["steps"])
-			await self._retrieve_results()
-
-			clean_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"] }
-			await Worker._execute_remote_command(self._connection, self.identifier, "clean", clean_request)
-
+			if executor["build"]["status"] == "pending":
+				await self._start_execution(executor["build"], executor["job"])
+			if executor["should_abort"]:
+				await self._abort_execution(executor["build"])
+			if executor["build"]["status"] == "running":
+				await self._update_execution(executor["build"])
+			if executor["build"]["status"] != "running":
+				await self._finish_execution(executor["build"])
+				self.executors.remove(executor)
 		except:
-			logger.error("(%s) Failed to process build %s %s", self.identifier, self.build["job"], self.build["identifier"], exc_info = True)
-			self._build_provider.update(self.build, status = "exception")
-
-		logger.info("(%s) Completed build %s %s with status %s", self.identifier, self.build["job"], self.build["identifier"], self.build["status"])
-		self.job = None
-		self.build = None
+			logger.error("(%s) Failed to execute build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
+			self._build_provider.update(executor["build"], status = "exception")
+			self.executors.remove(executor)
 
 
-	async def _retrieve_logs(self, build_step_collection):
+	async def _start_execution(self, build, job):
+		logger.info("(%s) Starting build %s %s", self.identifier, build["job"], build["identifier"])
+		self._build_provider.update(build, worker = self.identifier, status = "running")
+		execute_request = { "job_identifier": build["job"], "build_identifier": build["identifier"], "job": job, "parameters": build["parameters"] }
+		await Worker._execute_remote_command(self._connection, self.identifier, "execute", execute_request)
+
+
+	async def _abort_execution(self, build):
+		logger.info("(%s) Aborting build %s %s", self.identifier, build["job"], build["identifier"])
+		abort_request = { "job_identifier": build["job"], "build_identifier": build["identifier"] }
+		await Worker._execute_remote_command(self._connection, self.identifier, "abort", abort_request)
+
+
+	async def _update_execution(self, build):
+		status_request = { "job_identifier": build["job"], "build_identifier": build["identifier"] }
+		status_response = await Worker._execute_remote_command(self._connection, self.identifier, "status", status_request)
+		if status_response:
+			self._build_provider.update(build, status = status_response["status"])
+			self._build_provider.update_steps(build["identifier"], status_response["steps"])
+			await self._retrieve_logs(build, status_response["steps"])
+			await self._retrieve_results(build)
+
+
+	async def _finish_execution(self, build):
+		all_steps = self._build_provider.get_all_steps(build["identifier"])
+		await self._retrieve_logs(build, all_steps)
+		await self._retrieve_results(build)
+		clean_request = { "job_identifier": build["job"], "build_identifier": build["identifier"] }
+		await Worker._execute_remote_command(self._connection, self.identifier, "clean", clean_request)
+		logger.info("(%s) Completed build %s %s with status %s", self.identifier, build["job"], build["identifier"], build["status"])
+
+
+	async def _retrieve_logs(self, build, build_step_collection):
 		for build_step in build_step_collection:
 			is_completed = build_step["status"] not in [ "pending", "running" ]
-			has_log = self._build_provider.has_step_log(self.build["identifier"], build_step["index"])
+			has_log = self._build_provider.has_step_log(build["identifier"], build_step["index"])
 			if is_completed and not has_log:
 				log_request = {
-					"job_identifier": self.build["job"],
-					"build_identifier": self.build["identifier"],
+					"job_identifier": build["job"],
+					"build_identifier": build["identifier"],
 					"step_index": build_step["index"],
 					"step_name": build_step["name"],
 				}
 				log_text = await Worker._execute_remote_command(self._connection, self.identifier, "log", log_request)
-				self._build_provider.set_step_log(self.build["identifier"], build_step["index"], log_text)
+				self._build_provider.set_step_log(build["identifier"], build_step["index"], log_text)
 
 
-	async def _retrieve_results(self):
-		results_request = { "job_identifier": self.build["job"], "build_identifier": self.build["identifier"], }
+	async def _retrieve_results(self, build):
+		results_request = { "job_identifier": build["job"], "build_identifier": build["identifier"], }
 		results = await Worker._execute_remote_command(self._connection, self.identifier, "results", results_request)
-		self._build_provider.set_results(self.build["identifier"], results)
+		self._build_provider.set_results(build["identifier"], results)
 
 
 	@staticmethod
