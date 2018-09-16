@@ -2,13 +2,14 @@ import asyncio
 import json
 import logging
 import os
-import shutil
 import signal
 import subprocess
 import sys
 import time
 
 import websockets
+
+import bhamon_build_worker.worker_storage as worker_storage
 
 
 logger = logging.getLogger("Worker")
@@ -130,11 +131,9 @@ def _authenticate(worker_data):
 
 def _execute(worker_data, job_identifier, build_identifier, job, parameters):
 	logger.info("Executing %s %s", job_identifier, build_identifier)
-	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
-	os.makedirs(build_directory)
 	build_request = { "job_identifier": job_identifier, "build_identifier": build_identifier, "job": job, "parameters": parameters }
-	with open(os.path.join(build_directory, "request.json"), "w") as request_file:
-		json.dump(build_request, request_file, indent = 4)
+	worker_storage.create_build(job_identifier, build_identifier)
+	worker_storage.save_request(job_identifier, build_identifier, build_request)
 	executor_command = [ sys.executable, worker_data["executor_script"], job_identifier, build_identifier ]
 	executor_process = subprocess.Popen(executor_command, creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
 	executor = { "job_identifier": job_identifier, "build_identifier": build_identifier, "process": executor_process }
@@ -143,26 +142,26 @@ def _execute(worker_data, job_identifier, build_identifier, job, parameters):
 
 def _clean(worker_data, job_identifier, build_identifier):
 	logger.info("Cleaning %s %s", job_identifier, build_identifier)
-
-	for executor in list(worker_data["active_executors"]):
-		if executor["build_identifier"] == build_identifier:
-			if executor["process"].poll() is None:
-				raise RuntimeError("Executor is still running for build %s" % build_identifier)
-			worker_data["active_executors"].remove(executor)
-			break
-
-	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
-	shutil.rmtree(build_directory)
+	executor = _find_executor(worker_data, build_identifier)
+	if executor["process"].poll() is None:
+		raise RuntimeError("Executor is still running for build %s" % build_identifier)
+	worker_data["active_executors"].remove(executor)
+	worker_storage.delete_build(job_identifier, build_identifier)
 
 
 def _abort(worker_data, job_identifier, build_identifier):
 	logger.info("Aborting %s %s", job_identifier, build_identifier)
-	for executor in worker_data["active_executors"]:
-		if executor["build_identifier"] == build_identifier:
-			os.kill(executor["process"].pid, signal.CTRL_BREAK_EVENT)
-			break
+	executor = _find_executor(worker_data, build_identifier)
+	os.kill(executor["process"].pid, signal.CTRL_BREAK_EVENT)
 	# The executor should terminate nicely, if it does not it will stays as running and should be investigated
 	# Forcing termination here would leave orphan processes and the status as running
+
+
+def _find_executor(worker_data, build_identifier):
+	for executor in worker_data["active_executors"]:
+		if executor["build_identifier"] == build_identifier:
+			return executor
+	raise KeyError("Executor not found for %s" % build_identifier)
 
 
 def _shutdown(worker_data):
@@ -170,29 +169,12 @@ def _shutdown(worker_data):
 
 
 def _get_status(job_identifier, build_identifier):
-	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
-	status_file_path = os.path.join(build_directory, "status.json")
-	if not os.path.exists(status_file_path):
-		return None
-	with open(status_file_path) as status_file:
-		return json.load(status_file)
+	return worker_storage.load_status(job_identifier, build_identifier)
 
 
 def _retrieve_log(job_identifier, build_identifier, step_index, step_name):
-	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
-	log_file_name = "step_{index}_{name}.log".format(index = step_index, name = step_name)
-	log_fith_path = os.path.join(build_directory, log_file_name)
-	if not os.path.isfile(log_fith_path):
-		return ""
-	with open(log_fith_path) as log_file:
-		return log_file.read()
+	return worker_storage.load_log(job_identifier, build_identifier, step_index, step_name)
 
 
 def _retrieve_results(job_identifier, build_identifier):
-	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
-	result_file_path = os.path.join(build_directory, "results.json")
-	if not os.path.isfile(result_file_path):
-		return {}
-	with open(result_file_path) as result_file:
-		return json.load(result_file)
-
+	return worker_storage.load_results(job_identifier, build_identifier)
