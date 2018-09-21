@@ -25,7 +25,7 @@ def run(job_identifier, build_identifier, environment):
 	build_status = {
 		"job_identifier": build_request["job_identifier"],
 		"build_identifier": build_request["build_identifier"],
-		"status": "pending",
+		"status": "running",
 		"steps": [
 			{
 				"index": step_index,
@@ -40,8 +40,6 @@ def run(job_identifier, build_identifier, environment):
 	logger.info("(%s) Build is starting", build_identifier)
 
 	try:
-		
-		build_status["status"] = "running"
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
 		workspace = os.path.join("workspaces", build_request["job"]["workspace"])

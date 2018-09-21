@@ -82,9 +82,10 @@ class Worker:
 		status_response = await Worker._execute_remote_command(self._connection, self.identifier, "status", status_request)
 		if status_response:
 			self._build_provider.update(build, status = status_response["status"])
-			self._build_provider.update_steps(build["identifier"], status_response["steps"])
-			await self._retrieve_logs(build, status_response["steps"])
-			await self._retrieve_results(build)
+			if "steps" in status_response:
+				self._build_provider.update_steps(build["identifier"], status_response["steps"])
+				await self._retrieve_logs(build, status_response["steps"])
+				await self._retrieve_results(build)
 
 
 	async def _finish_execution(self, build):

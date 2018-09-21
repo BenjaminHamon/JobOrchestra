@@ -114,7 +114,7 @@ def _execute_command(worker_data, command, parameters):
 	elif command == "abort":
 		return _abort(worker_data, **parameters)
 	elif command == "status":
-		return _get_status(**parameters)
+		return _check_status(worker_data, **parameters)
 	elif command == "log":
 		return _retrieve_log(**parameters)
 	elif command == "results":
@@ -168,8 +168,15 @@ def _shutdown(worker_data):
 	worker_data["should_exit"] = True
 
 
-def _get_status(job_identifier, build_identifier):
-	return worker_storage.load_status(job_identifier, build_identifier)
+def _check_status(worker_data, job_identifier, build_identifier):
+	executor = _find_executor(worker_data, build_identifier)
+	is_executor_running = executor["process"].poll() is None
+	status = worker_storage.load_status(job_identifier, build_identifier)
+	if not is_executor_running and (not status or status["status"] == "running"):
+		logger.error('Build %s executor terminated before completion', build_identifier)
+		status["status"] = "exception"
+		worker_storage.save_status(job_identifier, build_identifier, status)
+	return status
 
 
 def _retrieve_log(job_identifier, build_identifier, step_index, step_name):
