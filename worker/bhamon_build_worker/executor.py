@@ -25,6 +25,9 @@ def run(job_identifier, build_identifier, environment):
 	build_status = {
 		"job_identifier": build_request["job_identifier"],
 		"build_identifier": build_request["build_identifier"],
+		"workspace": os.path.join("workspaces", build_request["job"]["workspace"]),
+		"environment": environment,
+		"parameters": build_request["parameters"],
 		"status": "running",
 		"steps": [
 			{
@@ -42,22 +45,18 @@ def run(job_identifier, build_identifier, environment):
 	try:
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
-		workspace = os.path.join("workspaces", build_request["job"]["workspace"])
-		if not os.path.exists(workspace):
-			os.makedirs(workspace)
-
-		def update_step_status(step_index, status):
-			build_status["steps"][step_index]["status"] = status
-			worker_storage.save_status(job_identifier, build_identifier, build_status)
+		if not os.path.exists(build_status["workspace"]):
+			os.makedirs(build_status["workspace"])
 
 		build_final_status = "succeeded"
 		is_skipping = False
+
 		for step_index, step in enumerate(build_request["job"]["steps"]):
-			step_status = _execute_step(workspace, step_index, step, job_identifier, build_identifier,
-					environment, build_request["parameters"], is_skipping, update_step_status)
-			if not is_skipping and step_status in [ "failed", "aborted", "exception" ]:
-				build_final_status = step_status
+			_execute_step(job_identifier, build_identifier, build_status, step_index, step, is_skipping)
+			if not is_skipping and step["status"] != "succeeded":
+				build_final_status = step["status"]
 				is_skipping = True
+
 		build_status["status"] = build_final_status
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
@@ -69,40 +68,46 @@ def run(job_identifier, build_identifier, environment):
 	logger.info("(%s) Build completed with status %s", build_identifier, build_status["status"])
 
 
-def _execute_step(workspace, step_index, step, job_identifier, build_identifier, environment, parameters, is_skipping, update_status_handler):
+def _execute_step(job_identifier, build_identifier, build_status, step_index, step, is_skipping):
 	logger.info("(%s) Step %s is starting", build_identifier, step["name"])
-	step_status = "running"
-	update_status_handler(step_index, step_status)
-
-	log_file_path = worker_storage.get_log_path(job_identifier, build_identifier, step_index, step["name"])
-	result_file_path = os.path.join(".build_results", job_identifier + "_" + build_identifier, "results.json")
 
 	try:
+		step["status"] = "running"
+		worker_storage.save_status(job_identifier, build_identifier, build_status)
+
+		log_file_path = worker_storage.get_log_path(job_identifier, build_identifier, step_index, step["name"])
+		result_file_path = os.path.join(".build_results", job_identifier + "_" + build_identifier, "results.json")
+
 		if is_skipping:
-			step_status = "skipped"
+			step["status"] = "skipped"
+
 		else:
 			step_parameters = {
+				"environment": build_status["environment"],
+				"parameters": build_status["parameters"],
 				"result_file_path": result_file_path,
-				"environment": environment,
-				"parameters": parameters,
 			}
+
 			step_command = [ argument.format(**step_parameters) for argument in step["command"] ]
 			logger.info("(%s) + %s", build_identifier, " ".join(step_command))
+
 			with open(log_file_path, "w") as log_file:
-				child_process = subprocess.Popen(step_command, cwd = workspace, stdout = log_file, stderr = subprocess.STDOUT,
-						creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
-				step_status = _wait_process(build_identifier, child_process)
+				child_process = subprocess.Popen(
+					step_command, cwd = build_status["workspace"],
+					stdout = log_file, stderr = subprocess.STDOUT,
+					creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
+				step["status"] = _wait_process(build_identifier, child_process)
+
+		if os.path.isfile(os.path.join(build_status["workspace"], result_file_path)):
+			worker_storage.save_results(job_identifier, build_identifier, os.path.join(build_status["workspace"], result_file_path))
+		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
 	except:
 		logger.error("(%s) Step %s raised an exception", build_identifier, step["name"], exc_info = True)
-		step_status = "exception"
+		step["status"] = "exception"
+		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
-	if os.path.isfile(os.path.join(workspace, result_file_path)):
-		worker_storage.save_results(job_identifier, build_identifier, os.path.join(workspace, result_file_path))
-
-	update_status_handler(step_index, step_status)
-	logger.info("(%s) Step %s completed with status %s", build_identifier, step["name"], step_status)
-	return step_status
+	logger.info("(%s) Step %s completed with status %s", build_identifier, step["name"], step["status"])
 
 
 def _wait_process(build_identifier, child_process):
