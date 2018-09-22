@@ -73,6 +73,18 @@ def trigger_job(job_identifier):
 	return flask.jsonify({ "job_identifier": job_identifier, "build_identifier": build["identifier"], "task_identifier": task["identifier"] })
 
 
+@application.route("/job/<job_identifier>/enable", methods = [ "POST" ])
+def enable_job(job_identifier):
+	application.job_provider.update_status(job_identifier, is_enabled = True)
+	return flask.jsonify({})
+
+
+@application.route("/job/<job_identifier>/disable", methods = [ "POST" ])
+def disable_job(job_identifier):
+	application.job_provider.update_status(job_identifier, is_enabled = False)
+	return flask.jsonify({})
+
+
 @application.route("/build_collection", methods = [ "GET" ])
 def get_build_collection():
 	return flask.jsonify(application.build_provider.get_all())
