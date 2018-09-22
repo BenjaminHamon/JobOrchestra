@@ -101,7 +101,6 @@ def get_build_step_log(build_identifier, step_index):
 
 @application.route("/build/<build_identifier>/results", methods = [ "GET" ])
 def get_build_results(build_identifier):
-	results = application.build_provider.get_results(build_identifier)
 	return flask.jsonify(application.build_provider.get_results(build_identifier))
 
 
