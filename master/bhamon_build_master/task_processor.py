@@ -32,7 +32,7 @@ class TaskProcessor:
 			all_tasks.sort(key = self._get_task_order)
 
 			for task in all_tasks:
-				logger.info("Processing task %s (Type: %s, Parameters: %s)", task["identifier"], task["type"], task["parameters"])
+				logger.debug("Processing task %s (Type: %s, Parameters: %s)", task["identifier"], task["type"], task["parameters"])
 
 				try:
 					self._task_provider.update(task, status = "running")
@@ -46,7 +46,7 @@ class TaskProcessor:
 					self._task_provider.update(task, status = end_status)
 
 				except:
-					logger.warning("Failed to process task %s", task["identifier"], exc_info = True)
+					logger.error("Failed to process task %s", task["identifier"], exc_info = True)
 					self._task_provider.update(task, status = "exception")
 
 			await asyncio.sleep(process_delay_seconds)
