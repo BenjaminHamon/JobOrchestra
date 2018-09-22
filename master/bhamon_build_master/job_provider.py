@@ -17,14 +17,13 @@ class JobProvider:
 		return self.database_client.get(self.table, job_identifier)
 
 
-	def create_or_update(self, job_identifier, workspace, steps, parameters, properties, workers, description):
+	def create_or_update(self, job_identifier, workspace, steps, parameters, properties, description):
 		try:
 			job = self.get(job_identifier)
 			job["workspace"] = workspace
 			job["steps"] = steps
 			job["parameters"] = parameters
 			job["properties"] = properties
-			job["workers"] = workers
 			job["description"] = description
 			job["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
 			self.database_client.update(self.table, job_identifier, job)
@@ -36,7 +35,6 @@ class JobProvider:
 				"steps": steps,
 				"parameters": parameters,
 				"properties": properties,
-				"workers": workers,
 				"description": description,
 				"is_enabled": True,
 				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),

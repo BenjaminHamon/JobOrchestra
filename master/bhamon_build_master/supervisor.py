@@ -13,13 +13,14 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, worker_provider, job_provider, build_provider):
+	def __init__(self, host, port, worker_provider, job_provider, build_provider, worker_selector):
 		self._active_workers = {}
 		self._host = host
 		self._port = port
 		self._worker_provider = worker_provider
 		self._job_provider = job_provider
 		self._build_provider = build_provider
+		self._worker_selector = worker_selector
 
 
 	async def run_server(self):
@@ -46,16 +47,17 @@ class Supervisor:
 		if not job["is_enabled"]:
 			return False
 
-		is_worker_available = lambda worker: worker["is_enabled"] and worker["is_active"] and self._active_workers[worker["identifier"]].can_assign_build()
-		all_workers = self._worker_provider.get_all().values()
-		all_available_workers = [ worker for worker in all_workers if is_worker_available(worker) ]
-		
-		selected_worker = next(iter(all_available_workers), None)
+		all_available_workers = []
+		for worker_data in self._worker_provider.get_all().values():
+			if worker_data["is_enabled"] and worker_data["is_active"]:
+				all_available_workers.append((worker_data, self._active_workers[worker_data["identifier"]]))
+
+		selected_worker = self._worker_selector(job, all_available_workers)
 		if selected_worker is None:
 			return False
 
-		logger.info("Assigning build %s %s to worker %s", build["job"], build["identifier"], selected_worker["identifier"])
-		self._active_workers[selected_worker["identifier"]].assign_build(job, build)
+		logger.info("Assigning build %s %s to worker %s", build["job"], build["identifier"], selected_worker.identifier)
+		selected_worker.assign_build(job, build)
 		return True
 
 

@@ -15,12 +15,8 @@ class Worker:
 		self.identifier = identifier
 		self._connection = connection
 		self._build_provider = build_provider
-		self._should_shutdown = False
+		self.should_shutdown = False
 		self.executors = []
-
-
-	def can_assign_build(self):
-		return not self._should_shutdown
 
 
 	def assign_build(self, job, build):
@@ -35,11 +31,11 @@ class Worker:
 
 
 	def shutdown(self):
-		self._should_shutdown = True
+		self.should_shutdown = True
 
 
 	async def run(self):
-		while not self._should_shutdown or len(self.executors) > 0:
+		while not self.should_shutdown or len(self.executors) > 0:
 			await self._connection.ping()
 			all_executors = list(self.executors)
 			for executor in all_executors:

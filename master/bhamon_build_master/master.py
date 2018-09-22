@@ -8,10 +8,10 @@ import bhamon_build_master.task_processor as task_processor
 logger = logging.getLogger("Master")
 
 
-def run(host, port, configuration_loader, data_providers):
+def run(host, port, data_providers, configuration_loader, worker_selector):
 	logger.info("Starting build master")
 
-	supervisor_instance = supervisor.Supervisor(host, port, data_providers["worker"], data_providers["job"], data_providers["build"])
+	supervisor_instance = supervisor.Supervisor(host, port, data_providers["worker"], data_providers["job"], data_providers["build"], worker_selector)
 	task_processor_instance = task_processor.TaskProcessor(data_providers["task"])
 
 	task_processor_instance.register_handler("reload_configuration", 20,
@@ -50,7 +50,7 @@ def _reload_configuration(configuration_loader, worker_provider, job_provider, s
 		worker_provider.create_or_update(worker["identifier"], worker["properties"], worker["description"])
 	for job in configuration["jobs"]:
 		logger.info("Adding/Updating job %s", job["identifier"])
-		job_provider.create_or_update(job["identifier"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["workers"], job["description"])
+		job_provider.create_or_update(job["identifier"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["description"])
 
 	return "succeeded"
 
