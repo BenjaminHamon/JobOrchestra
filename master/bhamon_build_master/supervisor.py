@@ -21,6 +21,7 @@ class Supervisor:
 		self._job_provider = job_provider
 		self._build_provider = build_provider
 		self._worker_selector = worker_selector
+		self._should_shutdown = False
 
 
 	async def run_server(self):
@@ -29,8 +30,15 @@ class Supervisor:
 
 		logger.info("Listening for workers on %s:%s", self._host, self._port)
 		async with websockets.serve(self._process_connection, self._host, self._port):
-			while True:
+			while not self._should_shutdown or len(self._active_workers) > 0:
 				await asyncio.sleep(1)
+
+
+	def shutdown(self):
+		for worker in self._active_workers.values():
+			worker.disconnect()
+		self._should_shutdown = True
+
 
 
 	def stop_worker(self, worker_identifier):
@@ -69,6 +77,8 @@ class Supervisor:
 
 	async def _process_connection(self, connection, path):
 		worker_identifier = None
+		if self._should_shutdown:
+			return
 
 		try:
 			logger.info("Processing connection: %s", connection)

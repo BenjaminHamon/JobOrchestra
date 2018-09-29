@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import signal
 
 import bhamon_build_master.supervisor as supervisor
 import bhamon_build_master.task_processor as task_processor
@@ -14,6 +15,10 @@ def run(host, port, data_providers, configuration_loader, worker_selector):
 	supervisor_instance = supervisor.Supervisor(host, port, data_providers["worker"], data_providers["job"], data_providers["build"], worker_selector)
 	task_processor_instance = task_processor.TaskProcessor(data_providers["task"])
 
+	signal.signal(signal.SIGBREAK, lambda signal_number, frame: _shutdown(supervisor_instance, task_processor_instance))
+	signal.signal(signal.SIGINT, lambda signal_number, frame: _shutdown(supervisor_instance, task_processor_instance))
+	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(supervisor_instance, task_processor_instance))
+
 	task_processor_instance.register_handler("reload_configuration", 20,
 		lambda parameters: _reload_configuration(configuration_loader, data_providers["worker"], data_providers["job"], supervisor_instance))
 	task_processor_instance.register_handler("stop_worker", 50,
@@ -27,6 +32,8 @@ def run(host, port, data_providers, configuration_loader, worker_selector):
 	_reload_configuration(configuration_loader, data_providers["worker"], data_providers["job"], supervisor_instance)
 	main_future = asyncio.gather(supervisor_instance.run_server(), task_processor_instance.run())
 	asyncio.get_event_loop().run_until_complete(main_future)
+
+	logger.info("Exiting build master")
 
 
 def _reload_configuration(configuration_loader, worker_provider, job_provider, supervisor_instance):
@@ -53,6 +60,11 @@ def _reload_configuration(configuration_loader, worker_provider, job_provider, s
 		job_provider.create_or_update(job["identifier"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["description"])
 
 	return "succeeded"
+
+
+def _shutdown(supervisor_instance, task_processor_instance):
+	supervisor_instance.shutdown()
+	task_processor_instance.shutdown()
 
 
 def _stop_worker(supervisor_instance, worker_identifier):

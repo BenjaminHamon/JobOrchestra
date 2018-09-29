@@ -13,6 +13,7 @@ class TaskProcessor:
 	def __init__(self, task_provider):
 		self._task_provider = task_provider
 		self._handler_collection = {}
+		self._should_shutdown = False
 
 
 	def register_handler(self, task_type, order, execution_handler, cancellation_handler = None):
@@ -26,7 +27,7 @@ class TaskProcessor:
 
 
 	async def run(self):
-		while True:
+		while not self._should_shutdown:
 			all_tasks = self._task_provider.get_all()
 			all_tasks = [ task for task in all_tasks.values() if task["status"] == "pending" ]
 			all_tasks.sort(key = self._get_task_order)
@@ -50,6 +51,10 @@ class TaskProcessor:
 					self._task_provider.update(task, status = "exception")
 
 			await asyncio.sleep(process_delay_seconds)
+
+
+	def shutdown(self):
+		self._should_shutdown = True
 
 
 	def _get_task_order(self, task):

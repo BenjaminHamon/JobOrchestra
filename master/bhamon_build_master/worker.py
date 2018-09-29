@@ -15,6 +15,7 @@ class Worker:
 		self.identifier = identifier
 		self._connection = connection
 		self._build_provider = build_provider
+		self.should_disconnect = False
 		self.should_shutdown = False
 		self.executors = []
 
@@ -30,12 +31,16 @@ class Worker:
 				executor["should_abort"] = True
 
 
+	def disconnect(self):
+		self.should_disconnect = True
+
+
 	def shutdown(self):
 		self.should_shutdown = True
 
 
 	async def run(self):
-		while not self.should_shutdown or len(self.executors) > 0:
+		while not self.should_disconnect and (not self.should_shutdown or len(self.executors) > 0):
 			await self._connection.ping()
 			all_executors = list(self.executors)
 			for executor in all_executors:
