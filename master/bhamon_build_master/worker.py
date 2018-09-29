@@ -46,6 +46,8 @@ class Worker:
 			for executor in all_executors:
 				await self._process_executor(executor)
 			await asyncio.sleep(run_interval_seconds)
+		if self.should_shutdown and len(self.executors) == 0:
+			await Worker._execute_remote_command(self._connection, self.identifier, "shutdown", None)
 
 
 	async def _process_executor(self, executor):

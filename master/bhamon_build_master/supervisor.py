@@ -44,7 +44,7 @@ class Supervisor:
 	def stop_worker(self, worker_identifier):
 		if not worker_identifier in self._active_workers:
 			return False
-		logger.info("Requesting worker %s to shutdown", worker_identifier)
+		logger.info("Flagging worker %s for shutdown", worker_identifier)
 		self._active_workers[worker_identifier].shutdown()
 		return True
 
