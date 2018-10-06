@@ -56,7 +56,7 @@ async def _run_client(master_address, worker_data):
 
 		except OSError:
 			logger.error("Failed to connect to master", exc_info = True)
-		except websockets.exceptions.ConnectionClosed:
+		except (websockets.exceptions.ConnectionClosed, websockets.exceptions.InvalidStatusCode):
 			logger.error("Lost connection to master", exc_info = True)
 
 		if not worker_data["should_shutdown"]:
