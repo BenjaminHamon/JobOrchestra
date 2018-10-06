@@ -2,6 +2,8 @@ import asyncio
 import json
 import logging
 
+import websockets
+
 
 logger = logging.getLogger("Worker")
 
@@ -40,12 +42,19 @@ class Worker:
 
 
 	async def run(self):
+		builds_to_recover = await Worker._execute_remote_command(self._connection, self.identifier, "list", {})
+		for build_information in builds_to_recover:
+			executor = await self._recover_execution(**build_information)
+			if executor is not None:
+				self.executors.append(executor)
+
 		while not self.should_disconnect and (not self.should_shutdown or len(self.executors) > 0):
 			await self._connection.ping()
 			all_executors = list(self.executors)
 			for executor in all_executors:
 				await self._process_executor(executor)
 			await asyncio.sleep(run_interval_seconds)
+
 		if self.should_shutdown and len(self.executors) == 0:
 			await Worker._execute_remote_command(self._connection, self.identifier, "shutdown", None)
 
@@ -61,10 +70,19 @@ class Worker:
 			if executor["build"]["status"] != "running":
 				await self._finish_execution(executor["build"])
 				self.executors.remove(executor)
+		except websockets.exceptions.ConnectionClosed:
+			raise
 		except:
 			logger.error("(%s) Failed to execute build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
 			self._build_provider.update(executor["build"], status = "exception")
 			self.executors.remove(executor)
+
+
+	async def _recover_execution(self, job_identifier, build_identifier):
+		logger.info("(%s) Recovering build %s %s", self.identifier, job_identifier, build_identifier)
+		build_request = await self._retrieve_request(job_identifier, build_identifier)
+		build = self._build_provider.get(build_identifier)
+		return { "job": build_request["job"], "build": build, "should_abort": False }
 
 
 	async def _start_execution(self, build, job):
@@ -98,6 +116,11 @@ class Worker:
 		clean_request = { "job_identifier": build["job"], "build_identifier": build["identifier"] }
 		await Worker._execute_remote_command(self._connection, self.identifier, "clean", clean_request)
 		logger.info("(%s) Completed build %s %s with status %s", self.identifier, build["job"], build["identifier"], build["status"])
+
+
+	async def _retrieve_request(self, job_identifier, build_identifier):
+		parameters = { "job_identifier": job_identifier, "build_identifier": build_identifier }
+		return await Worker._execute_remote_command(self._connection, self.identifier, "request", parameters)
 
 
 	async def _retrieve_logs(self, build, build_step_collection):

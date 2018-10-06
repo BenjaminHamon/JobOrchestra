@@ -3,6 +3,21 @@ import os
 import shutil
 
 
+def list_builds():
+	if not os.path.isdir("builds"):
+		return []
+
+	all_builds = []
+	for child_directory in os.listdir("builds"):
+		build_directory = os.path.join("builds", child_directory)
+		if os.path.isdir(build_directory):
+			request_file_path = os.path.join(build_directory, "request.json")
+			with open(request_file_path, "r") as request_file:
+				build_request = json.load(request_file)
+				all_builds.append((build_request["job_identifier"], build_request["build_identifier"]))
+	return all_builds
+
+
 def create_build(job_identifier, build_identifier):
 	build_directory = os.path.join("builds", job_identifier + "_" + build_identifier)
 	os.makedirs(build_directory)
