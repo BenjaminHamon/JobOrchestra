@@ -18,7 +18,7 @@ connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 360
 termination_timeout_seconds = 30
 
 
-def run(master_address, worker_identifier, executor_script):
+def run(master_uri, worker_identifier, executor_script):
 	worker_data = {
 		"identifier": worker_identifier,
 		"executor_script": executor_script,
@@ -32,20 +32,20 @@ def run(master_address, worker_identifier, executor_script):
 
 	logger.info("Starting build worker")
 	_recover(worker_data)
-	main_future = asyncio.gather(_run_client(master_address, worker_data), _handle_shutdown(worker_data))
+	main_future = asyncio.gather(_run_client(master_uri, worker_data), _handle_shutdown(worker_data))
 	asyncio.get_event_loop().run_until_complete(main_future)
 	logger.info("Exiting build worker")
 
 
-async def _run_client(master_address, worker_data):
+async def _run_client(master_uri, worker_data):
 	connection_attempt_counter = 0
 
 	while not worker_data["should_shutdown"]:
 		try:
 			connection_attempt_counter += 1
-			logger.info("Connecting to master on %s (Attempt: %s)", master_address, connection_attempt_counter)
+			logger.info("Connecting to master on %s (Attempt: %s)", master_uri, connection_attempt_counter)
 			try:
-				async with websockets.connect("ws://" + master_address) as connection:
+				async with websockets.connect(master_uri) as connection:
 					logger.info("Connected to master, waiting for commands")
 					connection_attempt_counter = 0
 					await _process_connection(connection, worker_data)
