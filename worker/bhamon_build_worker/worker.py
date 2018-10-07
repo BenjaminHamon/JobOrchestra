@@ -32,8 +32,9 @@ def run(master_uri, worker_identifier, executor_script):
 
 	logger.info("Starting build worker")
 	_recover(worker_data)
-	main_future = asyncio.gather(_run_client(master_uri, worker_data), _handle_shutdown(worker_data))
+	main_future = asyncio.gather(_run_client(master_uri, worker_data))
 	asyncio.get_event_loop().run_until_complete(main_future)
+	_terminate(worker_data)
 	logger.info("Exiting build worker")
 
 
@@ -69,8 +70,7 @@ async def _run_client(master_uri, worker_data):
 
 
 async def _process_connection(connection, worker_data):
-	# When terminating, the connection is kept opened until all the builds are aborted and cleaned
-	while not worker_data["should_shutdown"] or len(worker_data["active_executors"]) > 0:
+	while not worker_data["should_shutdown"]:
 		try:
 			# Timeout to ensure the loop condition is checked once in a while
 			request = json.loads(await asyncio.wait_for(connection.recv(), timeout = 10))
@@ -90,22 +90,28 @@ async def _process_connection(connection, worker_data):
 		await connection.send(json.dumps(response))
 
 
-async def _handle_shutdown(worker_data):
-	while not worker_data["should_shutdown"]:
-		await asyncio.sleep(1)
-
-	logger.info("Terminating build worker")
-	termination_start_time = time.time()
+def _terminate(worker_data):
+	all_futures = []
 	for executor in worker_data["active_executors"]:
-		_abort(worker_data, executor["job_identifier"], executor["build_identifier"])
-	while (len(worker_data["active_executors"]) > 0) and (time.time() - termination_start_time < termination_timeout_seconds):
-		await asyncio.sleep(1)
+		all_futures.append(_terminate_executor(executor, termination_timeout_seconds))
+	asyncio.get_event_loop().run_until_complete(asyncio.gather(*all_futures))
 	for executor in worker_data["active_executors"]:
-		logger.warning("Build %s was not cleaned", executor["build_identifier"])
 		if executor["process"] and executor["process"].poll() is None:
-			logger.warning("Build %s executor is still running (Process: %s)", executor["build_identifier"], executor["process"].pid)
-	# Force the connection to close by discarding remaining executors
-	worker_data["active_executors"].clear()
+			logger.warning("%s %s is still running (Process: %s)", executor["job_identifier"], executor["build_identifier"], executor["process"].pid)
+
+
+async def _terminate_executor(executor, timeout_seconds):
+	if executor["process"] and executor["process"].poll() is None:
+		logger.info("Aborting %s %s", executor["job_identifier"], executor["build_identifier"])
+		termination_start_time = time.time()
+		os.kill(executor["process"].pid, signal.CTRL_BREAK_EVENT)
+		while time.time() - termination_start_time < timeout_seconds:
+			await asyncio.sleep(1)
+			if executor["process"].poll() is not None:
+				return
+		logger.warning("Terminating %s %s", executor["job_identifier"], executor["build_identifier"])
+		executor["process"].kill()
+		await asyncio.sleep(1)
 
 
 def _execute_command(worker_data, command, parameters):
