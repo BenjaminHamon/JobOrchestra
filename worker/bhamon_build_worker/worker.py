@@ -66,7 +66,9 @@ async def _run_client(master_uri, worker_data):
 			except IndexError:
 				connection_attempt_delay = connection_attempt_delay_collection[-1]
 			logger.info("Retrying connection in %s seconds", connection_attempt_delay)
-			await asyncio.sleep(connection_attempt_delay)
+			delay_start_time = time.time()
+			while not worker_data["should_shutdown"] and (time.time() - delay_start_time < connection_attempt_delay):
+				await asyncio.sleep(1)
 
 
 async def _process_connection(connection, worker_data):
