@@ -22,6 +22,7 @@ def run(master_uri, worker_identifier, executor_script):
 	worker_data = {
 		"identifier": worker_identifier,
 		"executor_script": executor_script,
+		"active_connection_task": None,
 		"active_executors": [],
 		"should_shutdown": False,
 	}
@@ -74,22 +75,25 @@ async def _run_client(master_uri, worker_data):
 async def _process_connection(connection, worker_data):
 	while not worker_data["should_shutdown"]:
 		try:
-			# Timeout to ensure the loop condition is checked once in a while
-			request = json.loads(await asyncio.wait_for(connection.recv(), timeout = 10))
-		except asyncio.TimeoutError:
-			await asyncio.wait_for(await connection.ping(), timeout = 10)
-			continue
-		logger.debug("< %s", request)
+			worker_data["active_connection_task"] = asyncio.ensure_future(connection.recv())
+			request = json.loads(await worker_data["active_connection_task"])
+			worker_data["active_connection_task"] = None
+			logger.debug("< %s", request)
 
-		try:
-			result = _execute_command(worker_data, request["command"], request["parameters"])
-			response = { "result": result }
-		except Exception as exception:
-			logger.error("Failed to process request %s", request, exc_info = True)
-			response = { "error": str(exception) }
+			try:
+				result = _execute_command(worker_data, request["command"], request["parameters"])
+				response = { "result": result }
+			except Exception as exception:
+				logger.error("Failed to process request %s", request, exc_info = True)
+				response = { "error": str(exception) }
 
-		logger.debug("> %s", response)
-		await connection.send(json.dumps(response))
+			logger.debug("> %s", response)
+			worker_data["active_connection_task"] = asyncio.ensure_future(connection.send(json.dumps(response)))
+			await worker_data["active_connection_task"]
+			worker_data["active_connection_task"] = None
+
+		except asyncio.CancelledError:
+			break
 
 
 def _terminate(worker_data):
@@ -207,6 +211,8 @@ def _request_shutdown(worker_data):
 
 def _shutdown(worker_data):
 	worker_data["should_shutdown"] = True
+	if worker_data["active_connection_task"]:
+		worker_data["active_connection_task"].cancel()
 
 
 def _check_status(worker_data, job_identifier, build_identifier):
