@@ -33,14 +33,6 @@ class Worker:
 				executor["should_abort"] = True
 
 
-	def disconnect(self):
-		self.should_disconnect = True
-
-
-	def shutdown(self):
-		self.should_shutdown = True
-
-
 	async def run(self):
 		builds_to_recover = await Worker._execute_remote_command(self._connection, self.identifier, "list", {})
 		for build_information in builds_to_recover:

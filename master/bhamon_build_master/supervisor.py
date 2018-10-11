@@ -36,7 +36,7 @@ class Supervisor:
 
 	def shutdown(self):
 		for worker in self._active_workers.values():
-			worker.disconnect()
+			worker.should_disconnect = True
 		self._should_shutdown = True
 
 
@@ -45,7 +45,7 @@ class Supervisor:
 		if not worker_identifier in self._active_workers:
 			return False
 		logger.info("Flagging worker %s for shutdown", worker_identifier)
-		self._active_workers[worker_identifier].shutdown()
+		self._active_workers[worker_identifier].should_shutdown = True
 		return True
 
 
