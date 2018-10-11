@@ -33,10 +33,16 @@ def run(master_uri, worker_identifier, executor_script):
 
 	logger.info("Starting build worker")
 	_recover(worker_data)
-	main_future = asyncio.gather(_run_client(master_uri, worker_data))
+	main_future = asyncio.gather(_run_client(master_uri, worker_data), _check_signals(worker_data))
 	asyncio.get_event_loop().run_until_complete(main_future)
 	_terminate(worker_data)
 	logger.info("Exiting build worker")
+
+
+# Ensure Windows signals are processed even when the asyncio event loop is blocking with nothing happening
+async def _check_signals(worker_data):
+	while not worker_data["should_shutdown"]:
+		await asyncio.sleep(1)
 
 
 async def _run_client(master_uri, worker_data):
