@@ -93,6 +93,8 @@ class Supervisor:
 				logger.info("Accepted connection from worker %s", worker_identifier)
 				worker_instance = worker.Worker(worker_identifier, connection, self._build_provider)
 				self._worker_provider.update_status(worker_identifier, is_active = True)
+				if worker_identifier in self._active_workers:
+					raise KeyError("Worker %s is already in active workers" % worker_identifier)
 				self._active_workers[worker_identifier] = worker_instance
 
 				try:
