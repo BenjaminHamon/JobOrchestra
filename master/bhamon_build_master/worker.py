@@ -20,6 +20,7 @@ class Worker:
 		self.should_shutdown = False
 		self.executors = []
 		self.update_interval_seconds = 10
+		self.active_asyncio_sleep = None
 
 
 	def assign_build(self, job, build):
@@ -47,7 +48,13 @@ class Worker:
 			for executor in all_executors:
 				await self._process_executor(executor)
 			update_end = time.time()
-			await asyncio.sleep(self.update_interval_seconds - (update_end - update_start))
+
+			try:
+				self.active_asyncio_sleep = asyncio.ensure_future(asyncio.sleep(self.update_interval_seconds - (update_end - update_start)))
+				await self.active_asyncio_sleep
+				self.active_asyncio_sleep = None
+			except asyncio.CancelledError:
+				break
 
 		if self.should_shutdown and len(self.executors) == 0:
 			await Worker._execute_remote_command(self._connection, self.identifier, "shutdown", None)

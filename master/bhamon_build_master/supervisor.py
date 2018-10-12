@@ -38,6 +38,8 @@ class Supervisor:
 	def shutdown(self):
 		for worker in self._active_workers.values():
 			worker.should_disconnect = True
+			if worker.active_asyncio_sleep:
+				worker.active_asyncio_sleep.cancel()
 		self._should_shutdown = True
 
 

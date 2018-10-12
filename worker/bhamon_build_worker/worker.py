@@ -84,20 +84,24 @@ async def _process_connection(connection, worker_data):
 			worker_data["active_connection_task"] = asyncio.ensure_future(connection.recv())
 			request = json.loads(await worker_data["active_connection_task"])
 			worker_data["active_connection_task"] = None
-			logger.debug("< %s", request)
+		except asyncio.CancelledError:
+			break
 
-			try:
-				result = _execute_command(worker_data, request["command"], request["parameters"])
-				response = { "result": result }
-			except Exception as exception:
-				logger.error("Failed to process request %s", request, exc_info = True)
-				response = { "error": str(exception) }
+		logger.debug("< %s", request)
 
-			logger.debug("> %s", response)
+		try:
+			result = _execute_command(worker_data, request["command"], request["parameters"])
+			response = { "result": result }
+		except Exception as exception:
+			logger.error("Failed to process request %s", request, exc_info = True)
+			response = { "error": str(exception) }
+
+		logger.debug("> %s", response)
+
+		try:
 			worker_data["active_connection_task"] = asyncio.ensure_future(connection.send(json.dumps(response)))
 			await worker_data["active_connection_task"]
 			worker_data["active_connection_task"] = None
-
 		except asyncio.CancelledError:
 			break
 
