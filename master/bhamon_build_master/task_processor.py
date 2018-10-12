@@ -1,10 +1,9 @@
 import asyncio
 import logging
+import time
 
 
 logger = logging.getLogger("TaskProcessor")
-
-process_delay_seconds = 5
 
 
 class TaskProcessor:
@@ -14,6 +13,7 @@ class TaskProcessor:
 		self._task_provider = task_provider
 		self._handler_collection = {}
 		self._should_shutdown = False
+		self.update_interval_seconds = 10
 
 
 	def register_handler(self, task_type, order, execution_handler, cancellation_handler = None):
@@ -28,6 +28,14 @@ class TaskProcessor:
 
 	async def run(self):
 		while not self._should_shutdown:
+			update_start = time.time()
+			await self._update()
+			update_end = time.time()
+			await asyncio.sleep(self.update_interval_seconds - (update_end - update_start))
+
+
+	async def _update(self):
+		try:
 			all_tasks = self._task_provider.get_all()
 			all_tasks = [ task for task in all_tasks.values() if task["status"] == "pending" ]
 			all_tasks.sort(key = self._get_task_order)
@@ -50,7 +58,8 @@ class TaskProcessor:
 					logger.error("Failed to process task %s", task["identifier"], exc_info = True)
 					self._task_provider.update(task, status = "exception")
 
-			await asyncio.sleep(process_delay_seconds)
+		except:
+			logger.error("TaskProcessor update raised an exception", exc_info = True)
 
 
 	def shutdown(self):

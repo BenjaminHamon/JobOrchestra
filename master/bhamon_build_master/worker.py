@@ -1,13 +1,12 @@
 import asyncio
 import json
 import logging
+import time
 
 import websockets
 
 
 logger = logging.getLogger("Worker")
-
-run_interval_seconds = 5
 
 
 class Worker:
@@ -20,6 +19,7 @@ class Worker:
 		self.should_disconnect = False
 		self.should_shutdown = False
 		self.executors = []
+		self.update_interval_seconds = 10
 
 
 	def assign_build(self, job, build):
@@ -41,11 +41,13 @@ class Worker:
 				self.executors.append(executor)
 
 		while not self.should_disconnect and (not self.should_shutdown or len(self.executors) > 0):
+			update_start = time.time()
 			await self._connection.ping()
 			all_executors = list(self.executors)
 			for executor in all_executors:
 				await self._process_executor(executor)
-			await asyncio.sleep(run_interval_seconds)
+			update_end = time.time()
+			await asyncio.sleep(self.update_interval_seconds - (update_end - update_start))
 
 		if self.should_shutdown and len(self.executors) == 0:
 			await Worker._execute_remote_command(self._connection, self.identifier, "shutdown", None)

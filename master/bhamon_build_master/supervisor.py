@@ -22,6 +22,7 @@ class Supervisor:
 		self._build_provider = build_provider
 		self._worker_selector = worker_selector
 		self._should_shutdown = False
+		self.update_interval_seconds = 10
 
 
 	async def run_server(self):
@@ -92,6 +93,7 @@ class Supervisor:
 			else:
 				logger.info("Accepted connection from worker %s", worker_identifier)
 				worker_instance = worker.Worker(worker_identifier, connection, self._build_provider)
+				worker_instance.update_interval_seconds = self.update_interval_seconds
 				self._worker_provider.update_status(worker_identifier, is_active = True)
 				if worker_identifier in self._active_workers:
 					raise KeyError("Worker %s is already in active workers" % worker_identifier)
