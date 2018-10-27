@@ -20,7 +20,7 @@ class Worker:
 		self.should_shutdown = False
 		self.executors = []
 		self.update_interval_seconds = 10
-		self.active_asyncio_sleep = None
+		self._active_asyncio_sleep = None
 
 
 	def assign_build(self, job, build):
@@ -50,9 +50,9 @@ class Worker:
 			update_end = time.time()
 
 			try:
-				self.active_asyncio_sleep = asyncio.ensure_future(asyncio.sleep(self.update_interval_seconds - (update_end - update_start)))
-				await self.active_asyncio_sleep
-				self.active_asyncio_sleep = None
+				self._active_asyncio_sleep = asyncio.ensure_future(asyncio.sleep(self.update_interval_seconds - (update_end - update_start)))
+				await self._active_asyncio_sleep
+				self._active_asyncio_sleep = None
 			except asyncio.CancelledError:
 				break
 

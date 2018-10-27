@@ -2,87 +2,97 @@ import asyncio
 import logging
 import signal
 
-import bhamon_build_master.supervisor as supervisor
-import bhamon_build_master.task_processor as task_processor
-
 
 logger = logging.getLogger("Master")
 
 
-def run(host, port, data_providers, configuration_loader, worker_selector):
-	logger.info("Starting build master")
-
-	supervisor_instance = supervisor.Supervisor(host, port, data_providers["worker"], data_providers["job"], data_providers["build"], worker_selector)
-	task_processor_instance = task_processor.TaskProcessor(data_providers["task"])
-
-	signal.signal(signal.SIGBREAK, lambda signal_number, frame: _shutdown(supervisor_instance, task_processor_instance))
-	signal.signal(signal.SIGINT, lambda signal_number, frame: _shutdown(supervisor_instance, task_processor_instance))
-	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(supervisor_instance, task_processor_instance))
-
-	task_processor_instance.register_handler("reload_configuration", 20,
-		lambda parameters: _reload_configuration(configuration_loader, data_providers["worker"], data_providers["job"], supervisor_instance))
-	task_processor_instance.register_handler("stop_worker", 50,
-		lambda parameters: _stop_worker(supervisor_instance, **parameters))
-	task_processor_instance.register_handler("abort_build", 90,
-		lambda parameters: _abort_build(supervisor_instance, **parameters))
-	task_processor_instance.register_handler("trigger_build", 100,
-		lambda parameters: _trigger_build(supervisor_instance, **parameters),
-		lambda parameters: _cancel_build(data_providers["build"], **parameters))
-
-	_reload_configuration(configuration_loader, data_providers["worker"], data_providers["job"], supervisor_instance)
-	main_future = asyncio.gather(supervisor_instance.run_server(), task_processor_instance.run())
-	asyncio.get_event_loop().run_until_complete(main_future)
-
-	logger.info("Exiting build master")
+class Master:
 
 
-def _reload_configuration(configuration_loader, worker_provider, job_provider, supervisor_instance):
-	logger.info("Reloading configuration")
-	configuration = configuration_loader()
+	def __init__(self, supervisor, task_processor, job_provider, worker_provider, configuration_loader):
+		self._supervisor = supervisor
+		self._task_processor = task_processor
+		self._job_provider = job_provider
+		self._worker_provider = worker_provider
+		self._configuration_loader = configuration_loader
 
-	all_existing_workers = worker_provider.get_all()
-	for existing_worker_identifier in all_existing_workers.keys():
-		if existing_worker_identifier not in [ worker["identifier"] for worker in configuration["workers"] ]:
-			logger.info("Removing worker %s", existing_worker_identifier)
-			worker_provider.delete(existing_worker_identifier)
-			supervisor_instance.stop_worker(existing_worker_identifier)
-	all_existing_jobs = job_provider.get_all()
-	for existing_job_identifier in all_existing_jobs.keys():
-		if existing_job_identifier not in [ job["identifier"] for job in configuration["jobs"] ]:
-			logger.info("Removing job %s", existing_job_identifier)
-			job_provider.delete(existing_job_identifier)
 
-	for worker in configuration["workers"]:
-		logger.info("Adding/Updating worker %s", worker["identifier"])
-		worker_provider.create_or_update(worker["identifier"], worker["properties"], worker["description"])
-	for job in configuration["jobs"]:
-		logger.info("Adding/Updating job %s", job["identifier"])
-		job_provider.create_or_update(job["identifier"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["description"])
+	def run(self):
+		logger.info("Starting build master")
 
+		signal.signal(signal.SIGBREAK, lambda signal_number, frame: self.shutdown())
+		signal.signal(signal.SIGINT, lambda signal_number, frame: self.shutdown())
+		signal.signal(signal.SIGTERM, lambda signal_number, frame: self.shutdown())
+
+		self.reload_configuration()
+
+		main_future = asyncio.gather(self._supervisor.run_server(), self._task_processor.run())
+		asyncio.get_event_loop().run_until_complete(main_future)
+
+		logger.info("Exiting build master")
+
+
+	def reload_configuration(self):
+		logger.info("Reloading configuration")
+		configuration = self._configuration_loader()
+
+		all_existing_workers = self._worker_provider.get_all()
+		for existing_worker_identifier in all_existing_workers.keys():
+			if existing_worker_identifier not in [ worker["identifier"] for worker in configuration["workers"] ]:
+				logger.info("Removing worker %s", existing_worker_identifier)
+				self._worker_provider.delete(existing_worker_identifier)
+				self._supervisor.stop_worker(existing_worker_identifier)
+		all_existing_jobs = self._job_provider.get_all()
+		for existing_job_identifier in all_existing_jobs.keys():
+			if existing_job_identifier not in [ job["identifier"] for job in configuration["jobs"] ]:
+				logger.info("Removing job %s", existing_job_identifier)
+				self._job_provider.delete(existing_job_identifier)
+
+		for worker in configuration["workers"]:
+			logger.info("Adding/Updating worker %s", worker["identifier"])
+			self._worker_provider.create_or_update(worker["identifier"], worker["properties"], worker["description"])
+		for job in configuration["jobs"]:
+			logger.info("Adding/Updating job %s", job["identifier"])
+			self._job_provider.create_or_update(job["identifier"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["description"])
+
+
+	def shutdown(self):
+		self._supervisor.shutdown()
+		self._task_processor.shutdown()
+
+
+def register_default_tasks(master):
+	master._task_processor.register_handler("reload_configuration", 20,
+		lambda parameters: reload_configuration(master))
+	master._task_processor.register_handler("stop_worker", 50,
+		lambda parameters: stop_worker(master._supervisor, **parameters))
+	master._task_processor.register_handler("abort_build", 90,
+		lambda parameters: abort_build(master._supervisor, **parameters))
+	master._task_processor.register_handler("trigger_build", 100,
+		lambda parameters: trigger_build(master._supervisor, **parameters),
+		lambda parameters: cancel_build(master._supervisor, **parameters))
+
+
+def reload_configuration(master):
+	master.reload_configuration()
 	return "succeeded"
 
 
-def _shutdown(supervisor_instance, task_processor_instance):
-	supervisor_instance.shutdown()
-	task_processor_instance.shutdown()
-
-
-def _stop_worker(supervisor_instance, worker_identifier):
-	was_stopped = supervisor_instance.stop_worker(worker_identifier)
+def stop_worker(supervisor, worker_identifier):
+	was_stopped = supervisor.stop_worker(worker_identifier)
 	return "succeeded" if was_stopped else "failed"
 
 
-def _trigger_build(supervisor_instance, build_identifier):
-	was_triggered = supervisor_instance.trigger_build(build_identifier)
+def trigger_build(supervisor, build_identifier):
+	was_triggered = supervisor.trigger_build(build_identifier)
 	return "succeeded" if was_triggered else "pending"
 
 
-def _cancel_build(build_provider, build_identifier):
-	build = build_provider.get(build_identifier)
-	if build["status"] == "pending":
-		build_provider.update(build, "cancelled")
+def cancel_build(supervisor, build_identifier):
+	was_cancelled = supervisor.cancel_build(build_identifier)
+	return "succeeded" if was_cancelled else "failed"
 
 
-def _abort_build(supervisor_instance, build_identifier):
-	was_aborted = supervisor_instance.abort_build(build_identifier)
+def abort_build(supervisor, build_identifier):
+	was_aborted = supervisor.abort_build(build_identifier)
 	return "succeeded" if was_aborted else "failed"

@@ -14,7 +14,7 @@ class TaskProcessor:
 		self._handler_collection = {}
 		self._should_shutdown = False
 		self.update_interval_seconds = 10
-		self.active_asyncio_sleep = None
+		self._active_asyncio_sleep = None
 
 
 	def register_handler(self, task_type, order, execution_handler, cancellation_handler = None):
@@ -34,9 +34,9 @@ class TaskProcessor:
 			update_end = time.time()
 
 			try:
-				self.active_asyncio_sleep = asyncio.ensure_future(asyncio.sleep(self.update_interval_seconds - (update_end - update_start)))
-				await self.active_asyncio_sleep
-				self.active_asyncio_sleep = None
+				self._active_asyncio_sleep = asyncio.ensure_future(asyncio.sleep(self.update_interval_seconds - (update_end - update_start)))
+				await self._active_asyncio_sleep
+				self._active_asyncio_sleep = None
 			except asyncio.CancelledError:
 				break
 
@@ -71,8 +71,8 @@ class TaskProcessor:
 
 	def shutdown(self):
 		self._should_shutdown = True
-		if self.active_asyncio_sleep:
-			self.active_asyncio_sleep.cancel()
+		if self._active_asyncio_sleep:
+			self._active_asyncio_sleep.cancel()
 
 
 	def _get_task_order(self, task):

@@ -13,14 +13,14 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, worker_provider, job_provider, build_provider, worker_selector):
-		self._active_workers = {}
+	def __init__(self, host, port, build_provider, job_provider, worker_provider, worker_selector):
 		self._host = host
 		self._port = port
-		self._worker_provider = worker_provider
-		self._job_provider = job_provider
 		self._build_provider = build_provider
+		self._job_provider = job_provider
+		self._worker_provider = worker_provider
 		self._worker_selector = worker_selector
+		self._active_workers = {}
 		self._should_shutdown = False
 		self.update_interval_seconds = 10
 
@@ -38,8 +38,8 @@ class Supervisor:
 	def shutdown(self):
 		for worker in self._active_workers.values():
 			worker.should_disconnect = True
-			if worker.active_asyncio_sleep:
-				worker.active_asyncio_sleep.cancel()
+			if worker._active_asyncio_sleep:
+				worker._active_asyncio_sleep.cancel()
 		self._should_shutdown = True
 
 
@@ -69,6 +69,14 @@ class Supervisor:
 
 		logger.info("Assigning build %s %s to worker %s", build["job"], build["identifier"], selected_worker.identifier)
 		selected_worker.assign_build(job, build)
+		return True
+
+
+	def cancel_build(self, build_identifier):
+		build = self._build_provider.get(build_identifier)
+		if build["status"] != "pending":
+			return False
+		self._build_provider.update(build, "cancelled")
 		return True
 
 
