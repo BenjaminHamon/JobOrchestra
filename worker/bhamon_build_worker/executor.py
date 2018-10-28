@@ -51,7 +51,7 @@ def run(job_identifier, build_identifier, environment):
 		build_final_status = "succeeded"
 		is_skipping = False
 
-		for step_index, step in enumerate(build_request["job"]["steps"]):
+		for step_index, step in enumerate(build_status["steps"]):
 			if not is_skipping and should_exit:
 				build_final_status = "aborted"
 				is_skipping = True
