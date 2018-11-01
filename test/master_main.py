@@ -20,8 +20,8 @@ import environment
 
 def parse_arguments():
 	argument_parser = argparse.ArgumentParser()
-	argument_parser.add_argument("--address", default = "localhost", help = "Set the address for the server to listen to")
-	argument_parser.add_argument("--port", type = int, default = 8765, help = "Set the port for the server to listen to")
+	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
+	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
 	return argument_parser.parse_args()
 
 

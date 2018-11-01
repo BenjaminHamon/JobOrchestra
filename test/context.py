@@ -17,6 +17,8 @@ class Context:
 
 	def __init__(self, temporary_directory):
 		self.temporary_directory = temporary_directory
+		self.master_address = "localhost"
+		self.master_port = 8765
 		self.process_collection = []
 
 
@@ -35,11 +37,19 @@ class Context:
 
 
 	def invoke_master(self):
-		return self.invoke("master_main.py", [], os.path.join(self.temporary_directory, "master"))
+		return self.invoke(
+			script = "master_main.py",
+			arguments = [ "--address", self.master_address, "--port", str(self.master_port) ],
+			workspace = os.path.join(self.temporary_directory, "master"),
+		)
 
 
 	def invoke_worker(self, identifier):
-		return self.invoke("worker_main.py", [ "--identifier", identifier, "--master-uri", "ws://localhost:8765" ], os.path.join(self.temporary_directory, identifier))
+		return self.invoke(
+			script = "worker_main.py",
+			arguments = [ "--identifier", identifier, "--master-uri", "ws://%s:%s" % (self.master_address, self.master_port) ],
+			workspace = os.path.join(self.temporary_directory, identifier),
+		)
 
 
 	def invoke(self, script, arguments, workspace):
