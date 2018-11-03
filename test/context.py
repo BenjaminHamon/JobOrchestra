@@ -66,7 +66,7 @@ class Context:
 		script_root = os.path.dirname(os.path.realpath(__file__))
 		command = [ sys.executable, os.path.join(script_root, script) ] + arguments
 
-		os.makedirs(workspace)
+		os.makedirs(workspace, exist_ok = True)
 
 		process = subprocess.Popen(
 			command,

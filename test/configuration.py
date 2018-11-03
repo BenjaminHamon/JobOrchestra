@@ -1,3 +1,6 @@
+service_url = "http://localhost:5100"
+
+
 def configure():
 	workers = _configure_workers()
 	jobs = _configure_jobs()
@@ -10,6 +13,8 @@ def _configure_jobs():
 		test_success(),
 		test_failure(),
 		test_exception(),
+		test_controller_success(),
+		test_controller_failure(),
 	]
 
 
@@ -66,6 +71,54 @@ def test_exception():
 
 		"steps": [
 			{ "name": "exception", "command": [ "{environment[python3_executable]}", "-c", "print('{undefined}')" ] },
+		],
+	}
+
+
+def test_controller_success():
+	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
+	controller_script += [ "--service-url", service_url, "--results", "{result_file_path}" ]
+
+	return {
+		"identifier": "test_controller_success",
+		"description": "Trigger all test jobs.",
+		"workspace": "test_project",
+
+		"properties": {
+			"project": "test_project",
+			"is_controller": True,
+		},
+
+		"parameters": [],
+
+		"steps": [
+			{ "name": "trigger", "command": controller_script + [ "trigger", "test_success" ] },
+			{ "name": "trigger", "command": controller_script + [ "trigger", "test_success" ] },
+			{ "name": "wait", "command": controller_script + [ "wait" ] },
+		],
+	}
+
+
+def test_controller_failure():
+	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
+	controller_script += [ "--service-url", service_url, "--results", "{result_file_path}" ]
+
+	return {
+		"identifier": "test_controller_failure",
+		"description": "Trigger all test jobs.",
+		"workspace": "test_project",
+
+		"properties": {
+			"project": "test_project",
+			"is_controller": True,
+		},
+
+		"parameters": [],
+
+		"steps": [
+			{ "name": "trigger", "command": controller_script + [ "trigger", "test_success" ] },
+			{ "name": "trigger", "command": controller_script + [ "trigger", "test_failure" ] },
+			{ "name": "wait", "command": controller_script + [ "wait" ] },
 		],
 	}
 
