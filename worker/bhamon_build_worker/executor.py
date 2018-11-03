@@ -79,7 +79,7 @@ def _execute_step(job_identifier, build_identifier, build_status, step_index, st
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
 		log_file_path = worker_storage.get_log_path(job_identifier, build_identifier, step_index, step["name"])
-		result_file_path = os.path.join(".build_results", job_identifier + "_" + build_identifier, "results.json")
+		result_file_path = worker_storage.get_file_path(job_identifier, build_identifier, "results.json")
 
 		if is_skipping:
 			step["status"] = "skipped"
@@ -88,7 +88,7 @@ def _execute_step(job_identifier, build_identifier, build_status, step_index, st
 			step_parameters = {
 				"environment": build_status["environment"],
 				"parameters": build_status["parameters"],
-				"result_file_path": result_file_path,
+				"result_file_path": os.path.relpath(result_file_path, build_status["workspace"]),
 			}
 
 			step_command = [ argument.format(**step_parameters) for argument in step["command"] ]
@@ -101,8 +101,6 @@ def _execute_step(job_identifier, build_identifier, build_status, step_index, st
 					creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
 				step["status"] = _wait_process(build_identifier, child_process)
 
-		if os.path.isfile(os.path.join(build_status["workspace"], result_file_path)):
-			worker_storage.save_results(job_identifier, build_identifier, os.path.join(build_status["workspace"], result_file_path))
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
 	except:
