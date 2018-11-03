@@ -5,10 +5,14 @@ import sys
 import pytest
 
 
+STATUS_CONTROL_C_EXIT = 0xC000013A
+
+
 def assert_multi_process(process_information_collection):
 	__tracebackhide__ = True # pylint: disable=unused-variable
 
 	for process_information in process_information_collection:
+		process_information["result_code"] = process_information["process"].poll()
 		process_information["stdout"] = process_information["process"].stdout.read().decode()
 		process_information["stderr"] = process_information["process"].stderr.read().decode()
 
@@ -22,7 +26,10 @@ def assert_multi_process(process_information_collection):
 			sys.stderr.write("\n")
 
 	for process_information in process_information_collection:
-		assert process_information["process"].poll() == 0
+		if process_information["result_code"] is None:
+			pytest.fail("Process %s did not complete" % process_information["identifier"])
+		if process_information["result_code"] not in [ 0, STATUS_CONTROL_C_EXIT ]:
+			pytest.fail("Process %s completed with result code %s" % (process_information["identifier"], process_information["result_code"]))
 		assert_log(process_information["stderr"], process_information["log_format"], process_information["expected_messages"])
 
 

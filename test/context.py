@@ -19,6 +19,8 @@ class Context:
 		self.temporary_directory = temporary_directory
 		self.master_address = "localhost"
 		self.master_port = 8765
+		self.service_address = "localhost"
+		self.service_port = 5100
 		self.process_collection = []
 
 
@@ -49,6 +51,14 @@ class Context:
 			script = "worker_main.py",
 			arguments = [ "--identifier", identifier, "--master-uri", "ws://%s:%s" % (self.master_address, self.master_port) ],
 			workspace = os.path.join(self.temporary_directory, identifier),
+		)
+
+
+	def invoke_service(self):
+		return self.invoke(
+			script = "service_main.py",
+			arguments = [ "--address", self.service_address, "--port", str(self.service_port) ],
+			workspace = os.path.join(self.temporary_directory, "master"),
 		)
 
 
