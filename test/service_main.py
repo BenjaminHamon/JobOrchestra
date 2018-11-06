@@ -22,7 +22,7 @@ if __name__ == "__main__":
 	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
 
-	from bhamon_build_master.service import application
+	from bhamon_build_service.service import application
 
 	database_client_instance = json_database_client.JsonDatabaseClient(".")
 	file_storage_instance = file_storage.FileStorage(".")

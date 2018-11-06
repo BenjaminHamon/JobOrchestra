@@ -5,7 +5,6 @@ import werkzeug
 
 
 logger = logging.getLogger("Service")
-logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 logger.info("Starting build master service")
 

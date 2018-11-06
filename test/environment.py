@@ -16,6 +16,7 @@ def configure_logging(log_level):
 	logging.getLogger('filelock').setLevel(logging.WARNING)
 	logging.getLogger('urllib3').setLevel(logging.INFO)
 	logging.getLogger('websockets.protocol').setLevel(logging.INFO)
+	logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 
 def load_environment():
