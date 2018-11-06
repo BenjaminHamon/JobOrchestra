@@ -4,12 +4,12 @@ import subprocess
 import sys
 import time
 
-import bhamon_build_master.build_provider as build_provider
-import bhamon_build_master.file_storage as file_storage
-import bhamon_build_master.job_provider as job_provider
-import bhamon_build_master.json_database_client as json_database_client
-import bhamon_build_master.task_provider as task_provider
-import bhamon_build_master.worker_provider as worker_provider
+import bhamon_build_model.build_provider as build_provider
+import bhamon_build_model.file_storage as file_storage
+import bhamon_build_model.job_provider as job_provider
+import bhamon_build_model.json_database_client as json_database_client
+import bhamon_build_model.task_provider as task_provider
+import bhamon_build_model.worker_provider as worker_provider
 
 
 class Context:

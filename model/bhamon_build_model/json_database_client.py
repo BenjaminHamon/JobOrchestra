@@ -2,7 +2,7 @@ import glob
 import json
 import os
 
-from bhamon_build_master import database_client
+from bhamon_build_model import database_client
 
 
 class JsonDatabaseClient(database_client.DatabaseClient):
