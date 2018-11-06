@@ -1,12 +1,16 @@
 import argparse
 import logging
 
+import flask
+import werkzeug
+
 import bhamon_build_model.build_provider as build_provider
 import bhamon_build_model.file_storage as file_storage
 import bhamon_build_model.job_provider as job_provider
 import bhamon_build_model.json_database_client as json_database_client
 import bhamon_build_model.task_provider as task_provider
 import bhamon_build_model.worker_provider as worker_provider
+import bhamon_build_service.service as service
 
 import environment
 
@@ -22,14 +26,19 @@ if __name__ == "__main__":
 	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
 
-	from bhamon_build_service.service import application
-
 	database_client_instance = json_database_client.JsonDatabaseClient(".")
 	file_storage_instance = file_storage.FileStorage(".")
 
+	application = flask.Flask(__name__)
 	application.build_provider = build_provider.BuildProvider(database_client_instance, file_storage_instance)
 	application.job_provider = job_provider.JobProvider(database_client_instance)
 	application.task_provider = task_provider.TaskProvider(database_client_instance)
 	application.worker_provider = worker_provider.WorkerProvider(database_client_instance)
+
+	application.before_request(service.log_request)
+	for exception in werkzeug.exceptions.default_exceptions:
+		application.register_error_handler(exception, service.handle_error)
+
+	service.register_routes(application)
 
 	application.run(host = arguments.address, port = arguments.port)

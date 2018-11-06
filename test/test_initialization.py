@@ -44,10 +44,6 @@ def test_service(tmpdir):
 	with context.Context(tmpdir) as context_instance:
 		service_process = context_instance.invoke_service()
 
-	service_expected_messages = [
-		{ "level": "Info", "logger": "Service", "message": "Starting build master service" },
-	]
-
 	assert_extensions.assert_multi_process([
-		{ "identifier": "service", "process": service_process, "log_format": environment.log_format, "expected_messages": service_expected_messages },
+		{ "identifier": "service", "process": service_process, "log_format": environment.log_format, "expected_messages": [] },
 	])
