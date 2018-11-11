@@ -11,16 +11,18 @@ import bhamon_build_model.json_database_client as json_database_client
 import bhamon_build_model.task_provider as task_provider
 import bhamon_build_model.worker_provider as worker_provider
 
+import environment
+
 
 class Context:
 
 
 	def __init__(self, temporary_directory):
 		self.temporary_directory = temporary_directory
-		self.master_address = "localhost"
-		self.master_port = 8765
-		self.service_address = "localhost"
-		self.service_port = 5100
+		self.master_address = environment.master_address
+		self.master_port = environment.master_port
+		self.service_address = environment.service_address
+		self.service_port = environment.service_port
 		self.process_collection = []
 
 

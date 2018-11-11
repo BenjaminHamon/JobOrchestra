@@ -2,6 +2,12 @@ import logging
 import sys
 
 
+master_address = "localhost"
+master_port = 8765
+service_address = "localhost"
+service_port = 5100
+
+
 log_format = "[{levelname}][{name}] {message}"
 
 
@@ -22,4 +28,5 @@ def configure_logging(log_level):
 def load_environment():
 	return {
 		"python3_executable": sys.executable,
+		"service_url": "http://%s:%s" % (service_address, service_port),
 	}

@@ -1,6 +1,3 @@
-service_url = "http://localhost:5100"
-
-
 def configure():
 	workers = _configure_workers()
 	jobs = _configure_jobs()
@@ -77,7 +74,7 @@ def test_exception():
 
 def test_controller_success():
 	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
-	controller_script += [ "--service-url", service_url, "--results", "{result_file_path}" ]
+	controller_script += [ "--service-url", "{environment[service_url]}", "--results", "{result_file_path}" ]
 
 	return {
 		"identifier": "test_controller_success",
@@ -101,7 +98,7 @@ def test_controller_success():
 
 def test_controller_failure():
 	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
-	controller_script += [ "--service-url", service_url, "--results", "{result_file_path}" ]
+	controller_script += [ "--service-url", "{environment[service_url]}", "--results", "{result_file_path}" ]
 
 	return {
 		"identifier": "test_controller_failure",
