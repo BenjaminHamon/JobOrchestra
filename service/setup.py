@@ -10,5 +10,9 @@ setuptools.setup(
 
 	packages = [
 		"bhamon_build_service",
-	]
+	],
+
+	install_requires = [
+		"flask",
+	],
 )

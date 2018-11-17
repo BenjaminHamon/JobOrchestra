@@ -10,5 +10,9 @@ setuptools.setup(
 
 	packages = [
 		"bhamon_build_master",
-	]
+	],
+
+	install_requires = [
+		"websockets",
+	],
 )
