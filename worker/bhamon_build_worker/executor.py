@@ -15,14 +15,16 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 
 termination_timeout_seconds = 30
 
-should_exit = False
-
 
 def run(job_identifier, build_identifier, environment):
+	executor_data = {
+		"should_shutdown": False,
+	}
+
 	if platform.system() == "Windows":
-		signal.signal(signal.SIGBREAK, _handle_termination)
-	signal.signal(signal.SIGINT, _handle_termination)
-	signal.signal(signal.SIGTERM, _handle_termination)
+		signal.signal(signal.SIGBREAK, lambda signal_number, frame: _shutdown(executor_data))
+	signal.signal(signal.SIGINT, lambda signal_number, frame: _shutdown(executor_data))
+	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(executor_data))
 
 	logger.info("(%s) Executing %s", build_identifier, job_identifier)
 	build_request = worker_storage.load_request(job_identifier, build_identifier)
@@ -57,10 +59,10 @@ def run(job_identifier, build_identifier, environment):
 		is_skipping = False
 
 		for step_index, step in enumerate(build_status["steps"]):
-			if not is_skipping and should_exit:
+			if not is_skipping and executor_data["should_shutdown"]:
 				build_final_status = "aborted"
 				is_skipping = True
-			_execute_step(job_identifier, build_identifier, build_status, step_index, step, is_skipping)
+			_execute_step(executor_data, job_identifier, build_identifier, build_status, step_index, step, is_skipping)
 			if not is_skipping and step["status"] != "succeeded":
 				build_final_status = step["status"]
 				is_skipping = True
@@ -76,7 +78,7 @@ def run(job_identifier, build_identifier, environment):
 	logger.info("(%s) Build completed with status %s", build_identifier, build_status["status"])
 
 
-def _execute_step(job_identifier, build_identifier, build_status, step_index, step, is_skipping):
+def _execute_step(executor_data, job_identifier, build_identifier, build_status, step_index, step, is_skipping):
 	logger.info("(%s) Step %s is starting", build_identifier, step["name"])
 
 	try:
@@ -107,7 +109,7 @@ def _execute_step(job_identifier, build_identifier, build_status, step_index, st
 					stderr = subprocess.STDOUT,
 					creationflags = subprocess_flags,
 				)
-				step["status"] = _wait_process(build_identifier, child_process)
+				step["status"] = _wait_process(executor_data, build_identifier, child_process)
 
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
@@ -119,10 +121,10 @@ def _execute_step(job_identifier, build_identifier, build_status, step_index, st
 	logger.info("(%s) Step %s completed with status %s", build_identifier, step["name"], step["status"])
 
 
-def _wait_process(build_identifier, child_process):
+def _wait_process(executor_data, build_identifier, child_process):
 	result = None
 	while result is None:
-		if should_exit:
+		if executor_data["should_shutdown"]:
 			logger.info("(%s) Terminating child process", build_identifier)
 			os.kill(child_process.pid, shutdown_signal)
 			try:
@@ -136,6 +138,5 @@ def _wait_process(build_identifier, child_process):
 	return "succeeded" if result == 0 else "failed"
 
 
-def _handle_termination(signal_number, frame):
-	global should_exit
-	should_exit = True
+def _shutdown(executor_data):
+	executor_data["should_shutdown"] = True
