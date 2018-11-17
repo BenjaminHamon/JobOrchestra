@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import platform
 import signal
 import subprocess
 import sys
@@ -13,6 +14,9 @@ import bhamon_build_worker.worker_storage as worker_storage
 
 
 logger = logging.getLogger("Worker")
+
+shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT
+subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
 termination_timeout_seconds = 30
@@ -27,7 +31,8 @@ def run(master_uri, worker_identifier, executor_script):
 		"should_shutdown": False,
 	}
 
-	signal.signal(signal.SIGBREAK, lambda signal_number, frame: _shutdown(worker_data))
+	if platform.system() == "Windows":
+		signal.signal(signal.SIGBREAK, lambda signal_number, frame: _shutdown(worker_data))
 	signal.signal(signal.SIGINT, lambda signal_number, frame: _shutdown(worker_data))
 	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(worker_data))
 
@@ -120,7 +125,7 @@ async def _terminate_executor(executor, timeout_seconds):
 	if executor["process"] and executor["process"].poll() is None:
 		logger.info("Aborting %s %s", executor["job_identifier"], executor["build_identifier"])
 		termination_start_time = time.time()
-		os.kill(executor["process"].pid, signal.CTRL_BREAK_EVENT)
+		os.kill(executor["process"].pid, shutdown_signal)
 		while time.time() - termination_start_time < timeout_seconds:
 			await asyncio.sleep(1)
 			if executor["process"].poll() is not None:
@@ -183,7 +188,7 @@ def _execute(worker_data, job_identifier, build_identifier, job, parameters):
 	worker_storage.create_build(job_identifier, build_identifier)
 	worker_storage.save_request(job_identifier, build_identifier, build_request)
 	executor_command = [ sys.executable, worker_data["executor_script"], job_identifier, build_identifier ]
-	executor_process = subprocess.Popen(executor_command, creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
+	executor_process = subprocess.Popen(executor_command, creationflags = subprocess_flags)
 	executor = { "job_identifier": job_identifier, "build_identifier": build_identifier, "process": executor_process }
 	worker_data["active_executors"].append(executor)
 
@@ -201,7 +206,7 @@ def _abort(worker_data, job_identifier, build_identifier):
 	logger.info("Aborting %s %s", job_identifier, build_identifier)
 	executor = _find_executor(worker_data, build_identifier)
 	if executor["process"] and executor["process"].poll() is None:
-		os.kill(executor["process"].pid, signal.CTRL_BREAK_EVENT)
+		os.kill(executor["process"].pid, shutdown_signal)
 	# The executor should terminate nicely, if it does not it will stays as running and should be investigated
 	# Forcing termination here would leave orphan processes and the status as running
 

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import platform
 import signal
 
 
@@ -20,7 +21,8 @@ class Master:
 	def run(self):
 		logger.info("Starting build master")
 
-		signal.signal(signal.SIGBREAK, lambda signal_number, frame: self.shutdown())
+		if platform.system() == "Windows":
+			signal.signal(signal.SIGBREAK, lambda signal_number, frame: self.shutdown())
 		signal.signal(signal.SIGINT, lambda signal_number, frame: self.shutdown())
 		signal.signal(signal.SIGTERM, lambda signal_number, frame: self.shutdown())
 

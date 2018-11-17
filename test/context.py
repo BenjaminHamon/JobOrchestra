@@ -1,4 +1,5 @@
 import os
+import platform
 import signal
 import subprocess
 import sys
@@ -12,6 +13,10 @@ import bhamon_build_model.task_provider as task_provider
 import bhamon_build_model.worker_provider as worker_provider
 
 import environment
+
+
+shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT
+subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 
 class Context:
@@ -32,7 +37,7 @@ class Context:
 
 	def __exit__(self, exception_type, exception_value, traceback):
 		for process in self.process_collection:
-			os.kill(process.pid, signal.CTRL_BREAK_EVENT)
+			os.kill(process.pid, shutdown_signal)
 			try:
 				process.wait(5)
 			except subprocess.TimeoutExpired:
@@ -75,7 +80,7 @@ class Context:
 			cwd = workspace,
 			stdout = subprocess.PIPE,
 			stderr = subprocess.PIPE,
-			creationflags = subprocess.CREATE_NEW_PROCESS_GROUP,
+			creationflags = subprocess_flags,
 		)
 
 		self.process_collection.append(process)

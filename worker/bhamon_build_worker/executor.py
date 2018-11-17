@@ -1,5 +1,6 @@
 import logging
 import os
+import platform
 import signal
 import subprocess
 import time
@@ -9,14 +10,18 @@ import bhamon_build_worker.worker_storage as worker_storage
 
 logger = logging.getLogger("Executor")
 
+shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT
+subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
+
 termination_timeout_seconds = 30
 
 should_exit = False
 
 
 def run(job_identifier, build_identifier, environment):
+	if platform.system() == "Windows":
+		signal.signal(signal.SIGBREAK, _handle_termination)
 	signal.signal(signal.SIGINT, _handle_termination)
-	signal.signal(signal.SIGBREAK, _handle_termination)
 	signal.signal(signal.SIGTERM, _handle_termination)
 
 	logger.info("(%s) Executing %s", build_identifier, job_identifier)
@@ -96,9 +101,12 @@ def _execute_step(job_identifier, build_identifier, build_status, step_index, st
 
 			with open(log_file_path, "w") as log_file:
 				child_process = subprocess.Popen(
-					step_command, cwd = build_status["workspace"],
-					stdout = log_file, stderr = subprocess.STDOUT,
-					creationflags = subprocess.CREATE_NEW_PROCESS_GROUP)
+					step_command,
+					cwd = build_status["workspace"],
+					stdout = log_file,
+					stderr = subprocess.STDOUT,
+					creationflags = subprocess_flags,
+				)
 				step["status"] = _wait_process(build_identifier, child_process)
 
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
@@ -116,7 +124,7 @@ def _wait_process(build_identifier, child_process):
 	while result is None:
 		if should_exit:
 			logger.info("(%s) Terminating child process", build_identifier)
-			os.kill(child_process.pid, signal.CTRL_BREAK_EVENT)
+			os.kill(child_process.pid, shutdown_signal)
 			try:
 				result = child_process.wait(timeout = termination_timeout_seconds)
 			except subprocess.TimeoutExpired:
