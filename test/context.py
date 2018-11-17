@@ -18,7 +18,7 @@ class Context:
 
 
 	def __init__(self, temporary_directory):
-		self.temporary_directory = temporary_directory
+		self.temporary_directory = str(temporary_directory)
 		self.master_address = environment.master_address
 		self.master_port = environment.master_port
 		self.service_address = environment.service_address
@@ -86,6 +86,7 @@ class Context:
 
 
 def instantiate_providers(temporary_directory):
+	temporary_directory = str(temporary_directory)
 	database_client_instance = json_database_client.JsonDatabaseClient(os.path.join(temporary_directory, "master"))
 	file_storage_instance = file_storage.FileStorage(os.path.join(temporary_directory, "master"))
 
