@@ -35,6 +35,8 @@ def register_routes(application):
 	application.add_url_rule("/worker_collection", methods = [ "GET" ], view_func = worker_controller.get_worker_collection)
 	application.add_url_rule("/worker/<worker_identifier>", methods = [ "GET" ], view_func = worker_controller.get_worker)
 	application.add_url_rule("/worker/<worker_identifier>/stop", methods = [ "POST" ], view_func = worker_controller.stop_worker)
+	application.add_url_rule("/worker/<worker_identifier>/enable", methods = [ "POST" ], view_func = worker_controller.enable_worker)
+	application.add_url_rule("/worker/<worker_identifier>/disable", methods = [ "POST" ], view_func = worker_controller.disable_worker)
 
 
 def log_request():
