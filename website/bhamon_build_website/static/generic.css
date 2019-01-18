@@ -1,0 +1,123 @@
+﻿html
+{
+	overflow-y: scroll;
+	height: 100%;
+}
+
+h1, p, ul
+{
+	margin: 0;
+}
+
+body
+{
+	display: flex;
+	flex-flow: column;
+	margin: 0;
+	min-height: 100%;
+}
+
+header
+{
+	padding: 10px;
+}
+
+header a
+{
+	font-size: 1.5em;
+	text-decoration: none;
+}
+
+header a, header a:visited, header a:hover, header a:active
+{
+	color: inherit;
+}
+
+#body-inner
+{
+	display: flex;
+	flex-direction: row;
+	flex-grow: 1;
+}
+
+nav
+{
+	padding: 10px;
+}
+
+main
+{
+	display: flex;
+	flex-direction: column;
+	/* flex-grow: 1; */
+	padding: 10px;
+}
+
+footer
+{
+	padding: 10px;
+	text-align: center;
+	font-size: 0.8em;
+	color: #555;
+}
+
+h1
+{
+	margin: 5px;
+	font-size: 1.5em;
+}
+
+h2
+{
+	margin: 5px;
+	font-size: 1.2em;
+}
+
+a, img
+{
+	display: block;
+}
+
+ul, form, table, section, form div
+{
+	margin: 5px;
+}
+
+table
+{
+	border-collapse: collapse;
+}
+
+th, td
+{
+	padding: 5px;
+	border: 1px solid grey;
+}
+
+form ul
+{
+	padding: 0px;
+}
+
+form li
+{
+	display: flex;
+	flex-wrap: wrap;
+	margin-bottom: 10px;
+}
+
+form li label
+{
+	width: 100px;
+	margin-right: 10px;
+}
+
+form li input
+{
+	flex-grow: 1;
+}
+
+form li button
+{
+	margin-left: auto;
+}

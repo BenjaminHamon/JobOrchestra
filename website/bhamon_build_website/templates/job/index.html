@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Job {{ job['identifier'] }}</h1>
+<section>
+	<p>{{ job['description'] }}</p>
+</section>
+<form action="{{ url_for('trigger_job', job_identifier = job['identifier']) }}" method="post">
+	<ul>
+		{% for parameter in job['parameters'] %}
+		<li>
+			<label for="parameter-{{parameter['key']}}">{{ parameter['key'] }}</label>
+			<input type="text" id="parameter-{{parameter['key']}}" name="parameter-{{ parameter['key'] }}"/>
+		</li>
+		{% endfor %}
+		<li>
+			<button type="submit">Trigger build</button>
+		</li>
+	</ul>
+</form>
+{% endblock %}

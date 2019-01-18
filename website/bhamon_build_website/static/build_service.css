@@ -1,0 +1,35 @@
+.action-group
+{
+	display: flex;
+	flex-direction: row;
+	margin: 0;
+}
+
+.status-group
+{
+	display: flex;
+	flex-direction: row;
+}
+
+.status-indicator
+{
+	display: inline-block;
+	height: 16px;
+	width: 16px;
+	margin-right: 5px;
+	border: 1px solid grey;
+	border-radius: 50%;
+}
+
+.status-indicator.pending { background-color: lightblue; }
+.status-indicator.running { background-color: yellow; }
+.status-indicator.cancelled { background-color: grey; }
+.status-indicator.succeeded { background-color: green; }
+.status-indicator.failed { background-color: red; }
+.status-indicator.aborted { background-color: purple; }
+.status-indicator.exception { background-color: purple; }
+
+.build-information .status-group
+{
+	margin: 5px 40px;
+}

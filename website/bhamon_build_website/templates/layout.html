@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+
+	<head>
+		<title>{{ title }} - Build Service</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename = 'generic.css') }}">
+		<link rel="stylesheet" href="{{ url_for('static', filename = 'build_service.css') }}">
+	</head>
+
+	<body>
+
+		<header>
+			<a href="{{ url_for('home') }}">Build Service</a>
+		</header>
+
+		<div id="body-inner">
+
+			<nav>
+				<a href="{{ url_for('job_collection_index') }}">Jobs</a>
+				<a href="{{ url_for('build_collection_index') }}">Builds</a>
+				<a href="{{ url_for('artifact_storage_index') }}">Artifacts</a>
+				<a href="{{ url_for('worker_collection_index') }}">Workers</a>
+				<a href="{{ url_for('task_collection_index') }}">Tasks</a>
+			</nav>
+
+			<main>
+				{% block content %}{% endblock %}
+			</main>
+
+		</div>
+
+		<footer>
+			<p>Copyright © 2019 Benjamin Hamon</p>
+		</footer>
+
+	</body>
+
+	{% block scripts %}{% endblock %}
+
+</html>
