@@ -27,6 +27,15 @@
 </section>
 
 <section>
+	<h2>Parameters</h2>
+	<ul>
+		{% for key, value in build['parameters'].items() %}
+		<li>{{ key }}: {{ value }}</li>
+		{% endfor %}
+	</ul>
+</section>
+
+<section>
 	<h2>Steps</h2>
 	<table>
 		<thead>
