@@ -3,11 +3,11 @@ import sys
 
 
 master_address = "localhost"
-master_port = 8765
+master_port = 5901
 service_address = "localhost"
-service_port = 5100
+service_port = 5902
 website_address = "localhost"
-website_port = 5000
+website_port = 5903
 
 
 log_format = "[{levelname}][{name}] {message}"
