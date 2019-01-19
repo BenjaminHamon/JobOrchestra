@@ -1,4 +1,9 @@
+import logging
+
 import flask
+
+
+logger = logging.getLogger("BuildController")
 
 
 def get_build_collection():

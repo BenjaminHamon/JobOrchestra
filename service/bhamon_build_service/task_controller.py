@@ -1,4 +1,9 @@
+import logging
+
 import flask
+
+
+logger = logging.getLogger("TaskController")
 
 
 def get_task_collection():

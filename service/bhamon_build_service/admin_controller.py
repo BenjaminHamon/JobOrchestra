@@ -1,4 +1,9 @@
+import logging
+
 import flask
+
+
+logger = logging.getLogger("AdminController")
 
 
 def reload():

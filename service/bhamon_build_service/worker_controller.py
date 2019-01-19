@@ -1,4 +1,9 @@
+import logging
+
 import flask
+
+
+logger = logging.getLogger("WorkerController")
 
 
 def get_worker_collection():
