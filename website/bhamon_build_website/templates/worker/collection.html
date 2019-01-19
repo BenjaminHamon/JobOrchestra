@@ -17,8 +17,32 @@
 			{% for worker in worker_collection %}
 			<tr>
 				<td><a href="{{ url_for('worker_index', worker_identifier = worker['identifier']) }}">{{ worker['identifier'] }}</a></td>
-				<td>{{ worker['is_active'] }}</td>
-				<td>{{ worker['is_enabled'] }}</td>
+				<td>
+					{% if worker['is_active'] %}
+					<div class="status-group">
+						<div class="status-indicator active"></div>
+						<div class="status-text">Active</div>
+					</div method="post">
+					{% else %}
+					<div class="status-group">
+						<div class="status-indicator inactive"></div>
+						<div class="status-text">Inactive</div>
+					</div>
+					{% endif %}
+				</td>
+				<td>
+					{% if worker['is_enabled'] %}
+					<div class="status-group">
+						<div class="status-indicator enabled"></div>
+						<div class="status-text">Enabled</div>
+					</div>
+					{% else %}
+					<div class="status-group">
+						<div class="status-indicator disabled"></div>
+						<div class="status-text">Disabled</div>
+					</div>
+					{% endif %}
+				</td>
 				<td>
 					<form class="action-group" method="post">
 						{% if worker['is_active'] %}

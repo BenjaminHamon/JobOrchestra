@@ -5,10 +5,30 @@
 	margin: 0;
 }
 
+.action-group button
+{
+	min-width: 80px;
+}
+
+.status-grid
+{
+	display: inline-grid;
+	grid-template-columns: auto auto;
+	grid-column-gap: 10px;
+	grid-row-gap: 5px;
+}
+
+.status-grid button
+{
+	width: 100%;
+	min-width: 80px;
+}
+
 .status-group
 {
 	display: flex;
 	flex-direction: row;
+	align-items: center;
 }
 
 .status-indicator
@@ -28,6 +48,12 @@
 .status-indicator.failed { background-color: red; }
 .status-indicator.aborted { background-color: purple; }
 .status-indicator.exception { background-color: purple; }
+
+.status-indicator.active { background-color: green; }
+.status-indicator.inactive { background-color: gray; }
+
+.status-indicator.enabled { background-color: green; }
+.status-indicator.disabled { background-color: grey; }
 
 .build-status .status-group
 {

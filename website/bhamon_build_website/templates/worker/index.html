@@ -2,8 +2,49 @@
 
 {% block content %}
 <h1>Worker {{ worker['identifier'] }}</h1>
+
 <section>
 	<h2>Description</h2>
 	<div>{{ worker['description'] }}</div>
+</section>
+
+<section>
+	<h2>Status</h2>
+	<div class=status-grid>
+		{% if worker['is_active'] %}
+		<div class="status-group">
+			<div class="status-indicator active"></div>
+			<div class="status-text">Active</div>
+		</div method="post">
+		<form>
+			<button formaction="{{ url_for('stop_worker', worker_identifier = worker['identifier']) }}">Stop</button>
+		</form>
+		{% else %}
+		<div class="status-group">
+			<div class="status-indicator inactive"></div>
+			<div class="status-text">Inactive</div>
+		</div>
+		<form method="post">
+			<button formaction="{{ url_for('stop_worker', worker_identifier = worker['identifier']) }}" disabled>Stop</button>
+		</form>
+		{% endif %}
+		{% if worker['is_enabled'] %}
+		<div class="status-group">
+			<div class="status-indicator enabled"></div>
+			<div class="status-text">Enabled</div>
+		</div>
+		<form method="post">
+			<button formaction="{{ url_for('disable_worker', worker_identifier = worker['identifier']) }}">Disable</button>
+		</form>
+		{% else %}
+		<div class="status-group">
+			<div class="status-indicator disabled"></div>
+			<div class="status-text">Disabled</div>
+		</div>
+		<form method="post">
+			<button formaction="{{ url_for('enable_worker', worker_identifier = worker['identifier']) }}">Enable</button>
+		</form>
+		{% endif %}
+	</div>
 </section>
 {% endblock %}
