@@ -5,20 +5,25 @@
 
 <section>
 	<h2>Status</h2>
-	<div class="build-status">
-		<ul>
-			<li>Job: <a href="{{ url_for('job_index', job_identifier = build['job']) }}" style="display: inline">{{ build['job'] }}</a></li>
-			<li>Worker: <a href="{{ url_for('worker_index', worker_identifier = build['worker']) }}" style="display: inline">{{ build['worker'] }}</a></li>
-		</ul>
+	<div class=status-grid>
 		<div class="status-group">
 			<div class="status-indicator {{ build['status'] }}"></div>
 			<div class="status-text">{{ build['status'] }}</div>
 		</div>
-		<ul>
-			<li>Creation date: {{ build['creation_date'] }}</li>
-			<li>Update date: {{ build['update_date'] }}</li>
-		</ul>
+		<form method="post">
+			{% if build['status'] == 'running' %}
+			<button formaction="{{ url_for('abort_build', build_identifier = build['identifier']) }}">Abort</button>
+			{% else %}
+			<button formaction="{{ url_for('abort_build', build_identifier = build['identifier']) }}" disabled>Abort</button>
+			{% endif %}
+		</form>
 	</div>
+	<ul>
+		<li>Job: <a href="{{ url_for('job_index', job_identifier = build['job']) }}" style="display: inline">{{ build['job'] }}</a></li>
+		<li>Worker: <a href="{{ url_for('worker_index', worker_identifier = build['worker']) }}" style="display: inline">{{ build['worker'] }}</a></li>
+		<li>Creation date: {{ build['creation_date'] }}</li>
+		<li>Update date: {{ build['update_date'] }}</li>
+	</ul>
 </section>
 
 <section>

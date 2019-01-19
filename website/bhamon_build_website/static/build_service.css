@@ -54,8 +54,3 @@
 
 .status-indicator.enabled { background-color: green; }
 .status-indicator.disabled { background-color: grey; }
-
-.build-status .status-group
-{
-	margin: 5px 40px;
-}
