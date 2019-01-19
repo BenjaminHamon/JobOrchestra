@@ -29,7 +29,7 @@
 .status-indicator.aborted { background-color: purple; }
 .status-indicator.exception { background-color: purple; }
 
-.build-information .status-group
+.build-status .status-group
 {
 	margin: 5px 40px;
 }

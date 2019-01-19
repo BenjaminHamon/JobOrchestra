@@ -61,26 +61,26 @@ footer
 	color: #555;
 }
 
+section
+{
+	margin: 5px;
+}
+
 h1
 {
 	margin: 5px;
 	font-size: 1.5em;
 }
 
-h2
+section h2
 {
-	margin: 5px;
+	margin: 5px 0;
 	font-size: 1.2em;
 }
 
 a, img
 {
 	display: block;
-}
-
-ul, form, table, section, form div
-{
-	margin: 5px;
 }
 
 table
