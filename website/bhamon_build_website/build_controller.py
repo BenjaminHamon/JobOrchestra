@@ -37,4 +37,4 @@ def build_step_log(build_identifier, step_index):
 def abort_build(build_identifier):
 	parameters = flask.request.form
 	service_client.post("/build/{build_identifier}/abort".format(**locals()), parameters)
-	return flask.redirect(flask.url_for("build_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("build_collection_index"))

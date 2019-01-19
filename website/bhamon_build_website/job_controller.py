@@ -26,14 +26,14 @@ def trigger_job(job_identifier):
 		if key.startswith("parameter-"):
 			parameters[key[len("parameter-"):]] = value
 	service_client.post("/job/{job_identifier}/trigger".format(**locals()), parameters)
-	return flask.redirect(flask.url_for("job_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("job_collection_index"))
 
 
 def enable_job(job_identifier):
 	service_client.post("/job/{job_identifier}/enable".format(**locals()))
-	return flask.redirect(flask.url_for("job_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("job_collection_index"))
 
 
 def disable_job(job_identifier):
 	service_client.post("/job/{job_identifier}/disable".format(**locals()))
-	return flask.redirect(flask.url_for("job_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("job_collection_index"))

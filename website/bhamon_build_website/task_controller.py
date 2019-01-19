@@ -17,4 +17,4 @@ def task_collection_index():
 
 def cancel_task(task_identifier):
 	service_client.post("/task/{task_identifier}/cancel".format(**locals()))
-	return flask.redirect(flask.url_for("task_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("task_collection_index"))

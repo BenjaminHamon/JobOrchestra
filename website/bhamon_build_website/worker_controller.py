@@ -23,14 +23,14 @@ def worker_index(worker_identifier):
 def stop_worker(worker_identifier):
 	parameters = flask.request.form
 	service_client.post("/worker/{worker_identifier}/stop".format(**locals()), parameters)
-	return flask.redirect(flask.url_for("worker_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("worker_collection_index"))
 
 
 def enable_worker(worker_identifier):
 	service_client.post("/worker/{worker_identifier}/enable".format(**locals()))
-	return flask.redirect(flask.url_for("worker_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("worker_collection_index"))
 
 
 def disable_worker(worker_identifier):
 	service_client.post("/worker/{worker_identifier}/disable".format(**locals()))
-	return flask.redirect(flask.url_for("worker_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("worker_collection_index"))
