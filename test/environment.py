@@ -6,6 +6,8 @@ master_address = "localhost"
 master_port = 8765
 service_address = "localhost"
 service_port = 5100
+website_address = "localhost"
+website_port = 5000
 
 
 log_format = "[{levelname}][{name}] {message}"

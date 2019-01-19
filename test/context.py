@@ -28,6 +28,8 @@ class Context:
 		self.master_port = environment.master_port
 		self.service_address = environment.service_address
 		self.service_port = environment.service_port
+		self.website_address = environment.website_address
+		self.website_port = environment.website_port
 		self.process_collection = []
 
 
@@ -66,6 +68,14 @@ class Context:
 			script = "service_main.py",
 			arguments = [ "--address", self.service_address, "--port", str(self.service_port) ],
 			workspace = os.path.join(self.temporary_directory, "master"),
+		)
+
+
+	def invoke_website(self):
+		return self.invoke(
+			script = "website_main.py",
+			arguments = [ "--address", self.website_address, "--port", str(self.website_port) ],
+			workspace = os.path.join(self.temporary_directory, "website"),
 		)
 
 

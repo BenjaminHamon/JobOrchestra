@@ -47,3 +47,14 @@ def test_service(tmpdir):
 	assert_extensions.assert_multi_process([
 		{ "identifier": "service", "process": service_process, "log_format": environment.log_format, "expected_messages": [] },
 	])
+
+
+def test_website(tmpdir):
+	""" Start website """
+
+	with context.Context(tmpdir) as context_instance:
+		website_process = context_instance.invoke_website()
+
+	assert_extensions.assert_multi_process([
+		{ "identifier": "website", "process": website_process, "log_format": environment.log_format, "expected_messages": [] },
+	])
