@@ -31,6 +31,10 @@ def get_build_results(build_identifier):
 	return flask.jsonify(flask.current_app.build_provider.get_results(build_identifier))
 
 
+def get_build_tasks(build_identifier):
+	return flask.jsonify(flask.current_app.task_provider.get_all_for_build(build_identifier))
+
+
 def abort_build(build_identifier):
 	task = flask.current_app.task_provider.create("abort_build", { "build_identifier": build_identifier })
 	return flask.jsonify({ "build_identifier": build_identifier, "task_identifier": task["identifier"] })

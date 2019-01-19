@@ -20,13 +20,16 @@ def build_index(build_identifier):
 	build = service_client.get("/build/{build_identifier}".format(**locals()))
 	build_steps = service_client.get("/build/{build_identifier}/step_collection".format(**locals()))
 	build_results = service_client.get("/build/{build_identifier}/results".format(**locals()))
+	build_tasks = service_client.get("/build/{build_identifier}/tasks".format(**locals()))
+	build_tasks = list(build_tasks.values())
+	build_tasks.sort(key = lambda task: task["update_date"], reverse = True)
 
 	if "artifacts" in build_results:
 		for artifact in build_results["artifacts"]:
 			artifact["url"] = re.sub("^" + flask.current_app.artifact_storage_path, flask.current_app.artifact_storage_url, artifact["path"])
 
 	return flask.render_template("build/index.html", title = build["identifier"],
-			build = build, build_steps = build_steps, build_results = build_results)
+			build = build, build_steps = build_steps, build_results = build_results, build_tasks = build_tasks)
 
 
 def build_step_log(build_identifier, step_index):

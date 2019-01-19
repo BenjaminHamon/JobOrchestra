@@ -14,6 +14,10 @@ def get_worker(worker_identifier):
 	return flask.jsonify(flask.current_app.worker_provider.get(worker_identifier))
 
 
+def get_worker_tasks(worker_identifier):
+	return flask.jsonify(flask.current_app.task_provider.get_all_for_worker(worker_identifier))
+
+
 def stop_worker(worker_identifier):
 	task = flask.current_app.task_provider.create("stop_worker", { "worker_identifier": worker_identifier })
 	return flask.jsonify({ "worker_identifier": worker_identifier, "task_identifier": task["identifier"] })

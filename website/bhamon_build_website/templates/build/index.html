@@ -1,4 +1,5 @@
 {% extends 'layout.html' %}
+{% import 'task/macros.html' as task_macros %}
 
 {% block content %}
 <h1>Build {{ build['identifier'] }}</h1>
@@ -96,5 +97,10 @@
 		</li>
 		{% endif %}
 	</ul>
+</section>
+
+<section>
+	<h2>Tasks</h2>
+	{{ task_macros.task_table(build_tasks) }}
 </section>
 {% endblock %}

@@ -14,6 +14,18 @@ class TaskProvider:
 		return self.database_client.get_all(self.table)
 
 
+	def get_all_for_build(self, build_identifier):
+		all_tasks = self.get_all()
+		condition = lambda task: task["parameters"].get("build_identifier", None) == build_identifier
+		return { task_identifier: task for task_identifier, task in all_tasks.items() if condition(task) }
+
+
+	def get_all_for_worker(self, worker_identifier):
+		all_tasks = self.get_all()
+		condition = lambda task: task["parameters"].get("worker_identifier", None) == worker_identifier
+		return { task_identifier: task for task_identifier, task in all_tasks.items() if condition(task) }
+
+
 	def get(self, task_identifier):
 		return self.database_client.get(self.table, task_identifier)
 
