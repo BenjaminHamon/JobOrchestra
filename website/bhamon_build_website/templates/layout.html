@@ -13,21 +13,17 @@
 			<a href="{{ url_for('home') }}">Build Service</a>
 		</header>
 
-		<div id="body-inner">
+		<nav>
+			<a href="{{ url_for('job_collection_index') }}">Jobs</a>
+			<a href="{{ url_for('build_collection_index') }}">Builds</a>
+			<a href="{{ url_for('artifact_storage_index') }}">Artifacts</a>
+			<a href="{{ url_for('worker_collection_index') }}">Workers</a>
+			<a href="{{ url_for('task_collection_index') }}">Tasks</a>
+		</nav>
 
-			<nav>
-				<a href="{{ url_for('job_collection_index') }}">Jobs</a>
-				<a href="{{ url_for('build_collection_index') }}">Builds</a>
-				<a href="{{ url_for('artifact_storage_index') }}">Artifacts</a>
-				<a href="{{ url_for('worker_collection_index') }}">Workers</a>
-				<a href="{{ url_for('task_collection_index') }}">Tasks</a>
-			</nav>
-
-			<main>
-				{% block content %}{% endblock %}
-			</main>
-
-		</div>
+		<main>
+			{% block content %}{% endblock %}
+		</main>
 
 		<footer>
 			<p>Copyright © 2019 Benjamin Hamon</p>
