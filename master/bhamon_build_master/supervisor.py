@@ -76,7 +76,7 @@ class Supervisor:
 		build = self._build_provider.get(build_identifier)
 		if build["status"] != "pending":
 			return False
-		self._build_provider.update(build, "cancelled")
+		self._build_provider.update(build, status = "cancelled")
 		return True
 
 
