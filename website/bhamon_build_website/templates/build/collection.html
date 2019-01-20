@@ -1,44 +1,9 @@
 {% extends 'layout.html' %}
+{% import 'build/macros.html' as build_macros %}
 
 {% block content %}
 <h1>Builds</h1>
 <section>
-	<table>
-		<thead>
-			<tr>
-				<th>Job</th>
-				<th>Identifier</th>
-				<th>Status</th>
-				<th>Actions</th>
-				<th>Creation date</th>
-				<th>Update date</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for build in build_collection %}
-			<tr>
-				<td><a href="{{ url_for('job_index', job_identifier = build['job']) }}">{{ build['job'] }}</a></td>
-				<td><a href="{{ url_for('build_index', build_identifier = build['identifier']) }}">{{ build['identifier'] }}</a></td>
-				<td>
-					<div class="status-group">
-						<div class="status-indicator {{ build['status'] }}"></div>
-						<div class="status-text">{{ build['status'] }}</div>
-					</div>
-				</td>
-				<td>
-					<form class="action-group" method="post">
-						{% if build['status'] == 'running' %}
-						<button formaction="{{ url_for('abort_build', build_identifier = build['identifier']) }}">Abort</button>
-						{% else %}
-						<button formaction="{{ url_for('abort_build', build_identifier = build['identifier']) }}" disabled>Abort</button>
-						{% endif %}
-					</form>
-				</td>
-				<td>{{ build['creation_date'] }}</td>
-				<td>{{ build['update_date'] }}</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
+	{{ build_macros.build_table(build_collection) }}
 </section>
 {% endblock %}

@@ -17,7 +17,10 @@ def job_collection_index():
 
 def job_index(job_identifier):
 	job = service_client.get("/job/{job_identifier}".format(**locals()))
-	return flask.render_template("job/index.html", title = job["identifier"], job = job)
+	job_builds = service_client.get("/job/{job_identifier}/builds".format(**locals()))
+	job_builds = list(job_builds.values())
+	job_builds.sort(key = lambda build: build["update_date"], reverse = True)
+	return flask.render_template("job/index.html", title = job["identifier"], job = job, job_builds = job_builds)
 
 
 def trigger_job(job_identifier):

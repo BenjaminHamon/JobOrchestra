@@ -17,11 +17,14 @@ def worker_collection_index():
 
 def worker_index(worker_identifier):
 	worker = service_client.get("/worker/{worker_identifier}".format(**locals()))
+	worker_builds = service_client.get("/worker/{worker_identifier}/builds".format(**locals()))
+	worker_builds = list(worker_builds.values())
+	worker_builds.sort(key = lambda build: build["update_date"], reverse = True)
 	worker_tasks = service_client.get("/worker/{worker_identifier}/tasks".format(**locals()))
 	worker_tasks = list(worker_tasks.values())
 	worker_tasks.sort(key = lambda task: task["update_date"], reverse = True)
 	return flask.render_template("worker/index.html", title = worker["identifier"],
-			worker = worker, worker_tasks = worker_tasks)
+			worker = worker, worker_builds = worker_builds, worker_tasks = worker_tasks)
 
 
 def stop_worker(worker_identifier):

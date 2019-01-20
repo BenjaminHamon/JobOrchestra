@@ -18,6 +18,18 @@ class BuildProvider:
 		return self.database_client.get_all(self.build_table)
 
 
+	def get_all_for_job(self, job_identifier):
+		all_builds = self.get_all()
+		condition = lambda build: build["job"] == job_identifier
+		return { build_identifier: build for build_identifier, build in all_builds.items() if condition(build) }
+
+
+	def get_all_for_worker(self, worker_identifier):
+		all_builds = self.get_all()
+		condition = lambda build: build.get("worker", None) == worker_identifier
+		return { build_identifier: build for build_identifier, build in all_builds.items() if condition(build) }
+
+
 	def get(self, build_identifier):
 		return self.database_client.get(self.build_table, build_identifier)
 

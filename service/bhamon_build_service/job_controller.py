@@ -14,6 +14,10 @@ def get_job(job_identifier):
 	return flask.jsonify(flask.current_app.job_provider.get(job_identifier))
 
 
+def get_job_builds(job_identifier):
+	return flask.jsonify(flask.current_app.build_provider.get_all_for_job(job_identifier))
+
+
 def trigger_job(job_identifier):
 	parameters = flask.request.get_json()
 	build = flask.current_app.build_provider.create(job_identifier, parameters)
