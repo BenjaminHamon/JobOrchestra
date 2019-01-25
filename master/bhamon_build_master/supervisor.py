@@ -26,8 +26,8 @@ class Supervisor:
 
 
 	async def run_server(self):
-		for worker_identifier in self._worker_provider.get_all().keys():
-			self._worker_provider.update_status(worker_identifier, is_active = False)
+		for worker_data in self._worker_provider.get_list():
+			self._worker_provider.update_status(worker_data, is_active = False)
 
 		logger.info("Listening for workers on %s:%s", self._host, self._port)
 		async with websockets.serve(self._process_connection, self._host, self._port):
@@ -59,7 +59,7 @@ class Supervisor:
 			return False
 
 		all_available_workers = []
-		for worker_data in self._worker_provider.get_all().values():
+		for worker_data in self._worker_provider.get_list():
 			if worker_data["is_enabled"] and worker_data["is_active"]:
 				all_available_workers.append((worker_data, self._active_workers[worker_data["identifier"]]))
 
@@ -76,7 +76,7 @@ class Supervisor:
 		build = self._build_provider.get(build_identifier)
 		if build["status"] != "pending":
 			return False
-		self._build_provider.update(build, status = "cancelled")
+		self._build_provider.update_status(build, status = "cancelled")
 		return True
 
 
@@ -96,7 +96,8 @@ class Supervisor:
 
 			worker_authentication_response = await worker.Worker.authenticate(connection)
 			worker_identifier = worker_authentication_response["identifier"]
-			is_authenticated, reason = self._authenticate_worker(worker_identifier)
+			worker_data = self._worker_provider.get(worker_identifier)
+			is_authenticated, reason = self._authenticate_worker(worker_identifier, worker_data)
 			if not is_authenticated:
 				logger.warning("Refused connection from worker %s: %s", worker_identifier, reason)
 
@@ -104,7 +105,7 @@ class Supervisor:
 				logger.info("Accepted connection from worker %s", worker_identifier)
 				worker_instance = worker.Worker(worker_identifier, connection, self._build_provider)
 				worker_instance.update_interval_seconds = self.update_interval_seconds
-				self._worker_provider.update_status(worker_identifier, is_active = True)
+				self._worker_provider.update_status(worker_data, is_active = True)
 				if worker_identifier in self._active_workers:
 					raise KeyError("Worker %s is already in active workers" % worker_identifier)
 				self._active_workers[worker_identifier] = worker_instance
@@ -118,16 +119,15 @@ class Supervisor:
 					logger.error("Worker %s execution raised an exception", worker_identifier, exc_info = True)
 
 				del self._active_workers[worker_identifier]
-				if self._worker_provider.exists(worker_identifier):
-					self._worker_provider.update_status(worker_identifier, is_active = False)
+				self._worker_provider.update_status(worker_data, is_active = False)
 				logger.info("Closing connection with worker %s", worker_identifier)
 
 		except:
 			logger.error("Worker %s handler raised an exception", worker_identifier, exc_info = True)
 
 
-	def _authenticate_worker(self, worker_identifier):
-		if not self._worker_provider.exists(worker_identifier):
+	def _authenticate_worker(self, worker_identifier, worker_data):
+		if worker_data is None:
 			return False, "Worker is unknown"
 		if worker_identifier in self._active_workers:
 			return False, "Worker is already connected"

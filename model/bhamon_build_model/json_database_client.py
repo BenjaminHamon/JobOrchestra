@@ -1,8 +1,12 @@
 import glob
 import json
+import logging
 import os
 
 from bhamon_build_model import database_client
+
+
+logger = logging.getLogger("JsonDatabaseClient")
 
 
 class JsonDatabaseClient(database_client.DatabaseClient):
@@ -12,40 +16,52 @@ class JsonDatabaseClient(database_client.DatabaseClient):
 		self._data_directory = data_directory
 
 
-	def get_all(self, table):
-		return self._load(table)
+	def find_many(self, table, filter):
+		return [ row for row in self._load(table) if self._match_filter(row, filter) ]
 
 
-	def get(self, table, key):
-		return self._load(table)[key]
+	def find_one(self, table, filter):
+		return next(( row for row in self._load(table) if self._match_filter(row, filter) ), None)
 
 
-	def exists(self, table, key):
-		return key in self._load(table)
+	def insert_one(self, table, data):
+		all_rows = self._load(table)
+		all_rows.append(data)
+		self._save(table, all_rows)
 
 
-	def create(self, table, key, data):
-		table_data = self._load(table)
-		table_data[key] = data
-		self._save(table, table_data)
+	def update_one(self, table, filter, data):
+		all_rows = self._load(table)
+		matched_row = next(( row for row in all_rows if self._match_filter(row, filter) ), None)
+		if matched_row is not None:
+			matched_row.update(data)
+			self._save(table, all_rows)
 
 
-	def update(self, table, key, data):
-		table_data = self._load(table)
-		table_data[key] = data
-		self._save(table, table_data)
+	def delete_one(self, table, filter):
+		all_rows = self._load(table)
+		matched_row = next(( row for row in all_rows if self._match_filter(row, filter) ), None)
+		if matched_row is not None:
+			all_rows.remove(matched_row)
+			self._save(table, all_rows)
 
 
-	def delete(self, table, key):
-		table_data = self._load(table)
-		del table_data[key]
-		self._save(table, table_data)
+	def _match_filter(self, row, filter):
+		for key, value in filter.items():
+			data = row
+			for key_part in key.split("."):
+				if key_part not in data.keys():
+					return False
+				data = data[key_part]
+			if data != value:
+				return False
+		return True
 
 
 	def _load(self, table):
 		file_path = os.path.join(self._data_directory, table + ".json")
 		if not os.path.exists(file_path):
-			return {}
+			return []
 		with open(file_path) as data_file:
 			return json.load(data_file)
 

@@ -1,6 +1,10 @@
 import datetime
+import logging
 import os
 import uuid
+
+
+logger = logging.getLogger("BuildProvider")
 
 
 class BuildProvider:
@@ -14,24 +18,20 @@ class BuildProvider:
 		self.result_table = "build_result"
 
 
-	def get_all(self):
-		return self.database_client.get_all(self.build_table)
+	def get_list(self):
+		return self.database_client.find_many(self.build_table, {})
 
 
-	def get_all_for_job(self, job_identifier):
-		all_builds = self.get_all()
-		condition = lambda build: build["job"] == job_identifier
-		return { build_identifier: build for build_identifier, build in all_builds.items() if condition(build) }
+	def get_list_for_job(self, job_identifier):
+		return self.database_client.find_many(self.build_table, { "job": job_identifier })
 
 
-	def get_all_for_worker(self, worker_identifier):
-		all_builds = self.get_all()
-		condition = lambda build: build.get("worker", None) == worker_identifier
-		return { build_identifier: build for build_identifier, build in all_builds.items() if condition(build) }
+	def get_list_for_worker(self, worker_identifier):
+		return self.database_client.find_many(self.build_table, { "worker": worker_identifier })
 
 
 	def get(self, build_identifier):
-		return self.database_client.get(self.build_table, build_identifier)
+		return self.database_client.find_one(self.build_table, { "identifier": build_identifier })
 
 
 	def create(self, job_identifier, parameters):
@@ -44,41 +44,44 @@ class BuildProvider:
 			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 		}
 
-		self.database_client.create(self.build_table, build["identifier"], build)
-		self.database_client.create(self.result_table, build["identifier"], {})
+		build_results = {
+			"build": build["identifier"],
+			"results": {},
+		}
+
+		self.database_client.insert_one(self.build_table, build)
+		self.database_client.insert_one(self.result_table, build_results)
 		return build
 
 
-	def update(self, build, worker = None, status = None):
+	def update_status(self, build, worker = None, status = None):
+		update_data = {}
 		if worker is not None:
-			build["worker"] = worker
+			update_data["worker"] = worker
 		if status is not None:
-			build["status"] = status
-		build["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
-		self.database_client.update(self.build_table, build["identifier"], build)
-		return build
+			update_data["status"] = status
+		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+		build.update(update_data)
+		self.database_client.update_one(self.build_table, { "identifier": build["identifier"] }, update_data)
 
 
 	def get_all_steps(self, build_identifier):
-		all_build_steps = self.database_client.get_all(self.step_table)
-		all_build_steps = { tuple(key.split(", ")) : value for key, value in all_build_steps.items() }
-		return [ all_build_steps[key] for key in all_build_steps.keys() if key[0] == build_identifier ]
+		return self.database_client.find_many(self.step_table, { "build": build_identifier })
 
 
 	def get_step(self, build_identifier, step_index):
-		all_build_steps = self.database_client.get_all(self.step_table)
-		all_build_steps = { tuple(key.split(", ")) : value for key, value in all_build_steps.items() }
-		return all_build_steps[(build_identifier, str(step_index))]
+		return self.database_client.find_one(self.step_table, { "build": build_identifier, "index": step_index })
 
 
 	def update_steps(self, build_identifier, build_step_collection):
 		for build_step in build_step_collection:
 			build_step["build"] = build_identifier
-			key = ", ".join((build_identifier, str(build_step["index"])))
-			try:
-				self.database_client.update(self.step_table, key, build_step)
-			except KeyError:
-				self.database_client.create(self.step_table, key, build_step)
+		for build_step in build_step_collection:
+			existing_step = self.get_step(build_identifier, build_step["index"])
+			if existing_step is None:
+				self.database_client.insert_one(self.step_table, build_step)
+			else:
+				self.database_client.update_one(self.step_table, { "build": build_identifier, "index": build_step["index"] }, build_step)
 
 
 	def _get_step_log_path(self, build_identifier, step_index):
@@ -100,8 +103,8 @@ class BuildProvider:
 
 
 	def get_results(self, build_identifier):
-		return self.database_client.get(self.result_table, build_identifier)
+		return self.database_client.find_one(self.result_table, { "build": build_identifier })["results"]
 
 
 	def set_results(self, build_identifier, results):
-		self.database_client.update(self.result_table, build_identifier, results)
+		self.database_client.update_one(self.result_table, { "build": build_identifier }, { "results": results })

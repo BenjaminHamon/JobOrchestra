@@ -1,5 +1,9 @@
 import datetime
+import logging
 import uuid
+
+
+logger = logging.getLogger("TaskProvider")
 
 
 class TaskProvider:
@@ -10,24 +14,20 @@ class TaskProvider:
 		self.table = "task"
 
 
-	def get_all(self):
-		return self.database_client.get_all(self.table)
+	def get_list(self):
+		return self.database_client.find_many(self.table, {})
 
 
-	def get_all_for_build(self, build_identifier):
-		all_tasks = self.get_all()
-		condition = lambda task: task["parameters"].get("build_identifier", None) == build_identifier
-		return { task_identifier: task for task_identifier, task in all_tasks.items() if condition(task) }
+	def get_list_for_build(self, build_identifier):
+		return self.database_client.find_many(self.table, { "parameters.build_identifier": build_identifier })
 
 
-	def get_all_for_worker(self, worker_identifier):
-		all_tasks = self.get_all()
-		condition = lambda task: task["parameters"].get("worker_identifier", None) == worker_identifier
-		return { task_identifier: task for task_identifier, task in all_tasks.items() if condition(task) }
+	def get_list_for_worker(self, worker_identifier):
+		return self.database_client.find_many(self.table, { "parameters.worker_identifier": worker_identifier })
 
 
 	def get(self, task_identifier):
-		return self.database_client.get(self.table, task_identifier)
+		return self.database_client.find_one(self.table, { "identifier": task_identifier })
 
 
 	def create(self, type, parameters):
@@ -41,15 +41,16 @@ class TaskProvider:
 			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 		}
 
-		self.database_client.create(self.table, task["identifier"], task)
+		self.database_client.insert_one(self.table, task)
 		return task
 
 
-	def update(self, task, status = None, should_cancel = None):
+	def update_status(self, task, status = None, should_cancel = None):
+		update_data = {}
 		if status is not None:
-			task["status"] = status
+			update_data["status"] = status
 		if should_cancel is not None:
-			task["should_cancel"] = should_cancel
-		task["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
-		self.database_client.update(self.table, task["identifier"], task)
-		return task
+			update_data["should_cancel"] = should_cancel
+		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+		task.update(update_data)
+		self.database_client.update_one(self.table, { "identifier": task["identifier"] }, task)

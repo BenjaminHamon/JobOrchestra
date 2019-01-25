@@ -7,7 +7,7 @@ logger = logging.getLogger("BuildController")
 
 
 def get_build_collection():
-	return flask.jsonify(flask.current_app.build_provider.get_all())
+	return flask.jsonify(flask.current_app.build_provider.get_list())
 
 
 def get_build(build_identifier):
@@ -32,7 +32,7 @@ def get_build_results(build_identifier):
 
 
 def get_build_tasks(build_identifier):
-	return flask.jsonify(flask.current_app.task_provider.get_all_for_build(build_identifier))
+	return flask.jsonify(flask.current_app.task_provider.get_list_for_build(build_identifier))
 
 
 def abort_build(build_identifier):

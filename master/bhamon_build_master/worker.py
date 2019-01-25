@@ -75,7 +75,7 @@ class Worker:
 			raise
 		except:
 			logger.error("(%s) Failed to execute build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
-			self._build_provider.update(executor["build"], status = "exception")
+			self._build_provider.update_status(executor["build"], status = "exception")
 			self.executors.remove(executor)
 
 
@@ -88,7 +88,7 @@ class Worker:
 
 	async def _start_execution(self, build, job):
 		logger.info("(%s) Starting build %s %s", self.identifier, build["job"], build["identifier"])
-		self._build_provider.update(build, worker = self.identifier, status = "running")
+		self._build_provider.update_status(build, worker = self.identifier, status = "running")
 		execute_request = { "job_identifier": build["job"], "build_identifier": build["identifier"], "job": job, "parameters": build["parameters"] }
 		await Worker._execute_remote_command(self._connection, self.identifier, "execute", execute_request)
 
@@ -103,7 +103,7 @@ class Worker:
 		status_request = { "job_identifier": build["job"], "build_identifier": build["identifier"] }
 		status_response = await Worker._execute_remote_command(self._connection, self.identifier, "status", status_request)
 		if status_response:
-			self._build_provider.update(build, status = status_response["status"])
+			self._build_provider.update_status(build, status = status_response["status"])
 			if "steps" in status_response:
 				self._build_provider.update_steps(build["identifier"], status_response["steps"])
 				await self._retrieve_logs(build, status_response["steps"])

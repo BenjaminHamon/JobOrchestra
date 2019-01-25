@@ -7,7 +7,7 @@ logger = logging.getLogger("JobController")
 
 
 def get_job_collection():
-	return flask.jsonify(flask.current_app.job_provider.get_all())
+	return flask.jsonify(flask.current_app.job_provider.get_list())
 
 
 def get_job(job_identifier):
@@ -15,7 +15,7 @@ def get_job(job_identifier):
 
 
 def get_job_builds(job_identifier):
-	return flask.jsonify(flask.current_app.build_provider.get_all_for_job(job_identifier))
+	return flask.jsonify(flask.current_app.build_provider.get_list_for_job(job_identifier))
 
 
 def trigger_job(job_identifier):
@@ -26,10 +26,10 @@ def trigger_job(job_identifier):
 
 
 def enable_job(job_identifier):
-	flask.current_app.job_provider.update_status(job_identifier, is_enabled = True)
+	flask.current_app.job_provider.update_status({ "identifier": job_identifier }, is_enabled = True)
 	return flask.jsonify({})
 
 
 def disable_job(job_identifier):
-	flask.current_app.job_provider.update_status(job_identifier, is_enabled = False)
+	flask.current_app.job_provider.update_status({ "identifier": job_identifier }, is_enabled = False)
 	return flask.jsonify({})

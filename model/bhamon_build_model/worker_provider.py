@@ -1,4 +1,8 @@
 import datetime
+import logging
+
+
+logger = logging.getLogger("WorkerProvider")
 
 
 class WorkerProvider:
@@ -9,27 +13,18 @@ class WorkerProvider:
 		self.table = "worker"
 
 
-	def get_all(self):
-		return self.database_client.get_all(self.table)
+	def get_list(self):
+		return self.database_client.find_many(self.table, {})
 
 
 	def get(self, worker_identifier):
-		return self.database_client.get(self.table, worker_identifier)
-
-
-	def exists(self, worker_identifier):
-		return self.database_client.exists(self.table, worker_identifier)
+		return self.database_client.find_one(self.table, { "identifier": worker_identifier })
 
 
 	def create_or_update(self, worker_identifier, properties, description):
-		try:
-			worker = self.get(worker_identifier)
-			worker["properties"] = properties
-			worker["description"] = description
-			worker["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
-			self.database_client.update(self.table, worker_identifier, worker)
+		worker = self.get(worker_identifier)
 
-		except KeyError:
+		if worker is None:
 			worker = {
 				"identifier": worker_identifier,
 				"properties": properties,
@@ -39,18 +34,27 @@ class WorkerProvider:
 				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
 			}
-			self.database_client.create(self.table, worker_identifier, worker)
+			self.database_client.insert_one(self.table, worker)
+
+		else:
+			update_data = {
+				"properties": properties,
+				"description": description,
+				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
+			}
+			self.database_client.update_one(self.table, { "identifier": worker_identifier }, update_data)
 
 
-	def update_status(self, worker_identifier, is_active = None, is_enabled = None):
-		worker = self.get(worker_identifier)
+	def update_status(self, worker, is_active = None, is_enabled = None):
+		update_data = {}
 		if is_active is not None:
-			worker["is_active"] = is_active
+			update_data["is_active"] = is_active
 		if is_enabled is not None:
-			worker["is_enabled"] = is_enabled
-		worker["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
-		self.database_client.update(self.table, worker_identifier, worker)
+			update_data["is_enabled"] = is_enabled
+		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+		worker.update(update_data)
+		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
 
 
 	def delete(self, worker_identifier):
-		return self.database_client.delete(self.table, worker_identifier)
+		return self.database_client.delete_one(self.table, { "identifier": worker_identifier })

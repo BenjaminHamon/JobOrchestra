@@ -10,7 +10,6 @@ logger = logging.getLogger("JobController")
 
 def job_collection_index():
 	job_collection = service_client.get("/job_collection")
-	job_collection = list(job_collection.values())
 	job_collection.sort(key = lambda job: job["identifier"])
 	return flask.render_template("job/collection.html", title = "Jobs", job_collection = job_collection)
 
@@ -18,7 +17,6 @@ def job_collection_index():
 def job_index(job_identifier):
 	job = service_client.get("/job/{job_identifier}".format(**locals()))
 	job_builds = service_client.get("/job/{job_identifier}/builds".format(**locals()))
-	job_builds = list(job_builds.values())
 	job_builds.sort(key = lambda build: build["update_date"], reverse = True)
 	return flask.render_template("job/index.html", title = job["identifier"], job = job, job_builds = job_builds)
 

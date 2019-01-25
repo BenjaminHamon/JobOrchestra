@@ -7,7 +7,7 @@ logger = logging.getLogger("TaskController")
 
 
 def get_task_collection():
-	return flask.jsonify(flask.current_app.task_provider.get_all())
+	return flask.jsonify(flask.current_app.task_provider.get_list())
 
 
 def get_task(task_identifier):
@@ -19,4 +19,4 @@ def cancel_task(task_identifier):
 	task = flask.current_app.task_provider.get(task_identifier)
 	if task["status"] == "pending":
 		flask.current_app.task_provider.update(task, should_cancel = True)
-	return flask.jsonify(task)
+	return flask.jsonify({})

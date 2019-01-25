@@ -11,7 +11,6 @@ logger = logging.getLogger("BuildController")
 
 def build_collection_index():
 	build_collection = service_client.get("/build_collection")
-	build_collection = list(build_collection.values())
 	build_collection.sort(key = lambda build: build["update_date"], reverse = True)
 	return flask.render_template("build/collection.html", title = "Builds", build_collection = build_collection)
 
@@ -21,7 +20,6 @@ def build_index(build_identifier):
 	build_steps = service_client.get("/build/{build_identifier}/step_collection".format(**locals()))
 	build_results = service_client.get("/build/{build_identifier}/results".format(**locals()))
 	build_tasks = service_client.get("/build/{build_identifier}/tasks".format(**locals()))
-	build_tasks = list(build_tasks.values())
 	build_tasks.sort(key = lambda task: task["update_date"], reverse = True)
 
 	if "artifacts" in build_results:

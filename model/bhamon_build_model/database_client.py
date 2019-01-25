@@ -3,25 +3,21 @@ import abc
 class DatabaseClient(abc.ABC):
 
 	@abc.abstractmethod
-	def get_all(self, table):
+	def find_many(self, table, filter):
 		pass
 
 	@abc.abstractmethod
-	def get(self, table, key):
+	def find_one(self, table, filter):
 		pass
 
 	@abc.abstractmethod
-	def exists(self, table, key):
+	def insert_one(self, table, data):
 		pass
 
 	@abc.abstractmethod
-	def create(self, table, key, data):
+	def update_one(self, table, filter, data):
 		pass
 
 	@abc.abstractmethod
-	def update(self, table, key, data):
-		pass
-
-	@abc.abstractmethod
-	def delete(self, table, key):
+	def delete_one(self, table, filter):
 		pass

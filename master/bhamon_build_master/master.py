@@ -38,17 +38,17 @@ class Master:
 		logger.info("Reloading configuration")
 		configuration = self._configuration_loader()
 
-		all_existing_workers = self._worker_provider.get_all()
-		for existing_worker_identifier in all_existing_workers.keys():
-			if existing_worker_identifier not in [ worker["identifier"] for worker in configuration["workers"] ]:
-				logger.info("Removing worker %s", existing_worker_identifier)
-				self._worker_provider.delete(existing_worker_identifier)
-				self._supervisor.stop_worker(existing_worker_identifier)
-		all_existing_jobs = self._job_provider.get_all()
-		for existing_job_identifier in all_existing_jobs.keys():
-			if existing_job_identifier not in [ job["identifier"] for job in configuration["jobs"] ]:
-				logger.info("Removing job %s", existing_job_identifier)
-				self._job_provider.delete(existing_job_identifier)
+		all_existing_workers = self._worker_provider.get_list()
+		for existing_worker in all_existing_workers:
+			if existing_worker["identifier"] not in [ worker["identifier"] for worker in configuration["workers"] ]:
+				logger.info("Removing worker %s", existing_worker["identifier"])
+				self._worker_provider.delete(existing_worker["identifier"])
+				self._supervisor.stop_worker(existing_worker["identifier"])
+		all_existing_jobs = self._job_provider.get_list()
+		for existing_job in all_existing_jobs:
+			if existing_job["identifier"] not in [ job["identifier"] for job in configuration["jobs"] ]:
+				logger.info("Removing job %s", existing_job["identifier"])
+				self._job_provider.delete(existing_job["identifier"])
 
 		for worker in configuration["workers"]:
 			logger.info("Adding/Updating worker %s", worker["identifier"])

@@ -148,8 +148,8 @@ def test_job_controller_success(tmpdir):
 
 		task = providers["task"].get(task["identifier"])
 		build = providers["build"].get(build["identifier"])
-		all_tasks = providers["task"].get_all()
-		all_builds = providers["build"].get_all()
+		all_tasks = providers["task"].get_list()
+		all_builds = providers["build"].get_list()
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting build %s %s" % (job_identifier, build["identifier"]) },
@@ -194,8 +194,8 @@ def test_job_controller_failure(tmpdir):
 
 		task = providers["task"].get(task["identifier"])
 		build = providers["build"].get(build["identifier"])
-		all_tasks = providers["task"].get_all()
-		all_builds = providers["build"].get_all()
+		all_tasks = providers["task"].get_list()
+		all_builds = providers["build"].get_list()
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting build %s %s" % (job_identifier, build["identifier"]) },

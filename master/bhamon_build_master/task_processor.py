@@ -43,15 +43,15 @@ class TaskProcessor:
 
 	async def _update(self):
 		try:
-			all_tasks = self._task_provider.get_all()
-			all_tasks = [ task for task in all_tasks.values() if task["status"] == "pending" ]
+			all_tasks = self._task_provider.get_list()
+			all_tasks = [ task for task in all_tasks if task["status"] == "pending" ]
 			all_tasks.sort(key = self._get_task_order)
 
 			for task in all_tasks:
 				logger.debug("Processing task %s (Type: %s, Parameters: %s)", task["identifier"], task["type"], task["parameters"])
 
 				try:
-					self._task_provider.update(task, status = "running")
+					self._task_provider.update_status(task, status = "running")
 					if task["should_cancel"]:
 						cancellation_handler = self._handler_collection[task["type"]]["cancellation_handler"]
 						if cancellation_handler:
@@ -59,11 +59,11 @@ class TaskProcessor:
 						end_status = "cancelled"
 					else:
 						end_status = self._handler_collection[task["type"]]["execution_handler"](task["parameters"])
-					self._task_provider.update(task, status = end_status)
+					self._task_provider.update_status(task, status = end_status)
 
 				except:
 					logger.error("Failed to process task %s", task["identifier"], exc_info = True)
-					self._task_provider.update(task, status = "exception")
+					self._task_provider.update_status(task, status = "exception")
 
 		except:
 			logger.error("TaskProcessor update raised an exception", exc_info = True)
