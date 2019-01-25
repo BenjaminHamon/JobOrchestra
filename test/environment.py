@@ -21,9 +21,10 @@ def configure_logging(log_level):
 	logging.addLevelName(logging.ERROR, "Error")
 	logging.addLevelName(logging.CRITICAL, "Critical")
 
-	logging.getLogger('filelock').setLevel(logging.WARNING)
-	logging.getLogger('urllib3').setLevel(logging.INFO)
-	logging.getLogger('websockets.protocol').setLevel(logging.INFO)
+	logging.getLogger("asyncio").setLevel(logging.INFO)
+	logging.getLogger("filelock").setLevel(logging.WARNING)
+	logging.getLogger("urllib3").setLevel(logging.INFO)
+	logging.getLogger("websockets.protocol").setLevel(logging.INFO)
 	logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 
