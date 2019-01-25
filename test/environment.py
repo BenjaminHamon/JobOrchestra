@@ -9,6 +9,9 @@ service_port = 5902
 website_address = "localhost"
 website_port = 5903
 
+database_uri = "json"
+# database_uri = "mongodb://localhost:27017/"
+
 
 log_format = "[{levelname}][{name}] {message}"
 
