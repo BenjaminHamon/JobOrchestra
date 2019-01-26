@@ -9,8 +9,7 @@ logger = logging.getLogger("TaskController")
 
 
 def task_collection_index():
-	task_collection = service_client.get("/task_collection")
-	task_collection.sort(key = lambda task: task["update_date"], reverse = True)
+	task_collection = service_client.get("/task_collection", { "limit": 100, "order_by": [ "update_date descending" ] })
 	return flask.render_template("task/collection.html", title = "Tasks", task_collection = task_collection)
 
 

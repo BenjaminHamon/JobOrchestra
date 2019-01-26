@@ -9,17 +9,14 @@ logger = logging.getLogger("WorkerController")
 
 
 def worker_collection_index():
-	worker_collection = service_client.get("/worker_collection")
-	worker_collection.sort(key = lambda worker: worker["identifier"])
+	worker_collection = service_client.get("/worker_collection", { "limit": 100, "order_by": [ "identifier ascending" ] })
 	return flask.render_template("worker/collection.html", title = "Workers", worker_collection = worker_collection)
 
 
 def worker_index(worker_identifier):
 	worker = service_client.get("/worker/{worker_identifier}".format(**locals()))
-	worker_builds = service_client.get("/worker/{worker_identifier}/builds".format(**locals()))
-	worker_builds.sort(key = lambda build: build["update_date"], reverse = True)
-	worker_tasks = service_client.get("/worker/{worker_identifier}/tasks".format(**locals()))
-	worker_tasks.sort(key = lambda task: task["update_date"], reverse = True)
+	worker_builds = service_client.get("/worker/{worker_identifier}/builds".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] })
+	worker_tasks = service_client.get("/worker/{worker_identifier}/tasks".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] })
 	return flask.render_template("worker/index.html", title = worker["identifier"],
 			worker = worker, worker_builds = worker_builds, worker_tasks = worker_tasks)
 
