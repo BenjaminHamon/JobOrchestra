@@ -18,6 +18,10 @@ class BuildProvider:
 		self.result_table = "build_result"
 
 
+	def count(self):
+		return self.database_client.count(self.build_table, {})
+
+
 	def get_list(self):
 		return self.database_client.find_many(self.build_table, {})
 

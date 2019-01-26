@@ -3,6 +3,10 @@ import abc
 class DatabaseClient(abc.ABC):
 
 	@abc.abstractmethod
+	def count(self, table, filter):
+		pass
+
+	@abc.abstractmethod
 	def find_many(self, table, filter):
 		pass
 

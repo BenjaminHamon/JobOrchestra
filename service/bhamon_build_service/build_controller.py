@@ -6,6 +6,10 @@ import flask
 logger = logging.getLogger("BuildController")
 
 
+def get_build_count():
+	return flask.jsonify(flask.current_app.build_provider.count())
+
+
 def get_build_collection():
 	return flask.jsonify(flask.current_app.build_provider.get_list())
 

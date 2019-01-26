@@ -16,6 +16,10 @@ class JsonDatabaseClient(database_client.DatabaseClient):
 		self._data_directory = data_directory
 
 
+	def count(self, table, filter):
+		return sum(1 for row in self._load(table) if self._match_filter(row, filter))
+
+
 	def find_many(self, table, filter):
 		return [ row for row in self._load(table) if self._match_filter(row, filter) ]
 

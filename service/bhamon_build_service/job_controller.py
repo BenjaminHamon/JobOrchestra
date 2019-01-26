@@ -6,6 +6,10 @@ import flask
 logger = logging.getLogger("JobController")
 
 
+def get_job_count():
+	return flask.jsonify(flask.current_app.job_provider.count())
+
+
 def get_job_collection():
 	return flask.jsonify(flask.current_app.job_provider.get_list())
 

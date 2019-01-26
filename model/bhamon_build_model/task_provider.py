@@ -14,6 +14,10 @@ class TaskProvider:
 		self.table = "task"
 
 
+	def count(self):
+		return self.database_client.count(self.table, {})
+
+
 	def get_list(self):
 		return self.database_client.find_many(self.table, {})
 

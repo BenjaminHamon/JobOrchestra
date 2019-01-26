@@ -6,6 +6,10 @@ import flask
 logger = logging.getLogger("TaskController")
 
 
+def get_task_count():
+	return flask.jsonify(flask.current_app.task_provider.count())
+
+
 def get_task_collection():
 	return flask.jsonify(flask.current_app.task_provider.get_list())
 

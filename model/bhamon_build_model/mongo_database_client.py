@@ -13,6 +13,10 @@ class MongoDatabaseClient(database_client.DatabaseClient):
 		self.mongo_database = mongo_database
 
 
+	def count(self, table, filter):
+		return self.mongo_database[table].count_documents(filter)
+
+
 	def find_many(self, table, filter):
 		return list(self.mongo_database[table].find(filter, {'_id': False}))
 
