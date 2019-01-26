@@ -17,8 +17,12 @@ class MongoDatabaseClient(database_client.DatabaseClient):
 		return self.mongo_database[table].count_documents(filter)
 
 
-	def find_many(self, table, filter):
-		return list(self.mongo_database[table].find(filter, {'_id': False}))
+	def find_many(self, table, filter, skip = 0, limit = None):
+		if limit == 0:
+			return []
+		if limit is None:
+			limit = 0
+		return list(self.mongo_database[table].find(filter, {'_id': False}, skip = skip, limit = limit))
 
 
 	def find_one(self, table, filter):

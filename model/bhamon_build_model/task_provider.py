@@ -18,16 +18,16 @@ class TaskProvider:
 		return self.database_client.count(self.table, {})
 
 
-	def get_list(self):
-		return self.database_client.find_many(self.table, {})
+	def get_list(self, skip = 0, limit = 100):
+		return self.database_client.find_many(self.table, {}, skip = skip, limit = limit)
 
 
-	def get_list_for_build(self, build_identifier):
-		return self.database_client.find_many(self.table, { "parameters.build_identifier": build_identifier })
+	def get_list_for_build(self, build_identifier, skip = 0, limit = 100):
+		return self.database_client.find_many(self.table, { "parameters.build_identifier": build_identifier }, skip = skip, limit = limit)
 
 
-	def get_list_for_worker(self, worker_identifier):
-		return self.database_client.find_many(self.table, { "parameters.worker_identifier": worker_identifier })
+	def get_list_for_worker(self, worker_identifier, skip = 0, limit = 100):
+		return self.database_client.find_many(self.table, { "parameters.worker_identifier": worker_identifier }, skip = skip, limit = limit)
 
 
 	def get(self, task_identifier):

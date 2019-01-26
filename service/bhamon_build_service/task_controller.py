@@ -11,7 +11,9 @@ def get_task_count():
 
 
 def get_task_collection():
-	return flask.jsonify(flask.current_app.task_provider.get_list())
+	skip = max(flask.request.args.get("skip", default = 0, type = int), 0)
+	limit = max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0)
+	return flask.jsonify(flask.current_app.task_provider.get_list(skip = skip, limit = limit))
 
 
 def get_task(task_identifier):

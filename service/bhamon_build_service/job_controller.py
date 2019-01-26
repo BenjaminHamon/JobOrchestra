@@ -11,7 +11,9 @@ def get_job_count():
 
 
 def get_job_collection():
-	return flask.jsonify(flask.current_app.job_provider.get_list())
+	skip = max(flask.request.args.get("skip", default = 0, type = int), 0)
+	limit = max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0)
+	return flask.jsonify(flask.current_app.job_provider.get_list(skip = skip, limit = limit))
 
 
 def get_job(job_identifier):
@@ -19,7 +21,9 @@ def get_job(job_identifier):
 
 
 def get_job_builds(job_identifier):
-	return flask.jsonify(flask.current_app.build_provider.get_list_for_job(job_identifier))
+	skip = max(flask.request.args.get("skip", default = 0, type = int), 0)
+	limit = max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0)
+	return flask.jsonify(flask.current_app.build_provider.get_list_for_job(job_identifier, skip = skip, limit = limit))
 
 
 def trigger_job(job_identifier):

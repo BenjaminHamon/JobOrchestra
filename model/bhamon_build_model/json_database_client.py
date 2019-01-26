@@ -20,8 +20,10 @@ class JsonDatabaseClient(database_client.DatabaseClient):
 		return sum(1 for row in self._load(table) if self._match_filter(row, filter))
 
 
-	def find_many(self, table, filter):
-		return [ row for row in self._load(table) if self._match_filter(row, filter) ]
+	def find_many(self, table, filter, skip = 0, limit = None):
+		start_index = skip
+		end_index = (skip + limit) if limit is not None else None
+		return [ row for row in self._load(table) if self._match_filter(row, filter) ][ start_index : end_index ]
 
 
 	def find_one(self, table, filter):

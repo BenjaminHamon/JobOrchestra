@@ -7,7 +7,7 @@ class DatabaseClient(abc.ABC):
 		pass
 
 	@abc.abstractmethod
-	def find_many(self, table, filter):
+	def find_many(self, table, filter, skip = 0, limit = None):
 		pass
 
 	@abc.abstractmethod

@@ -17,8 +17,8 @@ class WorkerProvider:
 		return self.database_client.count(self.table, {})
 
 
-	def get_list(self):
-		return self.database_client.find_many(self.table, {})
+	def get_list(self, skip = 0, limit = 100):
+		return self.database_client.find_many(self.table, {}, skip = skip, limit = limit)
 
 
 	def get(self, worker_identifier):
