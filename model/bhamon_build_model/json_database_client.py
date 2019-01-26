@@ -20,10 +20,13 @@ class JsonDatabaseClient(database_client.DatabaseClient):
 		return sum(1 for row in self._load(table) if self._match_filter(row, filter))
 
 
-	def find_many(self, table, filter, skip = 0, limit = None):
+	def find_many(self, table, filter, skip = 0, limit = None, order_by = None):
 		start_index = skip
 		end_index = (skip + limit) if limit is not None else None
-		return [ row for row in self._load(table) if self._match_filter(row, filter) ][ start_index : end_index ]
+		results = self._load(table)
+		results = self._apply_order_by(results, order_by)
+		results = [ row for row in results if self._match_filter(row, filter) ]
+		return results[ start_index : end_index ]
 
 
 	def find_one(self, table, filter):
@@ -52,18 +55,6 @@ class JsonDatabaseClient(database_client.DatabaseClient):
 			self._save(table, all_rows)
 
 
-	def _match_filter(self, row, filter):
-		for key, value in filter.items():
-			data = row
-			for key_part in key.split("."):
-				if key_part not in data.keys():
-					return False
-				data = data[key_part]
-			if data != value:
-				return False
-		return True
-
-
 	def _load(self, table):
 		file_path = os.path.join(self._data_directory, table + ".json")
 		if not os.path.exists(file_path):
@@ -81,3 +72,28 @@ class JsonDatabaseClient(database_client.DatabaseClient):
 		if os.path.exists(file_path):
 			os.remove(file_path)
 		os.rename(file_path + ".tmp", file_path)
+
+
+	def _match_filter(self, row, filter):
+		for key, value in filter.items():
+			data = row
+			for key_part in key.split("."):
+				if key_part not in data.keys():
+					return False
+				data = data[key_part]
+			if data != value:
+				return False
+		return True
+
+
+	def _apply_order_by(self, row_collection, expression):
+		if expression is None:
+			return row_collection
+		
+		for key, direction in reversed(self._normalize_order_by_expression(expression)):
+			if direction in [ "asc", "ascending" ]:
+				reverse = False
+			elif direction in [ "desc", "descending" ]:
+				reverse = True
+			row_collection = sorted(row_collection, key = lambda x: x[key], reverse = reverse)
+		return row_collection
