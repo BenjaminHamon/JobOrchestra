@@ -2,6 +2,7 @@ import logging
 
 import flask
 
+import bhamon_build_website.helpers as helpers
 import bhamon_build_website.service_client as service_client
 
 
@@ -9,8 +10,17 @@ logger = logging.getLogger("WorkerController")
 
 
 def worker_collection_index():
-	worker_collection = service_client.get("/worker_collection", { "limit": 100, "order_by": [ "identifier ascending" ] })
-	return flask.render_template("worker/collection.html", title = "Workers", worker_collection = worker_collection)
+	item_total = service_client.get("/worker_count")
+	pagination = helpers.get_pagination(item_total)
+
+	query_parameters = {
+		"skip": (pagination["page_number"] - 1) * pagination["item_count"],
+		"limit": pagination["item_count"],
+		"order_by": [ "identifier ascending" ],
+	}
+
+	worker_collection = service_client.get("/worker_collection", query_parameters)
+	return flask.render_template("worker/collection.html", title = "Workers", worker_collection = worker_collection, pagination = pagination)
 
 
 def worker_index(worker_identifier):

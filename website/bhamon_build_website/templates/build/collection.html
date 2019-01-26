@@ -1,9 +1,13 @@
 {% extends 'layout.html' %}
 {% import 'build/macros.html' as build_macros %}
+{% import 'macros.html' as shared_macros %}
 
 {% block content %}
 <h1>Builds</h1>
 <section>
-	{{ build_macros.build_table(build_collection) }}
+	<div class="table-container">
+		{{ build_macros.build_table(build_collection) }}
+		{{ shared_macros.page_navigation('build_collection_index', pagination) }}
+	</div>
 </section>
 {% endblock %}

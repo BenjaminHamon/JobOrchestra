@@ -134,3 +134,38 @@ form li button
 {
 	margin-left: auto;
 }
+
+.table-container
+{
+	display: flex;
+	flex-direction: column;
+}
+
+.page-navigation
+{
+	display: flex;
+	flex-direction: row;
+	margin: 10px 50px 0 50px;
+}
+
+.page-navigation > p
+{
+	margin: 0 5px;
+}
+
+.page-navigation > a
+{
+	margin: 0 5px;
+	color: blue;
+	text-decoration: none;
+}
+
+.page-navigation > a:visited
+{
+	color: blue;
+}
+
+.page-navigation > .disabled
+{
+	visibility: hidden;
+}

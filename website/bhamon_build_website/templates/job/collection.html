@@ -1,48 +1,13 @@
 {% extends 'layout.html' %}
+{% import 'job/macros.html' as job_macros %}
+{% import 'macros.html' as shared_macros %}
 
 {% block content %}
 <h1>Jobs</h1>
 <section>
-	<table>
-		<thead>
-			<tr>
-				<th>Identifier</th>
-				<th>Enabled</th>
-				<th>Actions</th>
-				<th>Update date</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for job in job_collection %}
-			<tr>
-				<td><a href="{{ url_for('job_index', job_identifier = job['identifier']) }}">{{ job['identifier'] }}</a></td>
-				<td>
-					{% if job['is_enabled'] %}
-					<div class="status-group">
-						<div class="status-indicator enabled"></div>
-						<div class="status-text">Enabled</div>
-					</div>
-					{% else %}
-					<div class="status-group">
-						<div class="status-indicator disabled"></div>
-						<div class="status-text">Disabled</div>
-					</div>
-					{% endif %}
-				</td>
-				<td>
-					<form class="action-group" method="post">
-						<button formaction="{{ url_for('trigger_job', job_identifier = job['identifier']) }}">Trigger</button>
-						{% if job['is_enabled'] %}
-						<button formaction="{{ url_for('disable_job', job_identifier = job['identifier']) }}">Disable</button>
-						{% else %}
-						<button formaction="{{ url_for('enable_job', job_identifier = job['identifier']) }}">Enable</button>
-						{% endif %}
-					</form>
-				</td>
-				<td>{{ job['update_date'] }}</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
+	<div class="table-container">
+		{{ job_macros.job_table(job_collection) }}
+		{{ shared_macros.page_navigation('job_collection_index', pagination) }}
+	</div>
 </section>
 {% endblock %}

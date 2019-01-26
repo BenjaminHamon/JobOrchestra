@@ -1,9 +1,13 @@
 {% extends 'layout.html' %}
 {% import 'task/macros.html' as task_macros %}
+{% import 'macros.html' as shared_macros %}
 
 {% block content %}
 <h1>Tasks</h1>
 <section>
-	{{ task_macros.task_table(task_collection) }}
+	<div class="table-container">
+		{{ task_macros.task_table(task_collection) }}
+		{{ shared_macros.page_navigation('task_collection_index', pagination) }}
+	</div>
 </section>
 {% endblock %}

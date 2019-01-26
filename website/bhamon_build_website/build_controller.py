@@ -1,8 +1,9 @@
-import re
 import logging
+import re
 
 import flask
 
+import bhamon_build_website.helpers as helpers
 import bhamon_build_website.service_client as service_client
 
 
@@ -10,8 +11,17 @@ logger = logging.getLogger("BuildController")
 
 
 def build_collection_index():
-	build_collection = service_client.get("/build_collection", { "limit": 100, "order_by": [ "update_date descending" ] })
-	return flask.render_template("build/collection.html", title = "Builds", build_collection = build_collection)
+	item_total = service_client.get("/build_count")
+	pagination = helpers.get_pagination(item_total)
+	
+	query_parameters = {
+		"skip": (pagination["page_number"] - 1) * pagination["item_count"],
+		"limit": pagination["item_count"],
+		"order_by": [ "update_date descending" ],
+	}
+
+	build_collection = service_client.get("/build_collection", query_parameters)
+	return flask.render_template("build/collection.html", title = "Builds", build_collection = build_collection, pagination = pagination)
 
 
 def build_index(build_identifier):
