@@ -14,6 +14,11 @@ import bhamon_build_website.worker_controller as worker_controller
 logger = logging.getLogger("Website")
 
 
+def configure(application):
+	application.jinja_env.trim_blocks = True
+	application.jinja_env.lstrip_blocks = True
+
+
 def register_routes(application):
 	application.add_url_rule("/", methods = [ "GET" ], view_func = home)
 	application.add_url_rule("/artifact_storage", methods = [ "GET" ], view_func = artifact_storage_index)

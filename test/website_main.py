@@ -25,6 +25,8 @@ if __name__ == "__main__":
 	application.artifact_storage_path = None
 	application.artifact_storage_url = None
 
+	website.configure(application)
+
 	application.before_request(website.log_request)
 	for exception in werkzeug.exceptions.default_exceptions:
 		application.register_error_handler(exception, website.handle_error)
