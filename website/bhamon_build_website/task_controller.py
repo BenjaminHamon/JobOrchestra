@@ -10,14 +10,21 @@ logger = logging.getLogger("TaskController")
 
 
 def task_collection_index():
-	item_total = service_client.get("/task_count")
+	query_parameters = {
+		"type": flask.request.args.get("type", default = None),
+		"status": flask.request.args.get("status", default = None),
+		"build": flask.request.args.get("build", default = None),
+		"worker": flask.request.args.get("worker", default = None),
+	}
+
+	item_total = service_client.get("/task_count", query_parameters)
 	pagination = helpers.get_pagination(item_total)
 
-	query_parameters = {
+	query_parameters.update({
 		"skip": (pagination["page_number"] - 1) * pagination["item_count"],
 		"limit": pagination["item_count"],
 		"order_by": [ "update_date descending" ],
-	}
+	})
 
 	task_collection = service_client.get("/task_collection", query_parameters)
 	return flask.render_template("task/collection.html", title = "Tasks", task_collection = task_collection, pagination = pagination)

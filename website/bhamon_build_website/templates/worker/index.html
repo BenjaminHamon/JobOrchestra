@@ -51,12 +51,12 @@
 </section>
 
 <section>
-	<h2>Builds</h2>
+	<h2><a href="{{ url_for('build_collection_index', worker = worker['identifier']) }}" title="View all builds">Builds</a></h2>
 	{{ build_macros.build_table(worker_builds) }}
 </section>
 
 <section>
-	<h2>Tasks</h2>
+	<h2><a href="{{ url_for('task_collection_index', worker = worker['identifier']) }}" title="View all tasks">Tasks</a></h2>
 	{{ task_macros.task_table(worker_tasks) }}
 </section>
 {% endblock %}

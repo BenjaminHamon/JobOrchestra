@@ -6,6 +6,7 @@
 			<th>Identifier</th>
 			<th>Status</th>
 			<th>Actions</th>
+			<th>Worker</th>
 			<th>Creation date</th>
 			<th>Update date</th>
 		</tr>
@@ -30,6 +31,7 @@
 					{% endif %}
 				</form>
 			</td>
+			<td><a href="{{ url_for('worker_index', worker_identifier = build['worker']) }}">{{ build['worker'] }}</a></td>
 			<td>{{ build['creation_date'] }}</td>
 			<td>{{ build['update_date'] }}</td>
 		</tr>

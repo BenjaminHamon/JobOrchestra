@@ -1,20 +1,20 @@
 {% macro page_navigation(endpoint, pagination) %}
 <div class="page-navigation">
 	{% if pagination['page_number'] == 1 %}
-	<a href="{{ url_for(endpoint, page = 1, item_count = pagination['item_count']) }}" class="disabled"> << </a>
-	<a href="{{ url_for(endpoint, page = 1, item_count = pagination['item_count']) }}" class="disabled"> < </a>
+	<a href="{{ url_for(endpoint, page = 1, item_count = pagination['item_count']) }}" title="First page" class="disabled"> << </a>
+	<a href="{{ url_for(endpoint, page = 1, item_count = pagination['item_count']) }}" title="Previous page" class="disabled"> < </a>
 	{% else %}
-	<a href="{{ url_for(endpoint, page = 1, item_count = pagination['item_count']) }}"> << </a>
-	<a href="{{ url_for(endpoint, page = pagination['page_number'] - 1, item_count = pagination['item_count']) }}"> < </a>
+	<a href="{{ url_for(endpoint, page = 1, item_count = pagination['item_count']) }}" title="First page"> << </a>
+	<a href="{{ url_for(endpoint, page = pagination['page_number'] - 1, item_count = pagination['item_count']) }}" title="Previous page"> < </a>
 	{% endif %}
 	<p>Page {{ pagination['page_number'] }} / {{ pagination['page_total'] }}</p>
 	<p>({{ pagination['item_total']  }} items)</p>
 	{% if pagination['page_number'] == pagination['page_total'] %}
-	<a href="{{ url_for(endpoint, page = pagination['page_total'], item_count = pagination['item_count']) }}" class="disabled"> > </a>
-	<a href="{{ url_for(endpoint, page = pagination['page_total'], item_count = pagination['item_count']) }}" class="disabled"> >> </a>
+	<a href="{{ url_for(endpoint, page = pagination['page_total'], item_count = pagination['item_count']) }}" title="Next page" class="disabled"> > </a>
+	<a href="{{ url_for(endpoint, page = pagination['page_total'], item_count = pagination['item_count']) }}" title="Last page" class="disabled"> >> </a>
 	{% else %}
-	<a href="{{ url_for(endpoint, page = pagination['page_number'] + 1, item_count = pagination['item_count']) }}"> > </a>
-	<a href="{{ url_for(endpoint, page = pagination['page_total'], item_count = pagination['item_count']) }}"> >> </a>
+	<a href="{{ url_for(endpoint, page = pagination['page_number'] + 1, item_count = pagination['item_count']) }}" title="Next page"> > </a>
+	<a href="{{ url_for(endpoint, page = pagination['page_total'], item_count = pagination['item_count']) }}" title="Last page"> >> </a>
 	{% endif %}
 </div>
 {% endmacro %}

@@ -11,14 +11,20 @@ logger = logging.getLogger("BuildController")
 
 
 def build_collection_index():
-	item_total = service_client.get("/build_count")
+	query_parameters = {
+		"job": flask.request.args.get("job", default = None),
+		"worker": flask.request.args.get("worker", default = None),
+		"status": flask.request.args.get("status", default = None),
+	}
+
+	item_total = service_client.get("/build_count", query_parameters)
 	pagination = helpers.get_pagination(item_total)
 	
-	query_parameters = {
+	query_parameters.update({
 		"skip": (pagination["page_number"] - 1) * pagination["item_count"],
 		"limit": pagination["item_count"],
 		"order_by": [ "update_date descending" ],
-	}
+	})
 
 	build_collection = service_client.get("/build_collection", query_parameters)
 	return flask.render_template("build/collection.html", title = "Builds", build_collection = build_collection, pagination = pagination)
