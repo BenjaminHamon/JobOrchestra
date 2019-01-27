@@ -14,20 +14,16 @@ class TaskProvider:
 		self.table = "task"
 
 
-	def count(self):
-		return self.database_client.count(self.table, {})
+	def count(self, type = None, status = None, build = None, worker = None):
+		filter = { "type": type, "status": status, "parameters.build_identifier": build, "parameters.worker_identifier": worker }
+		filter = { key: value for key, value in filter.items() if value is not None }
+		return self.database_client.count(self.table, filter)
 
 
-	def get_list(self, skip = 0, limit = 100, order_by = None):
-		return self.database_client.find_many(self.table, {}, skip = skip, limit = limit, order_by = order_by)
-
-
-	def get_list_for_build(self, build_identifier, skip = 0, limit = 100, order_by = None):
-		return self.database_client.find_many(self.table, { "parameters.build_identifier": build_identifier }, skip = skip, limit = limit, order_by = order_by)
-
-
-	def get_list_for_worker(self, worker_identifier, skip = 0, limit = 100, order_by = None):
-		return self.database_client.find_many(self.table, { "parameters.worker_identifier": worker_identifier }, skip = skip, limit = limit, order_by = order_by)
+	def get_list(self, type = None, status = None, build = None, worker = None, skip = 0, limit = 100, order_by = None):
+		filter = { "type": type, "status": status, "parameters.build_identifier": build, "parameters.worker_identifier": worker }
+		filter = { key: value for key, value in filter.items() if value is not None }
+		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
 	def get(self, task_identifier):

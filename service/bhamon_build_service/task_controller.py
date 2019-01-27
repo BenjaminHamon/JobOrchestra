@@ -7,19 +7,32 @@ logger = logging.getLogger("TaskController")
 
 
 def get_task_count():
-	return flask.jsonify(flask.current_app.task_provider.count())
+	query_parameters = {
+		"type": flask.request.args.get("type", default = None),
+		"status": flask.request.args.get("status", default = None),
+		"build": flask.request.args.get("build", default = None),
+		"worker": flask.request.args.get("worker", default = None),
+	}
+
+	return flask.jsonify(flask.current_app.task_provider.count(**query_parameters))
 
 
 def get_task_collection():
-	skip = max(flask.request.args.get("skip", default = 0, type = int), 0)
-	limit = max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0)
-	order_by = [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ]
-	return flask.jsonify(flask.current_app.task_provider.get_list(skip = skip, limit = limit, order_by = order_by))
+	query_parameters = {
+		"type": flask.request.args.get("type", default = None),
+		"status": flask.request.args.get("status", default = None),
+		"build": flask.request.args.get("build", default = None),
+		"worker": flask.request.args.get("worker", default = None),
+		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
+		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),
+		"order_by": [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ],
+	}
+
+	return flask.jsonify(flask.current_app.task_provider.get_list(**query_parameters))
 
 
 def get_task(task_identifier):
-	task = flask.current_app.task_provider.get(task_identifier)
-	return flask.jsonify(task)
+	return flask.jsonify(flask.current_app.task_provider.get(task_identifier))
 
 
 def cancel_task(task_identifier):

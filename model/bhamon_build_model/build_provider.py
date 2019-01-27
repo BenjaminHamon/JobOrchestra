@@ -18,20 +18,16 @@ class BuildProvider:
 		self.result_table = "build_result"
 
 
-	def count(self):
-		return self.database_client.count(self.build_table, {})
+	def count(self, job = None, worker = None, status = None):
+		filter = { "job": job, "worker": worker, "status": status }
+		filter = { key: value for key, value in filter.items() if value is not None }
+		return self.database_client.count(self.build_table, filter)
 
 
-	def get_list(self, skip = 0, limit = 100, order_by = None):
-		return self.database_client.find_many(self.build_table, {}, skip = skip, limit = limit, order_by = order_by)
-
-
-	def get_list_for_job(self, job_identifier, skip = 0, limit = 100, order_by = None):
-		return self.database_client.find_many(self.build_table, { "job": job_identifier }, skip = skip, limit = limit, order_by = order_by)
-
-
-	def get_list_for_worker(self, worker_identifier, skip = 0, limit = 100, order_by = None):
-		return self.database_client.find_many(self.build_table, { "worker": worker_identifier }, skip = skip, limit = limit, order_by = order_by)
+	def get_list(self, job = None, worker = None, status = None, skip = 0, limit = 100, order_by = None):
+		filter = { "job": job, "worker": worker, "status": status }
+		filter = { key: value for key, value in filter.items() if value is not None }
+		return self.database_client.find_many(self.build_table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
 	def get(self, build_identifier):

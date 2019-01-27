@@ -11,10 +11,13 @@ def get_job_count():
 
 
 def get_job_collection():
-	skip = max(flask.request.args.get("skip", default = 0, type = int), 0)
-	limit = max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0)
-	order_by = [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ]
-	return flask.jsonify(flask.current_app.job_provider.get_list(skip = skip, limit = limit, order_by = order_by))
+	query_parameters = {
+		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
+		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),
+		"order_by": [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ],
+	}
+
+	return flask.jsonify(flask.current_app.job_provider.get_list(**query_parameters))
 
 
 def get_job(job_identifier):
@@ -22,10 +25,15 @@ def get_job(job_identifier):
 
 
 def get_job_builds(job_identifier):
-	skip = max(flask.request.args.get("skip", default = 0, type = int), 0)
-	limit = max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0)
-	order_by = [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ]
-	return flask.jsonify(flask.current_app.build_provider.get_list_for_job(job_identifier, skip = skip, limit = limit, order_by = order_by))
+	query_parameters = {
+		"job": job_identifier,
+		"status": flask.request.args.get("status", default = None),
+		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
+		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),
+		"order_by": [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ],
+	}
+
+	return flask.jsonify(flask.current_app.build_provider.get_list(**query_parameters))
 
 
 def trigger_job(job_identifier):
