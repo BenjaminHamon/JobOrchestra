@@ -12,9 +12,9 @@ logger = logging.getLogger("BuildController")
 
 def build_collection_index():
 	query_parameters = {
-		"job": flask.request.args.get("job", default = None),
-		"worker": flask.request.args.get("worker", default = None),
-		"status": flask.request.args.get("status", default = None),
+		"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
+		"worker": helpers.none_if_empty(flask.request.args.get("worker", default = None)),
+		"status": helpers.none_if_empty(flask.request.args.get("status", default = None)),
 	}
 
 	item_total = service_client.get("/build_count", query_parameters)
@@ -26,8 +26,15 @@ def build_collection_index():
 		"order_by": [ "update_date descending" ],
 	})
 
-	build_collection = service_client.get("/build_collection", query_parameters)
-	return flask.render_template("build/collection.html", title = "Builds", build_collection = build_collection, pagination = pagination)
+	view_data = {
+		"build_collection": service_client.get("/build_collection", query_parameters),
+		"job_collection": service_client.get("/job_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
+		"worker_collection": service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
+		"status_collection": _get_status_collection(),
+		"pagination": pagination,
+	}
+
+	return flask.render_template("build/collection.html", title = "Builds", **view_data)
 
 
 def build_index(build_identifier):
@@ -53,3 +60,7 @@ def abort_build(build_identifier):
 	parameters = flask.request.form
 	service_client.post("/build/{build_identifier}/abort".format(**locals()), parameters)
 	return flask.redirect(flask.request.referrer or flask.url_for("build_collection_index"))
+
+
+def _get_status_collection():
+	return [ "pending", "running", "succeeded", "failed", "exception", "aborted", "cancelled" ]

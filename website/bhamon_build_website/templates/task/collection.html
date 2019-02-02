@@ -6,6 +6,47 @@
 <h1>Tasks</h1>
 <section>
 	<div class="table-container">
+		<form action="{{ url_for('task_collection_index') }}" method="get">
+			<ul>
+				<li>
+					<label for="build">Build</label>
+					{% if request.args.get('build') %}
+					<input type="text" class="uuid-input" name="build" value="{{ request.args.get('build') }}"/>
+					{% else %}
+					<input type="text" class="uuid-input" name="build"/>
+					{% endif %}
+				</li>
+				<li>
+					<label for="worker">Worker</label>
+					<select name="worker">
+						<option></option>
+						{% for worker in worker_collection %}
+							{% if request.args.get('worker') == worker['identifier'] %}
+						<option selected>{{ worker['identifier'] }}</option>
+							{% else %}
+						<option>{{ worker['identifier'] }}</option>
+							{% endif %}
+						{% endfor %}
+					</select>
+				</li>
+				<li>
+					<label for="status">Status</label>
+					<select name="status">
+						<option></option>
+						{% for status in status_collection %}
+							{% if request.args.get('status') == status %}
+						<option selected>{{ status }}</option>
+							{% else %}
+						<option>{{ status }}</option>
+							{% endif %}
+						{% endfor %}
+					</select>
+				</li>
+				<li>
+					<button type="submit">Apply filters</button>
+				</li>
+			</ul>
+		</form>
 		{{ task_macros.task_table(task_collection) }}
 		{{ shared_macros.page_navigation('task_collection_index', pagination) }}
 	</div>

@@ -54,3 +54,8 @@
 
 .status-indicator.enabled { background-color: green; }
 .status-indicator.disabled { background-color: grey; }
+
+.uuid-input
+{
+	width: 250px;
+}

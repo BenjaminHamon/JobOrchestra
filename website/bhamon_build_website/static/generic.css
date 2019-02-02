@@ -123,6 +123,7 @@ form li label
 {
 	width: 100px;
 	margin-right: 10px;
+	text-align: right;
 }
 
 form li input
@@ -133,12 +134,43 @@ form li input
 form li button
 {
 	margin-left: auto;
+	white-space: nowrap;
+}
+
+form select
+{
+	min-width: 100px;
 }
 
 .table-container
 {
 	display: flex;
 	flex-direction: column;
+}
+
+.table-container > form > ul
+{
+	display: flex;
+	flex-direction: row;
+}
+
+.table-container > form > ul > li
+{
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	margin: 0 30px 10px 0;
+}
+
+.table-container > form > ul > li:last-child
+{
+	margin-right: 0;
+}
+
+.table-container > form > ul > li > label
+{
+	width: auto;
+	margin-right: 10px;
 }
 
 .page-navigation

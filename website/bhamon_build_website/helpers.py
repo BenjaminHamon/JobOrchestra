@@ -3,6 +3,12 @@ import math
 import flask
 
 
+def none_if_empty(value):
+	if value == "":
+		return None
+	return value
+
+
 def get_pagination(item_total):
 	item_count = max(min(flask.request.args.get("item_count", default = 100, type = int), 1000), 10)
 	page_total = max(int(math.ceil(item_total / item_count)), 1)
