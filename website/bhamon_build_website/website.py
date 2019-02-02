@@ -6,6 +6,7 @@ import jinja2
 import werkzeug
 
 import bhamon_build_website.build_controller as build_controller
+import bhamon_build_website.helpers as helpers
 import bhamon_build_website.job_controller as job_controller
 import bhamon_build_website.task_controller as task_controller
 import bhamon_build_website.worker_controller as worker_controller
@@ -17,6 +18,7 @@ logger = logging.getLogger("Website")
 def configure(application):
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True
+	application.jinja_env.filters['strip_pagination_arguments'] = helpers.strip_pagination_arguments
 
 
 def register_routes(application):
