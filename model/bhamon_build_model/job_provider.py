@@ -17,7 +17,7 @@ class JobProvider:
 		return self.database_client.count(self.table, {})
 
 
-	def get_list(self, skip = 0, limit = 100, order_by = None):
+	def get_list(self, skip = 0, limit = None, order_by = None):
 		return self.database_client.find_many(self.table, {}, skip = skip, limit = limit, order_by = order_by)
 
 

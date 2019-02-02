@@ -20,7 +20,7 @@ class TaskProvider:
 		return self.database_client.count(self.table, filter)
 
 
-	def get_list(self, type = None, status = None, build = None, worker = None, skip = 0, limit = 100, order_by = None):
+	def get_list(self, type = None, status = None, build = None, worker = None, skip = 0, limit = None, order_by = None):
 		filter = { "type": type, "status": status, "parameters.build_identifier": build, "parameters.worker_identifier": worker }
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)

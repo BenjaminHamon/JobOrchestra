@@ -24,7 +24,7 @@ class BuildProvider:
 		return self.database_client.count(self.build_table, filter)
 
 
-	def get_list(self, job = None, worker = None, status = None, skip = 0, limit = 100, order_by = None):
+	def get_list(self, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
 		filter = { "job": job, "worker": worker, "status": status }
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.build_table, filter, skip = skip, limit = limit, order_by = order_by)

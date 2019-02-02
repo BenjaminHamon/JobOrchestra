@@ -43,8 +43,7 @@ class TaskProcessor:
 
 	async def _update(self):
 		try:
-			all_tasks = self._task_provider.get_list()
-			all_tasks = [ task for task in all_tasks if task["status"] == "pending" ]
+			all_tasks = self._task_provider.get_list(status = "pending")
 			all_tasks.sort(key = self._get_task_order)
 
 			for task in all_tasks:
