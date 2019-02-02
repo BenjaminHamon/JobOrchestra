@@ -38,8 +38,7 @@ class Worker:
 		builds_to_recover = await Worker._execute_remote_command(self._connection, self.identifier, "list", {})
 		for build_information in builds_to_recover:
 			executor = await self._recover_execution(**build_information)
-			if executor is not None:
-				self.executors.append(executor)
+			self.executors.append(executor)
 
 		while not self.should_disconnect and (not self.should_shutdown or len(self.executors) > 0):
 			update_start = time.time()
@@ -83,6 +82,7 @@ class Worker:
 		logger.info("(%s) Recovering build %s %s", self.identifier, job_identifier, build_identifier)
 		build_request = await self._retrieve_request(job_identifier, build_identifier)
 		build = self._build_provider.get(build_identifier)
+		self._build_provider.update_status(build, status = "running")
 		return { "job": build_request["job"], "build": build, "should_abort": False }
 
 
