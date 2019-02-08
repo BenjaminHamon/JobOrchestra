@@ -7,6 +7,7 @@ setuptools.setup(
 	description = "Worker component for build service, responsible for executing builds",
 	author = "Benjamin Hamon",
 	author_email = "hamon.benjamin@gmail.com",
+	url = "https://github.com/BenjaminHamon/BuildService",
 
 	packages = [
 		"bhamon_build_worker",

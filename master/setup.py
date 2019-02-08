@@ -7,6 +7,7 @@ setuptools.setup(
 	description = "Master component for build service, responsible for supervising workers and builds",
 	author = "Benjamin Hamon",
 	author_email = "hamon.benjamin@gmail.com",
+	url = "https://github.com/BenjaminHamon/BuildService",
 
 	packages = [
 		"bhamon_build_master",
