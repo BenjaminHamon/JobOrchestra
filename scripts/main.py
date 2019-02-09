@@ -6,6 +6,27 @@ import configuration
 import environment
 
 
+def main():
+	current_directory = os.getcwd()
+	script_path = os.path.realpath(__file__)
+	workspace_directory = os.path.dirname(os.path.dirname(script_path))
+
+	os.chdir(workspace_directory)
+
+	try:
+		environment_instance = environment.load_environment()
+		configuration_instance = configuration.load_configuration(environment_instance)
+
+		arguments = parse_arguments(environment_instance, configuration_instance)
+		environment.configure_logging(logging.getLevelName(arguments.verbosity.upper()))
+
+		show_project_information(configuration_instance, arguments.simulate)
+		arguments.func(environment_instance, configuration_instance, arguments)
+
+	finally:
+		os.chdir(current_directory)
+
+
 def parse_arguments(environment_instance, configuration_instance):
 	all_log_levels = [ "debug", "info", "warning", "error", "critical" ]
 
@@ -31,15 +52,4 @@ def show_project_information(configuration_instance, simulate):
 
 
 if __name__ == "__main__":
-	script_path = os.path.realpath(__file__)
-	workspace_directory = os.path.dirname(os.path.dirname(script_path))
-	os.chdir(workspace_directory)
-
-	environment_instance = environment.load_environment()
-	configuration_instance = configuration.load_configuration(environment_instance)
-
-	arguments = parse_arguments(environment_instance, configuration_instance)
-	environment.configure_logging(logging.getLevelName(arguments.verbosity.upper()))
-
-	show_project_information(configuration_instance, arguments.simulate)
-	arguments.func(environment_instance, configuration_instance, arguments)
+	main()

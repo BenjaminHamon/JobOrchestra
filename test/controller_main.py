@@ -10,6 +10,12 @@ import environment
 controller.wait_delay_seconds = 1
 
 
+def main():
+	environment.configure_logging(logging.INFO)
+	arguments = parse_arguments()
+	arguments.func(arguments)
+
+
 def parse_arguments():
 
 	def parse_key_value_parameter(argument_value):
@@ -50,6 +56,4 @@ def wait_build(arguments):
 
 
 if __name__ == "__main__":
-	environment.configure_logging(logging.INFO)
-	arguments = parse_arguments()
-	arguments.func(arguments)
+	main()

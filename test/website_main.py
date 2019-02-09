@@ -9,14 +9,7 @@ import bhamon_build_website.website as website
 import environment
 
 
-def parse_arguments():
-	argument_parser = argparse.ArgumentParser()
-	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
-	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
-	return argument_parser.parse_args()
-
-
-if __name__ == "__main__":
+def main():
 	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
 
@@ -35,3 +28,14 @@ if __name__ == "__main__":
 	website.register_resources(application)
 
 	application.run(host = arguments.address, port = arguments.port)
+
+
+def parse_arguments():
+	argument_parser = argparse.ArgumentParser()
+	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
+	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
+	return argument_parser.parse_args()
+
+
+if __name__ == "__main__":
+	main()

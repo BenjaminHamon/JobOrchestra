@@ -17,23 +17,7 @@ import bhamon_build_service.service as service
 import environment
 
 
-def parse_arguments():
-	argument_parser = argparse.ArgumentParser()
-	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
-	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
-	argument_parser.add_argument("--database", required = True, help = "Set the build database uri")
-	return argument_parser.parse_args()
-
-
-def create_database_client(database_uri):
-	if database_uri == "json":
-		return json_database_client.JsonDatabaseClient(".")
-	if database_uri.startswith("mongodb://"):
-		return mongo_database_client.MongoDatabaseClient(pymongo.MongoClient(database_uri).get_database())
-	raise ValueError("Unsupported database uri '%s'" % database_uri)
-
-
-if __name__ == "__main__":
+def main():
 	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
 
@@ -53,3 +37,23 @@ if __name__ == "__main__":
 	service.register_routes(application)
 
 	application.run(host = arguments.address, port = arguments.port)
+
+
+def parse_arguments():
+	argument_parser = argparse.ArgumentParser()
+	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
+	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
+	argument_parser.add_argument("--database", required = True, help = "Set the build database uri")
+	return argument_parser.parse_args()
+
+
+def create_database_client(database_uri):
+	if database_uri == "json":
+		return json_database_client.JsonDatabaseClient(".")
+	if database_uri.startswith("mongodb://"):
+		return mongo_database_client.MongoDatabaseClient(pymongo.MongoClient(database_uri).get_database())
+	raise ValueError("Unsupported database uri '%s'" % database_uri)
+
+
+if __name__ == "__main__":
+	main()

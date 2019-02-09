@@ -9,14 +9,7 @@ import bhamon_build_worker.executor as executor
 import environment
 
 
-def parse_arguments():
-	argument_parser = argparse.ArgumentParser()
-	argument_parser.add_argument("job_identifier", help = "Set the job identifier")
-	argument_parser.add_argument("build_identifier", help = "Set the build identifier")
-	return argument_parser.parse_args()
-
-
-if __name__ == "__main__":
+def main():
 	arguments = parse_arguments()
 	environment.configure_logging(logging.INFO)
 	environment_instance = environment.load_environment()
@@ -25,3 +18,14 @@ if __name__ == "__main__":
 
 	with filelock.FileLock(os.path.join(executor_build_directory, "build_executor.lock"), 5):
 		executor.run(arguments.job_identifier, arguments.build_identifier, environment_instance)
+
+
+def parse_arguments():
+	argument_parser = argparse.ArgumentParser()
+	argument_parser.add_argument("job_identifier", help = "Set the job identifier")
+	argument_parser.add_argument("build_identifier", help = "Set the build identifier")
+	return argument_parser.parse_args()
+
+
+if __name__ == "__main__":
+	main()
