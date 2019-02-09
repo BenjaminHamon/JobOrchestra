@@ -4,11 +4,11 @@ import subprocess
 import uuid
 
 
-def configure_argument_parser(environment, configuration, subparsers):
+def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
 	return subparsers.add_parser("test", help = "run the test suite")
 
 
-def run(environment, configuration, arguments):
+def run(environment, configuration, arguments): # pylint: disable=unused-argument
 	test(environment, arguments.simulate)
 
 

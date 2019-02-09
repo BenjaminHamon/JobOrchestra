@@ -2,11 +2,11 @@ import logging
 import subprocess
 
 
-def configure_argument_parser(environment, configuration, subparsers):
+def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
 	return subparsers.add_parser("lint", help = "run linter")
 
 
-def run(environment, configuration, arguments):
+def run(environment, configuration, arguments): # pylint: disable=unused-argument
 	lint(environment, configuration["packages"])
 
 
