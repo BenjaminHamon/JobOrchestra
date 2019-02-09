@@ -34,6 +34,11 @@ class Worker:
 				executor["should_abort"] = True
 
 
+	def wake_up(self):
+		if self._active_asyncio_sleep:
+			self._active_asyncio_sleep.cancel()
+
+
 	async def run(self):
 		builds_to_recover = await Worker._execute_remote_command(self._connection, self.identifier, "list", {})
 		for build_information in builds_to_recover:

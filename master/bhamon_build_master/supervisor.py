@@ -1,5 +1,4 @@
 import asyncio
-import functools
 import logging
 
 import websockets
@@ -36,10 +35,9 @@ class Supervisor:
 
 
 	def shutdown(self):
-		for worker in self._active_workers.values():
-			worker.should_disconnect = True
-			if worker._active_asyncio_sleep:
-				worker._active_asyncio_sleep.cancel()
+		for worker_instance in self._active_workers.values():
+			worker_instance.should_disconnect = True
+			worker_instance.wake_up()
 		self._should_shutdown = True
 
 
@@ -81,8 +79,8 @@ class Supervisor:
 
 
 	def abort_build(self, build_identifier):
-		for worker in self._active_workers.values():
-			worker.abort_build(build_identifier)
+		for worker_instance in self._active_workers.values():
+			worker_instance.abort_build(build_identifier)
 		return True
 
 

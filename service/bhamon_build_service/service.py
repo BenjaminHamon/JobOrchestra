@@ -63,7 +63,7 @@ def home():
 	return flask.jsonify({})
 
 
-def help():
+def help(): # pylint: disable=redefined-builtin
 	route_collection = []
 	for rule in flask.current_app.url_map.iter_rules():
 		if not rule.rule.startswith("/static/"):

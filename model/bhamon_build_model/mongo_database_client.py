@@ -1,3 +1,6 @@
+# pylint: disable=no-self-use
+# pylint: disable=redefined-builtin
+
 import logging
 
 import pymongo
@@ -46,7 +49,7 @@ class MongoDatabaseClient(database_client.DatabaseClient):
 	def _convert_order_by_expression(self, expression):
 		if expression is None:
 			return None
-		
+
 		mongo_sort = []
 		for key, direction in self._normalize_order_by_expression(expression):
 			if direction in [ "asc", "ascending" ]:

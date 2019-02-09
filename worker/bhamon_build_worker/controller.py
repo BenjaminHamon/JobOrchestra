@@ -1,4 +1,3 @@
-import argparse
 import json
 import logging
 import os
@@ -65,15 +64,21 @@ def _try_request(message, send_request):
 			time.sleep(request_attempt_delay)
 
 
-def _service_get(service_url, route, parameters = {}):
+def _service_get(service_url, route, parameters = None):
 	headers = { "Content-Type": "application/json" }
+	if parameters is None:
+		parameters = {}
+
 	response = requests.get(service_url + route, headers = headers, params = parameters)
 	response.raise_for_status()
 	return response.json()
 
 
-def _service_post(service_url, route, data = {}):
+def _service_post(service_url, route, data = None):
 	headers = { "Content-Type": "application/json" }
+	if data is None:
+		data = {}
+
 	response = requests.post(service_url + route, headers = headers, data = json.dumps(data))
 	response.raise_for_status()
 	return response.json()

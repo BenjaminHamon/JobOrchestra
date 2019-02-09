@@ -34,6 +34,18 @@ class Master:
 		logger.info("Exiting build master")
 
 
+	def register_default_tasks(self):
+		self._task_processor.register_handler("reload_configuration", 20,
+			lambda parameters: reload_configuration(self))
+		self._task_processor.register_handler("stop_worker", 50,
+			lambda parameters: stop_worker(self._supervisor, **parameters))
+		self._task_processor.register_handler("abort_build", 90,
+			lambda parameters: abort_build(self._supervisor, **parameters))
+		self._task_processor.register_handler("trigger_build", 100,
+			lambda parameters: trigger_build(self._supervisor, **parameters),
+			lambda parameters: cancel_build(self._supervisor, **parameters))
+
+
 	def reload_configuration(self):
 		logger.info("Reloading configuration")
 		configuration = self._configuration_loader()
@@ -61,18 +73,6 @@ class Master:
 	def shutdown(self):
 		self._supervisor.shutdown()
 		self._task_processor.shutdown()
-
-
-def register_default_tasks(master):
-	master._task_processor.register_handler("reload_configuration", 20,
-		lambda parameters: reload_configuration(master))
-	master._task_processor.register_handler("stop_worker", 50,
-		lambda parameters: stop_worker(master._supervisor, **parameters))
-	master._task_processor.register_handler("abort_build", 90,
-		lambda parameters: abort_build(master._supervisor, **parameters))
-	master._task_processor.register_handler("trigger_build", 100,
-		lambda parameters: trigger_build(master._supervisor, **parameters),
-		lambda parameters: cancel_build(master._supervisor, **parameters))
 
 
 def reload_configuration(master):

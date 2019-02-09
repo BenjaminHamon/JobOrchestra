@@ -1,3 +1,6 @@
+# pylint: disable=no-self-use
+# pylint: disable=redefined-builtin
+
 import abc
 
 class DatabaseClient(abc.ABC):

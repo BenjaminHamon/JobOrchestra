@@ -83,6 +83,6 @@ if __name__ == "__main__":
 		supervisor_instance.update_interval_seconds = 1
 		task_processor_instance.update_interval_seconds = 1
 
-		master.register_default_tasks(master_instance)
+		master_instance.register_default_tasks()
 
 		master_instance.run()

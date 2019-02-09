@@ -1,3 +1,5 @@
+# pylint: disable=unused-argument
+
 import logging
 import re
 
@@ -19,7 +21,7 @@ def build_collection_index():
 
 	item_total = service_client.get("/build_count", query_parameters)
 	pagination = helpers.get_pagination(item_total)
-	
+
 	query_parameters.update({
 		"skip": (pagination["page_number"] - 1) * pagination["item_count"],
 		"limit": pagination["item_count"],

@@ -1,7 +1,6 @@
 """ Integration tests for connection between master and workers """
 
 import os
-import signal
 import time
 
 import assert_extensions

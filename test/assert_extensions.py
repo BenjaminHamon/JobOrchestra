@@ -1,11 +1,10 @@
-import logging
 import re
 import sys
 
 import pytest
 
 
-STATUS_CONTROL_C_EXIT = 0xC000013A
+STATUS_CONTROL_C_EXIT = 0xC000013A # pylint: disable=invalid-name
 
 
 def assert_multi_process(process_information_collection):
@@ -33,8 +32,13 @@ def assert_multi_process(process_information_collection):
 		assert_log(process_information["stderr"], process_information["log_format"], process_information["expected_messages"])
 
 
-def assert_log(log_text, log_format, expected_messages = [], failure_log_levels = [ "Warning", "Error", "Critical" ]):
+def assert_log(log_text, log_format, expected_messages = None, failure_log_levels = None):
 	__tracebackhide__ = True # pylint: disable=unused-variable
+
+	if expected_messages is None:
+		expected_messages = []
+	if failure_log_levels is None:
+		failure_log_levels = [ "Warning", "Error", "Critical" ]
 
 	log_format = log_format.replace("{levelname}", "{level}").replace("{name}", "{logger}")
 	log_regex = r"^" + re.escape(log_format) + r"$"

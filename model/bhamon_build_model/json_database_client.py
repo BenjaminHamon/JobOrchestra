@@ -1,4 +1,6 @@
-import glob
+# pylint: disable=no-self-use
+# pylint: disable=redefined-builtin
+
 import json
 import logging
 import os
@@ -89,11 +91,11 @@ class JsonDatabaseClient(database_client.DatabaseClient):
 	def _apply_order_by(self, row_collection, expression):
 		if expression is None:
 			return row_collection
-		
+
 		for key, direction in reversed(self._normalize_order_by_expression(expression)):
 			if direction in [ "asc", "ascending" ]:
 				reverse = False
 			elif direction in [ "desc", "descending" ]:
 				reverse = True
-			row_collection = sorted(row_collection, key = lambda x: x[key], reverse = reverse)
+			row_collection = sorted(row_collection, key = lambda x: x[key], reverse = reverse) # pylint: disable=cell-var-from-loop
 		return row_collection

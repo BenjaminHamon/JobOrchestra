@@ -135,29 +135,28 @@ async def _terminate_executor(executor, timeout_seconds):
 		await asyncio.sleep(1)
 
 
-def _execute_command(worker_data, command, parameters):
+def _execute_command(worker_data, command, parameters): # pylint: disable=too-many-return-statements
 	if command == "authenticate":
 		return _authenticate(worker_data)
 	if command == "list":
 		return _list_builds(worker_data)
-	elif command == "execute":
+	if command == "execute":
 		return _execute(worker_data, **parameters)
-	elif command == "clean":
+	if command == "clean":
 		return _clean(worker_data, **parameters)
-	elif command == "abort":
+	if command == "abort":
 		return _abort(worker_data, **parameters)
-	elif command == "status":
+	if command == "status":
 		return _check_status(worker_data, **parameters)
-	elif command == "request":
+	if command == "request":
 		return _retrieve_request(**parameters)
-	elif command == "log":
+	if command == "log":
 		return _retrieve_log(**parameters)
-	elif command == "results":
+	if command == "results":
 		return _retrieve_results(**parameters)
-	elif command == "shutdown":
+	if command == "shutdown":
 		return _request_shutdown(worker_data)
-	else:
-		raise ValueError("Unknown command %s" % command)
+	raise ValueError("Unknown command %s" % command)
 
 
 def _authenticate(worker_data):
