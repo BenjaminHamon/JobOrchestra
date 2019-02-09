@@ -1,0 +1,16 @@
+[BASIC]
+const-naming-style=snake_case
+
+[FORMAT]
+indent-string = '\t'
+
+[MESSAGES CONTROL]
+disable =
+	bad-continuation,
+	bad-whitespace,
+	duplicate-code,
+	len-as-condition,
+	line-too-long,
+	missing-docstring,
+	too-many-arguments,
+	too-many-instance-attributes,
