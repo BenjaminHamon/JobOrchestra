@@ -233,7 +233,7 @@ def _check_status(worker_data, job_identifier, build_identifier):
 	executor = _find_executor(worker_data, build_identifier)
 	is_executor_running = executor["process"] and executor["process"].poll() is None
 	status = worker_storage.load_status(job_identifier, build_identifier)
-	if not is_executor_running and (not status or status["status"] == "running"):
+	if not is_executor_running and (status["status"] in [ "unknown", "running" ]):
 		logger.error('Build %s executor terminated before completion', build_identifier)
 		status["status"] = "exception"
 		worker_storage.save_status(job_identifier, build_identifier, status)

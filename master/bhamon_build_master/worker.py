@@ -107,7 +107,7 @@ class Worker:
 	async def _update_execution(self, build):
 		status_request = { "job_identifier": build["job"], "build_identifier": build["identifier"] }
 		status_response = await Worker._execute_remote_command(self._connection, self.identifier, "status", status_request)
-		if status_response:
+		if status_response["status"] != "unknown":
 			self._build_provider.update_status(build, status = status_response["status"])
 			if "steps" in status_response:
 				self._build_provider.update_steps(build["identifier"], status_response["steps"])

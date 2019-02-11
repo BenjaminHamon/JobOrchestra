@@ -14,6 +14,7 @@ setuptools.setup(
 	],
 
 	install_requires = [
+		"filelock",
 		"requests",
 		"websockets",
 	],
