@@ -97,7 +97,7 @@ async def _process_connection(connection, worker_data):
 		try:
 			result = _execute_command(worker_data, request["command"], request["parameters"])
 			response = { "result": result }
-		except Exception as exception:
+		except Exception as exception: # pylint: disable=broad-except
 			logger.error("Failed to process request %s", request, exc_info = True)
 			response = { "error": str(exception) }
 

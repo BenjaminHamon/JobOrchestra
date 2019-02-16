@@ -84,7 +84,7 @@ class Supervisor:
 		return True
 
 
-	async def _process_connection(self, connection, path):
+	async def _process_connection(self, connection, path): # pylint: disable=unused-argument
 		worker_identifier = None
 		if self._should_shutdown:
 			return
@@ -103,25 +103,25 @@ class Supervisor:
 				logger.info("Accepted connection from worker %s", worker_identifier)
 				worker_instance = worker.Worker(worker_identifier, connection, self._build_provider)
 				worker_instance.update_interval_seconds = self.update_interval_seconds
-				self._worker_provider.update_status(worker_data, is_active = True)
 				if worker_identifier in self._active_workers:
 					raise KeyError("Worker %s is already in active workers" % worker_identifier)
 				self._active_workers[worker_identifier] = worker_instance
+				self._worker_provider.update_status(worker_data, is_active = True)
 
 				try:
 					await worker_instance.run()
 				except websockets.exceptions.ConnectionClosed as exception:
 					if exception.code not in [ 1000, 1001 ]:
-						logger.error("Worker %s execution raised an exception", worker_identifier, exc_info = True)
-				except:
-					logger.error("Worker %s execution raised an exception", worker_identifier, exc_info = True)
+						logger.error("Lost connection with worker %s", worker_identifier, exc_info = True)
+				except Exception: # pylint: disable=broad-except
+					logger.error("Unhandled exception from worker %s", worker_identifier, exc_info = True)
+				finally:
+					logger.info("Terminating connection with worker %s", worker_identifier)
+					del self._active_workers[worker_identifier]
+					self._worker_provider.update_status(worker_data, is_active = False)
 
-				del self._active_workers[worker_identifier]
-				self._worker_provider.update_status(worker_data, is_active = False)
-				logger.info("Closing connection with worker %s", worker_identifier)
-
-		except:
-			logger.error("Worker %s handler raised an exception", worker_identifier, exc_info = True)
+		except Exception: # pylint: disable=broad-except
+			logger.error("Unhandled exception from worker %s handler", worker_identifier, exc_info = True)
 
 
 	def _authenticate_worker(self, worker_identifier, worker_data):

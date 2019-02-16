@@ -48,9 +48,18 @@ class Worker:
 		while not self.should_disconnect and (not self.should_shutdown or len(self.executors) > 0):
 			update_start = time.time()
 			await self._connection.ping()
-			all_executors = list(self.executors)
-			for executor in all_executors:
-				await self._process_executor(executor)
+
+			try:
+				all_executors = list(self.executors)
+				for executor in all_executors:
+					await self._process_executor(executor)
+			except websockets.exceptions.ConnectionClosed:
+				raise
+			except: # pylint: disable=bare-except
+				all_executors = list(self.executors)
+				for executor in all_executors:
+					logger.error("(%s) Interrupted while executing build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
+
 			update_end = time.time()
 
 			try:
@@ -77,9 +86,8 @@ class Worker:
 				self.executors.remove(executor)
 		except websockets.exceptions.ConnectionClosed:
 			raise
-		except:
-			logger.error("(%s) Failed to execute build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
-			self._build_provider.update_status(executor["build"], status = "exception")
+		except Exception: # pylint: disable=broad-except
+			logger.error("(%s) Unhandled exception while executing build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
 			self.executors.remove(executor)
 
 
@@ -87,7 +95,6 @@ class Worker:
 		logger.info("(%s) Recovering build %s %s", self.identifier, job_identifier, build_identifier)
 		build_request = await self._retrieve_request(job_identifier, build_identifier)
 		build = self._build_provider.get(build_identifier)
-		self._build_provider.update_status(build, status = "running")
 		return { "job": build_request["job"], "build": build, "should_abort": False }
 
 

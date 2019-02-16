@@ -60,12 +60,16 @@ class TaskProcessor:
 						end_status = self._handler_collection[task["type"]]["execution_handler"](task["parameters"])
 					self._task_provider.update_status(task, status = end_status)
 
-				except:
-					logger.error("Failed to process task %s", task["identifier"], exc_info = True)
+				except Exception: # pylint: disable=broad-except
+					logger.error("Unhandled exception while processing task %s", task["identifier"], exc_info = True)
 					self._task_provider.update_status(task, status = "exception")
+				except: # pylint: disable=bare-except
+					logger.error("Interrupted while processing task %s", task["identifier"], exc_info = True)
+					self._task_provider.update_status(task, status = "exception")
+					raise
 
-		except:
-			logger.error("TaskProcessor update raised an exception", exc_info = True)
+		except Exception: # pylint: disable=broad-except
+			logger.error("Unhandled exception", exc_info = True)
 
 
 	def shutdown(self):

@@ -70,7 +70,7 @@ def run(job_identifier, build_identifier, environment):
 		build_status["status"] = build_final_status
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
-	except:
+	except: # pylint: disable=bare-except
 		logger.error("(%s) Build raised an exception", build_identifier, exc_info = True)
 		build_status["status"] = "exception"
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
@@ -113,7 +113,7 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
-	except:
+	except: # pylint: disable=bare-except
 		logger.error("(%s) Step %s raised an exception", build_identifier, step["name"], exc_info = True)
 		step["status"] = "exception"
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
