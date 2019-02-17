@@ -29,7 +29,7 @@ class Supervisor:
 			self._worker_provider.update_status(worker_data, is_active = False)
 
 		logger.info("Listening for workers on %s:%s", self._host, self._port)
-		async with websockets.serve(self._process_connection, self._host, self._port):
+		async with websockets.serve(self._process_connection, self._host, self._port, max_size = 2 ** 30):
 			while not self._should_shutdown or len(self._active_workers) > 0:
 				await asyncio.sleep(1)
 
