@@ -72,11 +72,11 @@ class Context:
 		)
 
 
-	def invoke_worker(self, identifier):
+	def invoke_worker(self, worker_identifier):
 		return self.invoke(
 			script = "worker_main.py",
-			arguments = [ "--identifier", identifier, "--master-uri", "ws://%s:%s" % (self.master_address, self.master_port) ],
-			workspace = os.path.join(self.temporary_directory, identifier),
+			arguments = [ "--identifier", worker_identifier, "--master-uri", "ws://%s:%s" % (self.master_address, self.master_port) ],
+			workspace = os.path.join(self.temporary_directory, worker_identifier),
 		)
 
 

@@ -34,8 +34,8 @@ def test_worker_disconnection(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "worker_01", "process": worker_process, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "identifier": "worker_01", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
 
@@ -66,6 +66,6 @@ def test_master_disconnection(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "worker_01", "process": worker_process, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "identifier": "worker_01", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])

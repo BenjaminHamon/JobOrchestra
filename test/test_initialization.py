@@ -17,7 +17,7 @@ def test_master(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
 	])
 
 
@@ -25,7 +25,7 @@ def test_worker(tmpdir):
 	""" Start worker """
 
 	with context.Context(tmpdir) as context_instance:
-		worker_process = context_instance.invoke_worker("worker_01")
+		worker_process = context_instance.invoke_worker("worker")
 
 	worker_expected_messages = [
 		{ "level": "Info", "logger": "Worker", "message": "Starting build worker" },
@@ -34,7 +34,7 @@ def test_worker(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "worker_01", "process": worker_process, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "identifier": "worker", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
 
@@ -45,7 +45,7 @@ def test_service(tmpdir):
 		service_process = context_instance.invoke_service()
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "service", "process": service_process, "log_format": environment.log_format, "expected_messages": [] },
+		{ "identifier": "service", "process": service_process, "expected_result_code": assert_extensions.STATUS_CONTROL_C_EXIT, "log_format": environment.log_format, "expected_messages": [] },
 	])
 
 
@@ -56,5 +56,5 @@ def test_website(tmpdir):
 		website_process = context_instance.invoke_website()
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "website", "process": website_process, "log_format": environment.log_format, "expected_messages": [] },
+		{ "identifier": "website", "process": website_process, "expected_result_code": assert_extensions.STATUS_CONTROL_C_EXIT, "log_format": environment.log_format, "expected_messages": [] },
 	])

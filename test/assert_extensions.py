@@ -27,8 +27,9 @@ def assert_multi_process(process_information_collection):
 	for process_information in process_information_collection:
 		if process_information["result_code"] is None:
 			pytest.fail("Process %s did not complete" % process_information["identifier"])
-		if process_information["result_code"] not in [ 0, STATUS_CONTROL_C_EXIT ]:
-			pytest.fail("Process %s completed with result code %s" % (process_information["identifier"], process_information["result_code"]))
+		if process_information["result_code"] != process_information["expected_result_code"]:
+			pytest.fail("Process %s completed with result code %s, expected %s"
+				% (process_information["identifier"], process_information["result_code"], process_information["expected_result_code"]))
 		assert_log(process_information["stderr"], process_information["log_format"], process_information["expected_messages"])
 
 

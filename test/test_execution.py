@@ -39,8 +39,8 @@ def test_job_success(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "worker_01", "process": worker_process, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "identifier": "worker_01", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
 	assert task["status"] == "succeeded"
@@ -79,8 +79,8 @@ def test_job_failure(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "worker_01", "process": worker_process, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "identifier": "worker_01", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
 	assert task["status"] == "succeeded"
@@ -120,8 +120,8 @@ def test_job_exception(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "worker_01", "process": worker_process, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "identifier": "worker_01", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
 	assert task["status"] == "succeeded"
@@ -161,11 +161,11 @@ def test_job_controller_success(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "service", "process": service_process, "log_format": environment.log_format, "expected_messages": [] },
-		{ "identifier": "controller", "process": controller_process, "log_format": environment.log_format, "expected_messages": controller_expected_messages },
-		{ "identifier": "worker_01", "process": worker_01_process, "log_format": environment.log_format, "expected_messages": [] },
-		{ "identifier": "worker_02", "process": worker_02_process, "log_format": environment.log_format, "expected_messages": [] },
+		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "identifier": "service", "process": service_process, "expected_result_code": assert_extensions.STATUS_CONTROL_C_EXIT, "log_format": environment.log_format, "expected_messages": [] },
+		{ "identifier": "controller", "process": controller_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": controller_expected_messages },
+		{ "identifier": "worker_01", "process": worker_01_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
+		{ "identifier": "worker_02", "process": worker_02_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
 	])
 
 	assert task["status"] == "succeeded"
@@ -207,11 +207,11 @@ def test_job_controller_failure(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "service", "process": service_process, "log_format": environment.log_format, "expected_messages": [] },
-		{ "identifier": "controller", "process": controller_process, "log_format": environment.log_format, "expected_messages": controller_expected_messages },
-		{ "identifier": "worker_01", "process": worker_01_process, "log_format": environment.log_format, "expected_messages": [] },
-		{ "identifier": "worker_02", "process": worker_02_process, "log_format": environment.log_format, "expected_messages": [] },
+		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "identifier": "service", "process": service_process, "expected_result_code": assert_extensions.STATUS_CONTROL_C_EXIT, "log_format": environment.log_format, "expected_messages": [] },
+		{ "identifier": "controller", "process": controller_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": controller_expected_messages },
+		{ "identifier": "worker_01", "process": worker_01_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
+		{ "identifier": "worker_02", "process": worker_02_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
 	])
 
 	assert task["status"] == "succeeded"
