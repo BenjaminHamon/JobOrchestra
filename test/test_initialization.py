@@ -38,6 +38,21 @@ def test_worker(tmpdir):
 	])
 
 
+def test_executor(tmpdir):
+	""" Start executor """
+
+	with context.Context(tmpdir) as context_instance:
+		executor_process = context_instance.invoke_executor("worker", "job", "00000000-0000-0000-0000-000000000000")
+
+	executor_expected_messages = [
+		{ "level": "Info", "logger": "Executor", "message": "(00000000-0000-0000-0000-000000000000) Executing job" },
+	]
+
+	assert_extensions.assert_multi_process([
+		{ "identifier": "executor", "process": executor_process, "expected_result_code": 1, "log_format": environment.log_format, "expected_messages": executor_expected_messages },
+	])
+
+
 def test_service(tmpdir):
 	""" Start service """
 

@@ -80,6 +80,19 @@ class Context:
 		)
 
 
+	def invoke_executor(self, worker_identifier, job_identifier, build_identifier):
+		worker_directory = os.path.join(self.temporary_directory, worker_identifier)
+		executor_build_directory = os.path.join(worker_directory, "builds", job_identifier + "_" + build_identifier)
+
+		os.makedirs(executor_build_directory)
+
+		return self.invoke(
+			script = "executor_main.py",
+			arguments = [ job_identifier, build_identifier ],
+			workspace = worker_directory,
+		)
+
+
 	def invoke_service(self):
 		return self.invoke(
 			script = "service_main.py",
