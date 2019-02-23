@@ -1,9 +1,15 @@
+# Build
+.build/
+
+# Environment
+environment.json
+
 # Python
 __pycache__/
 *.egg-info/
 
-# Visual Studio Code
-.vscode/
-
 # Tests
 test_results/
+
+# Visual Studio Code
+.vscode/

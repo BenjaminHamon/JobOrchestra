@@ -8,19 +8,23 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 
 def run(environment, configuration, arguments): # pylint: disable=unused-argument
-	clean(configuration["packages"], arguments.simulate)
+	clean(configuration, arguments.simulate)
 
 
-def clean(package_collection, simulate):
+def clean(configuration, simulate):
 	logging.info("Cleaning the workspace")
 	logging.info("")
 
-	directories_to_clean = []
-	for package in package_collection:
-		directories_to_clean += [ { "display_name": "Python cache", "path": package + "/__pycache__" } ]
+	directories_to_clean = [
+		{ "display_name": "Build", "path": ".build" },
+	]
+
+	for component in configuration["components"]:
+		for package in component["packages"]:
+			directories_to_clean += [ { "display_name": "Python cache", "path": os.path.join(component["path"], package, "__pycache__") } ]
 
 	directories_to_clean += [
-		{ "display_name": "Python cache", "path": "test/__pycache__" },
+		{ "display_name": "Python cache", "path": os.path.join("test", "__pycache__") },
 		{ "display_name": "Pytest cache", "path": ".pytest_cache" },
 		{ "display_name": "Test results", "path": "test_results" },
 	]
