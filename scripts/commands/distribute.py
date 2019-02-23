@@ -12,15 +12,12 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 	command_list = [ "setup", "package", "upload" ]
 
 	parser = subparsers.add_parser("distribute", formatter_class = argparse.RawTextHelpFormatter, help = "create distribution packages")
-	parser.add_argument("--command", choices = command_list, nargs = "+", dest = "distribute_commands",
+	parser.add_argument("--command", required = True, choices = command_list, nargs = "+", dest = "distribute_commands",
 		metavar = "<command>", help = "set the command(s) to execute for distribution" + "\n" + "(%s)" % ", ".join(command_list))
 	return parser
 
 
 def run(environment, configuration, arguments): # pylint: disable=unused-argument
-	if not arguments.distribute_commands:
-		raise ValueError("No command was selected")
-
 	if "setup" in arguments.distribute_commands:
 		for component in configuration["components"]:
 			setup(configuration, component, arguments.simulate)
