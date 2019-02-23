@@ -4,9 +4,11 @@ import os
 import shutil
 import subprocess
 
+import jinja2
+
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
-	command_list = [ "package", "upload" ]
+	command_list = [ "setup", "package", "upload" ]
 
 	parser = subparsers.add_parser("distribute", formatter_class = argparse.RawTextHelpFormatter, help = "create distribution packages")
 	parser.add_argument("--command", choices = command_list, nargs = "+", dest = "distribute_commands",
@@ -19,6 +21,10 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 	if not arguments.distribute_commands:
 		raise ValueError("No command was selected")
 
+	if "setup" in arguments.distribute_commands:
+		for component in configuration["components"]:
+			setup(configuration, component, arguments.simulate)
+		logging.info("")
 	if "package" in arguments.distribute_commands:
 		for component in configuration["components"]:
 			create(environment["python3_executable"], component, arguments.verbosity == "debug", arguments.simulate)
@@ -26,6 +32,22 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 		for component in configuration["components"]:
 			upload(environment["python_package_repository"], component, configuration["project_version"], arguments.force, arguments.simulate)
 			logging.info("")
+
+
+# Setup scripts are generated from a template to avoid having a dependency on scripts which are not packaged.
+def setup(configuration, component, simulate):
+	logging.info("Generating setup.py script for '%s'", component["name"])
+
+	template_loader = jinja2.FileSystemLoader(searchpath = os.path.join("scripts", "templates"))
+	jinja_environment = jinja2.Environment(loader = template_loader, trim_blocks = True, lstrip_blocks = True, keep_trailing_newline = True)
+
+	template = jinja_environment.get_template("setup.template.py")
+	script_content = template.render(configuration = configuration, component = component)
+	output_path = os.path.join(component["path"], "setup.py")
+
+	if not simulate:
+		with open(output_path, "w") as output_file:
+			output_file.write(script_content)
 
 
 def create(python_executable, component, verbose, simulate):

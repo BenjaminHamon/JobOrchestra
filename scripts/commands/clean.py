@@ -34,3 +34,10 @@ def clean(configuration, simulate):
 			logging.info("Removing directory '%s' (Path: '%s')", directory["display_name"], directory["path"])
 			if not simulate:
 				shutil.rmtree(directory["path"])
+
+	for component in configuration["components"]:
+		setup_script = os.path.join(component["path"], "setup.py")
+		if os.path.exists(setup_script):
+			logging.info("Removing generated script '%s'", setup_script)
+			if not simulate:
+				os.remove(setup_script)

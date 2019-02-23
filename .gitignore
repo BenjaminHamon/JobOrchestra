@@ -4,6 +4,13 @@
 # Environment
 environment.json
 
+# Generated scripts
+master/setup.py
+model/setup.py
+service/setup.py
+website/setup.py
+worker/setup.py
+
 # Python
 __pycache__/
 *.egg-info/
