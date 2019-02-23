@@ -1,4 +1,5 @@
 import argparse
+import glob
 import logging
 import os
 import shutil
@@ -13,7 +14,6 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 	parser = subparsers.add_parser("distribute", formatter_class = argparse.RawTextHelpFormatter, help = "create distribution packages")
 	parser.add_argument("--command", choices = command_list, nargs = "+", dest = "distribute_commands",
 		metavar = "<command>", help = "set the command(s) to execute for distribution" + "\n" + "(%s)" % ", ".join(command_list))
-	parser.add_argument("--force", action = "store_true", help = "if a distribution was already uploaded, overwrite it")
 	return parser
 
 
@@ -29,8 +29,9 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 		for component in configuration["components"]:
 			create(environment["python3_executable"], component, arguments.verbosity == "debug", arguments.simulate)
 	if "upload" in arguments.distribute_commands:
+		package_repository = os.path.normpath(environment["python_package_repository"])
 		for component in configuration["components"]:
-			upload(environment["python_package_repository"], component, configuration["project_version"], arguments.force, arguments.simulate)
+			upload(package_repository, component, configuration["project_version"], arguments.simulate)
 			logging.info("")
 
 
@@ -64,20 +65,19 @@ def create(python_executable, component, verbose, simulate):
 	subprocess.check_call(setup_command, cwd = component["path"])
 
 
-def upload(package_repository, component, version, force, simulate):
+def upload(package_repository, component, version, simulate):
 	logging.info("Uploading distribution for '%s'", component["name"])
 
 	archive_name = component["name"] + "-" + version["full"] + ".zip"
 	source_path = os.path.join(".build", component["path"], archive_name)
-	destination_path = os.path.join(package_repository, component["name"], archive_name) 
+	destination_path = os.path.join(package_repository, component["name"], archive_name)
+
+	existing_distribution_pattern = component["name"] + "-" + version["identifier"] + "+*.zip"
+	existing_distribution = next((x for x in glob.glob(os.path.join(package_repository, component["name"], existing_distribution_pattern))), None)
+	if existing_distribution is not None:
+		raise ValueError("Version %s already exists: '%s'" % (version["identifier"], os.path.basename(existing_distribution)))
 
 	logging.info("Uploading '%s' to '%s'", source_path, destination_path)
-
-	if os.path.isfile(destination_path):
-		if not force:
-			raise ValueError("Destination already exists: '%s'" % destination_path)
-		if not simulate:
-			os.remove(destination_path)
 
 	if not simulate:
 		os.makedirs(os.path.dirname(destination_path), exist_ok = True)
