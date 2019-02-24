@@ -4,22 +4,22 @@ import setuptools
 
 
 setuptools.setup(
-    name = "{{ component['name'] }}",
-    version = "{{ configuration['project_version']['full'] }}",
-    description = "{{ component['description'] }}",
-    author = "{{ configuration['author'] }}",
-    author_email = "{{ configuration['author_email'] }}",
-    url = "{{ configuration['project_url'] }}",
+	name = "{{ component['name'] }}",
+	version = "{{ configuration['project_version']['full'] }}",
+	description = "{{ component['description'] }}",
+	author = "{{ configuration['author'] }}",
+	author_email = "{{ configuration['author_email'] }}",
+	url = "{{ configuration['project_url'] }}",
 
-    packages = [
+	packages = [
 		{% for package in component['packages'] %}
-        "{{ package }}",
+		"{{ package }}",
 		{% endfor %}
-    ],
+	],
 
-    install_requires = [
+	install_requires = [
 		{% for dependency in component['dependencies'] %}
 		"{{ dependency }}",
 		{% endfor %}
-    ],
+	],
 )
