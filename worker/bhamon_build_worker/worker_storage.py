@@ -35,7 +35,7 @@ def delete_build(job_identifier, build_identifier):
 
 def load_request(job_identifier, build_identifier):
 	request_file_path = get_file_path(job_identifier, build_identifier, "request.json")
-	lock_file_path = get_file_path(job_identifier, build_identifier, "worker_storage.lock")
+	lock_file_path = get_file_path(job_identifier, build_identifier, "request.json.lock")
 
 	with filelock.FileLock(lock_file_path, filelock_timeout_seconds):
 		return _load_data(request_file_path)
@@ -43,7 +43,7 @@ def load_request(job_identifier, build_identifier):
 
 def save_request(job_identifier, build_identifier, build_request):
 	request_file_path = get_file_path(job_identifier, build_identifier, "request.json")
-	lock_file_path = get_file_path(job_identifier, build_identifier, "worker_storage.lock")
+	lock_file_path = get_file_path(job_identifier, build_identifier, "request.json.lock")
 
 	with filelock.FileLock(lock_file_path, filelock_timeout_seconds):
 		_save_data(request_file_path, build_request)
@@ -51,7 +51,7 @@ def save_request(job_identifier, build_identifier, build_request):
 
 def load_status(job_identifier, build_identifier):
 	status_file_path = get_file_path(job_identifier, build_identifier, "status.json")
-	lock_file_path = get_file_path(job_identifier, build_identifier, "worker_storage.lock")
+	lock_file_path = get_file_path(job_identifier, build_identifier, "status.json.lock")
 
 	with filelock.FileLock(lock_file_path, filelock_timeout_seconds):
 		if not os.path.isfile(status_file_path):
@@ -61,7 +61,7 @@ def load_status(job_identifier, build_identifier):
 
 def save_status(job_identifier, build_identifier, status):
 	status_file_path = get_file_path(job_identifier, build_identifier, "status.json")
-	lock_file_path = get_file_path(job_identifier, build_identifier, "worker_storage.lock")
+	lock_file_path = get_file_path(job_identifier, build_identifier, "status.json.lock")
 
 	with filelock.FileLock(lock_file_path, filelock_timeout_seconds):
 		_save_data(status_file_path, status)
@@ -69,7 +69,7 @@ def save_status(job_identifier, build_identifier, status):
 
 def load_results(job_identifier, build_identifier):
 	results_file_path = get_file_path(job_identifier, build_identifier, "results.json")
-	lock_file_path = get_file_path(job_identifier, build_identifier, "worker_storage.lock")
+	lock_file_path = get_file_path(job_identifier, build_identifier, "results.json.lock")
 
 	with filelock.FileLock(lock_file_path, filelock_timeout_seconds):
 		if not os.path.isfile(results_file_path):
@@ -79,7 +79,7 @@ def load_results(job_identifier, build_identifier):
 
 def save_results(job_identifier, build_identifier, results):
 	results_file_path = get_file_path(job_identifier, build_identifier, "results.json")
-	lock_file_path = get_file_path(job_identifier, build_identifier, "worker_storage.lock")
+	lock_file_path = get_file_path(job_identifier, build_identifier, "results.json.lock")
 
 	with filelock.FileLock(lock_file_path, filelock_timeout_seconds):
 		_save_data(results_file_path, results)
