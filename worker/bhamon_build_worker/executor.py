@@ -55,6 +55,10 @@ def run(job_identifier, build_identifier, environment):
 		if not os.path.exists(build_status["workspace"]):
 			os.makedirs(build_status["workspace"])
 
+		# Prevent executor pyvenv from overriding a python executable specified in a command
+		if "__PYVENV_LAUNCHER__" in os.environ:
+			del os.environ["__PYVENV_LAUNCHER__"]
+
 		build_final_status = "succeeded"
 		is_skipping = False
 
