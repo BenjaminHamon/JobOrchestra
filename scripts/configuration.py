@@ -1,6 +1,7 @@
 import subprocess
 
 import commands.clean
+import commands.develop
 import commands.distribute
 import commands.lint
 import commands.test
@@ -9,6 +10,7 @@ import commands.test
 def get_command_list():
 	return [
 		commands.clean,
+		commands.develop,
 		commands.distribute,
 		commands.lint,
 		commands.test,
