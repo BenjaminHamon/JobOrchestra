@@ -48,7 +48,7 @@ def parse_arguments(environment_instance, configuration_instance):
 def show_project_information(configuration_instance, simulate):
 	logging.info("%s %s", configuration_instance["project_name"], configuration_instance["project_version"]["full"])
 	logging.info("Script executing in %s %s", os.getcwd(), "(simulation)" if simulate else '')
-	logging.info("")
+	print("")
 
 
 if __name__ == "__main__":

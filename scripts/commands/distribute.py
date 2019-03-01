@@ -21,7 +21,7 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 	if "setup" in arguments.distribute_commands:
 		for component in configuration["components"]:
 			setup(configuration, component, arguments.simulate)
-		logging.info("")
+		print("")
 	if "package" in arguments.distribute_commands:
 		for component in configuration["components"]:
 			create(environment["python3_executable"], component, arguments.verbosity == "debug", arguments.simulate)
@@ -29,7 +29,7 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 		package_repository = os.path.normpath(environment["python_package_repository"])
 		for component in configuration["components"]:
 			upload(package_repository, component, configuration["project_version"], arguments.simulate)
-			logging.info("")
+			print("")
 
 
 # Setup scripts are generated from a template to avoid having a dependency on scripts which are not packaged.

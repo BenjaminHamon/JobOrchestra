@@ -13,7 +13,7 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 
 def clean(configuration, simulate):
 	logging.info("Cleaning the workspace")
-	logging.info("")
+	print("")
 
 	directories_to_clean = [
 		{ "display_name": "Build", "path": ".build" },

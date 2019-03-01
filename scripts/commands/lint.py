@@ -12,7 +12,6 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 
 def lint(environment, component_collection):
 	logging.info("Running linter")
-	logging.info("")
 
 	pylint_command = [ environment["python3_executable"], "-m", "pylint" ]
 	pylint_command += [ component["path"] for component in component_collection ]

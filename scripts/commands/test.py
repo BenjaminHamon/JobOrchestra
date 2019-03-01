@@ -18,7 +18,6 @@ def test(environment, filter_expression, simulate):
 	run_identifier = uuid.uuid4()
 
 	logging.info("Running test suite (RunIdentifier: %s)", run_identifier)
-	logging.info("")
 
 	os.makedirs("test_results", exist_ok = True)
 
