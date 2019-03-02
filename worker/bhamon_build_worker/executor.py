@@ -90,6 +90,7 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 		step["status"] = "running"
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
+		executor_directory = os.getcwd()
 		log_file_path = worker_storage.get_log_path(job_identifier, build_identifier, step_index, step["name"])
 		result_file_path = os.path.join(build_status["workspace"], "build_results", build_identifier, "results.json")
 
@@ -112,13 +113,17 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 				log_file.write("\n")
 				log_file.flush()
 
-				child_process = subprocess.Popen(
-					step_command,
-					cwd = build_status["workspace"],
-					stdout = log_file,
-					stderr = subprocess.STDOUT,
-					creationflags = subprocess_flags,
-				)
+				os.chdir(build_status["workspace"])
+
+				try:
+					child_process = subprocess.Popen(
+						step_command,
+						stdout = log_file,
+						stderr = subprocess.STDOUT,
+						creationflags = subprocess_flags,
+					)
+				finally:
+					os.chdir(executor_directory)
 
 				step["status"] = _wait_process(executor_data, build_identifier, child_process)
 
