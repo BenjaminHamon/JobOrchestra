@@ -106,6 +106,11 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 			logger.info("(%s) + %s", build_identifier, " ".join(step_command))
 
 			with open(log_file_path, "w") as log_file:
+				log_file.write("# Workspace: %s\n" % os.path.abspath(build_status["workspace"]))
+				log_file.write("# Command: %s\n" % " ".join(step_command))
+				log_file.write("\n")
+				log_file.flush()
+
 				child_process = subprocess.Popen(
 					step_command,
 					cwd = build_status["workspace"],
