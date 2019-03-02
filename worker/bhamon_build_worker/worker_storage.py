@@ -60,17 +60,17 @@ def save_status(job_identifier, build_identifier, status):
 
 
 def load_results(job_identifier, build_identifier):
-	results_file_path = get_file_path(job_identifier, build_identifier, "results.json")
-	with filelock.FileLock(results_file_path + ".lock", filelock_timeout_seconds):
-		if not os.path.isfile(results_file_path):
+	result_file_path = get_file_path(job_identifier, build_identifier, "results.json")
+	with filelock.FileLock(result_file_path + ".lock", filelock_timeout_seconds):
+		if not os.path.isfile(result_file_path):
 			return {}
-		return _load_data(results_file_path)
+		return _load_data(result_file_path)
 
 
 def save_results(job_identifier, build_identifier, results):
-	results_file_path = get_file_path(job_identifier, build_identifier, "results.json")
-	with filelock.FileLock(results_file_path + ".lock", filelock_timeout_seconds):
-		_save_data(results_file_path, results)
+	result_file_path = get_file_path(job_identifier, build_identifier, "results.json")
+	with filelock.FileLock(result_file_path + ".lock", filelock_timeout_seconds):
+		_save_data(result_file_path, results)
 
 
 def get_file_path(job_identifier, build_identifier, file_name):

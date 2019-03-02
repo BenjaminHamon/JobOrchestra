@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import platform
@@ -90,7 +91,7 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
 		log_file_path = worker_storage.get_log_path(job_identifier, build_identifier, step_index, step["name"])
-		result_file_path = worker_storage.get_file_path(job_identifier, build_identifier, "results.json")
+		result_file_path = os.path.join(build_status["workspace"], "build_results", build_identifier, "results.json")
 
 		if is_skipping:
 			step["status"] = "skipped"
@@ -118,7 +119,13 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 					stderr = subprocess.STDOUT,
 					creationflags = subprocess_flags,
 				)
+
 				step["status"] = _wait_process(executor_data, build_identifier, child_process)
+
+			if os.path.isfile(result_file_path):
+				with open(result_file_path, "r") as result_file:
+					results = json.load(result_file)
+				worker_storage.save_results(job_identifier, build_identifier, results)
 
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
