@@ -90,7 +90,6 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 		step["status"] = "running"
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
-		executor_directory = os.getcwd()
 		log_file_path = worker_storage.get_log_path(job_identifier, build_identifier, step_index, step["name"])
 		result_file_path = os.path.join(build_status["workspace"], "build_results", build_identifier, "results.json")
 
@@ -106,26 +105,7 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 
 			step_command = [ argument.format(**step_parameters) for argument in step["command"] ]
 			logger.info("(%s) + %s", build_identifier, " ".join(step_command))
-
-			with open(log_file_path, "w") as log_file:
-				log_file.write("# Workspace: %s\n" % os.path.abspath(build_status["workspace"]))
-				log_file.write("# Command: %s\n" % " ".join(step_command))
-				log_file.write("\n")
-				log_file.flush()
-
-				os.chdir(build_status["workspace"])
-
-				try:
-					child_process = subprocess.Popen(
-						step_command,
-						stdout = log_file,
-						stderr = subprocess.STDOUT,
-						creationflags = subprocess_flags,
-					)
-				finally:
-					os.chdir(executor_directory)
-
-				step["status"] = _wait_process(executor_data, build_identifier, child_process)
+			step["status"] = _execute_command(executor_data, build_identifier, step_command, build_status["workspace"], log_file_path)
 
 			if os.path.isfile(result_file_path):
 				with open(result_file_path, "r") as result_file:
@@ -140,6 +120,24 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
 	logger.info("(%s) Step %s completed with status %s", build_identifier, step["name"], step["status"])
+
+
+def _execute_command(executor_data, build_identifier, command, workspace, log_file_path):
+	with open(log_file_path, "w") as log_file:
+		log_file.write("# Workspace: %s\n" % os.path.abspath(workspace))
+		log_file.write("# Command: %s\n" % " ".join(command))
+		log_file.write("\n")
+		log_file.flush()
+
+		executor_directory = os.getcwd()
+		os.chdir(workspace)
+
+		try:
+			child_process = subprocess.Popen(command, stdout = log_file, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
+		finally:
+			os.chdir(executor_directory)
+
+		return _wait_process(executor_data, build_identifier, child_process)
 
 
 def _wait_process(executor_data, build_identifier, child_process):
