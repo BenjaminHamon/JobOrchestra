@@ -147,7 +147,7 @@ def _execute_command(worker_data, command, parameters): # pylint: disable=too-ma
 	if command == "abort":
 		return _abort(worker_data, **parameters)
 	if command == "status":
-		return _check_status(worker_data, **parameters)
+		return _retrieve_status(worker_data, **parameters)
 	if command == "request":
 		return _retrieve_request(**parameters)
 	if command == "log":
@@ -229,7 +229,7 @@ def _shutdown(worker_data):
 		worker_data["active_connection_task"].cancel()
 
 
-def _check_status(worker_data, job_identifier, build_identifier):
+def _retrieve_status(worker_data, job_identifier, build_identifier):
 	executor = _find_executor(worker_data, build_identifier)
 	is_executor_running = executor["process"] and executor["process"].poll() is None
 	status = worker_storage.load_status(job_identifier, build_identifier)

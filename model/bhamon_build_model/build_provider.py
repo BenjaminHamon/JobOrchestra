@@ -56,12 +56,16 @@ class BuildProvider:
 		return build
 
 
-	def update_status(self, build, worker = None, status = None):
+	def update_status(self, build, worker = None, status = None, start_date = None, completion_date = None):
 		update_data = {}
 		if worker is not None:
 			update_data["worker"] = worker
 		if status is not None:
 			update_data["status"] = status
+		if start_date is not None:
+			update_data["start_date"] = start_date
+		if completion_date is not None:
+			update_data["completion_date"] = completion_date
 		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
 		build.update(update_data)
 		self.database_client.update_one(self.build_table, { "identifier": build["identifier"] }, update_data)

@@ -115,7 +115,8 @@ class Worker:
 		status_request = { "job_identifier": build["job"], "build_identifier": build["identifier"] }
 		status_response = await Worker._execute_remote_command(self._connection, self.identifier, "status", status_request)
 		if status_response["status"] != "unknown":
-			self._build_provider.update_status(build, status = status_response["status"])
+			properties_to_update = [ "status", "start_date", "completion_date" ]
+			self._build_provider.update_status(build, ** { key: value for key, value in status_response.items() if key in properties_to_update })
 			if "steps" in status_response:
 				self._build_provider.update_steps(build["identifier"], status_response["steps"])
 				await self._retrieve_logs(build, status_response["steps"])
