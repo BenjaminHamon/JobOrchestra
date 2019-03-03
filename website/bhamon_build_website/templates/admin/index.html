@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Administration</h1>
+
+<section>
+	<h2>Service Administration</h2>
+	<form class="action-group" method="post">
+		<button formaction="{{ url_for('reload_service') }}">Reload</button>
+	</form>
+</section>
+{% endblock %}

@@ -5,6 +5,7 @@ import flask
 import jinja2
 import werkzeug
 
+import bhamon_build_website.admin_controller as admin_controller
 import bhamon_build_website.build_controller as build_controller
 import bhamon_build_website.helpers as helpers
 import bhamon_build_website.job_controller as job_controller
@@ -23,6 +24,8 @@ def configure(application):
 
 def register_routes(application):
 	application.add_url_rule("/", methods = [ "GET" ], view_func = home)
+	application.add_url_rule("/admin", methods = [ "GET" ], view_func = admin_controller.administration_index)
+	application.add_url_rule("/admin/reload", methods = [ "POST" ], view_func = admin_controller.reload_service)
 	application.add_url_rule("/artifact_storage", methods = [ "GET" ], view_func = artifact_storage_index)
 	application.add_url_rule("/build_collection", methods = [ "GET" ], view_func = build_controller.build_collection_index)
 	application.add_url_rule("/build/<build_identifier>", methods = [ "GET" ], view_func = build_controller.build_index)
