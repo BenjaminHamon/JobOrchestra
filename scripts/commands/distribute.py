@@ -6,8 +6,6 @@ import os
 import shutil
 import subprocess
 
-import jinja2
-
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
 	command_list = [ "setup", "package", "upload" ]
@@ -26,6 +24,7 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 	if "package" in arguments.distribute_commands:
 		for component in configuration["components"]:
 			create(environment["python3_executable"], component, arguments.verbosity == "debug", arguments.simulate)
+			print("")
 	if "upload" in arguments.distribute_commands:
 		package_repository = os.path.normpath(environment["python_package_repository"])
 		for component in configuration["components"]:
@@ -37,12 +36,15 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 def setup(configuration, component, simulate):
 	logging.info("Generating setup.py script for '%s'", component["name"])
 
-	template_loader = jinja2.FileSystemLoader(searchpath = os.path.join("scripts", "templates"))
-	jinja_environment = jinja2.Environment(loader = template_loader, trim_blocks = True, lstrip_blocks = True, keep_trailing_newline = True)
-
-	template = jinja_environment.get_template("setup.template.py")
-	script_content = template.render(configuration = configuration, component = component)
+	template_file_path = os.path.join(component["path"], "setup.template.py")
 	output_path = os.path.join(component["path"], "setup.py")
+
+	with open(template_file_path, "r") as template_file:
+		script_content = template_file.read()
+	script_content = script_content.replace("{version}", configuration["project_version"]["full"])
+	script_content = script_content.replace("{author}", configuration["author"])
+	script_content = script_content.replace("{author_email}", configuration["author_email"])
+	script_content = script_content.replace("{url}", configuration["project_url"])
 
 	if not simulate:
 		with open(output_path, "w") as output_file:

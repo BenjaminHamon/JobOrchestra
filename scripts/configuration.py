@@ -37,36 +37,27 @@ def load_configuration(environment):
 		{
 			"name": "bhamon-build-master",
 			"path": "master",
-			"description": "Master component for build service, responsible for supervising workers and builds",
 			"packages": [ "bhamon_build_master" ],
-			"dependencies": [ "websockets" ],
 		},
 		{
 			"name": "bhamon-build-model",
 			"path": "model",
-			"description": "Model library for build service",
 			"packages": [ "bhamon_build_model" ],
 		},
 		{
 			"name": "bhamon-build-service",
 			"path": "service",
-			"description": "Web service component for build service, exposing a web interface to interact with the master",
 			"packages": [ "bhamon_build_service" ],
-			"dependencies": [ "flask" ],
 		},
 		{
 			"name": "bhamon-build-website",
 			"path": "website",
-			"description": "Website component for the build service, exposing a web interface for the master",
 			"packages": [ "bhamon_build_website" ],
-			"dependencies": [ "flask", "requests" ],
 		},
 		{
 			"name": "bhamon-build-worker",
 			"path": "worker",
-			"description": "Worker component for build service, responsible for executing builds",
 			"packages": [ "bhamon_build_worker" ],
-			"dependencies": [ "filelock", "requests", "websockets" ],
 		},
 	]
 
