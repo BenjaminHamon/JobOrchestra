@@ -70,9 +70,22 @@
 <section>
 	<h2>Results</h2>
 	<ul>
+		{% if 'revision_control' in build['results'] %}
+		<li>
+			<p>Revision Control</p>
+			<ul>
+				<li>
+					<p>Revision: {{ build['results']['revision_control']['revision'] }}</p>
+				</li>
+				<li>
+					<p>Date: {{ build['results']['revision_control']['date'] }}</p>
+				</li>
+			</ul>
+		</li>
+		{% endif %}
 		{% if 'child_builds' in build['results'] %}
 		<li>
-			<p>Child builds</p>
+			<p>Child Builds</p>
 			<ul>
 				{% for child_build in build['results']['child_builds'] %}
 				<li>

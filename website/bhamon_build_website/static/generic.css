@@ -91,6 +91,11 @@ section > div, section > form, section > table, section > ul, section > p
 	margin: 5px;
 }
 
+section > ul li
+{
+	margin: 5px 0;
+}
+
 a, img
 {
 	display: block;
