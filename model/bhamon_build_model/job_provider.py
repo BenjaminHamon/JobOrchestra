@@ -39,8 +39,8 @@ class JobProvider:
 				"properties": properties,
 				"description": description,
 				"is_enabled": True,
-				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
+				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 			}
 			self.database_client.insert_one(self.table, job)
 
@@ -51,7 +51,7 @@ class JobProvider:
 				"parameters": parameters,
 				"properties": properties,
 				"description": description,
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
+				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 			}
 			self.database_client.update_one(self.table, { "identifier": job_identifier }, update_data)
 
@@ -60,7 +60,7 @@ class JobProvider:
 		update_data = {}
 		if is_enabled is not None:
 			update_data["is_enabled"] = is_enabled
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
 		job.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": job["identifier"] }, job)
 

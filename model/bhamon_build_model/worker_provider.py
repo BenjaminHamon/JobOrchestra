@@ -37,8 +37,8 @@ class WorkerProvider:
 				"description": description,
 				"is_enabled": True,
 				"is_active": False,
-				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
+				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 			}
 			self.database_client.insert_one(self.table, worker)
 
@@ -46,7 +46,7 @@ class WorkerProvider:
 			update_data = {
 				"properties": properties,
 				"description": description,
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
+				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 			}
 			self.database_client.update_one(self.table, { "identifier": worker_identifier }, update_data)
 
@@ -57,7 +57,7 @@ class WorkerProvider:
 			update_data["is_active"] = is_active
 		if is_enabled is not None:
 			update_data["is_enabled"] = is_enabled
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
 		worker.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
 

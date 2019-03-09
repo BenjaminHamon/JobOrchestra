@@ -39,8 +39,8 @@ class TaskProvider:
 			"parameters": parameters,
 			"status": "pending",
 			"should_cancel": False,
-			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
+			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 		}
 
 		self.database_client.insert_one(self.table, task)
@@ -53,6 +53,6 @@ class TaskProvider:
 			update_data["status"] = status
 		if should_cancel is not None:
 			update_data["should_cancel"] = should_cancel
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
 		task.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": task["identifier"] }, task)

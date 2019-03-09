@@ -48,7 +48,7 @@ def run(job_identifier, build_identifier, environment):
 			for step_index, step in enumerate(build_request["job"]["steps"])
 		],
 
-		"start_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
+		"start_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 		"completion_date": None,
 	}
 
@@ -77,13 +77,13 @@ def run(job_identifier, build_identifier, environment):
 				is_skipping = True
 
 		build_status["status"] = build_final_status
-		build_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+		build_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
 	except: # pylint: disable=bare-except
 		logger.error("(%s) Build raised an exception", build_identifier, exc_info = True)
 		build_status["status"] = "exception"
-		build_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+		build_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
 	logger.info("(%s) Build completed with status %s", build_identifier, build_status["status"])

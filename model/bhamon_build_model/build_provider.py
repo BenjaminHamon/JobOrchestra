@@ -40,8 +40,8 @@ class BuildProvider:
 			"job": job_identifier,
 			"parameters": parameters,
 			"status": "pending",
-			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
+			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 		}
 
 		self.database_client.insert_one(self.build_table, build)
@@ -58,7 +58,7 @@ class BuildProvider:
 			update_data["start_date"] = start_date
 		if completion_date is not None:
 			update_data["completion_date"] = completion_date
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
+		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
 		build.update(update_data)
 		self.database_client.update_one(self.build_table, { "identifier": build["identifier"] }, update_data)
 
@@ -74,7 +74,7 @@ class BuildProvider:
 	def update_steps(self, build, step_collection):
 		update_data = {
 			"steps": step_collection,
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
+			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 		}
 
 		build.update(update_data)
@@ -106,7 +106,7 @@ class BuildProvider:
 	def set_results(self, build, results):
 		update_data = {
 			"results": results,
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat(),
+			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 		}
 
 		build.update(update_data)
