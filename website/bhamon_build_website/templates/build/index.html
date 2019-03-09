@@ -50,7 +50,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{% for step in build_steps %}
+			{% for step in build['steps'] %}
 			<tr>
 				<td>{{ step['index'] }}</td>
 				<td>{{ step['name'] }}</td>
@@ -70,11 +70,11 @@
 <section>
 	<h2>Results</h2>
 	<ul>
-		{% if 'child_builds' in build_results %}
+		{% if 'child_builds' in build['results'] %}
 		<li>
 			<p>Child builds</p>
 			<ul>
-				{% for child_build in build_results['child_builds'] %}
+				{% for child_build in build['results']['child_builds'] %}
 				<li>
 					<a href="{{ url_for('build_index', build_identifier = child_build['build_identifier']) }}">
 						{{ child_build['job_identifier'] }} {{ child_build['build_identifier'] }}
@@ -84,11 +84,11 @@
 			</ul>
 		</li>
 		{% endif %}
-		{% if 'artifacts' in build_results %}
+		{% if 'artifacts' in build['results'] %}
 		<li>
 			<p>Artifacts</p>
 			<ul>
-				{% for artifact in build_results['artifacts'] %}
+				{% for artifact in build['results']['artifacts'] %}
 				<li>
 					<a href="{{ artifact['url'] }}">
 						{{ artifact['name'] }}

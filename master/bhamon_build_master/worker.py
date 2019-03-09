@@ -118,14 +118,13 @@ class Worker:
 			properties_to_update = [ "status", "start_date", "completion_date" ]
 			self._build_provider.update_status(build, ** { key: value for key, value in status_response.items() if key in properties_to_update })
 			if "steps" in status_response:
-				self._build_provider.update_steps(build["identifier"], status_response["steps"])
-				await self._retrieve_logs(build, status_response["steps"])
+				self._build_provider.update_steps(build, status_response["steps"])
+				await self._retrieve_logs(build)
 				await self._retrieve_results(build)
 
 
 	async def _finish_execution(self, build):
-		all_steps = self._build_provider.get_all_steps(build["identifier"])
-		await self._retrieve_logs(build, all_steps)
+		await self._retrieve_logs(build)
 		await self._retrieve_results(build)
 		clean_request = { "job_identifier": build["job"], "build_identifier": build["identifier"] }
 		await Worker._execute_remote_command(self._connection, self.identifier, "clean", clean_request)
@@ -137,8 +136,8 @@ class Worker:
 		return await Worker._execute_remote_command(self._connection, self.identifier, "request", parameters)
 
 
-	async def _retrieve_logs(self, build, build_step_collection):
-		for build_step in build_step_collection:
+	async def _retrieve_logs(self, build):
+		for build_step in build["steps"]:
 			is_completed = build_step["status"] not in [ "pending", "running" ]
 			has_log = self._build_provider.has_step_log(build["identifier"], build_step["index"])
 			if is_completed and not has_log:
@@ -155,7 +154,7 @@ class Worker:
 	async def _retrieve_results(self, build):
 		results_request = { "job_identifier": build["job"], "build_identifier": build["identifier"], }
 		results = await Worker._execute_remote_command(self._connection, self.identifier, "results", results_request)
-		self._build_provider.set_results(build["identifier"], results)
+		self._build_provider.set_results(build, results)
 
 
 	@staticmethod
