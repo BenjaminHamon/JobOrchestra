@@ -39,7 +39,7 @@ header, nav, main, footer
 header a
 {
 	margin: 5px;
-	font-size: 1.5em;
+	font-size: 150%;
 	text-decoration: none;
 }
 
@@ -48,9 +48,23 @@ header a, header a:visited, header a:hover, header a:active
 	color: inherit;
 }
 
-nav > a
+nav
 {
-	margin: 5px;
+	display: flex;
+	flex-direction: column;
+	white-space: nowrap;
+}
+
+nav > div
+{
+	display: flex;
+	flex-direction: column;
+	margin: 5px 5px 15px 5px;
+}
+
+nav > div > a
+{
+	line-height: 150%;
 }
 
 main
@@ -62,14 +76,14 @@ main
 footer
 {
 	text-align: center;
-	font-size: 0.8em;
+	font-size: 80%;
 	color: #555;
 }
 
 h1
 {
 	margin: 5px 5px 15px 5px;
-	font-size: 1.5em;
+	font-size: 150%;
 }
 
 section
@@ -83,7 +97,7 @@ section
 section > h2
 {
 	margin: 5px;
-	font-size: 1.2em;
+	font-size: 120%;
 }
 
 section > div, section > form, section > table, section > ul, section > p
@@ -145,6 +159,11 @@ form li button
 form select
 {
 	min-width: 100px;
+}
+
+table
+{
+	white-space: nowrap;
 }
 
 .table-container
