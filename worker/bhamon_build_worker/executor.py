@@ -99,6 +99,11 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 		log_file_path = worker_storage.get_log_path(job_identifier, build_identifier, step_index, step["name"])
 		result_file_path = os.path.join(build_status["workspace"], "build_results", build_identifier, "results.json")
 
+		results = {}
+		if os.path.isfile(result_file_path):
+			with open(result_file_path, "r") as result_file:
+				results = json.load(result_file)
+
 		if is_skipping:
 			step["status"] = "skipped"
 
@@ -106,6 +111,7 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 			step_parameters = {
 				"environment": build_status["environment"],
 				"parameters": build_status["parameters"],
+				"results": results,
 				"result_file_path": os.path.relpath(result_file_path, build_status["workspace"]),
 			}
 
