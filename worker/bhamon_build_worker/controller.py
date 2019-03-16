@@ -1,9 +1,10 @@
 import json
 import logging
-import os
 import time
 
 import requests
+
+import bhamon_build_worker.workspace as workspace
 
 
 logger = logging.getLogger("Controller")
@@ -17,21 +18,22 @@ def trigger_build(service_url, result_file_path, job_identifier, parameters):
 	response = _try_request(message, lambda: _service_post(service_url, "/job/" + job_identifier + "/trigger", parameters))
 	logger.info("Build: %s, Task: %s", response["build_identifier"], response["task_identifier"])
 
-	result_data = _load_results(result_file_path)
-	result_data["child_builds"].append(response)
-	_save_results(result_file_path, result_data)
+	results = workspace.load_results(result_file_path)
+	results["child_builds"] = results.get("child_builds", [])
+	results["child_builds"].append(response)
+	workspace.save_results(result_file_path, results)
 
 
 def wait_build(service_url, result_file_path):
-	result_data = _load_results(result_file_path)
+	results = workspace.load_results(result_file_path)
 
-	for build in result_data["child_builds"]:
+	for build in results["child_builds"]:
 		build["build_status"] = "unknown"
 
-	while any(build["build_status"] in [ "unknown", "pending", "running" ] for build in result_data["child_builds"]):
+	while any(build["build_status"] in [ "unknown", "pending", "running" ] for build in results["child_builds"]):
 		time.sleep(wait_delay_seconds)
 
-		for build in result_data["child_builds"]:
+		for build in results["child_builds"]:
 			if build["build_status"] in [ "unknown", "pending", "running" ]:
 				response = _try_request(None, lambda: _service_get(service_url, "/build/" + build["build_identifier"]))
 				if build["build_status"] in [ "unknown", "pending" ] and response["status"] == "running":
@@ -40,7 +42,7 @@ def wait_build(service_url, result_file_path):
 				if response["status"] not in [ "pending", "running" ]:
 					logger.info("Build %s completed with status %s", response["identifier"], response["status"])
 
-	if any(build["build_status"] != "succeeded" for build in result_data["child_builds"]):
+	if any(build["build_status"] != "succeeded" for build in results["child_builds"]):
 		raise RuntimeError("One or more builds failed")
 
 
@@ -75,23 +77,10 @@ def _service_get(service_url, route, parameters = None):
 
 
 def _service_post(service_url, route, data = None):
-	headers = { "Content-Type": "application/json" }
 	if data is None:
 		data = {}
 
+	headers = { "Content-Type": "application/json" }
 	response = requests.post(service_url + route, headers = headers, data = json.dumps(data))
 	response.raise_for_status()
 	return response.json()
-
-
-def _load_results(result_file_path):
-	if not os.path.isfile(result_file_path):
-		return { "child_builds": [] }
-	with open(result_file_path, "r") as result_file:
-		return json.load(result_file)
-
-
-def _save_results(result_file_path, result_data):
-	os.makedirs(os.path.dirname(result_file_path), exist_ok = True)
-	with open(result_file_path, "w") as result_file:
-		json.dump(result_data, result_file, indent = 4)
