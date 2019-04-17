@@ -8,14 +8,14 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 
 def run(environment, configuration, arguments): # pylint: disable=unused-argument
-	clean(configuration, arguments.simulate)
+	clean(configuration, arguments.simulate, arguments.results)
 
 
-def clean(configuration, simulate):
+def clean(configuration, simulate, result_file_path):
 	logging.info("Cleaning the workspace")
 	print("")
 
-	directories_to_clean = [ ".pytest_cache", "build_results", "test_results", os.path.join("test", "__pycache__") ]
+	directories_to_clean = [ ".pytest_cache", os.path.join("test", "__pycache__") ]
 
 	for component in configuration["components"]:
 		directories_to_clean.append(os.path.join(component["path"], "build"))
@@ -31,3 +31,17 @@ def clean(configuration, simulate):
 			logging.info("Removing directory '%s'", directory)
 			if not simulate:
 				shutil.rmtree(directory)
+
+	if os.path.isdir("build_results"):
+		for build_identifier in os.listdir("build_results"):
+			if os.sep + build_identifier + os.sep in result_file_path:
+				continue
+			logging.info("Removing build results for '%s'", build_identifier)
+			if not simulate:
+				shutil.rmtree(os.path.join("build_results", build_identifier))
+
+	if os.path.isdir("test_results"):
+		for run_identifier in os.listdir("test_results"):
+			logging.info("Removing test results for '%s'", run_identifier)
+			if not simulate:
+				shutil.rmtree(os.path.join("test_results", run_identifier))
