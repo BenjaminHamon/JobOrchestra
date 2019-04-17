@@ -1,4 +1,5 @@
 import logging
+import os
 import subprocess
 
 import commands.distribute
@@ -12,15 +13,24 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 	for component in configuration["components"]:
 		commands.distribute.setup(configuration, component, arguments.simulate)
 	print("")
-	for component in configuration["components"]:
-		install(environment["python3_executable"], component, arguments.simulate)
-		print("")
+	install(environment["python3_executable"], configuration["components"], arguments.simulate)
+	print("")
 
 
-def install(python_executable, component, simulate):
-	logging.info("Installing '%s'", component["name"])
+def install(python_executable, component_collection, simulate):
+	logging.info("Installing development dependencies")
 
-	install_command = [ python_executable, "-m", "pip", "install", "--editable", component["path"] ]
+	install_command = [ python_executable, "-m", "pip", "install", "--upgrade", "pylint", "pytest", "wheel" ]
 	logging.info("+ %s", " ".join(install_command))
 	if not simulate:
 		subprocess.check_call(install_command)
+		print("")
+
+	logging.info("Installing development packages")
+
+	install_command = [ python_executable, "-m", "pip", "install", "--upgrade", "--editable" ]
+	install_command += [ os.path.join(".", component["path"]) for component in component_collection ]
+	logging.info("+ %s", " ".join(install_command))
+	if not simulate:
+		subprocess.check_call(install_command)
+		print("")
