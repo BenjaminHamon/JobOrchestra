@@ -33,7 +33,18 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 
 
 def setup(configuration, component, simulate):
-	pass
+	logging.info("Generating metadata for '%s'", component["name"])
+
+	for package_name in component["packages"]:
+		metadata_file_path = os.path.join(component["path"], package_name, "__metadata__.py")
+		metadata_content = ""
+		metadata_content += "__copyright__ = \"%s\"\n" % configuration["copyright"]
+		metadata_content += "__version__ = \"%s\"\n" % configuration["project_version"]["full"]
+		metadata_content += "__date__ = \"%s\"\n" % configuration["project_version"]["date"]
+
+		if not simulate:
+			with open(metadata_file_path, "w", encoding = "utf-8") as metadata_file:
+				metadata_file.writelines(metadata_content)
 
 
 def package(python_executable, component, verbose, simulate):
