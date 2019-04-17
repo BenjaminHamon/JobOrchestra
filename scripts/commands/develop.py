@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 
-import commands.distribute
+import scripts.commands.distribute
 
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
@@ -11,7 +11,7 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 def run(environment, configuration, arguments): # pylint: disable=unused-argument
 	for component in configuration["components"]:
-		commands.distribute.setup(configuration, component, arguments.simulate)
+		scripts.commands.distribute.setup(configuration, component, arguments.simulate)
 	print("")
 	install(environment["python3_executable"], configuration["components"], arguments.simulate)
 	print("")
@@ -26,11 +26,11 @@ def install(python_executable, component_collection, simulate):
 		subprocess.check_call(install_command)
 		print("")
 
-	logging.info("Installing development packages")
+	for component in component_collection:
+		logging.info("Installing development package for %s", component["name"])
 
-	install_command = [ python_executable, "-m", "pip", "install", "--upgrade", "--editable" ]
-	install_command += [ os.path.join(".", component["path"]) for component in component_collection ]
-	logging.info("+ %s", " ".join(install_command))
-	if not simulate:
-		subprocess.check_call(install_command)
-		print("")
+		install_command = [ python_executable, "-m", "pip", "install", "--upgrade", "--editable", os.path.join(".", component["path"]) ]
+		logging.info("+ %s", " ".join(install_command))
+		if not simulate:
+			subprocess.check_call(install_command)
+			print("")

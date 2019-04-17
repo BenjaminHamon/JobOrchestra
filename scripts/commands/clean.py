@@ -15,30 +15,19 @@ def clean(configuration, simulate):
 	logging.info("Cleaning the workspace")
 	print("")
 
-	directories_to_clean = [
-		{ "display_name": "Build", "path": ".build" },
-	]
+	directories_to_clean = [ ".pytest_cache", "build_results", "test_results", os.path.join("test", "__pycache__") ]
 
 	for component in configuration["components"]:
+		directories_to_clean.append(os.path.join(component["path"], "build"))
+		directories_to_clean.append(os.path.join(component["path"], "dist"))
 		for package in component["packages"]:
-			directories_to_clean += [ { "display_name": "Python cache", "path": os.path.join(component["path"], package, "__pycache__") } ]
-			directories_to_clean += [ { "display_name": "Python egg", "path": os.path.join(component["path"], package + ".egg-info") } ]
+			directories_to_clean.append(os.path.join(component["path"], package, "__pycache__"))
+			directories_to_clean.append(os.path.join(component["path"], package + ".egg-info"))
 
-	directories_to_clean += [
-		{ "display_name": "Python cache", "path": os.path.join("test", "__pycache__") },
-		{ "display_name": "Pytest cache", "path": ".pytest_cache" },
-		{ "display_name": "Test results", "path": "test_results" },
-	]
+	directories_to_clean.sort()
 
 	for directory in directories_to_clean:
-		if os.path.exists(directory["path"]):
-			logging.info("Removing directory '%s' (Path: '%s')", directory["display_name"], directory["path"])
+		if os.path.exists(directory):
+			logging.info("Removing directory '%s'", directory)
 			if not simulate:
-				shutil.rmtree(directory["path"])
-
-	for component in configuration["components"]:
-		setup_script = os.path.join(component["path"], "setup.py")
-		if os.path.exists(setup_script):
-			logging.info("Removing generated script '%s'", setup_script)
-			if not simulate:
-				os.remove(setup_script)
+				shutil.rmtree(directory)

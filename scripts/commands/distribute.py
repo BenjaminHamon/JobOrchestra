@@ -23,7 +23,7 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 		print("")
 	if "package" in arguments.distribute_commands:
 		for component in configuration["components"]:
-			create(environment["python3_executable"], component, arguments.verbosity == "debug", arguments.simulate)
+			package(environment["python3_executable"], component, arguments.verbosity == "debug", arguments.simulate)
 			print("")
 	if "upload" in arguments.distribute_commands:
 		package_repository = os.path.normpath(environment["python_package_repository"])
@@ -32,34 +32,17 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 			print("")
 
 
-# Setup scripts are generated from a template to avoid having a dependency on scripts which are not packaged.
 def setup(configuration, component, simulate):
-	logging.info("Generating setup.py script for '%s'", component["name"])
-
-	template_file_path = os.path.join(component["path"], "setup.template.py")
-	output_path = os.path.join(component["path"], "setup.py")
-
-	with open(template_file_path, "r") as template_file:
-		script_content = template_file.read()
-	script_content = script_content.replace("{version}", configuration["project_version"]["full"])
-	script_content = script_content.replace("{author}", configuration["author"])
-	script_content = script_content.replace("{author_email}", configuration["author_email"])
-	script_content = script_content.replace("{url}", configuration["project_url"])
-
-	if not simulate:
-		with open(output_path, "w") as output_file:
-			output_file.write(script_content)
+	pass
 
 
-def create(python_executable, component, verbose, simulate):
+def package(python_executable, component, verbose, simulate):
 	logging.info("Creating distribution for '%s'", component["name"])
-
-	output_directory = os.path.join("..", ".build", component["path"])
 
 	setup_command = [ python_executable, "setup.py" ]
 	setup_command += [ "--quiet" ] if not verbose else []
 	setup_command += [ "--dry-run" ] if simulate else []
-	setup_command += [ "sdist", "--dist-dir", output_directory, "--format", "zip" ]
+	setup_command += [ "bdist_wheel" ]
 
 	logging.info("+ %s", " ".join(setup_command))
 	subprocess.check_call(setup_command, cwd = component["path"])
@@ -68,11 +51,11 @@ def create(python_executable, component, verbose, simulate):
 def upload(package_repository, component, version, simulate, result_file_path):
 	logging.info("Uploading distribution for '%s'", component["name"])
 
-	archive_name = component["name"] + "-" + version["full"]
-	source_path = os.path.join(".build", component["path"], archive_name + ".zip")
-	destination_path = os.path.join(package_repository, component["name"], archive_name + ".zip")
+	archive_name = component["name"].replace("-", "_") + "-" + version["full"]
+	source_path = os.path.join(component["path"], "dist", archive_name + "-py3-none-any.whl")
+	destination_path = os.path.join(package_repository, component["name"], archive_name + "-py3-none-any.whl")
 
-	existing_distribution_pattern = component["name"] + "-" + version["identifier"] + "+*.zip"
+	existing_distribution_pattern = component["name"].replace("-", "_") + "-" + version["identifier"] + "+*-py3-none-any.whl"
 	existing_distribution = next((x for x in glob.glob(os.path.join(package_repository, component["name"], existing_distribution_pattern))), None)
 	if existing_distribution is not None:
 		raise ValueError("Version %s already exists: '%s'" % (version["identifier"], os.path.basename(existing_distribution)))

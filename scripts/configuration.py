@@ -1,19 +1,21 @@
+import glob
+import os
 import subprocess
 
-import commands.clean
-import commands.develop
-import commands.distribute
-import commands.lint
-import commands.test
+import scripts.commands.clean
+import scripts.commands.develop
+import scripts.commands.distribute
+import scripts.commands.lint
+import scripts.commands.test
 
 
 def get_command_list():
 	return [
-		commands.clean,
-		commands.develop,
-		commands.distribute,
-		commands.lint,
-		commands.test,
+		scripts.commands.clean,
+		scripts.commands.develop,
+		scripts.commands.distribute,
+		scripts.commands.lint,
+		scripts.commands.test,
 	]
 
 
@@ -62,3 +64,19 @@ def load_configuration(environment):
 	]
 
 	return configuration
+
+
+def get_setuptools_parameters(configuration):
+	return {
+		"version": configuration["project_version"]["full"],
+		"author": configuration["author"],
+		"author_email": configuration["author_email"],
+		"url": configuration["project_url"],
+	}
+
+
+def list_package_data(package, pattern_collection):
+	all_files = []
+	for pattern in pattern_collection:
+		all_files += glob.glob(package + "/" + pattern, recursive = True)
+	return [ os.path.relpath(path, package) for path in all_files ]
