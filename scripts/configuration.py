@@ -43,6 +43,8 @@ def load_configuration(environment):
 	configuration["project_url"] = "https://github.com/BenjaminHamon/BuildService"
 	configuration["copyright"] = "Copyright © 2019 Benjamin Hamon"
 
+	configuration["development_dependencies"] = [ "pylint", "pymongo", "pytest", "wheel" ]
+
 	configuration["components"] = [
 		{
 			"name": "bhamon-build-master",
