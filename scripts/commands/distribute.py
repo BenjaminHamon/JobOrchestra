@@ -55,11 +55,11 @@ def package(python_executable, component, verbose, simulate):
 
 	setup_command = [ python_executable, "setup.py" ]
 	setup_command += [ "--quiet" ] if not verbose else []
-	setup_command += [ "--dry-run" ] if simulate else []
 	setup_command += [ "bdist_wheel" ]
 
 	logger.info("+ %s", " ".join(setup_command))
-	subprocess.check_call(setup_command, cwd = component["path"])
+	if not simulate:
+		subprocess.check_call(setup_command, cwd = component["path"])
 
 
 def upload(package_repository, component, version, simulate, result_file_path):
