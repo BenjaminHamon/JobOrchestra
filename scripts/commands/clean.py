@@ -18,7 +18,7 @@ def clean(configuration, simulate, result_file_path):
 	logger.info("Cleaning the workspace")
 	print("")
 
-	directories_to_clean = [ ".pytest_cache", os.path.join("test", "__pycache__") ]
+	directories_to_clean = [ ".artifacts", ".pytest_cache", os.path.join("test", "__pycache__") ]
 
 	for component in configuration["components"]:
 		directories_to_clean.append(os.path.join(component["path"], "build"))

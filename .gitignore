@@ -1,6 +1,9 @@
 # Build
 build_results/
 
+# Build artifacts
+.artifacts/
+
 # Distribution
 master/build/
 master/dist/

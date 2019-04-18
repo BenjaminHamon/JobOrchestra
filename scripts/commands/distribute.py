@@ -1,10 +1,11 @@
 import argparse
 import glob
-import json
 import logging
 import os
 import shutil
 import subprocess
+
+import scripts.configuration
 
 
 logger = logging.getLogger("Main")
@@ -82,23 +83,14 @@ def upload(package_repository, component, version, simulate, result_file_path):
 		shutil.move(destination_path + ".tmp", destination_path)
 
 	if result_file_path:
-		results = _load_results(result_file_path)
+		results = scripts.configuration.load_results(result_file_path)
 		results["artifacts"].append({ "name": archive_name, "path": destination_path })
 		if not simulate:
-			_save_results(result_file_path, results)
+			scripts.configuration.save_results(result_file_path, results)
 
 
-def _load_results(result_file_path):
-	if not os.path.isfile(result_file_path):
-		return { "artifacts": [] }
-	with open(result_file_path, "r") as result_file:
-		results = json.load(result_file)
-		results["artifacts"] = results.get("artifacts", [])
-	return results
-
-
-def _save_results(result_file_path, result_data):
-	if os.path.dirname(result_file_path):
-		os.makedirs(os.path.dirname(result_file_path), exist_ok = True)
-	with open(result_file_path, "w") as result_file:
-		json.dump(result_data, result_file, indent = 4)
+def create_fileset(component):
+	return {
+		"path_in_workspace": os.path.join(component["path"], "dist"),
+		"file_patterns": [ component["name"].replace("-", "_") + "-{version}-py3-none-any.whl" ],
+	}

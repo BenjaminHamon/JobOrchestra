@@ -1,8 +1,10 @@
 import datetime
 import glob
+import json
 import os
 import subprocess
 
+import scripts.commands.artifact
 import scripts.commands.clean
 import scripts.commands.develop
 import scripts.commands.distribute
@@ -12,6 +14,7 @@ import scripts.commands.test
 
 def get_command_list():
 	return [
+		scripts.commands.artifact,
 		scripts.commands.clean,
 		scripts.commands.develop,
 		scripts.commands.distribute,
@@ -73,6 +76,24 @@ def load_configuration(environment):
 		},
 	]
 
+	configuration["filesets"] = {
+		"distribution": lambda configuration, parameters: scripts.commands.distribute.create_fileset(next(c for c in configuration["components"] if c["name"] == parameters["component"])),
+	}
+
+	configuration["artifacts"] = {
+		"package": {
+			"file_name": "{project}_{version}_package",
+			"path_in_repository": "packages",
+			"filesets": [
+				{ "identifier": "distribution", "path_in_archive": "bhamon-build-master", "parameters": { "component": "bhamon-build-master" } },
+				{ "identifier": "distribution", "path_in_archive": "bhamon-build-model", "parameters": { "component": "bhamon-build-model" } },
+				{ "identifier": "distribution", "path_in_archive": "bhamon-build-service", "parameters": { "component": "bhamon-build-service" } },
+				{ "identifier": "distribution", "path_in_archive": "bhamon-build-website", "parameters": { "component": "bhamon-build-website" } },
+				{ "identifier": "distribution", "path_in_archive": "bhamon-build-worker", "parameters": { "component": "bhamon-build-worker" } },
+			],
+		},
+	}
+
 	return configuration
 
 
@@ -90,3 +111,19 @@ def list_package_data(package, pattern_collection):
 	for pattern in pattern_collection:
 		all_files += glob.glob(package + "/" + pattern, recursive = True)
 	return [ os.path.relpath(path, package) for path in all_files ]
+
+
+def load_results(result_file_path):
+	if not os.path.isfile(result_file_path):
+		return { "artifacts": [] }
+	with open(result_file_path, "r") as result_file:
+		results = json.load(result_file)
+		results["artifacts"] = results.get("artifacts", [])
+	return results
+
+
+def save_results(result_file_path, result_data):
+	if os.path.dirname(result_file_path):
+		os.makedirs(os.path.dirname(result_file_path), exist_ok = True)
+	with open(result_file_path, "w") as result_file:
+		json.dump(result_data, result_file, indent = 4)
