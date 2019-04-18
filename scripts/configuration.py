@@ -9,6 +9,7 @@ import scripts.commands.clean
 import scripts.commands.develop
 import scripts.commands.distribute
 import scripts.commands.lint
+import scripts.commands.release
 import scripts.commands.test
 
 
@@ -19,6 +20,7 @@ def get_command_list():
 		scripts.commands.develop,
 		scripts.commands.distribute,
 		scripts.commands.lint,
+		scripts.commands.release,
 		scripts.commands.test,
 	]
 
