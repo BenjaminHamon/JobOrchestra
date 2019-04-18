@@ -3,6 +3,9 @@ import os
 import shutil
 
 
+logger = logging.getLogger("Main")
+
+
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
 	return subparsers.add_parser("clean", help = "clean the workspace")
 
@@ -12,7 +15,7 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 
 
 def clean(configuration, simulate, result_file_path):
-	logging.info("Cleaning the workspace")
+	logger.info("Cleaning the workspace")
 	print("")
 
 	directories_to_clean = [ ".pytest_cache", os.path.join("test", "__pycache__") ]
@@ -28,7 +31,7 @@ def clean(configuration, simulate, result_file_path):
 
 	for directory in directories_to_clean:
 		if os.path.exists(directory):
-			logging.info("Removing directory '%s'", directory)
+			logger.info("Removing directory '%s'", directory)
 			if not simulate:
 				shutil.rmtree(directory)
 
@@ -36,12 +39,12 @@ def clean(configuration, simulate, result_file_path):
 		for build_identifier in os.listdir("build_results"):
 			if os.sep + build_identifier + os.sep in result_file_path:
 				continue
-			logging.info("Removing build results for '%s'", build_identifier)
+			logger.info("Removing build results for '%s'", build_identifier)
 			if not simulate:
 				shutil.rmtree(os.path.join("build_results", build_identifier))
 
 	if os.path.isdir("test_results"):
 		for run_identifier in os.listdir("test_results"):
-			logging.info("Removing test results for '%s'", run_identifier)
+			logger.info("Removing test results for '%s'", run_identifier)
 			if not simulate:
 				shutil.rmtree(os.path.join("test_results", run_identifier))

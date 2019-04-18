@@ -3,8 +3,10 @@ import logging
 import os
 
 
+log_format = "[{levelname}][{name}] {message}"
+
+
 def configure_logging(log_level):
-	log_format = "[{levelname}] {message}"
 	logging.basicConfig(level = log_level, format = log_format, style = "{")
 	logging.addLevelName(logging.DEBUG, "Debug")
 	logging.addLevelName(logging.INFO, "Info")

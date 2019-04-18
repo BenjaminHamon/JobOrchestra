@@ -7,6 +7,9 @@ import shutil
 import subprocess
 
 
+logger = logging.getLogger("Main")
+
+
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
 	command_list = [ "setup", "package", "upload" ]
 
@@ -33,7 +36,7 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 
 
 def setup(configuration, component, simulate):
-	logging.info("Generating metadata for '%s'", component["name"])
+	logger.info("Generating metadata for '%s'", component["name"])
 
 	for package_name in component["packages"]:
 		metadata_file_path = os.path.join(component["path"], package_name, "__metadata__.py")
@@ -48,19 +51,19 @@ def setup(configuration, component, simulate):
 
 
 def package(python_executable, component, verbose, simulate):
-	logging.info("Creating distribution for '%s'", component["name"])
+	logger.info("Creating distribution for '%s'", component["name"])
 
 	setup_command = [ python_executable, "setup.py" ]
 	setup_command += [ "--quiet" ] if not verbose else []
 	setup_command += [ "--dry-run" ] if simulate else []
 	setup_command += [ "bdist_wheel" ]
 
-	logging.info("+ %s", " ".join(setup_command))
+	logger.info("+ %s", " ".join(setup_command))
 	subprocess.check_call(setup_command, cwd = component["path"])
 
 
 def upload(package_repository, component, version, simulate, result_file_path):
-	logging.info("Uploading distribution for '%s'", component["name"])
+	logger.info("Uploading distribution for '%s'", component["name"])
 
 	archive_name = component["name"].replace("-", "_") + "-" + version["full"]
 	source_path = os.path.join(component["path"], "dist", archive_name + "-py3-none-any.whl")
@@ -71,7 +74,7 @@ def upload(package_repository, component, version, simulate, result_file_path):
 	if existing_distribution is not None:
 		raise ValueError("Version %s already exists: '%s'" % (version["identifier"], os.path.basename(existing_distribution)))
 
-	logging.info("Uploading '%s' to '%s'", source_path, destination_path)
+	logger.info("Uploading '%s' to '%s'", source_path, destination_path)
 
 	if not simulate:
 		os.makedirs(os.path.dirname(destination_path), exist_ok = True)

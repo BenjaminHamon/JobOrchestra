@@ -9,6 +9,9 @@ import scripts.configuration # pylint: disable = wrong-import-position
 import scripts.environment # pylint: disable = wrong-import-position
 
 
+logger = logging.getLogger("Main")
+
+
 def main():
 	current_directory = os.getcwd()
 	script_path = os.path.realpath(__file__)
@@ -50,8 +53,8 @@ def parse_arguments(environment_instance, configuration_instance):
 
 
 def show_project_information(configuration_instance, simulate):
-	logging.info("%s %s", configuration_instance["project_name"], configuration_instance["project_version"]["full"])
-	logging.info("Script executing in %s %s", os.getcwd(), "(simulation)" if simulate else '')
+	logger.info("%s %s", configuration_instance["project_name"], configuration_instance["project_version"]["full"])
+	logger.info("Script executing in %s %s", os.getcwd(), "(simulation)" if simulate else '')
 	print("")
 
 

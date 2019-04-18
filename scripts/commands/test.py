@@ -4,6 +4,9 @@ import subprocess
 import uuid
 
 
+logger = logging.getLogger("Main")
+
+
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
 	parser = subparsers.add_parser("test", help = "run the test suite")
 	parser.add_argument("--filter", help = "specify a string expression to select tests to run")
@@ -17,7 +20,7 @@ def run(environment, configuration, arguments): # pylint: disable=unused-argumen
 def test(environment, filter_expression, simulate):
 	run_identifier = uuid.uuid4()
 
-	logging.info("Running test suite (RunIdentifier: %s)", run_identifier)
+	logger.info("Running test suite (RunIdentifier: %s)", run_identifier)
 
 	os.makedirs("test_results", exist_ok = True)
 
@@ -26,5 +29,5 @@ def test(environment, filter_expression, simulate):
 	pytest_command += [ "--basetemp", os.path.join("test_results", str(run_identifier)) ]
 	pytest_command += [ "-k", filter_expression ] if filter_expression else []
 
-	logging.info("+ %s", " ".join(pytest_command))
+	logger.info("+ %s", " ".join(pytest_command))
 	subprocess.check_call(pytest_command)
