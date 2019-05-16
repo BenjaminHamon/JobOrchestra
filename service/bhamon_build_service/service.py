@@ -10,7 +10,15 @@ import bhamon_build_service.task_controller as task_controller
 import bhamon_build_service.worker_controller as worker_controller
 
 
-logger = logging.getLogger("Service")
+main_logger = logging.getLogger("Service")
+request_logger = logging.getLogger("Request")
+
+
+def register_handlers(application):
+	application.log_exception = lambda exc_info: None
+	application.before_request(log_request)
+	for exception in werkzeug.exceptions.default_exceptions:
+		application.register_error_handler(exception, handle_error)
 
 
 def register_routes(application):
@@ -48,15 +56,36 @@ def register_routes(application):
 
 
 def log_request():
-	logger.info("%s %s from %s", flask.request.method, flask.request.base_url, flask.request.environ["REMOTE_ADDR"])
+	request_logger.info("(%s) %s %s", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url)
 
 
 def handle_error(exception):
-	logger.error("Failed to process request on %s", flask.request.path, exc_info = True)
-	error_code = 500
-	if isinstance(exception, werkzeug.exceptions.HTTPException):
-		error_code = exception.code
-	return flask.jsonify(str(exception)), error_code
+	status_code = exception.code if isinstance(exception, werkzeug.exceptions.HTTPException) else 500
+	status_message = get_error_message(status_code)
+	request_logger.error("(%s) %s %s (StatusCode: %s)", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url, status_code, exc_info = True)
+	return flask.jsonify({ "status_code": status_code, "status_message": status_message }), status_code
+
+
+def get_error_message(status_code): # pylint: disable = too-many-return-statements
+	if status_code == 400:
+		return "Bad request"
+	if status_code == 401:
+		return "Unauthorized"
+	if status_code == 403:
+		return "Forbidden"
+	if status_code == 404:
+		return "Page not found"
+	if status_code == 405:
+		return "Method not allowed"
+
+	if status_code == 500:
+		return "Internal server error"
+
+	if 400 <= status_code < 500:
+		return "Client error"
+	if 500 <= status_code < 600:
+		return "Server error"
+	return "Unknown error"
 
 
 def home():

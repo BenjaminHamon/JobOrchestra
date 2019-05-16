@@ -3,7 +3,6 @@ import logging
 
 import flask
 import pymongo
-import werkzeug
 
 import bhamon_build_model.build_provider as build_provider
 import bhamon_build_model.file_storage as file_storage
@@ -30,10 +29,7 @@ def main():
 	application.task_provider = task_provider.TaskProvider(database_client_instance)
 	application.worker_provider = worker_provider.WorkerProvider(database_client_instance)
 
-	application.before_request(service.log_request)
-	for exception in werkzeug.exceptions.default_exceptions:
-		application.register_error_handler(exception, service.handle_error)
-
+	service.register_handlers(application)
 	service.register_routes(application)
 
 	application.run(host = arguments.address, port = arguments.port)

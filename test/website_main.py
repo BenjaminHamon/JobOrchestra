@@ -2,7 +2,6 @@ import argparse
 import logging
 
 import flask
-import werkzeug
 
 import bhamon_build_website.website as website
 
@@ -19,11 +18,7 @@ def main():
 	application.artifact_storage_url = None
 
 	website.configure(application)
-
-	application.before_request(website.log_request)
-	for exception in werkzeug.exceptions.default_exceptions:
-		application.register_error_handler(exception, website.handle_error)
-
+	website.register_handlers(application)
 	website.register_routes(application)
 	website.register_resources(application)
 
