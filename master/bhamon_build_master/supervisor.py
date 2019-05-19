@@ -41,6 +41,19 @@ class Supervisor:
 		self._should_shutdown = True
 
 
+	def get_worker(self, worker_identifier):
+		return self._active_workers[worker_identifier]
+
+
+	def is_worker_available(self, worker_identifier):
+		if worker_identifier not in self._active_workers:
+			return False
+
+		worker_data = self._worker_provider.get(worker_identifier)
+		worker_instance = self._active_workers[worker_identifier]
+
+		return worker_data["is_enabled"] and not worker_instance.should_shutdown
+
 
 	def stop_worker(self, worker_identifier):
 		if not worker_identifier in self._active_workers:
@@ -56,17 +69,12 @@ class Supervisor:
 		if not job["is_enabled"]:
 			return False
 
-		all_available_workers = []
-		for worker_data in self._worker_provider.get_list():
-			if worker_data["is_enabled"] and worker_data["is_active"]:
-				all_available_workers.append((worker_data, self._active_workers[worker_data["identifier"]]))
-
-		selected_worker = self._worker_selector(job, all_available_workers)
+		selected_worker = self._worker_selector(self, job)
 		if selected_worker is None:
 			return False
 
-		logger.info("Assigning build %s %s to worker %s", build["job"], build["identifier"], selected_worker.identifier)
-		selected_worker.assign_build(job, build)
+		logger.info("Assigning build %s %s to worker %s", build["job"], build["identifier"], selected_worker)
+		self._active_workers[selected_worker].assign_build(job, build)
 		return True
 
 

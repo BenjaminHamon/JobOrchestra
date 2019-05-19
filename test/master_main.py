@@ -17,6 +17,7 @@ import bhamon_build_model.task_provider as task_provider
 import bhamon_build_model.worker_provider as worker_provider
 
 import configuration
+import configuration_extensions
 import environment
 
 
@@ -37,13 +38,17 @@ def main():
 			task_provider = task_provider_instance,
 		)
 
+		worker_selector_instance = configuration_extensions.WorkerSelector(
+			worker_provider = worker_provider_instance,
+		)
+
 		supervisor_instance = supervisor.Supervisor(
 			host = arguments.address,
 			port = arguments.port,
 			worker_provider = worker_provider_instance,
 			job_provider = job_provider_instance,
 			build_provider = build_provider_instance,
-			worker_selector = select_worker,
+			worker_selector = worker_selector_instance,
 		)
 
 		master_instance = master.Master(
@@ -82,10 +87,6 @@ def create_database_client(database_uri):
 def reload_configuration():
 	importlib.reload(configuration)
 	return configuration.configure()
-
-
-def select_worker(job, all_available_workers):
-	return configuration.select_worker(job, all_available_workers)
 
 
 if __name__ == "__main__":

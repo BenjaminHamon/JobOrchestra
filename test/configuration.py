@@ -150,17 +150,3 @@ def _configure_workers():
 			},
 		},
 	]
-
-
-def select_worker(job, all_workers):
-
-	def are_compatible(job, worker):
-		return (job["properties"]["project"] in worker["properties"]["project"]
-			and job["properties"]["is_controller"] == worker["properties"]["is_controller"])
-
-	def is_available(worker_data, worker_instance):
-		return (not worker_instance.should_shutdown
-			and are_compatible(job, worker_data)
-			and len(worker_instance.executors) < worker_data["properties"]["executor_limit"])
-
-	return next((instance for (data, instance) in all_workers if is_available(data, instance)), None)
