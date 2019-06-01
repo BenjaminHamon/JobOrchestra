@@ -124,8 +124,9 @@ class Worker:
 
 
 	async def _finish_execution(self, build):
-		await self._retrieve_logs(build)
-		await self._retrieve_results(build)
+		if "steps" in build:
+			await self._retrieve_logs(build)
+			await self._retrieve_results(build)
 		clean_request = { "job_identifier": build["job"], "build_identifier": build["identifier"] }
 		await Worker._execute_remote_command(self._connection, self.identifier, "clean", clean_request)
 		logger.info("(%s) Completed build %s %s with status %s", self.identifier, build["job"], build["identifier"], build["status"])
