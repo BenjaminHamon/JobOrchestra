@@ -53,18 +53,16 @@ def register_routes(application):
 	application.add_url_rule("/worker/<worker_identifier>/disable", methods = [ "POST" ], view_func = worker_controller.disable_worker)
 
 
-def register_resources(application):
-	package_path = os.path.join(os.path.dirname(__file__))
+def register_resources(application, path_collection = None):
+	if application.static_folder is not None:
+		raise ValueError("Flask application should be initialized with static_folder set to None")
 
-	# This requires that Flask is initialized with 'static_folder = None',
-	# otherwise it raises an AssertionError about overwriting the static endpoint
-	application.static_folder = os.path.join(application.root_path, "static")
-	application.static_folder_default = os.path.join(package_path, "static")
+	if path_collection is None:
+		path_collection = [ os.path.dirname(__file__) ]
+
+	application.static_directories = [ os.path.join(path, "static") for path in path_collection ]
 	application.add_url_rule("/static/<path:filename>", view_func = send_static_file, endpoint = "static")
-
-	local_loader = jinja2.FileSystemLoader(os.path.join(application.root_path, "templates"))
-	default_loader = jinja2.FileSystemLoader(os.path.join(package_path, "templates"))
-	application.jinja_loader = jinja2.ChoiceLoader([ local_loader, default_loader ])
+	application.jinja_loader = jinja2.ChoiceLoader([ jinja2.FileSystemLoader(os.path.join(path, "templates")) for path in path_collection ])
 
 
 def log_request():
@@ -102,19 +100,22 @@ def get_error_message(status_code): # pylint: disable = too-many-return-statemen
 	return "Unknown error"
 
 
-# Override Flask send_static_file to add a default static directory
+# Override Flask send_static_file to support several static directories
 def send_static_file(filename):
-	if not flask.current_app.has_static_folder:
-		raise RuntimeError('No static folder for this object')
+	if not flask.current_app.static_directories:
+		raise RuntimeError('Flask application has no static directory')
 
 	# Ensure get_send_file_max_age is called in all cases.
 	# Here, we ensure get_send_file_max_age is called for Blueprints.
 	cache_timeout = flask.current_app.get_send_file_max_age(filename)
 
-	try:
-		return flask.helpers.send_from_directory(flask.current_app.static_folder, filename, cache_timeout = cache_timeout)
-	except werkzeug.exceptions.NotFound:
-		return flask.helpers.send_from_directory(flask.current_app.static_folder_default, filename, cache_timeout = cache_timeout)
+	for directory in flask.current_app.static_directories:
+		try:
+			return flask.helpers.send_from_directory(directory, filename, cache_timeout = cache_timeout)
+		except werkzeug.exceptions.NotFound:
+			pass
+
+	raise werkzeug.exceptions.NotFound
 
 
 def home():
