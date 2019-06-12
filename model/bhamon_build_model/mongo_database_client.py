@@ -1,5 +1,5 @@
-# pylint: disable=no-self-use
-# pylint: disable=redefined-builtin
+# pylint: disable = no-self-use
+# pylint: disable = redefined-builtin
 
 import logging
 
