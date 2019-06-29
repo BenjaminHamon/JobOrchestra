@@ -49,7 +49,7 @@ def build_index(build_identifier):
 		for artifact in [ a for a in build_artifacts if "path" in a ]:
 			artifact["url"] = re.sub("^" + re.escape(flask.current_app.artifact_storage_path), flask.current_app.artifact_storage_url, artifact["path"])
 
-	return flask.render_template("build/index.html", title = build["identifier"], build = build, build_tasks = build_tasks)
+	return flask.render_template("build/index.html", title = "Build " + build["identifier"][:18], build = build, build_tasks = build_tasks)
 
 
 def build_step_log(build_identifier, step_index):
