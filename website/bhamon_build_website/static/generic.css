@@ -176,6 +176,16 @@ table
 	white-space: nowrap;
 }
 
+.flash .info
+{
+	color: green;
+}
+
+.flash .error
+{
+	color: red;
+}
+
 .table-container
 {
 	display: flex;
