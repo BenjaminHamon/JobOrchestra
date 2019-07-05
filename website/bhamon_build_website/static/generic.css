@@ -135,6 +135,7 @@ form li
 {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
 	margin-bottom: 10px;
 }
 
@@ -148,11 +149,20 @@ form li label
 form li input
 {
 	flex-grow: 1;
+	padding: 5px;
+	border: gray 1px solid;
+}
+
+form li input:read-only
+{
+	background-color: #dddddd;
 }
 
 form li button
 {
 	margin-left: auto;
+	padding: 5px;
+	min-width: 100px;
 	white-space: nowrap;
 }
 
