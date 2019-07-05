@@ -36,6 +36,7 @@ class MongoDatabaseClient(database_client.DatabaseClient):
 
 	def insert_one(self, table, data):
 		self.mongo_database[table].insert_one(data)
+		del data["_id"]
 
 
 	def update_one(self, table, filter, data):
