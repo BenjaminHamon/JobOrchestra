@@ -38,13 +38,13 @@
 	height: 16px;
 	width: 16px;
 	margin-right: 5px;
-	border: 1px solid grey;
+	border: 1px solid gray;
 	border-radius: 50%;
 }
 
 .status-indicator.pending { background-color: lightblue; }
 .status-indicator.running { background-color: yellow; }
-.status-indicator.cancelled { background-color: grey; }
+.status-indicator.cancelled { background-color: gray; }
 .status-indicator.succeeded { background-color: green; }
 .status-indicator.failed { background-color: red; }
 .status-indicator.aborted { background-color: purple; }
@@ -54,7 +54,7 @@
 .status-indicator.inactive { background-color: gray; }
 
 .status-indicator.enabled { background-color: green; }
-.status-indicator.disabled { background-color: grey; }
+.status-indicator.disabled { background-color: gray; }
 
 .uuid-input
 {
