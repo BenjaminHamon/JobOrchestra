@@ -10,6 +10,7 @@ import bhamon_build_website.build_controller as build_controller
 import bhamon_build_website.helpers as helpers
 import bhamon_build_website.job_controller as job_controller
 import bhamon_build_website.task_controller as task_controller
+import bhamon_build_website.user_controller as user_controller
 import bhamon_build_website.worker_controller as worker_controller
 
 
@@ -46,6 +47,12 @@ def register_routes(application):
 	application.add_url_rule("/job/<job_identifier>/disable", methods = [ "POST" ], view_func = job_controller.disable_job)
 	application.add_url_rule("/task_collection", methods = [ "GET" ], view_func = task_controller.task_collection_index)
 	application.add_url_rule("/task/<task_identifier>/cancel", methods = [ "POST" ], view_func = task_controller.cancel_task)
+	application.add_url_rule("/user_collection", methods = [ "GET" ], view_func = user_controller.user_collection_index)
+	application.add_url_rule("/user_create", methods = [ "GET", "POST" ], view_func = user_controller.create_user)
+	application.add_url_rule("/user/<user_identifier>", methods = [ "GET" ], view_func = user_controller.user_index)
+	application.add_url_rule("/user/<user_identifier>/edit", methods = [ "GET", "POST" ], view_func = user_controller.edit_user)
+	application.add_url_rule("/user/<user_identifier>/enable", methods = [ "POST" ], view_func = user_controller.enable_user)
+	application.add_url_rule("/user/<user_identifier>/disable", methods = [ "POST" ], view_func = user_controller.disable_user)
 	application.add_url_rule("/worker_collection", methods = [ "GET" ], view_func = worker_controller.worker_collection_index)
 	application.add_url_rule("/worker/<worker_identifier>", methods = [ "GET" ], view_func = worker_controller.worker_index)
 	application.add_url_rule("/worker/<worker_identifier>/stop", methods = [ "POST" ], view_func = worker_controller.stop_worker)

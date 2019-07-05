@@ -1,0 +1,49 @@
+{% extends 'layout.html' %}
+{% import 'macros.html' as shared_macros %}
+
+{% block content %}
+<h1>User {{ user['display_name'] }}</h1>
+
+{{ shared_macros.flash_messages() }}
+
+<section>
+	<div>
+		<a href="{{ url_for('edit_user', user_identifier = user['identifier']) }}">Edit</a>
+	</div>
+</section>
+
+<section>
+	<h2>Identity</h2>
+	<ul>
+		<li>Identifier: {{ user['identifier'] }}</li>
+		<li>Display name: {{ user['display_name'] }}</li>
+	</ul>
+</section>
+
+<section>
+	<h2>Status</h2>
+	<div class=status-grid>
+		{% if user['is_enabled'] %}
+		<div class="status-group">
+			<div class="status-indicator enabled"></div>
+			<div class="status-text">Enabled</div>
+		</div>
+		<form method="post">
+			<button formaction="{{ url_for('disable_user', user_identifier = user['identifier']) }}">Disable</button>
+		</form>
+		{% else %}
+		<div class="status-group">
+			<div class="status-indicator disabled"></div>
+			<div class="status-text">Disabled</div>
+		</div>
+		<form method="post">
+			<button formaction="{{ url_for('enable_user', user_identifier = user['identifier']) }}">Enable</button>
+		</form>
+		{% endif %}
+	</div>
+	<ul>
+		<li>Creation date: {{ user['creation_date'] }}</li>
+		<li>Update date: {{ user['update_date'] }}</li>
+	</ul>
+</section>
+{% endblock %}
