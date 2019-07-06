@@ -1,5 +1,6 @@
 # pylint: disable=unused-argument
 
+import datetime
 import logging
 
 import flask
@@ -28,7 +29,14 @@ def user_collection_index():
 
 def user_index(user_identifier):
 	user = service_client.get("/user/{user_identifier}".format(**locals()))
-	return flask.render_template("user/index.html", title = "User " + user["display_name"], user = user)
+	user_tokens = service_client.get("/user/{user_identifier}/token_collection".format(**locals()), { "order_by": [ "update_date descending" ] })
+	user_tokens.sort(key = lambda token: "expiration_date" in token)
+
+	now = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+	for token in user_tokens:
+		token["is_active"] = token["expiration_date"] > now if "expiration_date" in token else True
+
+	return flask.render_template("user/index.html", title = "User " + user["display_name"], user = user, user_tokens = user_tokens)
 
 
 def create_user():
@@ -77,3 +85,8 @@ def enable_user(user_identifier):
 def disable_user(user_identifier):
 	service_client.post("/user/{user_identifier}/disable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("user_collection_index"))
+
+
+def delete_token(user_identifier, token_identifier):
+	service_client.post("/user/{user_identifier}/token/{token_identifier}/delete".format(**locals()))
+	return flask.redirect(flask.request.referrer or flask.url_for("user_index", user_identifier = user_identifier))

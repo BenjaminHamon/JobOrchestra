@@ -1,4 +1,5 @@
 {% extends 'layout.html' %}
+{% import 'user/macros.html' as user_macros %}
 {% import 'macros.html' as shared_macros %}
 
 {% block content %}
@@ -45,5 +46,10 @@
 		<li>Creation date: {{ user['creation_date'] }}</li>
 		<li>Update date: {{ user['update_date'] }}</li>
 	</ul>
+</section>
+
+<section>
+	<h2>Authentication Tokens</h2>
+	{{ user_macros.user_token_table(user_tokens) }}
 </section>
 {% endblock %}
