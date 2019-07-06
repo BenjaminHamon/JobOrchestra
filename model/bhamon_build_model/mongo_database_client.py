@@ -5,13 +5,14 @@ import logging
 
 import pymongo
 
-from bhamon_build_model import database_client
+import bhamon_build_model.database_client as database_client
 
 
 logger = logging.getLogger("MongoDatabaseClient")
 
 
 class MongoDatabaseClient(database_client.DatabaseClient):
+	""" Client for a MongoDB database. """
 
 
 	def __init__(self, mongo_database):
