@@ -3,9 +3,9 @@
 import os
 import time
 
-import assert_extensions
-import context
-import environment
+from .. import assert_extensions
+from . import context
+from . import environment
 
 
 def test_worker_disconnection(tmpdir):

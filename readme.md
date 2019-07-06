@@ -37,7 +37,7 @@ python3 ./scripts/main.py develop
 
 A build service instance includes several components, each with its process which could run on its own host, with its own environment. A typical setup includes a master, a service, a website and several workers.
 
-To run each component, you need to first write entry point scripts. The test suite includes samples, see [executor_main.py](test/executor_main.py), [master_main.py](test/master_main.py), [service_main.py](test/service_main.py), [website_main.py](test/website_main.py), [worker_main.py](test/worker_main.py). Additionally, the master will need to load its configuration, see [configuration.py](test/configuration.py) for an example.
+You need to write entry point scripts for all the components, as well as the master configuration. The test suite includes an example used by [integration tests](test/integration).
 
 For the database, the project currently supports MongoDB, as well as a custom JSON database meant for development only. You can implement custom providers if you wish to use another database. To use MongoDB, ensure you have a running and reachable MongoDB instance and configure the master and service entry points to connect to it.
 

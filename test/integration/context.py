@@ -16,7 +16,7 @@ import bhamon_build_model.mongo_database_client as mongo_database_client
 import bhamon_build_model.task_provider as task_provider
 import bhamon_build_model.worker_provider as worker_provider
 
-import environment
+from . import environment
 
 
 shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT
