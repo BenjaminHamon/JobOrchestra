@@ -73,7 +73,8 @@ def create_token(user_identifier):
 	if expiration is not None:
 		expiration = datetime.timedelta(seconds = expiration)
 
-	return flask.jsonify(flask.current_app.authentication_provider.create_token(user_identifier, description, expiration))
+	token = flask.current_app.authentication_provider.create_token(user_identifier, description, expiration)
+	return flask.jsonify({ "token_identifier": token["identifier"], "secret": token["secret"] })
 
 
 def refresh_token(user_identifier, token_identifier):
