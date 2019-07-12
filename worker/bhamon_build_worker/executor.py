@@ -12,7 +12,7 @@ import bhamon_build_worker.worker_storage as worker_storage
 
 logger = logging.getLogger("Executor")
 
-shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT
+shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT # pylint: disable = no-member
 subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 termination_timeout_seconds = 30
@@ -24,7 +24,7 @@ def run(job_identifier, build_identifier, environment):
 	}
 
 	if platform.system() == "Windows":
-		signal.signal(signal.SIGBREAK, lambda signal_number, frame: _shutdown(executor_data))
+		signal.signal(signal.SIGBREAK, lambda signal_number, frame: _shutdown(executor_data)) # pylint: disable = no-member
 	signal.signal(signal.SIGINT, lambda signal_number, frame: _shutdown(executor_data))
 	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(executor_data))
 

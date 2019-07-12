@@ -22,7 +22,7 @@ class Master:
 		logger.info("Starting build master")
 
 		if platform.system() == "Windows":
-			signal.signal(signal.SIGBREAK, lambda signal_number, frame: self.shutdown())
+			signal.signal(signal.SIGBREAK, lambda signal_number, frame: self.shutdown()) # pylint: disable = no-member
 		signal.signal(signal.SIGINT, lambda signal_number, frame: self.shutdown())
 		signal.signal(signal.SIGTERM, lambda signal_number, frame: self.shutdown())
 
