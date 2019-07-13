@@ -34,6 +34,7 @@ class UserProvider:
 		user = {
 			"identifier": user_identifier,
 			"display_name": display_name,
+			"roles": [],
 			"is_enabled": True,
 			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
@@ -43,11 +44,21 @@ class UserProvider:
 		return user
 
 
-	def update(self, user, display_name = None):
+	def update_identity(self, user, display_name = None):
 		update_data = {}
 		if display_name is not None:
 			update_data["display_name"] = display_name
 		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		user.update(update_data)
+		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)
+
+
+	def update_roles(self, user, roles):
+		update_data = {
+			"roles": roles,
+			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+		}
+
 		user.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)
 

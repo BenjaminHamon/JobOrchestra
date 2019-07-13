@@ -181,6 +181,14 @@ form li input:read-only
 	background-color: #eeeeee;
 }
 
+form li textarea
+{
+	padding: 5px;
+	min-height: 100px;
+	max-height: 300px;
+	resize: vertical;
+}
+
 form li button
 {
 	margin-left: auto;

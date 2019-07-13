@@ -59,22 +59,36 @@ def create_user():
 
 
 def edit_user(user_identifier):
-	if flask.request.method == "GET":
-		flask.request.form = service_client.get("/user/{user_identifier}".format(**locals()))
-		return flask.render_template("user/edit.html", title = "Edit User", user_identifier = user_identifier)
+	return edit_user_resume(user_identifier, {})
 
-	if flask.request.method == "POST":
-		parameters = { "display_name": flask.request.form["display_name"] }
 
-		try:
-			service_client.post("/user/{user_identifier}/update".format(**locals()), data = parameters)
-			flask.flash("User '%s' was updated successfully." % user_identifier, "info")
-			return flask.redirect(flask.url_for("user_index", user_identifier = user_identifier))
-		except requests.HTTPError:
-			flask.flash( "User '%s' could not be updated." % user_identifier, "error")
-			return flask.render_template("user/edit.html", title = "Edit User", user_identifier = user_identifier)
+def edit_user_resume(user_identifier, local_parameters):
+	flask.request.form = service_client.get("/user/{user_identifier}".format(**locals()))
+	flask.request.form.update(local_parameters)
+	flask.request.form["roles"] = "\n".join(flask.request.form["roles"])
+	return flask.render_template("user/edit.html", title = "Edit User", user_identifier = user_identifier)
 
-	return flask.abort(405)
+
+def update_user_identity(user_identifier):
+	parameters = { "display_name": flask.request.form["display_name"] }
+
+	try:
+		service_client.post("/user/{user_identifier}/update_identity".format(**locals()), data = parameters)
+		flask.flash("User identity was updated successfully.", "info")
+	except requests.HTTPError:
+		flask.flash( "User identity could not be updated.", "error")
+	return edit_user_resume(user_identifier, parameters)
+
+
+def update_user_roles(user_identifier):
+	parameters = { "roles": [ role.strip() for role in flask.request.form["roles"].splitlines() ] }
+
+	try:
+		service_client.post("/user/{user_identifier}/update_roles".format(**locals()), data = parameters)
+		flask.flash("User roles were updated successfully.", "info")
+	except requests.HTTPError:
+		flask.flash( "User roles could not be updated.", "error")
+	return edit_user_resume(user_identifier, parameters)
 
 
 def enable_user(user_identifier):

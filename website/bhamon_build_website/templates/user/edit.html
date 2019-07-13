@@ -7,15 +7,36 @@
 {{ shared_macros.flash_messages() }}
 
 <section>
-	<form action="{{ url_for('edit_user', user_identifier = user_identifier) }}" method="post">
+	<div>
+		<a href="{{ url_for('user_index', user_identifier = user_identifier) }}">View</a>
+	</div>
+</section>
+
+<section>
+	<h2>Identity</h2>
+	<form action="{{ url_for('update_user_identity', user_identifier = user_identifier) }}" method="post">
 		<ul>
 			<li>
 				<label for="identifier">Identifier</label>
-				<input type="text" id="identifier" name="identifier" value="{{ user_identifier }}" readonly>
+				<input type="text" class="text-input" id="identifier" name="identifier" value="{{ user_identifier }}" readonly>
 			</li>
 			<li>
 				<label for="display_name">Display name</label>
-				<input type="text" id="display_name" name="display_name" value="{{ request.form['display_name'] }}" required/>
+				<input type="text" class="text-input" id="display_name" name="display_name" value="{{ request.form['display_name'] }}" required/>
+			</li>
+			<li>
+				<button type="submit">Save</button>
+			</li>
+		</ul>
+	</form>
+</section>
+
+<section>
+	<h2>Roles</h2>
+	<form action="{{ url_for('update_user_roles', user_identifier = user_identifier) }}" method="post">
+		<ul>
+			<li>
+				<textarea class="textarea-input" id="roles" name="roles">{{ request.form['roles'] }}</textarea>
 			</li>
 			<li>
 				<button type="submit">Save</button>

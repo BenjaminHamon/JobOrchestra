@@ -27,14 +27,21 @@ def get_user(user_identifier):
 
 def create_user(user_identifier):
 	parameters = flask.request.get_json()
-	user = flask.current_app.user_provider.create(user_identifier, **parameters)
+	user = flask.current_app.user_provider.create(user_identifier, parameters["user_identifier"], parameters["display_name"])
 	return flask.jsonify(user)
 
 
-def update_user(user_identifier):
+def update_user_identity(user_identifier):
 	parameters = flask.request.get_json()
 	user = flask.current_app.user_provider.get(user_identifier)
-	flask.current_app.user_provider.update(user, **parameters)
+	flask.current_app.user_provider.update_identity(user, parameters["display_name"])
+	return flask.jsonify(user)
+
+
+def update_user_roles(user_identifier):
+	parameters = flask.request.get_json()
+	user = flask.current_app.user_provider.get(user_identifier)
+	flask.current_app.user_provider.update_roles(user, roles = parameters["roles"])
 	return flask.jsonify(user)
 
 
