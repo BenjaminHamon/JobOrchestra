@@ -10,7 +10,19 @@
 	<body>
 
 		<header>
-			<a href="{{ url_for('home') }}">Build Service</a>
+			<div class="title">
+				<a href="{{ url_for('home') }}">Build Service</a>
+			</div>
+			<div class="login">
+				{% if not "token" in session %}
+				<a href="{{ url_for('login') }}">Log In</a>
+				{% else %}
+				<a href="{{ url_for('my_profile') }}">{{ session["token"]["user_identifier"] }}</a>
+				<form method="post" action="{{ url_for('logout') }}">
+					<button type="submit">Log Out</button>
+				</form>
+				{% endif %}
+			</div>
 		</header>
 
 		<nav>

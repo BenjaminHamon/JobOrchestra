@@ -1,0 +1,34 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Profile</h1>
+
+<section>
+	<h2>Identity</h2>
+	<ul>
+		<li>Identifier: {{ user['identifier'] }}</li>
+		<li>Display name: {{ user['display_name'] }}</li>
+	</ul>
+</section>
+
+<section>
+	<h2>Status</h2>
+	<div class=status-grid>
+		{% if user['is_enabled'] %}
+		<div class="status-group">
+			<div class="status-indicator enabled"></div>
+			<div class="status-text">Enabled</div>
+		</div>
+		{% else %}
+		<div class="status-group">
+			<div class="status-indicator disabled"></div>
+			<div class="status-text">Disabled</div>
+		</div>
+		{% endif %}
+	</div>
+	<ul>
+		<li>Creation date: {{ user['creation_date'] }}</li>
+		<li>Update date: {{ user['update_date'] }}</li>
+	</ul>
+</section>
+{% endblock %}

@@ -38,6 +38,12 @@ def update_user(user_identifier):
 	return flask.jsonify(user)
 
 
+def set_password(user_identifier):
+	parameters = flask.request.get_json()
+	flask.current_app.authentication_provider.set_password(user_identifier, parameters["password"])
+	return flask.jsonify({})
+
+
 def enable_user(user_identifier):
 	user = flask.current_app.user_provider.get(user_identifier)
 	flask.current_app.user_provider.update_status(user, is_enabled = True)

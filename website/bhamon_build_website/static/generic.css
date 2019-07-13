@@ -36,16 +36,38 @@ header, nav, main, footer
 	background: white;
 }
 
-header a
+header
+{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+header > div
 {
 	margin: 5px;
+}
+
+header .title a
+{
 	font-size: 150%;
 	text-decoration: none;
 }
 
-header a, header a:visited, header a:hover, header a:active
+header .title a, header .title a:visited, header .title a:hover, header .title a:active
 {
 	color: inherit;
+}
+
+header .login
+{
+	display: flex;
+	justify-content: space-between;
+}
+
+header .login a, header .login button
+{
+	margin-left: 10px;
 }
 
 nav

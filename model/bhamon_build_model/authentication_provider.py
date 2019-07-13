@@ -135,7 +135,7 @@ class AuthenticationProvider:
 
 
 	def delete_token(self, user_identifier, token_identifier):
-		return self.database_client.delete_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
+		self.database_client.delete_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
 
 
 	def hash_password(self, password, salt, function, parameters): # pylint: disable = no-self-use

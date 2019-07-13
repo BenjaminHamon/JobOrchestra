@@ -51,6 +51,7 @@
 			<th>Description</th>
 			<th>Actions</th>
 			<th>Expiration</th>
+			<th>Creation date</th>
 			<th>Update date</th>
 		</tr>
 	</thead>
@@ -77,6 +78,7 @@
 				</div>
 				{% endif %}
 			</td>
+			<td>{{ token['creation_date'] }}</td>
 			<td>{{ token['update_date'] }}</td>
 		</tr>
 		{% endfor %}
