@@ -15,7 +15,7 @@ def get_my_user():
 
 def login():
 	parameters = flask.request.get_json()
-	if not flask.current_app.authentication_provider.check_password(parameters["user"], parameters["password"]):
+	if not flask.current_app.authentication_provider.authenticate_with_password(parameters["user"], parameters["password"]):
 		flask.abort(401)
 
 	token_parameters = {

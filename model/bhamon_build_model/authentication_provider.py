@@ -59,7 +59,7 @@ class AuthenticationProvider:
 		self.database_client.delete_one(self.table, { "user": user, "type": "password" })
 
 
-	def check_password(self, user_identifier, password):
+	def authenticate_with_password(self, user_identifier, password):
 		authentication = self.database_client.find_one(self.table, { "user": user_identifier, "type": "password" })
 		if authentication is None:
 			return False
@@ -67,7 +67,7 @@ class AuthenticationProvider:
 		return hmac.compare_digest(hashed_password, authentication["secret"])
 
 
-	def check_token(self, user_identifier, token_identifier, secret):
+	def authenticate_with_token(self, user_identifier, token_identifier, secret):
 		token = self.database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
 		if token is None:
 			return False
