@@ -10,10 +10,11 @@ import environment
 
 def main():
 	environment.configure_logging(logging.INFO)
+	environment_instance = environment.load_environment()
 	arguments = parse_arguments()
 
 	application = flask.Flask(__name__, static_folder = None)
-	application.service_url = "http://%s:%s" % (environment.service_address, environment.service_port)
+	application.service_url = environment_instance["build_service_url"]
 	application.artifact_storage_path = None
 	application.artifact_storage_url = None
 

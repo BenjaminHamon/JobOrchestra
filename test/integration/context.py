@@ -27,14 +27,16 @@ class Context:
 
 
 	def __init__(self, temporary_directory):
+		environment_instance = environment.load_test_context_environment("json")
+
 		self.temporary_directory = str(temporary_directory)
-		self.master_address = environment.master_address
-		self.master_port = environment.master_port
-		self.service_address = environment.service_address
-		self.service_port = environment.service_port
-		self.website_address = environment.website_address
-		self.website_port = environment.website_port
-		self.database_uri = environment.database_uri
+		self.master_address = environment_instance["master_address"]
+		self.master_port = environment_instance["master_port"]
+		self.service_address = environment_instance["service_address"]
+		self.service_port = environment_instance["service_port"]
+		self.website_address = environment_instance["website_address"]
+		self.website_port = environment_instance["website_port"]
+		self.database_uri = environment_instance["database_uri"]
 		self.database_name = "test_build_database_" + str(uuid.uuid4())
 		self.process_collection = []
 
