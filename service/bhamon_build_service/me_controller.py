@@ -33,8 +33,9 @@ def login():
 
 
 def logout():
-	parameters = flask.request.get_json()
-	flask.current_app.authentication_provider.delete_token(flask.request.authorization.username, parameters["token_identifier"])
+	if flask.request.authorization is not None:
+		parameters = flask.request.get_json()
+		flask.current_app.authentication_provider.delete_token(flask.request.authorization.username, parameters["token_identifier"])
 	return flask.jsonify({})
 
 

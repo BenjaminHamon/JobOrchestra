@@ -30,9 +30,14 @@ def login():
 
 def logout():
 	if flask.request.method == "GET":
+		if "token" not in flask.session:
+			return flask.redirect(flask.url_for("home"))
 		return flask.render_template("me/logout.html", title = "Log Out")
 
 	if flask.request.method == "POST":
+		if "token" not in flask.session:
+			return flask.redirect(flask.url_for("home"))
+
 		try:
 			service_client.post("/me/logout", { "token_identifier": flask.session["token"]["token_identifier"] })
 			flask.flash("Logout succeeded.", "info")
