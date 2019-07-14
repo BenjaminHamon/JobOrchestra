@@ -1,3 +1,4 @@
+import json
 import os
 import platform
 import signal
@@ -8,12 +9,15 @@ import uuid
 
 import pymongo
 
+import bhamon_build_model.authentication_provider as authentication_provider
+import bhamon_build_model.authorization_provider as authorization_provider
 import bhamon_build_model.build_provider as build_provider
 import bhamon_build_model.file_storage as file_storage
 import bhamon_build_model.job_provider as job_provider
 import bhamon_build_model.json_database_client as json_database_client
 import bhamon_build_model.mongo_database_client as mongo_database_client
 import bhamon_build_model.task_provider as task_provider
+import bhamon_build_model.user_provider as user_provider
 import bhamon_build_model.worker_provider as worker_provider
 
 from . import environment
@@ -140,13 +144,29 @@ class Context:
 		raise ValueError("Unsupported database uri '%s'" % self.database_uri)
 
 
+	def configure_worker_authentication(self, worker_collection):
+		providers = self.instantiate_providers()
+		user = providers["user"].create("build-worker", "Build Worker")
+		providers["user"].update_roles(user, "BuildWorker")
+		token = providers["authentication"].create_token("build-worker", None, None)
+
+		for worker in worker_collection:
+			worker_directory = os.path.join(self.temporary_directory, worker)
+			os.makedirs(worker_directory, exist_ok = True)
+			with open(os.path.join(worker_directory, "authentication.json"), "w") as authentication_file:
+				json.dump(token, authentication_file, indent = 4)
+
+
 	def instantiate_providers(self):
 		database_client_instance = self.create_database_client()
 		file_storage_instance = file_storage.FileStorage(os.path.join(self.temporary_directory, "master"))
 
 		return {
+			"authentication": authentication_provider.AuthenticationProvider(database_client_instance),
+			"authorization": authorization_provider.AuthorizationProvider(),
 			"build": build_provider.BuildProvider(database_client_instance, file_storage_instance),
 			"job": job_provider.JobProvider(database_client_instance),
 			"task": task_provider.TaskProvider(database_client_instance),
+			"user": user_provider.UserProvider(database_client_instance),
 			"worker": worker_provider.WorkerProvider(database_client_instance),
 		}

@@ -33,7 +33,7 @@ class AuthorizationProvider:
 		return False
 
 
-	def is_authorized_route(self, user_roles, method, route): # pylint: disable = too-many-return-statements
+	def is_authorized_route(self, user_roles, method, route): # pylint: disable = too-many-branches, too-many-return-statements
 		if "Administrator" in user_roles:
 			return True
 
@@ -47,15 +47,23 @@ class AuthorizationProvider:
 		if domain == "me":
 			return True
 
-		if domain == "admin":
-			return "Administrator" in user_roles
-		if domain == "user":
-			return "Administrator" in user_roles
+		if domain in [ "admin", "user" ]:
+			if "Administrator" in user_roles:
+				return True
 
 		if method == "GET" and domain in [ "artifact", "build", "job", "task", "worker" ]:
-			return "Viewer" in user_roles
+			if "Viewer" in user_roles:
+				return True
 		if method == "POST" and domain in [ "artifact", "build", "job", "task", "worker" ]:
-			return "Operator" in user_roles
+			if "Operator" in user_roles:
+				return True
+
+		if method == "GET" and route == "/build/<build_identifier>":
+			if "BuildWorker" in user_roles:
+				return True
+		if method == "POST" and route == "/job/<job_identifier>/trigger":
+			if "BuildWorker" in user_roles:
+				return True
 
 		return False
 

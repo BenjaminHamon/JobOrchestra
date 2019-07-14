@@ -134,6 +134,8 @@ def test_job_controller_success(tmpdir):
 	job_identifier = "test_controller_success"
 
 	with context.Context(tmpdir) as context_instance:
+		context_instance.configure_worker_authentication([ "controller" ])
+
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		service_process = context_instance.invoke_service()
@@ -180,6 +182,8 @@ def test_job_controller_failure(tmpdir):
 	job_identifier = "test_controller_failure"
 
 	with context.Context(tmpdir) as context_instance:
+		context_instance.configure_worker_authentication([ "controller" ])
+
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		service_process = context_instance.invoke_service()

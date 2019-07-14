@@ -13,9 +13,9 @@ request_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300 ]
 wait_delay_seconds = 10
 
 
-def trigger_build(service_url, result_file_path, job_identifier, parameters):
+def trigger_build(service_url, result_file_path, job_identifier, parameters, authorization = None):
 	message = "Triggering build for job %s" % job_identifier
-	response = _try_request(message, lambda: _service_post(service_url, "/job/" + job_identifier + "/trigger", parameters))
+	response = _try_request(message, lambda: _service_post(service_url, "/job/" + job_identifier + "/trigger", authorization = authorization, data = parameters))
 	logger.info("Build: %s, Task: %s", response["build_identifier"], response["task_identifier"])
 
 	results = workspace.load_results(result_file_path)
@@ -24,7 +24,7 @@ def trigger_build(service_url, result_file_path, job_identifier, parameters):
 	workspace.save_results(result_file_path, results)
 
 
-def wait_build(service_url, result_file_path):
+def wait_build(service_url, result_file_path, authorization = None):
 	results = workspace.load_results(result_file_path)
 
 	for build in results["child_builds"]:
@@ -35,7 +35,7 @@ def wait_build(service_url, result_file_path):
 
 		for build in results["child_builds"]:
 			if build["build_status"] in [ "unknown", "pending", "running" ]:
-				response = _try_request(None, lambda: _service_get(service_url, "/build/" + build["build_identifier"]))
+				response = _try_request(None, lambda: _service_get(service_url, "/build/" + build["build_identifier"], authorization = authorization))
 				if build["build_status"] in [ "unknown", "pending" ] and response["status"] == "running":
 					logger.info("Build %s is running", response["identifier"])
 				build["build_status"] = response["status"]
@@ -66,21 +66,21 @@ def _try_request(message, send_request):
 			time.sleep(request_attempt_delay)
 
 
-def _service_get(service_url, route, parameters = None):
+def _service_get(service_url, route, authorization = None, parameters = None):
 	headers = { "Content-Type": "application/json" }
 	if parameters is None:
 		parameters = {}
 
-	response = requests.get(service_url + route, headers = headers, params = parameters)
+	response = requests.get(service_url + route, auth = authorization, headers = headers, params = parameters)
 	response.raise_for_status()
 	return response.json()
 
 
-def _service_post(service_url, route, data = None):
+def _service_post(service_url, route, authorization = None, data = None):
 	if data is None:
 		data = {}
 
 	headers = { "Content-Type": "application/json" }
-	response = requests.post(service_url + route, headers = headers, data = json.dumps(data))
+	response = requests.post(service_url + route, auth = authorization, headers = headers, data = json.dumps(data))
 	response.raise_for_status()
 	return response.json()

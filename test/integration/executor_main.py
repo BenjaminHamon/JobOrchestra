@@ -14,6 +14,7 @@ def main():
 	environment.configure_logging(logging.INFO)
 	environment_instance = environment.load_environment()
 	environment_instance["script_root"] = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
+	environment_instance["build_worker_authentication"] = os.path.join(os.getcwd(), "authentication.json")
 	executor_build_directory = os.path.join("builds", arguments.job_identifier + "_" + arguments.build_identifier)
 
 	with filelock.FileLock(os.path.join(executor_build_directory, "build_executor.lock"), 5):
