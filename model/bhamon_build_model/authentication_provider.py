@@ -67,12 +67,13 @@ class AuthenticationProvider:
 		return hmac.compare_digest(hashed_password, authentication["secret"])
 
 
-	def authenticate_with_token(self, user_identifier, token_identifier, secret):
-		token = self.database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
-		if token is None:
-			return False
-		hashed_secret = self.hash_token(secret, token["hash_function"], token["hash_function_parameters"])
-		return hashed_secret == token["secret"]
+	def authenticate_with_token(self, user_identifier, secret):
+		user_tokens = self.database_client.find_many(self.table, { "user": user_identifier, "type": "token" })
+		for token in user_tokens:
+			hashed_secret = self.hash_token(secret, token["hash_function"], token["hash_function_parameters"])
+			if hashed_secret == token["secret"]:
+				return True
+		return False
 
 
 	def count_tokens(self, user = None):

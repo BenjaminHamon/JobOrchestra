@@ -15,25 +15,26 @@ def test_password_success():
 	user = "user"
 	first_secret = "first"
 	second_secret = "second"
+	wrong_secret = "wrong"
 
 	assert provider.authenticate_with_password(user, first_secret) is False
 	assert provider.authenticate_with_password(user, second_secret) is False
-	assert provider.authenticate_with_password(user, "something") is False
+	assert provider.authenticate_with_password(user, wrong_secret) is False
 
 	provider.set_password(user, first_secret)
 	assert provider.authenticate_with_password(user, first_secret) is True
 	assert provider.authenticate_with_password(user, second_secret) is False
-	assert provider.authenticate_with_password(user, "something") is False
+	assert provider.authenticate_with_password(user, wrong_secret) is False
 
 	provider.set_password(user, second_secret)
 	assert provider.authenticate_with_password(user, first_secret) is False
 	assert provider.authenticate_with_password(user, second_secret) is True
-	assert provider.authenticate_with_password(user, "something") is False
+	assert provider.authenticate_with_password(user, wrong_secret) is False
 
 	provider.remove_password(user)
 	assert provider.authenticate_with_password(user, first_secret) is False
 	assert provider.authenticate_with_password(user, second_secret) is False
-	assert provider.authenticate_with_password(user, "something") is False
+	assert provider.authenticate_with_password(user, wrong_secret) is False
 
 
 def test_token_success():
@@ -43,26 +44,27 @@ def test_token_success():
 	provider = authentication_provider.AuthenticationProvider(database_client_instance)
 
 	user = "user"
+	wrong_secret = secrets.token_hex(provider.token_size)
 
 	assert provider.count_tokens(user) == 0
-	assert provider.authenticate_with_token(user, "id", "something") is False
+	assert provider.authenticate_with_token(user, wrong_secret) is False
 
 	first_token = provider.create_token(user, None, None)
 	assert provider.count_tokens(user) == 1
-	assert provider.authenticate_with_token(user, first_token["identifier"], first_token["secret"]) is True
-	assert provider.authenticate_with_token(user, "id", "something") is False
+	assert provider.authenticate_with_token(user, first_token["secret"]) is True
+	assert provider.authenticate_with_token(user, wrong_secret) is False
 
 	second_token = provider.create_token(user, None, None)
 	assert provider.count_tokens(user) == 2
-	assert provider.authenticate_with_token(user, first_token["identifier"], first_token["secret"]) is True
-	assert provider.authenticate_with_token(user, second_token["identifier"], second_token["secret"]) is True
-	assert provider.authenticate_with_token(user, "id", "something") is False
+	assert provider.authenticate_with_token(user, first_token["secret"]) is True
+	assert provider.authenticate_with_token(user, second_token["secret"]) is True
+	assert provider.authenticate_with_token(user, wrong_secret) is False
 
 	provider.delete_token(user, first_token["identifier"])
 	assert provider.count_tokens(user) == 1
-	assert provider.authenticate_with_token(user, first_token["identifier"], first_token["secret"]) is False
-	assert provider.authenticate_with_token(user, second_token["identifier"], second_token["secret"]) is True
-	assert provider.authenticate_with_token(user, "id", "something") is False
+	assert provider.authenticate_with_token(user, first_token["secret"]) is False
+	assert provider.authenticate_with_token(user, second_token["secret"]) is True
+	assert provider.authenticate_with_token(user, wrong_secret) is False
 
 
 def test_hash_password_success():
