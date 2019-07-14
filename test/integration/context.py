@@ -70,6 +70,14 @@ class Context:
 		self.process_collection.clear()
 
 
+	def get_service_uri(self):
+		return "http://%s:%s" % (self.service_address, self.service_port)
+
+
+	def get_website_uri(self):
+		return "http://%s:%s" % (self.website_address, self.website_port)
+
+
 	def invoke_master(self):
 		return self.invoke(
 			script = "master_main.py",
