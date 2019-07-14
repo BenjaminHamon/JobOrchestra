@@ -15,7 +15,7 @@ import bhamon_build_worker.worker_storage as worker_storage
 
 logger = logging.getLogger("Worker")
 
-shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT
+shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT # pylint: disable = no-member
 subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
@@ -32,7 +32,7 @@ def run(master_uri, worker_identifier, executor_script):
 	}
 
 	if platform.system() == "Windows":
-		signal.signal(signal.SIGBREAK, lambda signal_number, frame: _shutdown(worker_data))
+		signal.signal(signal.SIGBREAK, lambda signal_number, frame: _shutdown(worker_data)) # pylint: disable = no-member
 	signal.signal(signal.SIGINT, lambda signal_number, frame: _shutdown(worker_data))
 	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(worker_data))
 

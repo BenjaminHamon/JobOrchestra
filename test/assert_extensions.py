@@ -1,3 +1,4 @@
+import platform
 import re
 import sys
 
@@ -5,6 +6,10 @@ import pytest
 
 
 STATUS_CONTROL_C_EXIT = 0xC000013A # pylint: disable = invalid-name
+
+
+def get_flask_exit_code():
+	return STATUS_CONTROL_C_EXIT if platform.system() == "Windows" else 0
 
 
 def assert_multi_process(process_information_collection):
