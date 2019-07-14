@@ -6,7 +6,7 @@ from . import environment
 
 
 def test_master(tmpdir):
-	""" Start master """
+	""" Test if the master starts successfully """
 
 	with context.Context(tmpdir) as context_instance:
 		master_process = context_instance.invoke_master()
@@ -22,7 +22,7 @@ def test_master(tmpdir):
 
 
 def test_worker(tmpdir):
-	""" Start worker """
+	""" Test if the worker starts successfully """
 
 	with context.Context(tmpdir) as context_instance:
 		worker_process = context_instance.invoke_worker("worker")
@@ -39,7 +39,7 @@ def test_worker(tmpdir):
 
 
 def test_executor(tmpdir):
-	""" Start executor """
+	""" Test if the executor starts successfully """
 
 	with context.Context(tmpdir) as context_instance:
 		executor_process = context_instance.invoke_executor("worker", "job", "00000000-0000-0000-0000-000000000000")
@@ -54,7 +54,7 @@ def test_executor(tmpdir):
 
 
 def test_service(tmpdir):
-	""" Start service """
+	""" Test if the service starts successfully """
 
 	with context.Context(tmpdir) as context_instance:
 		service_process = context_instance.invoke_service()
@@ -65,7 +65,7 @@ def test_service(tmpdir):
 
 
 def test_website(tmpdir):
-	""" Start website """
+	""" Test if the website starts successfully """
 
 	with context.Context(tmpdir) as context_instance:
 		website_process = context_instance.invoke_website()

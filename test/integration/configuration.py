@@ -1,11 +1,11 @@
 def configure():
-	workers = _configure_workers()
-	jobs = _configure_jobs()
+	workers = configure_workers()
+	jobs = configure_jobs()
 
 	return { "jobs": jobs, "workers": workers }
 
 
-def _configure_jobs():
+def configure_jobs():
 	return [
 		test_success(),
 		test_failure(),
@@ -124,7 +124,7 @@ def test_controller_failure():
 	}
 
 
-def _configure_workers():
+def configure_workers():
 	return [
 		{
 			"identifier": "controller",
