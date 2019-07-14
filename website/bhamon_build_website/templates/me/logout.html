@@ -1,0 +1,18 @@
+{% extends 'layout.html' %}
+{% import 'macros.html' as shared_macros %}
+
+{% block content %}
+<h1>Log Out</h1>
+
+{{ shared_macros.flash_messages() }}
+
+<section>
+	<form action="{{ url_for('logout') }}" method="post">
+		<ul>
+			<li>
+				<button type="submit">Log Out</button>
+			</li>
+		</ul>
+	</form>
+</section>
+{% endblock %}

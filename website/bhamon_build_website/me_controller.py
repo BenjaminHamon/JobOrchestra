@@ -29,14 +29,20 @@ def login():
 
 
 def logout():
-	try:
-		service_client.post("/me/logout", { "token_identifier": flask.session["token"]["token_identifier"] })
-		flask.flash("Logout succeeded.", "info")
-	except requests.HTTPError as exception:
-		flask.flash( "Logout failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
+	if flask.request.method == "GET":
+		return flask.render_template("me/logout.html", title = "Log Out")
 
-	del flask.session["token"]
-	return flask.redirect(flask.url_for("home"))
+	if flask.request.method == "POST":
+		try:
+			service_client.post("/me/logout", { "token_identifier": flask.session["token"]["token_identifier"] })
+			flask.flash("Logout succeeded.", "info")
+			del flask.session["token"]
+			return flask.redirect(flask.url_for("home"))
+		except requests.HTTPError as exception:
+			flask.flash( "Logout failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
+			return flask.render_template("me/logout.html", title = "Log Out")
+
+	return flask.abort(405)
 
 
 def my_profile():

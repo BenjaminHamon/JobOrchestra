@@ -15,12 +15,10 @@
 			</div>
 			<div class="login">
 				{% if not "token" in session %}
-				<a href="{{ url_for('login') }}">Log In</a>
+				<span><a href="{{ url_for('login') }}">Log In</a></span>
 				{% else %}
-				<a href="{{ url_for('my_profile') }}">{{ session["token"]["user_identifier"] }}</a>
-				<form method="post" action="{{ url_for('logout') }}">
-					<button type="submit">Log Out</button>
-				</form>
+				<span>Logged in as <a href="{{ url_for('my_profile') }}">{{ session["token"]["user_identifier"] }}</a></span>
+				<span><a href="{{ url_for('logout') }}">Log Out</a></span>
 				{% endif %}
 			</div>
 		</header>

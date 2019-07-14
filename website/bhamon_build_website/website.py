@@ -49,7 +49,7 @@ def register_routes(application):
 	application.add_url_rule("/job/<job_identifier>/disable", methods = [ "POST" ], view_func = job_controller.disable_job)
 	application.add_url_rule("/me", methods = [ "GET" ], view_func = me_controller.my_profile)
 	application.add_url_rule("/me/login", methods = [ "GET", "POST" ], view_func = me_controller.login)
-	application.add_url_rule("/me/logout", methods = [ "POST" ], view_func = me_controller.logout)
+	application.add_url_rule("/me/logout", methods = [ "GET", "POST" ], view_func = me_controller.logout)
 	application.add_url_rule("/task_collection", methods = [ "GET" ], view_func = task_controller.task_collection_index)
 	application.add_url_rule("/task/<task_identifier>/cancel", methods = [ "POST" ], view_func = task_controller.cancel_task)
 	application.add_url_rule("/user_collection", methods = [ "GET" ], view_func = user_controller.user_collection_index)

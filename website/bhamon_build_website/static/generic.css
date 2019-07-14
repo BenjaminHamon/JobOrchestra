@@ -42,6 +42,7 @@ header
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	white-space: nowrap;
 }
 
 header > div
@@ -66,9 +67,14 @@ header .login
 	justify-content: space-between;
 }
 
-header .login a, header .login button
+header .login span
 {
 	margin-left: 10px;
+}
+
+header .login a
+{
+	display: inline;
 }
 
 nav
