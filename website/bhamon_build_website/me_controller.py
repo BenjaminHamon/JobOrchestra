@@ -20,7 +20,7 @@ def login():
 		try:
 			flask.session["token"] = service_client.post("/me/login", data = parameters)
 			flask.flash("Login succeeded.", "info")
-			return flask.render_template("home.html", title = "Home")
+			return flask.redirect(flask.url_for("home"))
 		except requests.HTTPError as exception:
 			flask.flash( "Login failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
 			return flask.render_template("me/login.html", title = "Log In")
@@ -36,7 +36,7 @@ def logout():
 		flask.flash( "Logout failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
 
 	del flask.session["token"]
-	return flask.render_template("home.html", title = "Home")
+	return flask.redirect(flask.url_for("home"))
 
 
 def my_profile():
