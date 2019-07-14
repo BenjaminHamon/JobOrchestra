@@ -6,6 +6,7 @@ import jinja2
 import werkzeug
 
 import bhamon_build_website.helpers as helpers
+import bhamon_build_website.service_client as service_client
 
 import bhamon_build_website.admin_controller as admin_controller
 import bhamon_build_website.build_controller as build_controller
@@ -29,6 +30,7 @@ def configure(application):
 def register_handlers(application):
 	application.log_exception = lambda exc_info: None
 	application.before_request(log_request)
+	application.before_request(authorize_request)
 	for exception in werkzeug.exceptions.default_exceptions:
 		application.register_error_handler(exception, handle_error)
 
@@ -82,6 +84,19 @@ def register_resources(application, path_collection = None):
 
 def log_request():
 	request_logger.info("(%s) %s %s", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url)
+
+
+def authorize_request():
+	if flask.current_app.authorization_provider.is_public_route(flask.request.method, flask.request.url_rule.rule):
+		return
+
+	user = None
+	if "token" in flask.session:
+		user = service_client.get("/me")
+
+	is_authorized = flask.current_app.authorization_provider.authorize_request(user, flask.request.method, flask.request.url_rule.rule)
+	if not is_authorized:
+		flask.abort(403)
 
 
 def handle_error(exception):

@@ -21,6 +21,7 @@ request_logger = logging.getLogger("Request")
 def register_handlers(application):
 	application.log_exception = lambda exc_info: None
 	application.before_request(log_request)
+	application.before_request(authorize_request)
 	for exception in werkzeug.exceptions.default_exceptions:
 		application.register_error_handler(exception, handle_error)
 
@@ -79,6 +80,20 @@ def register_routes(application):
 
 def log_request():
 	request_logger.info("(%s) %s %s", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url)
+
+
+def authorize_request():
+	if flask.current_app.authorization_provider.is_public_route(flask.request.method, flask.request.url_rule.rule):
+		return
+
+	user = None
+	if flask.request.authorization is not None:
+		is_authenticated = flask.current_app.authentication_provider.authenticate_with_token(flask.request.authorization.username, flask.request.authorization.password)
+		user = flask.current_app.user_provider.get(flask.request.authorization.username) if is_authenticated else None
+
+	is_authorized = flask.current_app.authorization_provider.authorize_request(user, flask.request.method, flask.request.url_rule.rule)
+	if not is_authorized:
+		flask.abort(403)
 
 
 def handle_error(exception):
