@@ -93,6 +93,8 @@ def set_request_data():
 
 
 def authorize_request():
+	if flask.request.url_rule is None:
+		return
 	if not flask.current_app.authorization_provider.authorize_request(flask.request.user, flask.request.method, flask.request.url_rule.rule):
 		flask.abort(403)
 
