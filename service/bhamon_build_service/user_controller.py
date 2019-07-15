@@ -27,7 +27,7 @@ def get_user(user_identifier):
 
 def create_user(user_identifier):
 	parameters = flask.request.get_json()
-	user = flask.current_app.user_provider.create(user_identifier, parameters["user_identifier"], parameters["display_name"])
+	user = flask.current_app.user_provider.create(user_identifier, parameters["display_name"])
 	return flask.jsonify(user)
 
 
