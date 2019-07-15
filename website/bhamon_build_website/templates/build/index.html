@@ -11,6 +11,7 @@
 			<div class="status-indicator {{ build['status'] }}"></div>
 			<div class="status-text">{{ build['status'] }}</div>
 		</div>
+		{% if authorize_view("build-actions") %}
 		<form method="post">
 			{% if build['status'] == 'running' %}
 			<button formaction="{{ url_for('abort_build', build_identifier = build['identifier']) }}">Abort</button>
@@ -18,6 +19,7 @@
 			<button formaction="{{ url_for('abort_build', build_identifier = build['identifier']) }}" disabled>Abort</button>
 			{% endif %}
 		</form>
+		{% endif %}
 	</div>
 	<ul>
 		<li>Job: <a href="{{ url_for('job_index', job_identifier = build['job']) }}" style="display: inline">{{ build['job'] }}</a></li>

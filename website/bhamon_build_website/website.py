@@ -24,12 +24,14 @@ request_logger = logging.getLogger("Request")
 def configure(application):
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True
-	application.jinja_env.filters['strip_pagination_arguments'] = helpers.strip_pagination_arguments
+	application.jinja_env.filters["strip_pagination_arguments"] = helpers.strip_pagination_arguments
+	application.jinja_env.globals["authorize_view"] = authorize_view
 
 
 def register_handlers(application):
 	application.log_exception = lambda exc_info: None
 	application.before_request(log_request)
+	application.before_request(set_request_data)
 	application.before_request(authorize_request)
 	for exception in werkzeug.exceptions.default_exceptions:
 		application.register_error_handler(exception, handle_error)
@@ -86,17 +88,17 @@ def log_request():
 	request_logger.info("(%s) %s %s", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url)
 
 
+def set_request_data():
+	flask.request.user = service_client.get("/me") if "token" in flask.session else None
+
+
 def authorize_request():
-	if flask.current_app.authorization_provider.is_public_route(flask.request.method, flask.request.url_rule.rule):
-		return
-
-	user = None
-	if "token" in flask.session:
-		user = service_client.get("/me")
-
-	is_authorized = flask.current_app.authorization_provider.authorize_request(user, flask.request.method, flask.request.url_rule.rule)
-	if not is_authorized:
+	if not flask.current_app.authorization_provider.authorize_request(flask.request.user, flask.request.method, flask.request.url_rule.rule):
 		flask.abort(403)
+
+
+def authorize_view(view):
+	return flask.current_app.authorization_provider.authorize_view(flask.request.user, view)
 
 
 def handle_error(exception):

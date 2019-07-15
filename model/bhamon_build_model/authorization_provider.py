@@ -15,6 +15,12 @@ class AuthorizationProvider:
 		return False
 
 
+	def authorize_view(self, user, view):
+		if self.is_authorized_user(user) and self.is_authorized_view(user["roles"], view):
+			return True
+		return False
+
+
 	def is_authorized_user(self, user): # pylint: disable = no-self-use
 		return (user is not None) and (user["is_enabled"])
 
@@ -63,6 +69,24 @@ class AuthorizationProvider:
 				return True
 		if method == "POST" and route == "/job/<job_identifier>/trigger":
 			if "BuildWorker" in user_roles:
+				return True
+
+		return False
+
+
+	def is_authorized_view(self, user_roles, view): # pylint: disable = no-self-use
+		if "Administrator" in user_roles:
+			return True
+
+		if view in [ "nav-admin" ]:
+			if "Administrator" in user_roles:
+				return True
+		if view in [ "nav-main" ]:
+			if "Viewer" in user_roles:
+				return True
+
+		if view in [ "build-actions", "job-actions", "task-actions", "worker-actions" ]:
+			if "Operator" in user_roles:
 				return True
 
 		return False

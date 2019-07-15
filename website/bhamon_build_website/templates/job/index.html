@@ -17,21 +17,26 @@
 			<div class="status-indicator enabled"></div>
 			<div class="status-text">Enabled</div>
 		</div>
+			{% if authorize_view("job-actions") %}
 		<form method="post">
 			<button formaction="{{ url_for('disable_job', job_identifier = job['identifier']) }}">Disable</button>
 		</form>
+			{% endif %}
 		{% else %}
 		<div class="status-group">
 			<div class="status-indicator disabled"></div>
 			<div class="status-text">Disabled</div>
 		</div>
+			{% if authorize_view("job-actions") %}
 		<form method="post">
 			<button formaction="{{ url_for('enable_job', job_identifier = job['identifier']) }}">Enable</button>
 		</form>
+			{% endif %}
 		{% endif %}
 	</div>
 </section>
 
+{% if authorize_view("job-actions") %}
 <section>
 	<h2>Trigger</h2>
 	<form action="{{ url_for('trigger_job', job_identifier = job['identifier']) }}" method="post">
@@ -48,6 +53,7 @@
 		</ul>
 	</form>
 </section>
+{% endif %}
 
 <section>
 	<h2><a href="{{ url_for('build_collection_index', job = job['identifier']) }}" title="View all builds">Builds</a></h2>

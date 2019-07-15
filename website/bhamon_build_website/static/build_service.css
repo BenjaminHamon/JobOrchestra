@@ -18,6 +18,11 @@
 	grid-row-gap: 5px;
 }
 
+.status-grid.readonly
+{
+	grid-template-columns: auto;
+}
+
 .status-grid button
 {
 	width: 100%;
