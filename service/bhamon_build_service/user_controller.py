@@ -45,7 +45,7 @@ def update_user_roles(user_identifier):
 	return flask.jsonify(user)
 
 
-def set_password(user_identifier):
+def reset_password(user_identifier):
 	parameters = flask.request.get_json()
 	flask.current_app.authentication_provider.set_password(user_identifier, parameters["password"])
 	return flask.jsonify({})

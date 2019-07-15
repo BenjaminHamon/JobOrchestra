@@ -60,7 +60,7 @@ def register_routes(application):
 	application.add_url_rule("/user/<user_identifier>/create", methods = [ "POST" ], view_func = user_controller.create_user)
 	application.add_url_rule("/user/<user_identifier>/update_identity", methods = [ "POST" ], view_func = user_controller.update_user_identity)
 	application.add_url_rule("/user/<user_identifier>/update_roles", methods = [ "POST" ], view_func = user_controller.update_user_roles)
-	application.add_url_rule("/user/<user_identifier>/set_password", methods = [ "POST" ], view_func = user_controller.set_password)
+	application.add_url_rule("/user/<user_identifier>/reset_password", methods = [ "POST" ], view_func = user_controller.reset_password)
 	application.add_url_rule("/user/<user_identifier>/enable", methods = [ "POST" ], view_func = user_controller.enable_user)
 	application.add_url_rule("/user/<user_identifier>/disable", methods = [ "POST" ], view_func = user_controller.disable_user)
 	application.add_url_rule("/user/<user_identifier>/token_count", methods = [ "GET" ], view_func = user_controller.get_token_count)

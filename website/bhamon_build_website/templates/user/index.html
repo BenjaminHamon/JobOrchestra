@@ -8,8 +8,9 @@
 {{ shared_macros.flash_messages() }}
 
 <section>
-	<div>
+	<div class="link-group">
 		<a href="{{ url_for('edit_user', user_identifier = user['identifier']) }}">Edit</a>
+		<a href="{{ url_for('reset_password', user_identifier = user['identifier']) }}">Reset password</a>
 	</div>
 </section>
 
