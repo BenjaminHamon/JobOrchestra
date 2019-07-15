@@ -187,12 +187,19 @@ form li input:read-only
 	background-color: #eeeeee;
 }
 
+form li select
+{
+	padding: 5px;
+	border: gray 1px solid;
+}
+
 form li textarea
 {
 	padding: 5px;
 	min-height: 100px;
 	max-height: 300px;
 	resize: vertical;
+	border: gray 1px solid;
 }
 
 form li button
@@ -229,6 +236,11 @@ table
 	flex-direction: column;
 }
 
+.table-container > form
+{
+	margin: 0 20px 10px 20px;
+}
+
 .table-container > form > ul
 {
 	display: flex;
@@ -240,7 +252,7 @@ table
 	display: flex;
 	flex-direction: row;
 	flex-wrap: nowrap;
-	margin: 0 30px 10px 0;
+	margin: 0 30px 0 0;
 }
 
 .table-container > form > ul > li:last-child
