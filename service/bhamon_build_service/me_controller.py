@@ -39,5 +39,14 @@ def logout():
 	return flask.jsonify({})
 
 
+def change_password():
+	parameters = flask.request.get_json()
+	if not flask.current_app.authentication_provider.authenticate_with_password(flask.request.authorization.username, parameters["old_password"]):
+		flask.abort(401)
+
+	flask.current_app.authentication_provider.set_password(flask.request.authorization.username, parameters["new_password"])
+	return flask.jsonify({})
+
+
 def get_my_token_list():
 	return user_controller.get_token_list(flask.request.authorization.username)

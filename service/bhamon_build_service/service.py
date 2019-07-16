@@ -49,6 +49,7 @@ def register_routes(application):
 	application.add_url_rule("/me", methods = [ "GET" ], view_func = me_controller.get_my_user)
 	application.add_url_rule("/me/login", methods = [ "POST" ], view_func = me_controller.login)
 	application.add_url_rule("/me/logout", methods = [ "POST" ], view_func = me_controller.logout)
+	application.add_url_rule("/me/change_password", methods = [ "POST" ], view_func = me_controller.change_password)
 	application.add_url_rule("/me/token_collection", methods = [ "GET" ], view_func = me_controller.get_my_token_list)
 	application.add_url_rule("/task_count", methods = [ "GET" ], view_func = task_controller.get_task_count)
 	application.add_url_rule("/task_collection", methods = [ "GET" ], view_func = task_controller.get_task_collection)
