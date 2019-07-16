@@ -12,6 +12,8 @@ logger = logging.getLogger("MeController")
 
 def login():
 	if flask.request.method == "GET":
+		if "token" in flask.session:
+			return flask.redirect(flask.url_for("home"))
 		return flask.render_template("me/login.html", title = "Log In")
 
 	if flask.request.method == "POST":
@@ -22,7 +24,7 @@ def login():
 			flask.flash("Login succeeded.", "info")
 			return flask.redirect(flask.url_for("home"))
 		except requests.HTTPError as exception:
-			flask.flash( "Login failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
+			flask.flash("Login failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
 			return flask.render_template("me/login.html", title = "Log In")
 
 	return flask.abort(405)
@@ -44,7 +46,7 @@ def logout():
 			del flask.session["token"]
 			return flask.redirect(flask.url_for("home"))
 		except requests.HTTPError as exception:
-			flask.flash( "Logout failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
+			flask.flash("Logout failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
 			return flask.render_template("me/logout.html", title = "Log Out")
 
 	return flask.abort(405)
