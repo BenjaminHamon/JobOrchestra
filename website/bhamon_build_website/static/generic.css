@@ -148,6 +148,7 @@ a, img
 table
 {
 	border-collapse: collapse;
+	white-space: nowrap;
 }
 
 th, td
@@ -156,45 +157,25 @@ th, td
 	border: 1px solid gray;
 }
 
-form ul
+form input
 {
-	padding: 0px;
-}
-
-form li
-{
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	margin-bottom: 10px;
-}
-
-form li label
-{
-	width: 100px;
-	margin-right: 10px;
-	text-align: right;
-}
-
-form li input
-{
-	flex-grow: 1;
 	padding: 5px;
 	border: gray 1px solid;
 }
 
-form li input:read-only
+form input:read-only
 {
 	background-color: #eeeeee;
 }
 
-form li select
+form select
 {
 	padding: 5px;
 	border: gray 1px solid;
+	min-width: 100px;
 }
 
-form li textarea
+form textarea
 {
 	padding: 5px;
 	min-height: 100px;
@@ -203,22 +184,36 @@ form li textarea
 	border: gray 1px solid;
 }
 
-form li button
+form button
 {
+	white-space: nowrap;
+}
+
+.generic-form
+{
+	display: inline-grid;
+	grid-template-columns: auto auto;
+	grid-column-gap: 10px;
+	grid-row-gap: 10px;
+	align-items: center;
+}
+
+.generic-form > label
+{
+	text-align: right;
+}
+
+.generic-form > textarea
+{
+	grid-column: 1 / span 2;
+}
+
+.generic-form > button
+{
+	grid-column: 2;
 	margin-left: auto;
 	padding: 5px;
 	min-width: 100px;
-	white-space: nowrap;
-}
-
-form select
-{
-	min-width: 100px;
-}
-
-table
-{
-	white-space: nowrap;
 }
 
 .flash .info
@@ -250,32 +245,22 @@ table
 
 .table-container > form
 {
-	margin: 0 20px 10px 20px;
-}
-
-.table-container > form > ul
-{
 	display: flex;
 	flex-direction: row;
+	margin-bottom: 10px;
+	align-items: center;
 }
 
-.table-container > form > ul > li
+.table-container > form > label
 {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: nowrap;
-	margin: 0 30px 0 0;
+	margin: 0 10px 0 30px;
 }
 
-.table-container > form > ul > li:last-child
+.table-container > form > button
 {
-	margin-right: 0;
-}
-
-.table-container > form > ul > li > label
-{
-	width: auto;
-	margin-right: 10px;
+	margin: 0 30px 0 30px;
+	padding: 5px;
+	min-width: 100px;
 }
 
 .page-navigation

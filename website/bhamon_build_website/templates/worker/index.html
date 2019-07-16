@@ -17,9 +17,9 @@
 		<div class="status-group">
 			<div class="status-indicator active"></div>
 			<div class="status-text">Active</div>
-		</div method="post">
+		</div>
 			{% if authorize_view("worker-actions") %}
-		<form>
+		<form method="post">
 			<button formaction="{{ url_for('stop_worker', worker_identifier = worker['identifier']) }}">Stop</button>
 		</form>
 			{% endif %}

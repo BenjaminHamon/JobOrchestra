@@ -2,10 +2,15 @@
 {
 	display: flex;
 	flex-direction: row;
-	margin: 0;
 }
 
-.action-group button
+section > .action-group button
+{
+	padding: 5px;
+	min-width: 100px;
+}
+
+td > .action-group button
 {
 	min-width: 80px;
 }
@@ -25,7 +30,6 @@
 
 .status-grid button
 {
-	width: 100%;
 	min-width: 80px;
 }
 
