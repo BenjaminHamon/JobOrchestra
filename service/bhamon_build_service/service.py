@@ -26,7 +26,7 @@ def register_handlers(application):
 		application.register_error_handler(exception, handle_error)
 
 
-def register_routes(application):
+def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/", methods = [ "GET" ], view_func = home)
 	application.add_url_rule("/help", methods = [ "GET" ], view_func = help)
 	application.add_url_rule("/admin/reload", methods = [ "POST" ], view_func = admin_controller.reload)
@@ -110,7 +110,7 @@ def home():
 	return flask.jsonify({})
 
 
-def help(): # pylint: disable=redefined-builtin
+def help(): # pylint: disable = redefined-builtin
 	route_collection = []
 	for rule in flask.current_app.url_map.iter_rules():
 		if not rule.rule.startswith("/static/"):
