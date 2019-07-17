@@ -51,31 +51,12 @@ def load_configuration(environment):
 	configuration["development_dependencies"] = [ "pylint", "pymongo", "pytest", "wheel" ]
 
 	configuration["components"] = [
-		{
-			"name": "bhamon-build-master",
-			"path": "master",
-			"packages": [ "bhamon_build_master" ],
-		},
-		{
-			"name": "bhamon-build-model",
-			"path": "model",
-			"packages": [ "bhamon_build_model" ],
-		},
-		{
-			"name": "bhamon-build-service",
-			"path": "service",
-			"packages": [ "bhamon_build_service" ],
-		},
-		{
-			"name": "bhamon-build-website",
-			"path": "website",
-			"packages": [ "bhamon_build_website" ],
-		},
-		{
-			"name": "bhamon-build-worker",
-			"path": "worker",
-			"packages": [ "bhamon_build_worker" ],
-		},
+		{ "name": "bhamon-build-cli", "path": "cli", "packages": [ "bhamon_build_cli" ] },
+		{ "name": "bhamon-build-master", "path": "master", "packages": [ "bhamon_build_master" ] },
+		{ "name": "bhamon-build-model", "path": "model", "packages": [ "bhamon_build_model" ] },
+		{ "name": "bhamon-build-service", "path": "service", "packages": [ "bhamon_build_service" ] },
+		{ "name": "bhamon-build-website", "path": "website", "packages": [ "bhamon_build_website" ] },
+		{ "name": "bhamon-build-worker", "path": "worker", "packages": [ "bhamon_build_worker" ] },
 	]
 
 	configuration["filesets"] = {
@@ -87,6 +68,7 @@ def load_configuration(environment):
 			"file_name": "{project}_{version}_package",
 			"path_in_repository": "packages",
 			"filesets": [
+				{ "identifier": "distribution", "path_in_archive": "bhamon-build-cli", "parameters": { "component": "bhamon-build-cli" } },
 				{ "identifier": "distribution", "path_in_archive": "bhamon-build-master", "parameters": { "component": "bhamon-build-master" } },
 				{ "identifier": "distribution", "path_in_archive": "bhamon-build-model", "parameters": { "component": "bhamon-build-model" } },
 				{ "identifier": "distribution", "path_in_archive": "bhamon-build-service", "parameters": { "component": "bhamon-build-service" } },
