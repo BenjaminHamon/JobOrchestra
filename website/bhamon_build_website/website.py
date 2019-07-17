@@ -5,11 +5,15 @@ import flask
 import jinja2
 import werkzeug
 
+import bhamon_build_website.helpers as helpers
+import bhamon_build_website.service_client as service_client
+
 import bhamon_build_website.admin_controller as admin_controller
 import bhamon_build_website.build_controller as build_controller
-import bhamon_build_website.helpers as helpers
 import bhamon_build_website.job_controller as job_controller
+import bhamon_build_website.me_controller as me_controller
 import bhamon_build_website.task_controller as task_controller
+import bhamon_build_website.user_controller as user_controller
 import bhamon_build_website.worker_controller as worker_controller
 
 
@@ -20,12 +24,15 @@ request_logger = logging.getLogger("Request")
 def configure(application):
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True
-	application.jinja_env.filters['strip_pagination_arguments'] = helpers.strip_pagination_arguments
+	application.jinja_env.filters["strip_pagination_arguments"] = helpers.strip_pagination_arguments
+	application.jinja_env.globals["authorize_view"] = authorize_view
 
 
 def register_handlers(application):
 	application.log_exception = lambda exc_info: None
 	application.before_request(log_request)
+	application.before_request(set_request_data)
+	application.before_request(authorize_request)
 	for exception in werkzeug.exceptions.default_exceptions:
 		application.register_error_handler(exception, handle_error)
 
@@ -44,8 +51,22 @@ def register_routes(application):
 	application.add_url_rule("/job/<job_identifier>/trigger", methods = [ "POST" ], view_func = job_controller.trigger_job)
 	application.add_url_rule("/job/<job_identifier>/enable", methods = [ "POST" ], view_func = job_controller.enable_job)
 	application.add_url_rule("/job/<job_identifier>/disable", methods = [ "POST" ], view_func = job_controller.disable_job)
+	application.add_url_rule("/me", methods = [ "GET" ], view_func = me_controller.my_profile)
+	application.add_url_rule("/me/login", methods = [ "GET", "POST" ], view_func = me_controller.login)
+	application.add_url_rule("/me/logout", methods = [ "GET", "POST" ], view_func = me_controller.logout)
+	application.add_url_rule("/me/change_password", methods = [ "GET", "POST" ], view_func = me_controller.change_password)
 	application.add_url_rule("/task_collection", methods = [ "GET" ], view_func = task_controller.task_collection_index)
 	application.add_url_rule("/task/<task_identifier>/cancel", methods = [ "POST" ], view_func = task_controller.cancel_task)
+	application.add_url_rule("/user_collection", methods = [ "GET" ], view_func = user_controller.user_collection_index)
+	application.add_url_rule("/user_create", methods = [ "GET", "POST" ], view_func = user_controller.create_user)
+	application.add_url_rule("/user/<user_identifier>", methods = [ "GET" ], view_func = user_controller.user_index)
+	application.add_url_rule("/user/<user_identifier>/edit", methods = [ "GET" ], view_func = user_controller.edit_user)
+	application.add_url_rule("/user/<user_identifier>/update_identity", methods = [ "POST" ], view_func = user_controller.update_user_identity)
+	application.add_url_rule("/user/<user_identifier>/update_roles", methods = [ "POST" ], view_func = user_controller.update_user_roles)
+	application.add_url_rule("/user/<user_identifier>/enable", methods = [ "POST" ], view_func = user_controller.enable_user)
+	application.add_url_rule("/user/<user_identifier>/disable", methods = [ "POST" ], view_func = user_controller.disable_user)
+	application.add_url_rule("/user/<user_identifier>/reset_password", methods = [ "GET", "POST" ], view_func = user_controller.reset_password)
+	application.add_url_rule("/user/<user_identifier>/token/<token_identifier>/delete", methods = [ "POST" ], view_func = user_controller.delete_token)
 	application.add_url_rule("/worker_collection", methods = [ "GET" ], view_func = worker_controller.worker_collection_index)
 	application.add_url_rule("/worker/<worker_identifier>", methods = [ "GET" ], view_func = worker_controller.worker_index)
 	application.add_url_rule("/worker/<worker_identifier>/stop", methods = [ "POST" ], view_func = worker_controller.stop_worker)
@@ -69,35 +90,28 @@ def log_request():
 	request_logger.info("(%s) %s %s", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url)
 
 
+def set_request_data():
+	flask.request.user = service_client.get("/me") if "token" in flask.session else None
+
+
+def authorize_request():
+	if flask.request.url_rule is None:
+		return
+	if not flask.current_app.authorization_provider.authorize_request(flask.request.user, flask.request.method, flask.request.url_rule.rule):
+		flask.abort(403)
+
+
+def authorize_view(view):
+	return flask.current_app.authorization_provider.authorize_view(flask.request.user, view)
+
+
 def handle_error(exception):
 	status_code = exception.code if isinstance(exception, werkzeug.exceptions.HTTPException) else 500
-	status_message = get_error_message(status_code)
+	status_message = helpers.get_error_message(status_code)
 	request_logger.error("(%s) %s %s (StatusCode: %s)", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url, status_code, exc_info = True)
 	if flask.request.headers.get("Content-Type") == "application/json":
 		return flask.jsonify({ "status_code": status_code, "status_message": status_message }), status_code
 	return flask.render_template("error.html", title = "Error", status_message = status_message, status_code = status_code), status_code
-
-
-def get_error_message(status_code): # pylint: disable = too-many-return-statements
-	if status_code == 400:
-		return "Bad request"
-	if status_code == 401:
-		return "Unauthorized"
-	if status_code == 403:
-		return "Forbidden"
-	if status_code == 404:
-		return "Page not found"
-	if status_code == 405:
-		return "Method not allowed"
-
-	if status_code == 500:
-		return "Internal server error"
-
-	if 400 <= status_code < 500:
-		return "Client error"
-	if 500 <= status_code < 600:
-		return "Server error"
-	return "Unknown error"
 
 
 # Override Flask send_static_file to support several static directories

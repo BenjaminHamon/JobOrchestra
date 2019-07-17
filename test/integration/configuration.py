@@ -1,11 +1,11 @@
 def configure():
-	workers = _configure_workers()
-	jobs = _configure_jobs()
+	workers = configure_workers()
+	jobs = configure_jobs()
 
 	return { "jobs": jobs, "workers": workers }
 
 
-def _configure_jobs():
+def configure_jobs():
 	return [
 		test_success(),
 		test_failure(),
@@ -74,7 +74,9 @@ def test_exception():
 
 def test_controller_success():
 	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
-	controller_script += [ "--service-url", "{environment[service_url]}", "--results", "{result_file_path}" ]
+	controller_script += [ "--service-url", "{environment[build_service_url]}", ]
+	controller_script += [ "--authentication", "{environment[build_worker_authentication]}" ]
+	controller_script += [ "--results", "{result_file_path}" ]
 
 	return {
 		"identifier": "test_controller_success",
@@ -98,7 +100,9 @@ def test_controller_success():
 
 def test_controller_failure():
 	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
-	controller_script += [ "--service-url", "{environment[service_url]}", "--results", "{result_file_path}" ]
+	controller_script += [ "--service-url", "{environment[build_service_url]}", ]
+	controller_script += [ "--authentication", "{environment[build_worker_authentication]}" ]
+	controller_script += [ "--results", "{result_file_path}" ]
 
 	return {
 		"identifier": "test_controller_failure",
@@ -120,7 +124,7 @@ def test_controller_failure():
 	}
 
 
-def _configure_workers():
+def configure_workers():
 	return [
 		{
 			"identifier": "controller",

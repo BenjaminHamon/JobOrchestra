@@ -1,5 +1,8 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<p>{{ status_message }}</p>
+<section>
+	<h2>Error</h2>
+	<p>The web request could not be executed: {{ status_message }} ({{ status_code }}).</p>
+</section>
 {% endblock %}

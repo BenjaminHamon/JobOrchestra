@@ -5,7 +5,9 @@
 			<th>Job</th>
 			<th>Identifier</th>
 			<th>Status</th>
+			{% if authorize_view("build-actions") %}
 			<th>Actions</th>
+			{% endif %}
 			<th>Worker</th>
 			<th>Creation date</th>
 			<th>Update date</th>
@@ -22,6 +24,7 @@
 					<div class="status-text">{{ build['status'] }}</div>
 				</div>
 			</td>
+			{% if authorize_view("build-actions") %}
 			<td>
 				<form class="action-group" method="post">
 					{% if build['status'] == 'running' %}
@@ -31,6 +34,7 @@
 					{% endif %}
 				</form>
 			</td>
+			{% endif %}
 			<td><a href="{{ url_for('worker_index', worker_identifier = build['worker']) }}">{{ build['worker'] }}</a></td>
 			<td>{{ build['creation_date'] }}</td>
 			<td>{{ build['update_date'] }}</td>

@@ -1,3 +1,15 @@
+{% macro flash_messages() %}
+{% with messages = get_flashed_messages(with_categories = True) %}
+{% if messages %}
+<section class="flash">
+	{% for category, message in messages %}
+	<p class="{{ category }}">{{ message }}</p>
+	{% endfor %}
+</section>
+{% endif %}
+{% endwith %}
+{% endmacro %}
+
 {% macro page_navigation(endpoint, pagination) %}
 <div class="page-navigation">
 	{% set url_arguments = (request.args | strip_pagination_arguments) %}

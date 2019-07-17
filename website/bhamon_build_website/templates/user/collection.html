@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+{% import 'user/macros.html' as user_macros %}
+{% import 'macros.html' as shared_macros %}
+
+{% block content %}
+<h1>Users</h1>
+
+{{ shared_macros.flash_messages() }}
+
+<section>
+	<div class="link-group">
+		<a href="{{ url_for('create_user') }}">Create user</a>
+	</div>
+</section>
+
+<section>
+	<div class="table-container">
+		{{ user_macros.user_table(user_collection) }}
+		{{ shared_macros.page_navigation('user_collection_index', pagination) }}
+	</div>
+</section>
+{% endblock %}

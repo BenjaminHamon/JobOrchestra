@@ -2,10 +2,15 @@
 {
 	display: flex;
 	flex-direction: row;
-	margin: 0;
 }
 
-.action-group button
+section > .action-group button
+{
+	padding: 5px;
+	min-width: 100px;
+}
+
+td > .action-group button
 {
 	min-width: 80px;
 }
@@ -18,9 +23,13 @@
 	grid-row-gap: 5px;
 }
 
+.status-grid.readonly
+{
+	grid-template-columns: auto;
+}
+
 .status-grid button
 {
-	width: 100%;
 	min-width: 80px;
 }
 
@@ -38,13 +47,13 @@
 	height: 16px;
 	width: 16px;
 	margin-right: 5px;
-	border: 1px solid grey;
+	border: 1px solid gray;
 	border-radius: 50%;
 }
 
 .status-indicator.pending { background-color: lightblue; }
 .status-indicator.running { background-color: yellow; }
-.status-indicator.cancelled { background-color: grey; }
+.status-indicator.cancelled { background-color: gray; }
 .status-indicator.succeeded { background-color: green; }
 .status-indicator.failed { background-color: red; }
 .status-indicator.aborted { background-color: purple; }
@@ -54,9 +63,19 @@
 .status-indicator.inactive { background-color: gray; }
 
 .status-indicator.enabled { background-color: green; }
-.status-indicator.disabled { background-color: grey; }
+.status-indicator.disabled { background-color: gray; }
 
 .uuid-input
 {
 	width: 250px;
+}
+
+.text-input
+{
+	width: 250px
+}
+
+.textarea-input
+{
+	width: 360px;
 }

@@ -17,7 +17,7 @@ def lint(environment, component_collection):
 	logger.info("Running linter")
 
 	pylint_command = [ environment["python3_executable"], "-m", "pylint" ]
-	pylint_command += [ component["path"] for component in component_collection ]
+	pylint_command += [ component["path"] for component in component_collection ] + [ "test" ]
 
 	logger.info("+ %s", " ".join(pylint_command))
 	subprocess.check_call(pylint_command)

@@ -2,13 +2,13 @@
 
 import time
 
-import assert_extensions
-import context
-import environment
+from .. import assert_extensions
+from . import context
+from . import environment
 
 
 def test_job_success(tmpdir):
-	""" Execute the job test_success """
+	""" Test executing a job which should succeed """
 
 	job_identifier = "test_success"
 
@@ -48,7 +48,7 @@ def test_job_success(tmpdir):
 
 
 def test_job_failure(tmpdir):
-	""" Execute the job test_failure """
+	""" Test executing a job which should fail """
 
 	job_identifier = "test_failure"
 
@@ -88,7 +88,7 @@ def test_job_failure(tmpdir):
 
 
 def test_job_exception(tmpdir):
-	""" Execute the job test_exception """
+	""" Test executing a job which should raise an exception """
 
 	job_identifier = "test_exception"
 
@@ -129,11 +129,13 @@ def test_job_exception(tmpdir):
 
 
 def test_job_controller_success(tmpdir):
-	""" Execute the job test_controller_success """
+	""" Test executing a controller job which should succeed """
 
 	job_identifier = "test_controller_success"
 
 	with context.Context(tmpdir) as context_instance:
+		context_instance.configure_worker_authentication([ "controller" ])
+
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		service_process = context_instance.invoke_service()
@@ -175,11 +177,13 @@ def test_job_controller_success(tmpdir):
 
 
 def test_job_controller_failure(tmpdir):
-	""" Execute the job test_controller_failure """
+	""" Test executing a controller job which should fail """
 
 	job_identifier = "test_controller_failure"
 
 	with context.Context(tmpdir) as context_instance:
+		context_instance.configure_worker_authentication([ "controller" ])
+
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		service_process = context_instance.invoke_service()

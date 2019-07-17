@@ -1,80 +1,57 @@
 # pylint: disable = no-self-use
 # pylint: disable = redefined-builtin
 
-import json
 import logging
-import os
 
 import bhamon_build_model.database_client as database_client
 
 
-logger = logging.getLogger("JsonDatabaseClient")
+logger = logging.getLogger("MemoryDatabaseClient")
 
 
-class JsonDatabaseClient(database_client.DatabaseClient):
-	""" Client for a database storing data as json files, intended for development only. """
+class MemoryDatabaseClient(database_client.DatabaseClient):
+	""" Client for a database storing data in memory, intended for development only. """
 
 
-	def __init__(self, data_directory):
-		self._data_directory = data_directory
+	def __init__(self):
+		self.database = {}
 
 
 	def count(self, table, filter):
-		return sum(1 for row in self._load(table) if self._match_filter(row, filter))
+		return sum(1 for row in self.database.get(table, []) if self._match_filter(row, filter))
 
 
 	def find_many(self, table, filter, skip = 0, limit = None, order_by = None):
 		start_index = skip
 		end_index = (skip + limit) if limit is not None else None
-		results = self._load(table)
+		results = self.database.get(table, [])
 		results = self._apply_order_by(results, order_by)
 		results = [ row for row in results if self._match_filter(row, filter) ]
 		return results[ start_index : end_index ]
 
 
 	def find_one(self, table, filter):
-		return next(( row for row in self._load(table) if self._match_filter(row, filter) ), None)
+		return next(( row for row in self.database.get(table, []) if self._match_filter(row, filter) ), None)
 
 
 	def insert_one(self, table, data):
-		all_rows = self._load(table)
-		all_rows.append(data)
-		self._save(table, all_rows)
+		if table not in self.database:
+			self.database[table] = []
+		self.database[table].append(data)
 
 
 	def update_one(self, table, filter, data):
-		all_rows = self._load(table)
+		all_rows = self.database.get(table, [])
 		matched_row = next(( row for row in all_rows if self._match_filter(row, filter) ), None)
 		if matched_row is not None:
 			matched_row.update(data)
-			self._save(table, all_rows)
 
 
 	def delete_one(self, table, filter):
-		all_rows = self._load(table)
+		all_rows = self.database.get(table, [])
 		matched_row = next(( row for row in all_rows if self._match_filter(row, filter) ), None)
 		if matched_row is not None:
 			all_rows.remove(matched_row)
-			self._save(table, all_rows)
-
-
-	def _load(self, table):
-		file_path = os.path.join(self._data_directory, table + ".json")
-		if not os.path.exists(file_path):
-			return []
-		with open(file_path) as data_file:
-			return json.load(data_file)
-
-
-	def _save(self, table, table_data):
-		file_path = os.path.join(self._data_directory, table + ".json")
-		if not os.path.exists(os.path.dirname(file_path)):
-			os.makedirs(os.path.dirname(file_path))
-		with open(file_path + ".tmp", "w") as table_data_file:
-			json.dump(table_data, table_data_file, indent = 4)
-		if os.path.exists(file_path):
-			os.remove(file_path)
-		os.rename(file_path + ".tmp", file_path)
 
 
 	def _match_filter(self, row, filter):

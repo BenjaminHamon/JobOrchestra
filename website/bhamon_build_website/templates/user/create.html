@@ -1,0 +1,18 @@
+{% extends 'layout.html' %}
+{% import 'macros.html' as shared_macros %}
+
+{% block content %}
+<h1>Create User</h1>
+
+{{ shared_macros.flash_messages() }}
+
+<section>
+	<form class="generic-form" method="post" action="{{ url_for('create_user') }}">
+		<label for="identifier">Identifier</label>
+		<input type="text" id="identifier" name="identifier" value="{{ request.form['identifier'] }}" required/>
+		<label for="display_name">Display name</label>
+		<input type="text" id="display_name" name="display_name" value="{{ request.form['display_name'] }}" required/>
+		<button type="submit">Create</button>
+	</form>
+</section>
+{% endblock %}

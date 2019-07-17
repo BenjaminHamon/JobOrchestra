@@ -4,7 +4,9 @@
 		<tr>
 			<th>Identifier</th>
 			<th>Enabled</th>
+			{% if authorize_view("job-actions") %}
 			<th>Actions</th>
+			{% endif %}
 			<th>Update date</th>
 		</tr>
 	</thead>
@@ -25,6 +27,7 @@
 				</div>
 				{% endif %}
 			</td>
+			{% if authorize_view("job-actions") %}
 			<td>
 				<form class="action-group" method="post">
 					<button formaction="{{ url_for('trigger_job', job_identifier = job['identifier']) }}">Trigger</button>
@@ -35,6 +38,7 @@
 					{% endif %}
 				</form>
 			</td>
+			{% endif %}
 			<td>{{ job['update_date'] }}</td>
 		</tr>
 		{% endfor %}

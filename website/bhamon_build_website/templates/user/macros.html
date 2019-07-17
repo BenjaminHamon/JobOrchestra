@@ -1,0 +1,87 @@
+{% macro user_table(user_collection) %}
+<table>
+	<thead>
+		<tr>
+			<th>Identifier</th>
+			<th>Display name</th>
+			<th>Enabled</th>
+			<th>Actions</th>
+			<th>Update date</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for user in user_collection %}
+		<tr>
+			<td><a href="{{ url_for('user_index', user_identifier = user['identifier']) }}">{{ user['identifier'] }}</a></td>
+			<td>{{ user['display_name'] }}</td>
+			<td>
+				{% if user['is_enabled'] %}
+				<div class="status-group">
+					<div class="status-indicator enabled"></div>
+					<div class="status-text">Enabled</div>
+				</div>
+				{% else %}
+				<div class="status-group">
+					<div class="status-indicator disabled"></div>
+					<div class="status-text">Disabled</div>
+				</div>
+				{% endif %}
+			</td>
+			<td>
+				<form class="action-group" method="post">
+					{% if user['is_enabled'] %}
+					<button formaction="{{ url_for('disable_user', user_identifier = user['identifier']) }}">Disable</button>
+					{% else %}
+					<button formaction="{{ url_for('enable_user', user_identifier = user['identifier']) }}">Enable</button>
+					{% endif %}
+				</form>
+			</td>
+			<td>{{ user['update_date'] }}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endmacro %}
+
+{% macro user_token_table(token_collection) %}
+<table>
+	<thead>
+		<tr>
+			<th>Identifier</th>
+			<th>Description</th>
+			<th>Actions</th>
+			<th>Expiration</th>
+			<th>Creation date</th>
+			<th>Update date</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for token in token_collection %}
+		<tr>
+			<td>{{ token['identifier'] }}</td>
+			<td>{{ token['description'] if token['description'] }}</td>
+			<td>
+				<form class="action-group" method="post">
+					<button formaction="{{ url_for('delete_token', user_identifier = token['user'], token_identifier = token['identifier']) }}">Delete</button>
+				</form>
+			</td>
+			<td>
+				{% if token['is_active'] %}
+				<div class="status-group">
+					<div class="status-indicator active"></div>
+					<div class="status-text">{{ token['expiration_date'] | default("Never") }}</div>
+				</div>
+				{% else %}
+				<div class="status-group">
+					<div class="status-indicator inactive"></div>
+					<div class="status-text">{{ token['expiration_date'] | default("Never") }}</div>
+				</div>
+				{% endif %}
+			</td>
+			<td>{{ token['creation_date'] }}</td>
+			<td>{{ token['update_date'] }}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endmacro %}

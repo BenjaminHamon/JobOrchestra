@@ -5,7 +5,7 @@ import sys
 import pytest
 
 
-STATUS_CONTROL_C_EXIT = 0xC000013A # pylint: disable=invalid-name
+STATUS_CONTROL_C_EXIT = 0xC000013A # pylint: disable = invalid-name
 
 
 def get_flask_exit_code():
@@ -13,7 +13,7 @@ def get_flask_exit_code():
 
 
 def assert_multi_process(process_information_collection):
-	__tracebackhide__ = True # pylint: disable=unused-variable
+	__tracebackhide__ = True # pylint: disable = unused-variable
 
 	for process_information in process_information_collection:
 		process_information["result_code"] = process_information["process"].poll()
@@ -39,7 +39,7 @@ def assert_multi_process(process_information_collection):
 
 
 def assert_log(log_text, log_format, expected_messages = None, failure_log_levels = None):
-	__tracebackhide__ = True # pylint: disable=unused-variable
+	__tracebackhide__ = True # pylint: disable = unused-variable
 
 	if expected_messages is None:
 		expected_messages = []

@@ -5,7 +5,9 @@
 			<th>Type</th>
 			<th>Identifier</th>
 			<th>Status</th>
+			{% if authorize_view("task-actions") %}
 			<th>Actions</th>
+			{% endif %}
 			<th>Creation date</th>
 			<th>Update date</th>
 		</tr>
@@ -21,6 +23,7 @@
 					<div class="status-text">{{ task['status'] }}</div>
 				</div>
 			</td>
+			{% if authorize_view("task-actions") %}
 			<td>
 				<form class="action-group" method="post">
 					{% if task['status'] == 'pending' %}
@@ -30,6 +33,7 @@
 					{% endif %}
 				</form>
 			</td>
+			{% endif %}
 			<td>{{ task['creation_date'] }}</td>
 			<td>{{ task['update_date'] }}</td>
 		</tr>

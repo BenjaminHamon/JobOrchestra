@@ -3,13 +3,13 @@
 import os
 import time
 
-import assert_extensions
-import context
-import environment
+from .. import assert_extensions
+from . import context
+from . import environment
 
 
 def test_worker_disconnection(tmpdir):
-	""" Start master then worker, stop worker then master """
+	""" Test a disconnection initiated by the worker """
 
 	with context.Context(tmpdir) as context_instance:
 		master_process = context_instance.invoke_master()
@@ -40,7 +40,7 @@ def test_worker_disconnection(tmpdir):
 
 
 def test_master_disconnection(tmpdir):
-	""" Start master then worker, stop master then worker """
+	""" Test a disconnection initiated by the master """
 
 	with context.Context(tmpdir) as context_instance:
 		master_process = context_instance.invoke_master()
