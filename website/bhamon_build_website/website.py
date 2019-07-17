@@ -3,6 +3,7 @@ import os
 
 import flask
 import jinja2
+import requests
 import werkzeug
 
 import bhamon_build_website.helpers as helpers
@@ -91,7 +92,14 @@ def log_request():
 
 
 def set_request_data():
-	flask.request.user = service_client.get("/me") if "token" in flask.session else None
+	flask.request.user = None
+
+	if "token" in flask.session:
+		try:
+			flask.request.user = service_client.get("/me")
+		except requests.HTTPError as exception:
+			if exception.response.status_code == 403:
+				del flask.session["token"]
 
 
 def authorize_request():

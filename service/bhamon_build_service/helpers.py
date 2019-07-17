@@ -12,6 +12,8 @@ def get_error_message(status_code): # pylint: disable = too-many-return-statemen
 
 	if status_code == 500:
 		return "Internal server error"
+	if status_code == 503:
+		return "Service unavailable"
 
 	if 400 <= status_code < 500:
 		return "Client error"
