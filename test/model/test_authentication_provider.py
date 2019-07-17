@@ -1,5 +1,6 @@
 """ Unit tests for AuthenticationProvider """
 
+import datetime
 import secrets
 
 import bhamon_build_model.authentication_provider as authentication_provider
@@ -65,6 +66,23 @@ def test_token_success():
 	assert provider.authenticate_with_token(user, first_token["secret"]) is False
 	assert provider.authenticate_with_token(user, second_token["secret"]) is True
 	assert provider.authenticate_with_token(user, wrong_secret) is False
+
+
+def test_token_expired():
+	""" Test if token is refused when expired """
+
+	database_client_instance = memory_database_client.MemoryDatabaseClient()
+	provider = authentication_provider.AuthenticationProvider(database_client_instance)
+
+	user = "user"
+
+	permanent_token = provider.create_token(user, None, None)
+	valid_token = provider.create_token(user, None, datetime.timedelta(days = 1))
+	expired_token = provider.create_token(user, None, datetime.timedelta(days = -1))
+
+	assert provider.authenticate_with_token(user, permanent_token["secret"]) is True
+	assert provider.authenticate_with_token(user, valid_token["secret"]) is True
+	assert provider.authenticate_with_token(user, expired_token["secret"]) is False
 
 
 def test_hash_password_success():

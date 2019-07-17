@@ -68,11 +68,15 @@ class AuthenticationProvider:
 
 
 	def authenticate_with_token(self, user_identifier, secret):
+		now = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
 		user_tokens = self.database_client.find_many(self.table, { "user": user_identifier, "type": "token" })
+
 		for token in user_tokens:
-			hashed_secret = self.hash_token(secret, token["hash_function"], token["hash_function_parameters"])
-			if hashed_secret == token["secret"]:
-				return True
+			if "expiration_date" not in token or token["expiration_date"] > now:
+				hashed_secret = self.hash_token(secret, token["hash_function"], token["hash_function_parameters"])
+				if hashed_secret == token["secret"]:
+					return True
+
 		return False
 
 
