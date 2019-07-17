@@ -21,6 +21,10 @@ class AuthorizationProvider:
 		return False
 
 
+	def get_administrator_roles(self): # pylint: disable = no-self-use
+		return [ "Administrator" ]
+
+
 	def is_authorized_user(self, user): # pylint: disable = no-self-use
 		return (user is not None) and (user["is_enabled"])
 
