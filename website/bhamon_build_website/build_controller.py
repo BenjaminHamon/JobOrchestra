@@ -1,7 +1,6 @@
 # pylint: disable=unused-argument
 
 import logging
-import re
 
 import flask
 
@@ -46,12 +45,6 @@ def build_index(build_identifier):
 		"build_results": service_client.get("/build/{build_identifier}/results".format(**locals())),
 		"build_tasks": service_client.get("/build/{build_identifier}/tasks".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
-
-	# Resolve web urls for artifacts which use file system paths
-	if flask.current_app.artifact_storage_path is not None:
-		build_artifacts = view_data["build_results"].get("artifacts", [])
-		for artifact in [ a for a in build_artifacts if "path" in a ]:
-			artifact["url"] = re.sub("^" + re.escape(flask.current_app.artifact_storage_path), flask.current_app.artifact_storage_url, artifact["path"])
 
 	return flask.render_template("build/index.html", title = "Build " + view_data["build"]["identifier"][:18], **view_data)
 
