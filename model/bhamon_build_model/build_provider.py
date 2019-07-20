@@ -72,7 +72,7 @@ class BuildProvider:
 
 
 	def get_all_steps(self, build_identifier):
-		return self.database_client.find_one(self.build_table, { "identifier": build_identifier })["steps"]
+		return self.database_client.find_one(self.build_table, { "identifier": build_identifier }).get("steps", [])
 
 
 	def get_step(self, build_identifier, step_index):
@@ -108,7 +108,7 @@ class BuildProvider:
 
 
 	def get_results(self, build_identifier):
-		return self.database_client.find_one(self.build_table, { "identifier": build_identifier })["results"]
+		return self.database_client.find_one(self.build_table, { "identifier": build_identifier }).get("results", {})
 
 
 	def set_results(self, build, results):
