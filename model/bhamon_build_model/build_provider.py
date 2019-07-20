@@ -27,11 +27,19 @@ class BuildProvider:
 	def get_list(self, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
 		filter = { "job": job, "worker": worker, "status": status }
 		filter = { key: value for key, value in filter.items() if value is not None }
+		build_collection = self.database_client.find_many(self.build_table, filter, skip = skip, limit = limit, order_by = order_by)
+		return [ self.convert_to_public(build) for build in build_collection ]
+
+
+	def get_list_as_documents(self, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
+		filter = { "job": job, "worker": worker, "status": status }
+		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.build_table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
 	def get(self, build_identifier):
-		return self.database_client.find_one(self.build_table, { "identifier": build_identifier })
+		build = self.database_client.find_one(self.build_table, { "identifier": build_identifier })
+		return self.convert_to_public(build)
 
 
 	def create(self, job_identifier, parameters):
@@ -111,3 +119,8 @@ class BuildProvider:
 
 		build.update(update_data)
 		self.database_client.update_one(self.build_table, { "identifier": build["identifier"] }, update_data)
+
+
+	def convert_to_public(self, build): # pylint: disable = no-self-use
+		keys_to_return = [ "identifier", "job", "worker", "parameters", "status", "start_date", "completion_date", "creation_date", "update_date" ]
+		return { key: value for key, value in build.items() if key in keys_to_return }

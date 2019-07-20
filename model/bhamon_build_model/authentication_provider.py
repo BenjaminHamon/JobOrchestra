@@ -52,7 +52,7 @@ class AuthenticationProvider:
 		authentication["secret"] = self.hash_password(password, authentication["hash_function_salt"], authentication["hash_function"], authentication["hash_function_parameters"])
 
 		self.database_client.update_one(self.table, { "identifier": authentication["identifier"] }, authentication)
-		return self.convert_for_public_eyes(authentication)
+		return self.convert_to_public(authentication)
 
 
 	def remove_password(self, user):
@@ -90,12 +90,12 @@ class AuthenticationProvider:
 		filter = { "user": user, "type": "token" }
 		filter = { key: value for key, value in filter.items() if value is not None }
 		token_list = self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
-		return [ self.convert_for_public_eyes(token) for token in token_list ]
+		return [ self.convert_to_public(token) for token in token_list ]
 
 
 	def get_token(self, user_identifier, token_identifier):
 		token = self.database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
-		return self.convert_for_public_eyes(token)
+		return self.convert_to_public(token)
 
 
 	def create_token(self, user, description, expiration):
@@ -119,7 +119,7 @@ class AuthenticationProvider:
 		token["secret"] = self.hash_token(secret, token["hash_function"], token["hash_function_parameters"])
 
 		self.database_client.insert_one(self.table, token)
-		result = self.convert_for_public_eyes(token)
+		result = self.convert_to_public(token)
 		result["secret"] = secret
 		return result
 
@@ -155,6 +155,6 @@ class AuthenticationProvider:
 		raise ValueError("Unsupported hash function '%s'" % function)
 
 
-	def convert_for_public_eyes(self, authentication): # pylint: disable = no-self-use
+	def convert_to_public(self, authentication): # pylint: disable = no-self-use
 		keys_to_return = [ "identifier", "user", "type", "description", "expiration_date", "creation_date", "update_date" ]
 		return { key: value for key, value in authentication.items() if key in keys_to_return }
