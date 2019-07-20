@@ -3,6 +3,7 @@ const-naming-style = snake_case
 
 [FORMAT]
 indent-string = '\t'
+max-line-length = 200
 
 [MESSAGES CONTROL]
 disable =
@@ -10,7 +11,6 @@ disable =
 	bad-whitespace,
 	duplicate-code,
 	len-as-condition,
-	line-too-long,
 	missing-docstring,
 	too-many-arguments,
 	too-many-instance-attributes,
