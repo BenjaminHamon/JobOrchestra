@@ -17,8 +17,6 @@ def main():
 	application = flask.Flask(__name__, static_folder = None)
 	application.authorization_provider = authorization_provider.AuthorizationProvider()
 	application.service_url = environment_instance["build_service_url"]
-	application.artifact_storage_path = None
-	application.artifact_storage_url = None
 	application.secret_key = "secret"
 
 	website.configure(application)
