@@ -61,10 +61,10 @@ class AuthorizationProvider:
 			if "Administrator" in user_roles:
 				return True
 
-		if method == "GET" and domain in [ "artifact", "build", "job", "task", "worker" ]:
+		if method == "GET" and domain in [ "build", "job", "task", "worker" ]:
 			if "Viewer" in user_roles:
 				return True
-		if method == "POST" and domain in [ "artifact", "build", "job", "task", "worker" ]:
+		if method == "POST" and domain in [ "build", "job", "task", "worker" ]:
 			if "Operator" in user_roles:
 				return True
 

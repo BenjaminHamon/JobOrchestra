@@ -42,7 +42,6 @@ def register_routes(application):
 	application.add_url_rule("/", methods = [ "GET" ], view_func = home)
 	application.add_url_rule("/admin", methods = [ "GET" ], view_func = admin_controller.administration_index)
 	application.add_url_rule("/admin/reload", methods = [ "POST" ], view_func = admin_controller.reload_service)
-	application.add_url_rule("/artifact_repository", methods = [ "GET" ], view_func = artifact_repository_home)
 	application.add_url_rule("/build_collection", methods = [ "GET" ], view_func = build_controller.build_collection_index)
 	application.add_url_rule("/build/<build_identifier>", methods = [ "GET" ], view_func = build_controller.build_index)
 	application.add_url_rule("/build/<build_identifier>/step/<int:step_index>/log", methods = [ "GET" ], view_func = build_controller.build_step_log)
@@ -142,7 +141,3 @@ def send_static_file(filename):
 
 def home():
 	return flask.render_template("home.html", title = "Home")
-
-
-def artifact_repository_home():
-	return flask.redirect(flask.current_app.artifact_repository_url)
