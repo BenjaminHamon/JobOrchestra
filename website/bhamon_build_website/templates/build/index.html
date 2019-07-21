@@ -77,10 +77,14 @@
 			<p>Revision Control</p>
 			<ul>
 				<li>
-					<p>Revision: {{ build_results['revision_control']['revision'] }}</p>
-				</li>
-				<li>
-					<p>Date: {{ build_results['revision_control']['date'] }}</p>
+					<span>
+						<a href="{{ build_results['revision_control']['url'] }}" style="display: inline">
+							{{ build_results['revision_control']['revision'] }}
+						</a>
+					</span>
+					<span>
+						({{ build_results['revision_control']['date'] }})
+					</span>
 				</li>
 			</ul>
 		</li>
