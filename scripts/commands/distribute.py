@@ -11,7 +11,7 @@ import scripts.configuration
 logger = logging.getLogger("Main")
 
 
-def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
+def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 	command_list = [ "setup", "package", "upload" ]
 
 	parser = subparsers.add_parser("distribute", formatter_class = argparse.RawTextHelpFormatter, help = "create distribution packages")
@@ -20,7 +20,7 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 	return parser
 
 
-def run(environment, configuration, arguments): # pylint: disable=unused-argument
+def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	if "setup" in arguments.distribute_commands:
 		for component in configuration["components"]:
 			setup(configuration, component, arguments.simulate)

@@ -13,7 +13,7 @@ import scripts.configuration
 logger = logging.getLogger("Main")
 
 
-def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
+def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 
 	def parse_key_value_parameter(argument_value):
 		key_value = argument_value.split("=")
@@ -35,7 +35,7 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 	return parser
 
 
-def run(environment, configuration, arguments): # pylint: disable=unused-argument
+def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	parameters = {
 		"project": configuration["project"],
 		"version": configuration["project_version"]["full"],

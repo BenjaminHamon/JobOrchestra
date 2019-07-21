@@ -5,11 +5,11 @@ import subprocess
 logger = logging.getLogger("Main")
 
 
-def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
+def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 	return subparsers.add_parser("lint", help = "run linter")
 
 
-def run(environment, configuration, arguments): # pylint: disable=unused-argument
+def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	lint(environment, configuration["components"])
 
 

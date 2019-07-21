@@ -8,11 +8,11 @@ import scripts.commands.distribute
 logger = logging.getLogger("Main")
 
 
-def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
+def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 	return subparsers.add_parser("develop", help = "setup workspace for development")
 
 
-def run(environment, configuration, arguments): # pylint: disable=unused-argument
+def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	install_dependencies(environment["python3_executable"], configuration["development_dependencies"], arguments.simulate)
 	print("")
 	for component in configuration["components"]:

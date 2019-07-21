@@ -6,11 +6,11 @@ import shutil
 logger = logging.getLogger("Main")
 
 
-def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
+def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 	return subparsers.add_parser("clean", help = "clean the workspace")
 
 
-def run(environment, configuration, arguments): # pylint: disable=unused-argument
+def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	clean(configuration, arguments.simulate, arguments.results)
 
 

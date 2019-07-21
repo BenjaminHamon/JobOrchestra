@@ -7,13 +7,13 @@ import uuid
 logger = logging.getLogger("Main")
 
 
-def configure_argument_parser(environment, configuration, subparsers): # pylint: disable=unused-argument
+def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 	parser = subparsers.add_parser("test", help = "run the test suite")
 	parser.add_argument("--filter", help = "specify a string expression to select tests to run")
 	return parser
 
 
-def run(environment, configuration, arguments): # pylint: disable=unused-argument
+def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	test(environment, arguments.filter, arguments.simulate)
 
 
