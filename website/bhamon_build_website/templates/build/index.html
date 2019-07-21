@@ -72,7 +72,7 @@
 <section>
 	<h2>Results</h2>
 	<ul>
-		{% if 'revision_control' in build_results %}
+		{% if build_results.get('revision_control', {}) %}
 		<li>
 			<p>Revision Control</p>
 			<ul>
@@ -85,7 +85,7 @@
 			</ul>
 		</li>
 		{% endif %}
-		{% if 'child_builds' in build_results %}
+		{% if build_results.get('child_builds', []) %}
 		<li>
 			<p>Child Builds</p>
 			<ul>
@@ -99,7 +99,7 @@
 			</ul>
 		</li>
 		{% endif %}
-		{% if 'artifacts' in build_results %}
+		{% if build_results.get('artifacts', []) %}
 		<li>
 			<p>Artifacts</p>
 			<ul>
@@ -107,6 +107,20 @@
 				<li>
 					<a href="{{ artifact['url'] }}">
 						{{ artifact['name'] }}
+					</a>
+				</li>
+				{% endfor %}
+			</ul>
+		</li>
+		{% endif %}
+		{% if build_results.get('distributions', []) %}
+		<li>
+			<p>Distributions</p>
+			<ul>
+				{% for distribution in build_results['distributions'] %}
+				<li>
+					<a href="{{ distribution['url'] }}">
+						{{ distribution['name'] }} {{ distribution['version'] }}
 					</a>
 				</li>
 				{% endfor %}
