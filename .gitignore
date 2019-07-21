@@ -5,6 +5,8 @@ build_results/
 .artifacts/
 
 # Distribution
+cli/build/
+cli/dist/
 master/build/
 master/dist/
 model/build/

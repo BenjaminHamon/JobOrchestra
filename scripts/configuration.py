@@ -1,6 +1,5 @@
 import datetime
 import glob
-import json
 import os
 import subprocess
 
@@ -59,6 +58,9 @@ def load_configuration(environment):
 		{ "name": "bhamon-build-worker", "path": "worker", "packages": [ "bhamon_build_worker" ] },
 	]
 
+	if "artifact_repository" in environment:
+		configuration["artifact_repository"] = os.path.join(os.path.normpath(environment["artifact_repository"]), "BuildService")
+
 	configuration["filesets"] = {
 		"distribution": lambda configuration, parameters: scripts.commands.distribute.create_fileset(next(c for c in configuration["components"] if c["name"] == parameters["component"])),
 	}
@@ -95,19 +97,3 @@ def list_package_data(package, pattern_collection):
 	for pattern in pattern_collection:
 		all_files += glob.glob(package + "/" + pattern, recursive = True)
 	return [ os.path.relpath(path, package) for path in all_files ]
-
-
-def load_results(result_file_path):
-	if not os.path.isfile(result_file_path):
-		return { "artifacts": [] }
-	with open(result_file_path, "r") as result_file:
-		results = json.load(result_file)
-		results["artifacts"] = results.get("artifacts", [])
-	return results
-
-
-def save_results(result_file_path, result_data):
-	if os.path.dirname(result_file_path):
-		os.makedirs(os.path.dirname(result_file_path), exist_ok = True)
-	with open(result_file_path, "w") as result_file:
-		json.dump(result_data, result_file, indent = 4)

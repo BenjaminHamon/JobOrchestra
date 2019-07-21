@@ -10,13 +10,13 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
-	lint(environment, configuration["components"])
+	lint(environment["python3_executable"], configuration["components"])
 
 
-def lint(environment, component_collection):
+def lint(python_executable, component_collection):
 	logger.info("Running linter")
 
-	pylint_command = [ environment["python3_executable"], "-m", "pylint" ]
+	pylint_command = [ python_executable, "-m", "pylint" ]
 	pylint_command += [ component["path"] for component in component_collection ] + [ "test" ]
 
 	logger.info("+ %s", " ".join(pylint_command))
