@@ -40,7 +40,7 @@ def parse_arguments():
 	command_parser = subparsers.add_parser("trigger", help = "trigger a build")
 	command_parser.add_argument("job_identifier", help = "set the job to trigger a build for")
 	command_parser.add_argument("--parameters", nargs = "*", type = parse_key_value_parameter, default = [],
-		metavar = "<key=value>", help = "set parameters for the artifact")
+		metavar = "<key=value>", help = "set parameters for the job")
 	command_parser.set_defaults(func = trigger_build)
 
 	command_parser = subparsers.add_parser("wait", help = "wait for triggered builds")
