@@ -6,6 +6,7 @@ import platform
 import signal
 import subprocess
 import time
+import traceback
 
 import bhamon_build_worker.worker_storage as worker_storage
 
@@ -80,7 +81,7 @@ def run(job_identifier, build_identifier, environment):
 		build_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
-	except: # pylint: disable=bare-except
+	except: # pylint: disable = bare-except
 		logger.error("(%s) Build raised an exception", build_identifier, exc_info = True)
 		build_status["status"] = "exception"
 		build_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
@@ -99,23 +100,11 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 		log_file_path = worker_storage.get_log_path(job_identifier, build_identifier, step_index, step["name"])
 		result_file_path = os.path.join(build_status["workspace"], "build_results", build_identifier, "results.json")
 
-		results = {}
-		if os.path.isfile(result_file_path):
-			with open(result_file_path, "r") as result_file:
-				results = json.load(result_file)
-
 		if is_skipping:
 			step["status"] = "skipped"
 
 		else:
-			step_parameters = {
-				"environment": build_status["environment"],
-				"parameters": build_status["parameters"],
-				"results": results,
-				"result_file_path": os.path.relpath(result_file_path, build_status["workspace"]),
-			}
-
-			step_command = [ argument.format(**step_parameters) for argument in step["command"] ]
+			step_command = _format_command(step["command"], build_status, result_file_path, log_file_path)
 			logger.info("(%s) + %s", build_identifier, " ".join(step_command))
 			step["status"] = _execute_command(executor_data, build_identifier, step_command, build_status["workspace"], log_file_path)
 
@@ -126,12 +115,38 @@ def _execute_step(executor_data, job_identifier, build_identifier, build_status,
 
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
-	except: # pylint: disable=bare-except
+	except: # pylint: disable = bare-except
 		logger.error("(%s) Step %s raised an exception", build_identifier, step["name"], exc_info = True)
 		step["status"] = "exception"
 		worker_storage.save_status(job_identifier, build_identifier, build_status)
 
 	logger.info("(%s) Step %s completed with status %s", build_identifier, step["name"], step["status"])
+
+
+def _format_command(command, build_status, result_file_path, log_file_path):
+	results = {}
+	if os.path.isfile(result_file_path):
+		with open(result_file_path, "r") as result_file:
+			results = json.load(result_file)
+
+	format_parameters = {
+		"environment": build_status["environment"],
+		"parameters": build_status["parameters"],
+		"results": results,
+		"result_file_path": os.path.relpath(result_file_path, build_status["workspace"]),
+	}
+
+	try:
+		return [ argument.format(**format_parameters) for argument in command ]
+	except KeyError:
+		with open(log_file_path, "w") as log_file:
+			log_file.write("# Workspace: %s\n" % os.path.abspath(build_status["workspace"]))
+			log_file.write("# Command: %s\n" % " ".join(command))
+			log_file.write("\n")
+			log_file.write("Exception while formatting the step command\n")
+			log_file.write("\n")
+			log_file.write(traceback.format_exc())
+		raise
 
 
 def _execute_command(executor_data, build_identifier, command, workspace, log_file_path):
