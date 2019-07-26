@@ -6,10 +6,18 @@ logger = logging.getLogger("AdminController")
 
 
 def register_commands(subparsers):
+	command_parser = subparsers.add_parser("create-authentication-token", help = "create a user authentication token")
+	command_parser.set_defaults(handler = create_authentication_token)
 	command_parser = subparsers.add_parser("reload-configuration", help = "reload the master configuration")
 	command_parser.set_defaults(handler = reload_configuration)
 	command_parser = subparsers.add_parser("reset-administrator", help = "reset an administrator user")
 	command_parser.set_defaults(handler = reset_administrator)
+
+
+def create_authentication_token(application, arguments): # pylint: disable = unused-argument
+	user = input("User: ")
+	description = input("Description: ")
+	return application.authentication_provider.create_token(user, description, None)
 
 
 def reload_configuration(application, arguments): # pylint: disable = unused-argument
