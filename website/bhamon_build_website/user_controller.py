@@ -101,7 +101,7 @@ def disable_user(user_identifier):
 	return flask.redirect(flask.request.referrer or flask.url_for("user_collection_index"))
 
 
-def reset_password(user_identifier):
+def reset_user_password(user_identifier):
 	if flask.request.method == "GET":
 		return flask.render_template("user/reset_password.html", title = "Reset User Password", user_identifier = user_identifier)
 
@@ -119,6 +119,31 @@ def reset_password(user_identifier):
 	return flask.abort(405)
 
 
-def delete_token(user_identifier, token_identifier):
-	service_client.post("/user/{user_identifier}/token/{token_identifier}/delete".format(**locals()))
-	return flask.redirect(flask.request.referrer or flask.url_for("user_index", user_identifier = user_identifier))
+def create_user_token(user_identifier):
+	if flask.request.method == "GET":
+		return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user_identifier = user_identifier)
+
+	if flask.request.method == "POST":
+		parameters = { "description": flask.request.form["description"] }
+		if flask.request.form["expiration"]:
+			parameters["expiration"]  = flask.request.form["expiration"]
+
+		try:
+			token = service_client.post("/user/{user_identifier}/token_create".format(**locals()), data = parameters)
+			flask.flash("Token '%s' was created successfully." % token["token_identifier"], "info")
+			flask.flash("Token secret: '%s'." % token["secret"], "info")
+			return flask.redirect(flask.url_for("user_index", user_identifier = user_identifier))
+		except requests.HTTPError as exception:
+			flask.flash("Token could not be created: %s." % helpers.get_error_message(exception.response.status_code), "error")
+			return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user_identifier = user_identifier)
+
+	return flask.abort(405)
+
+
+def delete_user_token(user_identifier, token_identifier):
+	try:
+		service_client.post("/user/{user_identifier}/token/{token_identifier}/delete".format(**locals()))
+		flask.flash("Token '%s' was deleted successfully." % token_identifier, "info")
+	except requests.HTTPError as exception:
+		flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, helpers.get_error_message(exception.response.status_code)), "error")
+	return flask.redirect(flask.url_for("user_index", user_identifier = user_identifier))

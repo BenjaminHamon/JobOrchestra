@@ -1,16 +1,11 @@
 {% extends 'layout.html' %}
+{% import 'user/macros.html' as user_macros %}
 {% import 'macros.html' as shared_macros %}
 
 {% block content %}
 <h1>Profile</h1>
 
 {{ shared_macros.flash_messages() }}
-
-<section>
-	<div>
-		<a href="{{ url_for('change_password') }}">Change Password</a>
-	</div>
-</section>
 
 <section>
 	<h2>Identity</h2>
@@ -39,5 +34,14 @@
 		<li>Creation date: {{ user['creation_date'] }}</li>
 		<li>Update date: {{ user['update_date'] }}</li>
 	</ul>
+</section>
+
+<section>
+	<h2>Security</h2>
+	<div class="link-group">
+		<a href="{{ url_for('change_password') }}">Change Password</a>
+		<a href="{{ url_for('create_my_token') }}">Create token</a>
+	</div>
+	{{ user_macros.my_token_table(user_tokens) }}
 </section>
 {% endblock %}

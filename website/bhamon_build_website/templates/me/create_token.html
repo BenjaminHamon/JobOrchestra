@@ -1,0 +1,18 @@
+{% extends 'layout.html' %}
+{% import 'macros.html' as shared_macros %}
+
+{% block content %}
+<h1>Create Authentication Token</h1>
+
+{{ shared_macros.flash_messages() }}
+
+<section>
+	<form class="generic-form" method="post" action="{{ url_for('create_my_token') }}">
+		<label for="description">Description</label>
+		<input type="text" class="text-input" id="description" name="description" value="{{ request.form['description'] }}" required/>
+		<label for="expiration">Expiration</label>
+		<input type="text" class="text-input" id="expiration" name="expiration" value="{{ request.form['expiration'] }}"/>
+		<button type="submit">Create Token</button>
+	</form>
+</section>
+{% endblock %}

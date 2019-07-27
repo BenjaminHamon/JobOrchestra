@@ -1,7 +1,8 @@
-import datetime
 import logging
 
 import flask
+
+import bhamon_build_service.helpers as helpers
 
 
 logger = logging.getLogger("UserController")
@@ -63,11 +64,11 @@ def disable_user(user_identifier):
 	return flask.jsonify(user)
 
 
-def get_token_count(user_identifier):
+def get_user_token_count(user_identifier):
 	return flask.jsonify(flask.current_app.authentication_provider.count_tokens(user = user_identifier))
 
 
-def get_token_list(user_identifier):
+def get_user_token_list(user_identifier):
 	query_parameters = {
 		"user": user_identifier,
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
@@ -78,25 +79,29 @@ def get_token_list(user_identifier):
 	return flask.jsonify(flask.current_app.authentication_provider.get_token_list(**query_parameters))
 
 
-def create_token(user_identifier):
+def create_user_token(user_identifier):
 	parameters = flask.request.get_json()
 	description = parameters.get("description", None)
-	expiration = parameters.get("expiration_seconds", None)
+	expiration = parameters.get("expiration", None)
 
 	if expiration is not None:
-		expiration = datetime.timedelta(seconds = expiration)
+		expiration = helpers.parse_timedelta(expiration)
 
 	token = flask.current_app.authentication_provider.create_token(user_identifier, description, expiration)
 	return flask.jsonify({ "token_identifier": token["identifier"], "secret": token["secret"] })
 
 
-def refresh_token(user_identifier, token_identifier):
+def refresh_user_token(user_identifier, token_identifier):
 	parameters = flask.request.get_json()
-	expiration = datetime.timedelta(seconds = parameters["expiration_seconds"])
+	expiration = parameters.get("expiration", None)
+
+	if expiration is not None:
+		expiration = helpers.parse_timedelta(expiration)
+
 	flask.current_app.authentication_provider.refresh_token(user_identifier, token_identifier, expiration = expiration)
 	return flask.jsonify({})
 
 
-def delete_token(user_identifier, token_identifier):
+def delete_user_token(user_identifier, token_identifier):
 	flask.current_app.authentication_provider.delete_token(user_identifier, token_identifier)
 	return flask.jsonify({})

@@ -10,7 +10,6 @@
 <section>
 	<div class="link-group">
 		<a href="{{ url_for('edit_user', user_identifier = user['identifier']) }}">Edit</a>
-		<a href="{{ url_for('reset_password', user_identifier = user['identifier']) }}">Reset password</a>
 	</div>
 </section>
 
@@ -59,7 +58,11 @@
 </section>
 
 <section>
-	<h2>Authentication Tokens</h2>
+	<h2>Security</h2>
+	<div class="link-group">
+		<a href="{{ url_for('reset_user_password', user_identifier = user['identifier']) }}">Reset password</a>
+		<a href="{{ url_for('create_user_token', user_identifier = user['identifier']) }}">Create token</a>
+	</div>
 	{{ user_macros.user_token_table(user_tokens) }}
 </section>
 {% endblock %}

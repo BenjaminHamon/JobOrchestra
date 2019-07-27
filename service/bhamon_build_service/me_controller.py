@@ -49,4 +49,12 @@ def change_password():
 
 
 def get_my_token_list():
-	return user_controller.get_token_list(flask.request.authorization.username)
+	return user_controller.get_user_token_list(flask.request.authorization.username)
+
+
+def create_my_token():
+	return user_controller.create_user_token(flask.request.authorization.username)
+
+
+def delete_my_token(token_identifier):
+	return user_controller.delete_user_token(flask.request.authorization.username, token_identifier)
