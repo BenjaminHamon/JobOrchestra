@@ -15,10 +15,10 @@
 <section>
 	<h2>Identity</h2>
 	<form class="generic-form" method="post" action="{{ url_for('update_user_identity', user_identifier = user_identifier) }}">
-		<label for="identifier">Identifier</label>
-		<input type="text" class="text-input" id="identifier" name="identifier" value="{{ user_identifier }}" readonly>
-		<label for="display_name">Display name</label>
-		<input type="text" class="text-input" id="display_name" name="display_name" value="{{ request.form['display_name'] }}" required/>
+		<label for="input-identifier">Identifier</label>
+		<input type="text" class="text-input" id="input-identifier" name="identifier" value="{{ user_identifier }}" readonly>
+		<label for="input-display_name">Display name</label>
+		<input type="text" class="text-input" id="input-display_name" name="display_name" value="{{ request.form['display_name'] }}" required/>
 		<button type="submit">Save</button>
 	</form>
 </section>
@@ -26,7 +26,7 @@
 <section>
 	<h2>Roles</h2>
 	<form class="generic-form" method="post" action="{{ url_for('update_user_roles', user_identifier = user_identifier) }}">
-		<textarea class="textarea-input" id="roles" name="roles">{{ request.form['roles'] }}</textarea>
+		<textarea class="textarea-input" name="roles">{{ request.form['roles'] }}</textarea>
 		<button type="submit">Save</button>
 	</form>
 </section>

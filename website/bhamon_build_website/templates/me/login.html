@@ -8,10 +8,10 @@
 
 <section>
 	<form class="generic-form" method="post" action="{{ url_for('login') }}">
-		<label for="user">User</label>
-		<input type="text" class="text-input" id="user" name="user" value="{{ request.form['user'] }}" required/>
-		<label for="password">Password</label>
-		<input type="password" class="text-input" id="password" name="password" required/>
+		<label for="input-user">User</label>
+		<input type="text" class="text-input" id="input-user" name="user" value="{{ request.form['user'] }}" required/>
+		<label for="input-password">Password</label>
+		<input type="password" class="text-input" id="input-password" name="password" required/>
 		<button type="submit">Log in</button>
 	</form>
 </section>

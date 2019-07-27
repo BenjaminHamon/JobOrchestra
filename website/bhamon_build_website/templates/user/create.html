@@ -8,10 +8,10 @@
 
 <section>
 	<form class="generic-form" method="post" action="{{ url_for('create_user') }}">
-		<label for="identifier">Identifier</label>
-		<input type="text" id="identifier" name="identifier" value="{{ request.form['identifier'] }}" required/>
-		<label for="display_name">Display name</label>
-		<input type="text" id="display_name" name="display_name" value="{{ request.form['display_name'] }}" required/>
+		<label for="input-identifier">Identifier</label>
+		<input type="text" id="input-identifier" name="identifier" value="{{ request.form['identifier'] }}" required/>
+		<label for="input-display_name">Display name</label>
+		<input type="text" id="input-display_name" name="display_name" value="{{ request.form['display_name'] }}" required/>
 		<button type="submit">Create</button>
 	</form>
 </section>

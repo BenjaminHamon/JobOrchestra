@@ -7,14 +7,10 @@
 <section>
 	<div class="table-container">
 		<form method="get" action="{{ url_for('task_collection_index') }}">
-			<label for="build">Build</label>
-			{% if request.args.get('build') %}
-			<input type="text" class="uuid-input" name="build" value="{{ request.args.get('build') }}"/>
-			{% else %}
-			<input type="text" class="uuid-input" name="build"/>
-			{% endif %}
-			<label for="worker">Worker</label>
-			<select name="worker">
+			<label for="input-build">Build</label>
+			<input type="text" class="uuid-input" id="input-build" name="build" value="{{ request.args.get('build', '') }}"/>
+			<label for="input-worker">Worker</label>
+			<select id="input-worker" name="worker">
 				<option></option>
 				{% for worker in worker_collection %}
 					{% if request.args.get('worker') == worker['identifier'] %}
@@ -24,8 +20,8 @@
 					{% endif %}
 				{% endfor %}
 			</select>
-			<label for="status">Status</label>
-			<select name="status">
+			<label for="input-status">Status</label>
+			<select id="input-status" name="status">
 				<option></option>
 				{% for status in status_collection %}
 					{% if request.args.get('status') == status %}

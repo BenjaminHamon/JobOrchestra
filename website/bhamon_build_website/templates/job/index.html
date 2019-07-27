@@ -41,8 +41,8 @@
 	<h2>Trigger</h2>
 	<form class="generic-form" method="post" action="{{ url_for('trigger_job', job_identifier = job['identifier']) }}">
 		{% for parameter in job['parameters'] %}
-		<label for="parameter-{{parameter['key']}}">{{ parameter['key'] }}</label>
-		<input type="text" class="text-input" id="parameter-{{parameter['key']}}" name="parameter-{{ parameter['key'] }}"/>
+		<label for="trigger-parameter-{{parameter['key']}}">{{ parameter['key'] }}</label>
+		<input type="text" class="text-input" id="trigger-parameter-{{parameter['key']}}" name="parameter-{{ parameter['key'] }}"/>
 		{% endfor %}
 		<button type="submit">Trigger build</button>
 	</form>
