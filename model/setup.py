@@ -19,6 +19,7 @@ parameters.update({
 	"description": "Model library for build service",
 	"packages": [ "bhamon_build_model" ],
 	"python_requires": "~= 3.5",
+	"install_requires": [ "python2-secrets ; python_version < '3.6'" ],
 })
 
 setuptools.setup(**parameters)
