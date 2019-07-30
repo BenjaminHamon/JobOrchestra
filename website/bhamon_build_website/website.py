@@ -6,6 +6,7 @@ import jinja2
 import requests
 import werkzeug
 
+import bhamon_build_website
 import bhamon_build_website.helpers as helpers
 import bhamon_build_website.service_client as service_client
 
@@ -22,7 +23,10 @@ main_logger = logging.getLogger("Website")
 request_logger = logging.getLogger("Request")
 
 
-def configure(application):
+def configure(application, title = None, copyright = None): # pylint: disable = redefined-builtin
+	application.config["WEBSITE_TITLE"] = title if title is not None else "Build Service"
+	application.config["WEBSITE_COPYRIGHT"] = copyright if copyright is not None else bhamon_build_website.__copyright__
+
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True
 	application.jinja_env.filters["strip_pagination_arguments"] = helpers.strip_pagination_arguments
