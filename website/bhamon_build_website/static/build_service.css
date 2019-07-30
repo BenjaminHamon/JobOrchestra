@@ -59,6 +59,9 @@ td > .action-group button
 .status-indicator.aborted { background-color: purple; }
 .status-indicator.exception { background-color: purple; }
 
+.status-indicator.available { background-color: green; }
+.status-indicator.unavailable { background-color: red; }
+
 .status-indicator.active { background-color: green; }
 .status-indicator.inactive { background-color: gray; }
 

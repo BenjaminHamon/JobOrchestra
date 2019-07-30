@@ -5,6 +5,7 @@ import flask
 import requests
 
 import bhamon_build_website
+import bhamon_build_website.helpers as helpers
 import bhamon_build_website.service_client as service_client
 
 
@@ -12,14 +13,24 @@ logger = logging.getLogger("AdminController")
 
 
 def administration_index():
-	service_information = None
+	try:
+		service_client.get("/")
+		service_status = { "status": "available" }
+	except requests.HTTPError as exception:
+		service_status = {
+			"status": "unavailable",
+			"status_code": exception.response.status_code,
+			"status_message": helpers.get_error_message(exception.response.status_code),
+		}
 
+	service_information = None
 	try:
 		service_information = service_client.get("/admin/information")
 	except requests.HTTPError:
 		logger.error("Failed to retrieve service information", exc_info = True)
 
 	view_data = {
+		"service_status": service_status,
 		"service_information": service_information,
 		"website_information": {
 			"python_version": platform.python_version() + "+" + platform.python_revision(),

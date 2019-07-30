@@ -4,6 +4,14 @@
 <h1>Administration</h1>
 
 <section>
+	<div class="status-group">
+		<div class="status-indicator {{ service_status['status'] }}"></div>
+		{% if service_status['status'] == "available" %}
+		<div class="status-text">Service available</div>
+		{% else %}
+		<div class="status-text">{{ service_status['status_message'] }} ({{ service_status['status_code'] }})</div>
+		{% endif %}
+	</div>
 	<form class="action-group" method="post">
 		<button formaction="{{ url_for('reload_service') }}">Reload master configuration</button>
 	</form>
