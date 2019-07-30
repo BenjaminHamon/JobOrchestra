@@ -36,7 +36,7 @@ def configure(application, title = None, copyright = None): # pylint: disable = 
 def register_handlers(application):
 	application.log_exception = lambda exc_info: None
 	application.before_request(log_request)
-	application.before_request(set_request_data)
+	application.before_request(update_session)
 	application.before_request(authorize_request)
 	for exception in werkzeug.exceptions.default_exceptions:
 		application.register_error_handler(exception, handle_error)
@@ -97,15 +97,18 @@ def log_request():
 	request_logger.info("(%s) %s %s", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url)
 
 
-def set_request_data():
+def update_session():
 	flask.request.user = None
 
 	if "token" in flask.session:
 		try:
 			flask.request.user = service_client.get("/me")
+			flask.session["user"] = flask.request.user
 		except requests.HTTPError as exception:
 			if exception.response.status_code == 403:
-				del flask.session["token"]
+				del flask.session["token"] # Clear invalid token
+			elif 500 <= exception.response.status_code < 600:
+				flask.request.user = flask.session["user"] # Fallback to cached user information
 
 
 def authorize_request():

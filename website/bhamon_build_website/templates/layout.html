@@ -17,7 +17,7 @@
 				{% if not "token" in session %}
 				<span><a href="{{ url_for('login') }}">Log In</a></span>
 				{% else %}
-				<span>Logged in as <a href="{{ url_for('my_profile') }}">{{ session["token"]["user_identifier"] }}</a></span>
+				<span>Logged in as <a href="{{ url_for('my_profile') }}">{{ session["user"]["display_name"] }} ({{ session["user"]["identifier"] }})</a></span>
 				<span><a href="{{ url_for('logout') }}">Log Out</a></span>
 				{% endif %}
 			</div>
