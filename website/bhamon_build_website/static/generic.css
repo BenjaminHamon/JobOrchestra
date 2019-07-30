@@ -13,13 +13,12 @@ body
 {
 	display: grid;
 	grid-template-columns: min-content 1fr;
-	grid-template-rows: auto 1fr auto;
+	grid-template-rows: auto auto 1fr auto;
 	grid-template-areas:
 		"header header"
+		"announcement announcement"
 		"nav main"
 		"footer footer";
-	grid-column-gap: 5px;
-	grid-row-gap: 5px;
 	margin: 0;
 	min-height: 100%;
 	background: lightgray;
@@ -27,6 +26,7 @@ body
 }
 
 header { grid-area: header; }
+#announcement { grid-area: announcement; }
 nav { grid-area: nav; }
 main { grid-area: main; }
 footer { grid-area: footer; }
@@ -43,6 +43,7 @@ header
 	align-items: center;
 	justify-content: space-between;
 	white-space: nowrap;
+	margin-bottom: 5px;
 }
 
 header > div
@@ -77,11 +78,23 @@ header .login a
 	display: inline;
 }
 
+#announcement
+{
+	margin-bottom: 5px;
+	padding: 10px;
+	text-align: center;
+}
+
+#announcement.info { background: lightblue; }
+#announcement.warning { background: orange; }
+#announcement.error { background: red; }
+
 nav
 {
 	display: flex;
 	flex-direction: column;
 	white-space: nowrap;
+	margin-right: 5px;
 	min-width: 100px;
 }
 
@@ -105,6 +118,7 @@ main
 
 footer
 {
+	margin-top: 5px;
 	text-align: center;
 	font-size: 80%;
 	color: #555;

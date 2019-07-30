@@ -23,6 +23,12 @@
 			</div>
 		</header>
 
+		{% if config['WEBSITE_ANNOUNCEMENT'] %}
+		<div id="announcement" class="{{ config['WEBSITE_ANNOUNCEMENT_TYPE'] }}">
+			<p>{{ config['WEBSITE_ANNOUNCEMENT'] }}</p>
+		</div>
+		{% endif %}
+
 		<nav>
 			{% if authorize_view('nav-admin') %}
 			<div>
