@@ -29,6 +29,7 @@ def register_handlers(application):
 def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/", methods = [ "GET" ], view_func = home)
 	application.add_url_rule("/help", methods = [ "GET" ], view_func = help)
+	application.add_url_rule("/admin/information", methods = [ "GET" ], view_func = admin_controller.information)
 	application.add_url_rule("/admin/reload", methods = [ "POST" ], view_func = admin_controller.reload)
 	application.add_url_rule("/build_count", methods = [ "GET" ], view_func = build_controller.get_build_count)
 	application.add_url_rule("/build_collection", methods = [ "GET" ], view_func = build_controller.get_build_collection)

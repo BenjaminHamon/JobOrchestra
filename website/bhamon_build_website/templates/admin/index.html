@@ -4,9 +4,28 @@
 <h1>Administration</h1>
 
 <section>
-	<h2>Service Administration</h2>
 	<form class="action-group" method="post">
-		<button formaction="{{ url_for('reload_service') }}">Reload configuration</button>
+		<button formaction="{{ url_for('reload_service') }}">Reload master configuration</button>
 	</form>
 </section>
+
+{% if website_information %}
+<section>
+	<h2>Website Information</h2>
+	<ul>
+		<li>Python: {{ website_information['python_version'] }}</li>
+		<li>Website: {{ website_information['website_version'] }} ({{ website_information['website_version_date'] }})</li>
+	</ul>
+</section>
+{% endif %}
+
+{% if service_information %}
+<section>
+	<h2>Service Information</h2>
+	<ul>
+		<li>Python: {{ service_information['python_version'] }}</li>
+		<li>Service: {{ service_information['service_version'] }} ({{ service_information['service_version_date'] }})</li>
+	</ul>
+</section>
+{% endif %}
 {% endblock %}
