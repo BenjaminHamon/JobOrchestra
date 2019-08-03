@@ -12,11 +12,18 @@ logger = logging.getLogger("Main")
 
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
-	command_list = [ "setup", "package", "upload" ]
+	available_commands = [ "setup", "package", "upload" ]
 
-	parser = subparsers.add_parser("distribute", formatter_class = argparse.RawTextHelpFormatter, help = "create distribution packages")
-	parser.add_argument("--command", required = True, choices = command_list, nargs = "+", dest = "distribute_commands",
-		metavar = "<command>", help = "set the command(s) to execute for distribution" + "\n" + "(%s)" % ", ".join(command_list))
+	def parse_command_parameter(argument_value):
+		command_list = argument_value.split("+")
+		for command in command_list:
+			if command not in available_commands:
+				raise argparse.ArgumentTypeError("invalid distribute command: '%s'" % command)
+		return command_list
+
+	parser = subparsers.add_parser("distribute", help = "create distribution packages")
+	parser.add_argument("distribute_commands", type = parse_command_parameter,
+		metavar = "<command[+command]>", help = "set the command(s) to execute for the distribution, separated by '+' (%s)" % ", ".join(available_commands))
 	return parser
 
 
