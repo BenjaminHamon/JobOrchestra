@@ -58,8 +58,7 @@ def load_configuration(environment):
 		{ "name": "bhamon-build-worker", "path": "worker", "packages": [ "bhamon_build_worker" ] },
 	]
 
-	if "artifact_repository" in environment:
-		configuration["artifact_repository"] = os.path.join(os.path.normpath(environment["artifact_repository"]), "BuildService")
+	configuration["project_identifier_for_artifact_server"] = "BuildService"
 
 	configuration["filesets"] = {
 		"distribution": lambda configuration, parameters: scripts.commands.distribute.create_fileset(next(c for c in configuration["components"] if c["name"] == parameters["component"])),
