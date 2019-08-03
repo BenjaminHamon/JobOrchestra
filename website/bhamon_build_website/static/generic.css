@@ -118,10 +118,18 @@ main
 
 footer
 {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
 	margin-top: 5px;
 	text-align: center;
 	font-size: 80%;
 	color: #555;
+}
+
+footer > p
+{
+	margin: 5px;
 }
 
 h1

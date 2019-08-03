@@ -23,9 +23,11 @@ main_logger = logging.getLogger("Website")
 request_logger = logging.getLogger("Request")
 
 
-def configure(application, title = None, copyright = None): # pylint: disable = redefined-builtin
+def configure(application, title = None, copyright = None, version = None, date = None): # pylint: disable = redefined-builtin
 	application.config["WEBSITE_TITLE"] = title if title is not None else "Build Service"
 	application.config["WEBSITE_COPYRIGHT"] = copyright if copyright is not None else bhamon_build_website.__copyright__
+	application.config["WEBSITE_VERSION"] = version if version is not None else bhamon_build_website.__version__
+	application.config["WEBSITE_DATE"] = date if date is not None else bhamon_build_website.__date__
 
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True

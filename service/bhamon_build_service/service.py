@@ -3,6 +3,7 @@ import logging
 import flask
 import werkzeug
 
+import bhamon_build_service
 import bhamon_build_service.helpers as helpers
 
 import bhamon_build_service.admin_controller as admin_controller
@@ -16,6 +17,13 @@ import bhamon_build_service.worker_controller as worker_controller
 
 main_logger = logging.getLogger("Service")
 request_logger = logging.getLogger("Request")
+
+
+def configure(application, title = None, copyright = None, version = None, date = None): # pylint: disable = redefined-builtin
+	application.config["SERVICE_TITLE"] = title if title is not None else "Build Service"
+	application.config["SERVICE_COPYRIGHT"] = copyright if copyright is not None else bhamon_build_service.__copyright__
+	application.config["SERVICE_VERSION"] = version if version is not None else bhamon_build_service.__version__
+	application.config["SERVICE_DATE"] = date if date is not None else bhamon_build_service.__date__
 
 
 def register_handlers(application):
@@ -110,7 +118,12 @@ def handle_error(exception):
 
 
 def home():
-	return flask.jsonify({})
+	return flask.jsonify({
+		"title": flask.current_app.config["SERVICE_TITLE"],
+		"copyright": flask.current_app.config["SERVICE_COPYRIGHT"],
+		"version": flask.current_app.config["SERVICE_VERSION"],
+		"date": flask.current_app.config["SERVICE_DATE"],
+	})
 
 
 def help(): # pylint: disable = redefined-builtin

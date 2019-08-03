@@ -32,6 +32,7 @@ def main():
 	application.user_provider = user_provider.UserProvider(database_client_instance)
 	application.worker_provider = worker_provider.WorkerProvider(database_client_instance)
 
+	service.configure(application)
 	service.register_handlers(application)
 	service.register_routes(application)
 

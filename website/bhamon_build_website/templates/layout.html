@@ -53,7 +53,12 @@
 		</main>
 
 		<footer>
-			<p>{{ config["WEBSITE_COPYRIGHT"] }}</p>
+			{% if config['WEBSITE_VERSION'] %}
+			<p>Version {{ config['WEBSITE_VERSION'] }} ({{ config['WEBSITE_DATE'] }})</p>
+			<p>{{ config['WEBSITE_COPYRIGHT'].replace("(c)", "©") }}</p>
+			{% else %}
+			<p>Development Version</p>
+			{% endif %}
 		</footer>
 
 	</body>
