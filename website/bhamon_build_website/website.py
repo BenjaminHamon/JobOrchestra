@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 
@@ -33,6 +34,7 @@ def configure(application, title = None, copyright = None, version = None, date 
 	application.jinja_env.lstrip_blocks = True
 	application.jinja_env.filters["strip_pagination_arguments"] = helpers.strip_pagination_arguments
 	application.jinja_env.globals["authorize_view"] = authorize_view
+	application.permanent_session_lifetime = datetime.timedelta(days = 7)
 
 
 def register_handlers(application):
@@ -104,13 +106,14 @@ def update_session():
 
 	if "token" in flask.session:
 		try:
+			service_client.post("/me/refresh_session", { "token_identifier": flask.session["token"]["token_identifier"] })
 			flask.request.user = service_client.get("/me")
 			flask.session["user"] = flask.request.user
 		except requests.HTTPError as exception:
 			if exception.response.status_code == 403:
-				del flask.session["token"] # Clear invalid token
+				flask.session.clear()
 			elif 500 <= exception.response.status_code < 600:
-				flask.request.user = flask.session["user"] # Fallback to cached user information
+				flask.request.user = flask.session["user"]
 
 
 def authorize_request():

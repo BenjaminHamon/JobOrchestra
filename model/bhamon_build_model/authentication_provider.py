@@ -124,7 +124,7 @@ class AuthenticationProvider:
 		return result
 
 
-	def refresh_token(self, user_identifier, token_identifier, expiration):
+	def set_token_expiration(self, user_identifier, token_identifier, expiration):
 		token = self.database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
 		if "expiration_date" not in token:
 			raise ValueError("Token '%s' does not expire" % token_identifier)

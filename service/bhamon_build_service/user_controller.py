@@ -91,14 +91,10 @@ def create_user_token(user_identifier):
 	return flask.jsonify({ "token_identifier": token["identifier"], "secret": token["secret"] })
 
 
-def refresh_user_token(user_identifier, token_identifier):
+def set_user_token_expiration(user_identifier, token_identifier):
 	parameters = flask.request.get_json()
-	expiration = parameters.get("expiration", None)
-
-	if expiration is not None:
-		expiration = helpers.parse_timedelta(expiration)
-
-	flask.current_app.authentication_provider.refresh_token(user_identifier, token_identifier, expiration = expiration)
+	expiration = helpers.parse_timedelta(parameters["expiration"])
+	flask.current_app.authentication_provider.set_token_expiration(user_identifier, token_identifier, expiration)
 	return flask.jsonify({})
 
 

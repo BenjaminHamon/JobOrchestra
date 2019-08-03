@@ -22,6 +22,7 @@ def login():
 
 		try:
 			flask.session["token"] = service_client.post("/me/login", data = parameters)
+			flask.session.permanent = True
 			flask.flash("Login succeeded.", "info")
 			return flask.redirect(flask.url_for("home"))
 		except requests.HTTPError as exception:
@@ -44,7 +45,7 @@ def logout():
 		try:
 			service_client.post("/me/logout", { "token_identifier": flask.session["token"]["token_identifier"] })
 			flask.flash("Logout succeeded.", "info")
-			del flask.session["token"]
+			flask.session.clear()
 			return flask.redirect(flask.url_for("home"))
 		except requests.HTTPError as exception:
 			flask.flash("Logout failed: %s." % helpers.get_error_message(exception.response.status_code), "error")

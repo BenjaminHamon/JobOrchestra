@@ -1,4 +1,3 @@
-import datetime
 import logging
 
 import flask
@@ -25,7 +24,7 @@ def login():
 	token_parameters = {
 		"user": parameters["user"],
 		"description": "Session from %s" % flask.request.environ["REMOTE_ADDR"],
-		"expiration": datetime.timedelta(days = 7),
+		"expiration": flask.current_app.permanent_session_lifetime,
 	}
 
 	session_token = flask.current_app.authentication_provider.create_token(**token_parameters)
@@ -36,6 +35,19 @@ def logout():
 	if flask.request.authorization is not None:
 		parameters = flask.request.get_json()
 		flask.current_app.authentication_provider.delete_token(flask.request.authorization.username, parameters["token_identifier"])
+	return flask.jsonify({})
+
+
+def refresh_session():
+	parameters = flask.request.get_json()
+
+	operation_parameters = {
+		"user_identifier": flask.request.authorization.username,
+		"token_identifier": parameters["token_identifier"],
+		"expiration": flask.current_app.permanent_session_lifetime,
+	}
+
+	flask.current_app.authentication_provider.set_token_expiration(**operation_parameters)
 	return flask.jsonify({})
 
 

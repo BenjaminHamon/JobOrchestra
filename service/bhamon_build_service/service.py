@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 import flask
@@ -24,6 +25,7 @@ def configure(application, title = None, copyright = None, version = None, date 
 	application.config["SERVICE_COPYRIGHT"] = copyright if copyright is not None else bhamon_build_service.__copyright__
 	application.config["SERVICE_VERSION"] = version if version is not None else bhamon_build_service.__version__
 	application.config["SERVICE_DATE"] = date if date is not None else bhamon_build_service.__date__
+	application.permanent_session_lifetime = datetime.timedelta(days = 7)
 
 
 def register_handlers(application):
@@ -58,6 +60,7 @@ def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/me", methods = [ "GET" ], view_func = me_controller.get_my_user)
 	application.add_url_rule("/me/login", methods = [ "POST" ], view_func = me_controller.login)
 	application.add_url_rule("/me/logout", methods = [ "POST" ], view_func = me_controller.logout)
+	application.add_url_rule("/me/refresh_session", methods = [ "POST" ], view_func = me_controller.refresh_session)
 	application.add_url_rule("/me/change_password", methods = [ "POST" ], view_func = me_controller.change_password)
 	application.add_url_rule("/me/token_collection", methods = [ "GET" ], view_func = me_controller.get_my_token_list)
 	application.add_url_rule("/me/token_create", methods = [ "POST" ], view_func = me_controller.create_my_token)
@@ -78,7 +81,7 @@ def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/user/<user_identifier>/token_count", methods = [ "GET" ], view_func = user_controller.get_user_token_count)
 	application.add_url_rule("/user/<user_identifier>/token_collection", methods = [ "GET" ], view_func = user_controller.get_user_token_list)
 	application.add_url_rule("/user/<user_identifier>/token_create", methods = [ "POST" ], view_func = user_controller.create_user_token)
-	application.add_url_rule("/user/<user_identifier>/token/<token_identifier>/refresh", methods = [ "POST" ], view_func = user_controller.refresh_user_token)
+	application.add_url_rule("/user/<user_identifier>/token/<token_identifier>/set_expiration", methods = [ "POST" ], view_func = user_controller.set_user_token_expiration)
 	application.add_url_rule("/user/<user_identifier>/token/<token_identifier>/delete", methods = [ "POST" ], view_func = user_controller.delete_user_token)
 	application.add_url_rule("/worker_count", methods = [ "GET" ], view_func = worker_controller.get_worker_count)
 	application.add_url_rule("/worker_collection", methods = [ "GET" ], view_func = worker_controller.get_worker_collection)
