@@ -67,6 +67,7 @@ def load_configuration(environment):
 	configuration["artifacts"] = {
 		"package": {
 			"file_name": "{project}_{version}_package",
+			"installation_directory": ".artifacts/distributions",
 			"path_in_repository": "packages",
 			"filesets": [
 				{ "identifier": "distribution", "path_in_archive": "bhamon-build-cli", "parameters": { "component": "bhamon-build-cli" } },

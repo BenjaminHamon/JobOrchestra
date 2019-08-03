@@ -105,6 +105,6 @@ def save_upload_results(component, version, result_file_path, simulate):
 
 def create_fileset(component):
 	return {
-		"path_in_workspace": os.path.join(component["path"], "dist"),
+		"path_in_workspace": os.path.join(".artifacts", "distributions", component["name"]),
 		"file_patterns": [ component["name"].replace("-", "_") + "-{version}-py3-none-any.whl" ],
 	}

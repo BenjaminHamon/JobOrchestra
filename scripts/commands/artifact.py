@@ -14,7 +14,7 @@ logger = logging.getLogger("Main")
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 
-	available_commands = [ "show", "package", "verify", "upload" ]
+	available_commands = [ "show", "package", "verify", "upload", "install" ]
 
 	def parse_command_parameter(argument_value):
 		command_list = argument_value.split("+")
@@ -35,6 +35,8 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 		metavar = "<command[+command]>", help = "set the command(s) to execute for the artifact, separated by '+' (%s)" % ", ".join(available_commands))
 	parser.add_argument("artifact", choices = configuration["artifacts"].keys(),
 		metavar = "<artifact>", help = "set an artifact definition to use for the commands")
+	parser.add_argument("--installation-directory",
+		help = "set the installation directory")
 	parser.add_argument("--parameters", nargs = "*", type = parse_key_value_parameter, default = [],
 		metavar = "<key=value>", help = "set parameters for the artifact")
 	parser.add_argument("--overwrite", action = "store_true",
@@ -66,6 +68,7 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 		artifact_files = list_artifact_files(artifact, configuration, parameters)
 		artifact_repository.show(artifact_name, artifact_files)
 		print("")
+
 	if "package" in arguments.artifact_commands:
 		artifact_files = merge_artifact_mapping(map_artifact_files(artifact, configuration, parameters))
 		artifact_repository.package(artifact["path_in_repository"], artifact_name, artifact_files, arguments.simulate)
@@ -76,6 +79,11 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 	if "upload" in arguments.artifact_commands:
 		artifact_repository.upload(artifact["path_in_repository"], artifact_name, arguments.overwrite, arguments.simulate)
 		save_upload_results(artifact_name, arguments.artifact, arguments.results, arguments.simulate)
+		print("")
+
+	if "install" in arguments.artifact_commands:
+		installation_directory = arguments.installation_directory if arguments.installation_directory else artifact["installation_directory"]
+		artifact_repository.install(artifact["path_in_repository"], artifact_name, installation_directory, arguments.simulate)
 		print("")
 
 

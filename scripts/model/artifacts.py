@@ -84,6 +84,41 @@ class ArtifactRepository:
 		self.server_client.upload(self.local_path, self.project_identifier, path_in_repository, artifact_name, ".zip", overwrite, simulate)
 
 
+	def install(self, path_in_repository, artifact_name, installation_directory, simulate):
+		logger.info("Installing artifact '%s' to '%s'", artifact_name, installation_directory)
+
+		artifact_path = os.path.join(self.local_path, path_in_repository, artifact_name)
+		extraction_directory = os.path.join(self.local_path, ".extracting")
+
+		if not simulate and os.path.isdir(extraction_directory):
+			shutil.rmtree(extraction_directory)
+
+		print("")
+
+		logger.info("Extracting files to '%s'", extraction_directory)
+		with zipfile.ZipFile(artifact_path + ".zip", "r") as artifact_file:
+			artifact_files = artifact_file.namelist()
+			for source in artifact_files:
+				destination = os.path.join(extraction_directory, source).replace("\\", "/")
+				logger.info("+ '%s' => '%s'", source, destination)
+				if not simulate:
+					artifact_file.extract(source, extraction_directory)
+
+		print("")
+
+		logger.info("Moving files files to '%s'", installation_directory)
+		for file_path in artifact_files:
+			source = os.path.join(extraction_directory, file_path).replace("\\", "/")
+			destination = os.path.join(installation_directory, file_path).replace("\\", "/")
+			logger.info("+ '%s' => '%s'", source, destination)
+			if not simulate:
+				os.makedirs(os.path.dirname(destination), exist_ok = True)
+				shutil.move(source, destination)
+
+		if not simulate:
+			shutil.rmtree(extraction_directory)
+
+
 
 class ArtifactServerFileClient:
 
