@@ -69,6 +69,9 @@ def setup(configuration, component, simulate):
 def package(python_executable, component, version, verbose, simulate):
 	logger.info("Creating distribution for '%s'", component["name"])
 
+	if os.sep in os.path.normpath(python_executable):
+		python_executable = os.path.abspath(python_executable)
+
 	setup_command = [ python_executable, "setup.py" ]
 	setup_command += [ "--quiet" ] if not verbose else []
 	setup_command += [ "bdist_wheel" ]
