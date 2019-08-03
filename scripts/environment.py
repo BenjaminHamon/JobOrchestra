@@ -19,6 +19,8 @@ def create_default_environment():
 	return {
 		"git_executable": "git",
 		"python3_executable": "python3",
+		"scp_executable": "scp",
+		"ssh_executable": "ssh",
 	}
 
 
