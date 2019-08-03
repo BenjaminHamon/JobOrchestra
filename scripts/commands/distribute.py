@@ -1,10 +1,10 @@
 import argparse
-import glob
 import logging
 import os
 import shutil
 import subprocess
 
+import scripts.model.distribution as distribution
 import scripts.workspace as workspace
 
 
@@ -28,19 +28,27 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
+	repository_client = None
+	if environment.get("python_package_repository_url", None) is not None:
+		repository_url = environment["python_package_repository_url"]
+		repository_parameters = environment.get("python_package_repository_parameters", {})
+		repository_client = distribution.create_repository_client(repository_url, repository_parameters, environment)
+
+	if "upload" in arguments.distribute_commands and repository_client is None:
+		raise ValueError("Upload command requires a python package repository")
+
 	if "setup" in arguments.distribute_commands:
 		for component in configuration["components"]:
 			setup(configuration, component, arguments.simulate)
 		print("")
 	if "package" in arguments.distribute_commands:
 		for component in configuration["components"]:
-			package(environment["python3_executable"], component, arguments.verbosity == "debug", arguments.simulate)
+			package(environment["python3_executable"], component, configuration["project_version"], arguments.verbosity == "debug", arguments.simulate)
 			print("")
 	if "upload" in arguments.distribute_commands:
-		package_repository = os.path.normpath(environment["python_package_repository"])
 		for component in configuration["components"]:
-			upload(package_repository, component, configuration["project_version"], arguments.simulate)
-			save_results(component, configuration["project_version"], arguments.results, arguments.simulate)
+			repository_client.upload(os.path.join(".artifacts", "distributions"), component["name"], configuration["project_version"], "-py3-none-any.whl", arguments.simulate)
+			save_upload_results(component, configuration["project_version"], arguments.results, arguments.simulate)
 			print("")
 
 
@@ -58,7 +66,7 @@ def setup(configuration, component, simulate):
 			metadata_file.writelines(metadata_content)
 
 
-def package(python_executable, component, verbose, simulate):
+def package(python_executable, component, version, verbose, simulate):
 	logger.info("Creating distribution for '%s'", component["name"])
 
 	setup_command = [ python_executable, "setup.py" ]
@@ -69,20 +77,9 @@ def package(python_executable, component, verbose, simulate):
 	if not simulate:
 		subprocess.check_call(setup_command, cwd = component["path"])
 
-
-def upload(package_repository, component, version, simulate):
-	logger.info("Uploading distribution for '%s'", component["name"])
-
 	archive_name = component["name"].replace("-", "_") + "-" + version["full"]
 	source_path = os.path.join(component["path"], "dist", archive_name + "-py3-none-any.whl")
-	destination_path = os.path.join(package_repository, component["name"], archive_name + "-py3-none-any.whl")
-
-	logger.info("Copying '%s' to '%s'", source_path, destination_path)
-
-	existing_distribution_pattern = component["name"].replace("-", "_") + "-" + version["identifier"] + "+*-py3-none-any.whl"
-	existing_distribution = next((x for x in glob.glob(os.path.join(package_repository, component["name"], existing_distribution_pattern))), None)
-	if existing_distribution is not None:
-		raise ValueError("Version %s already exists: '%s'" % (version["identifier"], os.path.basename(existing_distribution)))
+	destination_path = os.path.join(".artifacts", "distributions", component["name"], archive_name + "-py3-none-any.whl")
 
 	if not simulate:
 		os.makedirs(os.path.dirname(destination_path), exist_ok = True)
@@ -90,7 +87,7 @@ def upload(package_repository, component, version, simulate):
 		shutil.move(destination_path + ".tmp", destination_path)
 
 
-def save_results(component, version, result_file_path, simulate):
+def save_upload_results(component, version, result_file_path, simulate):
 	distribution_information = {
 		"name": component["name"],
 		"version": version["full"],
