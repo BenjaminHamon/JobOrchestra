@@ -14,7 +14,7 @@ logger = logging.getLogger("Main")
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 
-	available_commands = [ "show", "package", "verify", "upload", "install" ]
+	available_commands = [ "show", "package", "verify", "upload", "download", "install" ]
 
 	def parse_command_parameter(argument_value):
 		command_list = argument_value.split("+")
@@ -81,6 +81,9 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 		save_upload_results(artifact_name, arguments.artifact, arguments.results, arguments.simulate)
 		print("")
 
+	if "download" in arguments.artifact_commands:
+		artifact_repository.download(artifact["path_in_repository"], artifact_name, arguments.simulate)
+		print("")
 	if "install" in arguments.artifact_commands:
 		installation_directory = arguments.installation_directory if arguments.installation_directory else artifact["installation_directory"]
 		artifact_repository.install(artifact["path_in_repository"], artifact_name, installation_directory, arguments.simulate)

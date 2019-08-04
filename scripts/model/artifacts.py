@@ -53,9 +53,8 @@ class ArtifactRepository:
 
 		logger.info("Writing '%s'", artifact_path + ".zip")
 
-		artifact_directory = os.path.dirname(artifact_path)
-		if not simulate and not os.path.isdir(artifact_directory):
-			os.makedirs(artifact_directory)
+		if not simulate:
+			os.makedirs(os.path.dirname(artifact_path), exist_ok = True)
 
 		if simulate:
 			for source, destination in artifact_files:
@@ -82,6 +81,10 @@ class ArtifactRepository:
 
 	def upload(self, path_in_repository, artifact_name, overwrite, simulate):
 		self.server_client.upload(self.local_path, self.project_identifier, path_in_repository, artifact_name, ".zip", overwrite, simulate)
+
+
+	def download(self, path_in_repository, artifact_name, simulate):
+		self.server_client.download(self.local_path, self.project_identifier, path_in_repository, artifact_name, ".zip", simulate)
 
 
 	def install(self, path_in_repository, artifact_name, installation_directory, simulate):
@@ -157,6 +160,21 @@ class ArtifactServerFileClient:
 			shutil.move(remote_artifact_path + file_extension + ".tmp", remote_artifact_path + file_extension)
 
 
+	def download(self, local_repository, remote_repository, path_in_repository, artifact_name, file_extension, simulate): # pylint: disable = too-many-arguments
+		logger.info("Downloading artifact '%s' from repository '%s'", artifact_name, os.path.join(self.server_path, remote_repository))
+
+		local_artifact_path = os.path.join(local_repository, path_in_repository, artifact_name)
+		remote_artifact_path = os.path.join(self.server_path, remote_repository, path_in_repository, artifact_name)
+
+		if not simulate:
+			os.makedirs(os.path.dirname(local_artifact_path), exist_ok = True)
+
+		logger.info("Copying '%s' to '%s'", remote_artifact_path + file_extension, local_artifact_path + file_extension)
+		if not simulate:
+			shutil.copyfile(remote_artifact_path + file_extension, local_artifact_path + file_extension + ".tmp")
+			shutil.move(local_artifact_path + file_extension + ".tmp", local_artifact_path + file_extension)
+
+
 
 class ArtifactServerSshClient:
 
@@ -211,7 +229,8 @@ class ArtifactServerSshClient:
 
 		self.create_directory(remote_repository, path_in_repository, simulate)
 
-		upload_command = [ self.scp_executable ] + self.ssh_parameters + [ local_artifact_path + file_extension ]
+		upload_command = [ self.scp_executable ] + self.ssh_parameters
+		upload_command += [ local_artifact_path + file_extension ]
 		upload_command += [ self.server_user + "@" + self.server_host + ":" + remote_artifact_path + file_extension + ".tmp" ]
 
 		logger.info("+ %s", " ".join(("'" + x + "'") if " " in x else x for x in upload_command))
@@ -232,3 +251,26 @@ class ArtifactServerSshClient:
 				raise RuntimeError("Failed to connect to the SSH server")
 			if move_result != 0:
 				raise RuntimeError("Failed to upload the artifact")
+
+
+	def download(self, local_repository, remote_repository, path_in_repository, artifact_name, file_extension, simulate): # pylint: disable = too-many-arguments
+		logger.info("Downloading artifact '%s' from repository '%s'", artifact_name, "ssh://" + self.server_host + ":" + self.server_path + "/" + remote_repository)
+
+		local_artifact_path = os.path.join(local_repository, path_in_repository, artifact_name)
+		remote_artifact_path = self.server_path + "/" + remote_repository + "/" + path_in_repository + "/" + artifact_name
+
+		if not simulate:
+			os.makedirs(os.path.dirname(local_artifact_path), exist_ok = True)
+
+		download_command = [ self.scp_executable ] + self.ssh_parameters
+		download_command += [ self.server_user + "@" + self.server_host + ":" + remote_artifact_path + file_extension ]
+		download_command += [ local_artifact_path + file_extension + ".tmp" ]
+
+		logger.info("+ %s", " ".join(("'" + x + "'") if " " in x else x for x in download_command))
+		if not simulate:
+			download_result = subprocess.call(download_command)
+			if download_result == 255:
+				raise RuntimeError("Failed to connect to the SSH server")
+			if download_result != 0:
+				raise RuntimeError("Failed to download the artifact")
+			shutil.move(local_artifact_path + file_extension + ".tmp", local_artifact_path + file_extension)
