@@ -3,7 +3,8 @@ import logging
 
 import websockets
 
-import bhamon_build_master.worker as worker
+from bhamon_build_master.worker import Worker
+from bhamon_build_master.worker_connection import WorkerConnection
 
 
 logger = logging.getLogger("Supervisor")
@@ -100,8 +101,9 @@ class Supervisor:
 		try:
 			logger.info("Processing connection: %s", connection)
 
-			worker_authentication_response = await worker.Worker.authenticate(connection)
-			worker_identifier = worker_authentication_response["identifier"]
+			connection_instance = WorkerConnection(connection)
+			authentication_response = await connection_instance.execute_command(None, "authenticate")
+			worker_identifier = authentication_response["identifier"]
 			worker_data = self._worker_provider.get(worker_identifier)
 			is_authenticated, reason = self._authenticate_worker(worker_identifier, worker_data)
 			if not is_authenticated:
@@ -109,7 +111,7 @@ class Supervisor:
 
 			else:
 				logger.info("Accepted connection from worker %s", worker_identifier)
-				worker_instance = worker.Worker(worker_identifier, connection, self._build_provider)
+				worker_instance = Worker(worker_identifier, connection_instance, self._build_provider)
 				worker_instance.update_interval_seconds = self.update_interval_seconds
 				if worker_identifier in self._active_workers:
 					raise KeyError("Worker %s is already in active workers" % worker_identifier)
