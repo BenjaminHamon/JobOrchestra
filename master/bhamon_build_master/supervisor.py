@@ -92,7 +92,7 @@ class Supervisor:
 		return True
 
 
-	async def _process_connection(self, connection, path): # pylint: disable=unused-argument
+	async def _process_connection(self, connection, path): # pylint: disable = unused-argument
 		worker_identifier = None
 		if self._should_shutdown:
 			return
@@ -121,14 +121,14 @@ class Supervisor:
 				except websockets.exceptions.ConnectionClosed as exception:
 					if exception.code not in [ 1000, 1001 ]:
 						logger.error("Lost connection with worker %s", worker_identifier, exc_info = True)
-				except Exception: # pylint: disable=broad-except
+				except Exception: # pylint: disable = broad-except
 					logger.error("Unhandled exception from worker %s", worker_identifier, exc_info = True)
 				finally:
 					logger.info("Terminating connection with worker %s", worker_identifier)
 					del self._active_workers[worker_identifier]
 					self._worker_provider.update_status(worker_data, is_active = False)
 
-		except Exception: # pylint: disable=broad-except
+		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception from worker %s handler", worker_identifier, exc_info = True)
 
 

@@ -55,7 +55,7 @@ class Worker:
 					await self._process_executor(executor)
 			except websockets.exceptions.ConnectionClosed:
 				raise
-			except: # pylint: disable=bare-except
+			except: # pylint: disable = bare-except
 				all_executors = list(self.executors)
 				for executor in all_executors:
 					logger.error("(%s) Interrupted while executing build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
@@ -86,7 +86,7 @@ class Worker:
 				self.executors.remove(executor)
 		except websockets.exceptions.ConnectionClosed:
 			raise
-		except Exception: # pylint: disable=broad-except
+		except Exception: # pylint: disable = broad-except
 			logger.error("(%s) Unhandled exception while executing build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
 			self.executors.remove(executor)
 
