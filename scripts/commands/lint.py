@@ -1,4 +1,5 @@
 import logging
+import os
 import subprocess
 
 
@@ -17,7 +18,7 @@ def lint(python_executable, component_collection):
 	logger.info("Running linter")
 
 	pylint_command = [ python_executable, "-m", "pylint" ]
-	pylint_command += [ component["path"] for component in component_collection ] + [ "test" ]
+	pylint_command += [ os.path.join(component["path"], component["packages"][0]) for component in component_collection ] + [ "test" ]
 
 	logger.info("+ %s", " ".join(pylint_command))
 	subprocess.check_call(pylint_command)
