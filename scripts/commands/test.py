@@ -27,6 +27,7 @@ def test(environment, filter_expression, simulate):
 	pytest_command = [ environment["python3_executable"], "-m", "pytest", "test", "--verbose" ]
 	pytest_command += [ "--collect-only" ] if simulate else []
 	pytest_command += [ "--basetemp", os.path.join("test_results", str(run_identifier)) ]
+	pytest_command += [ "--json", os.path.join("test_results", str(run_identifier) + ".json") ]
 	pytest_command += [ "-k", filter_expression ] if filter_expression else []
 
 	logger.info("+ %s", " ".join(pytest_command))
