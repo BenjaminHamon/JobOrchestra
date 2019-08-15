@@ -12,6 +12,7 @@ def load_results(result_file_path):
 
 	results["artifacts"] = results.get("artifacts", [])
 	results["distributions"] = results.get("distributions", [])
+	results["tests"] = results.get("tests", [])
 
 	return results
 
