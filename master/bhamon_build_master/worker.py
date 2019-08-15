@@ -23,6 +23,7 @@ class Worker:
 
 
 	def assign_build(self, job, build):
+		self._build_provider.update_status(build, worker = self.identifier)
 		executor = { "job": job, "build": build, "local_status": "pending", "should_abort": False }
 		self.executors.append(executor)
 
