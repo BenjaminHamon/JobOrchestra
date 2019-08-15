@@ -156,7 +156,7 @@ def _execute_command(worker_data, command, parameters): # pylint: disable=too-ma
 		return _retrieve_results(**parameters)
 	if command == "shutdown":
 		return _request_shutdown(worker_data)
-	raise ValueError("Unknown command %s" % command)
+	raise ValueError("Unknown command '%s'" % command)
 
 
 def _authenticate(worker_data):

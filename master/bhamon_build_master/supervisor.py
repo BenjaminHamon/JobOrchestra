@@ -132,6 +132,8 @@ class Supervisor:
 
 		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception from worker %s handler", worker_identifier, exc_info = True)
+		except KeyboardInterrupt:
+			logger.error("Interrupted worker %s handler", worker_identifier, exc_info = True)
 
 
 	def _authenticate_worker(self, worker_identifier, worker_data):

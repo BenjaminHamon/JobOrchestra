@@ -23,7 +23,7 @@ class Worker:
 
 
 	def assign_build(self, job, build):
-		executor = { "job": job, "build": build, "should_abort": False }
+		executor = { "job": job, "build": build, "local_status": "pending", "should_abort": False }
 		self.executors.append(executor)
 
 
@@ -39,25 +39,29 @@ class Worker:
 
 
 	async def run(self):
-		builds_to_recover = await self._connection.execute_command(self.identifier, "list")
-		for build_information in builds_to_recover:
-			executor = await self._recover_execution(**build_information)
-			self.executors.append(executor)
+		try:
+			self.executors += await self._recover_executors()
+		except websockets.exceptions.ConnectionClosed:
+			raise
+		except Exception: # pylint: disable = broad-except
+			logger.error("(%s) Unhandled exception while recovering builds", self.identifier, exc_info = True)
 
 		while not self.should_disconnect and (not self.should_shutdown or len(self.executors) > 0):
 			update_start = time.time()
 			await self._connection.ping()
 
-			try:
-				all_executors = list(self.executors)
-				for executor in all_executors:
+			all_executors = list(self.executors)
+			for executor in all_executors:
+				try:
 					await self._process_executor(executor)
-			except websockets.exceptions.ConnectionClosed:
-				raise
-			except: # pylint: disable = bare-except
-				all_executors = list(self.executors)
-				for executor in all_executors:
-					logger.error("(%s) Interrupted while executing build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
+				except websockets.exceptions.ConnectionClosed:
+					raise
+				except Exception: # pylint: disable = broad-except
+					logger.error("(%s) Unhandled exception while executing build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
+					executor["local_status"] = "exception"
+
+				if executor["local_status"] in [ "done", "exception" ]:
+					self.executors.remove(executor)
 
 			update_end = time.time()
 
@@ -72,34 +76,48 @@ class Worker:
 			await self._connection.execute_command(self.identifier, "shutdown")
 
 
+	async def _recover_executors(self):
+		recovered_executors = []
+		builds_to_recover = await self._connection.execute_command(self.identifier, "list")
+		for build_information in builds_to_recover:
+			executor = await self._recover_execution(**build_information)
+			recovered_executors.append(executor)
+		return recovered_executors
+
+
 	async def _process_executor(self, executor):
-		try:
-			if executor["build"]["status"] == "pending":
-				await self._start_execution(executor["build"], executor["job"])
-			if executor["should_abort"]:
-				await self._abort_execution(executor["build"])
-			if executor["build"]["status"] == "running":
-				await self._update_execution(executor["build"])
-			if executor["build"]["status"] != "running":
+		if executor["local_status"] == "pending":
+			await self._start_execution(executor["build"], executor["job"])
+			executor["local_status"] = "running"
+
+		elif executor["local_status"] == "running":
+			await self._update_execution(executor["build"])
+
+			if executor["build"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
 				await self._finish_execution(executor["build"])
-				self.executors.remove(executor)
-		except websockets.exceptions.ConnectionClosed:
-			raise
-		except Exception: # pylint: disable = broad-except
-			logger.error("(%s) Unhandled exception while executing build %s %s", self.identifier, executor["build"]["job"], executor["build"]["identifier"], exc_info = True)
-			self.executors.remove(executor)
+				executor["local_status"] = "done"
+
+			elif executor["should_abort"]:
+				await self._abort_execution(executor["build"])
+				executor["local_status"] = "aborting"
+
+		elif executor["local_status"] == "aborting":
+			await self._update_execution(executor["build"])
+
+			if executor["build"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
+				await self._finish_execution(executor["build"])
+				executor["local_status"] = "done"
 
 
 	async def _recover_execution(self, job_identifier, build_identifier):
 		logger.info("(%s) Recovering build %s %s", self.identifier, job_identifier, build_identifier)
 		build_request = await self._retrieve_request(job_identifier, build_identifier)
 		build = self._build_provider.get(build_identifier)
-		return { "job": build_request["job"], "build": build, "should_abort": False }
+		return { "job": build_request["job"], "build": build, "local_status": "running", "should_abort": False }
 
 
 	async def _start_execution(self, build, job):
 		logger.info("(%s) Starting build %s %s", self.identifier, build["job"], build["identifier"])
-		self._build_provider.update_status(build, worker = self.identifier, status = "running")
 		execute_request = { "job_identifier": build["job"], "build_identifier": build["identifier"], "job": job, "parameters": build["parameters"] }
 		await self._connection.execute_command(self.identifier, "execute", execute_request)
 
@@ -123,9 +141,6 @@ class Worker:
 
 
 	async def _finish_execution(self, build):
-		if "steps" in build:
-			await self._retrieve_logs(build)
-			await self._retrieve_results(build)
 		clean_request = { "job_identifier": build["job"], "build_identifier": build["identifier"] }
 		await self._connection.execute_command(self.identifier, "clean", clean_request)
 		logger.info("(%s) Completed build %s %s with status %s", self.identifier, build["job"], build["identifier"], build["status"])
