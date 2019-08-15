@@ -47,7 +47,7 @@ def load_configuration(environment):
 	configuration["project_url"] = "https://github.com/BenjaminHamon/BuildService"
 	configuration["copyright"] = "Copyright (c) 2019 Benjamin Hamon"
 
-	configuration["development_dependencies"] = [ "pylint", "pymongo", "pytest", "wheel" ]
+	configuration["development_dependencies"] = [ "pylint", "pymongo", "pytest", "pytest-asyncio", "wheel" ]
 
 	configuration["components"] = [
 		{ "name": "bhamon-build-cli", "path": "cli", "packages": [ "bhamon_build_cli" ] },
