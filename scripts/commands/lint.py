@@ -1,6 +1,6 @@
 import logging
-import os
-import subprocess
+
+import scripts.model.linting
 
 
 logger = logging.getLogger("Main")
@@ -12,23 +12,31 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	lint_packages(environment["python3_executable"], configuration["components"])
-	lint_tests(environment["python3_executable"], "test")
+	lint_tests(environment["python3_executable"], "./test")
 
 
 def lint_packages(python_executable, component_collection):
 	logger.info("Running linter in python packages")
+	print("")
 
-	pylint_command = [ python_executable, "-m", "pylint" ]
-	pylint_command += [ os.path.join(component["path"], component["packages"][0]) for component in component_collection ]
+	all_results = []
 
-	logger.info("+ %s", " ".join(pylint_command))
-	subprocess.check_call(pylint_command)
+	for component in component_collection:
+		pylint_results = scripts.model.linting.run_pylint(python_executable, component["packages"][0])
+		print("")
+
+		component_results = { "name": component["name"] }
+		component_results.update(pylint_results)
+		all_results.append(component_results)
+
+	if any(not result["success"] for result in all_results):
+		raise RuntimeError("Linting failed")
 
 
 def lint_tests(python_executable, test_directory):
 	logger.info("Running linter in python tests")
+	print("")
 
-	pylint_command = [ python_executable, "-m", "pylint", test_directory ]
-
-	logger.info("+ %s", " ".join(pylint_command))
-	subprocess.check_call(pylint_command)
+	pylint_results = scripts.model.linting.run_pylint(python_executable, test_directory)
+	if not pylint_results["success"]:
+		raise RuntimeError("Linting failed")
