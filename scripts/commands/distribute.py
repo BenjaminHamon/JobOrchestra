@@ -4,8 +4,8 @@ import os
 import shutil
 import subprocess
 
-import scripts.model.distribution as distribution
-import scripts.workspace as workspace
+import scripts.model.distribution
+import scripts.model.workspace
 
 
 logger = logging.getLogger("Main")
@@ -32,7 +32,7 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 	if environment.get("python_package_repository_url", None) is not None:
 		repository_url = environment["python_package_repository_url"]
 		repository_parameters = environment.get("python_package_repository_parameters", {})
-		repository_client = distribution.create_repository_client(repository_url, repository_parameters, environment)
+		repository_client = scripts.model.distribution.create_repository_client(repository_url, repository_parameters, environment)
 
 	if "upload" in arguments.distribute_commands and repository_client is None:
 		raise ValueError("Upload command requires a python package repository")
@@ -97,10 +97,10 @@ def save_upload_results(component, version, result_file_path, simulate):
 	}
 
 	if result_file_path:
-		results = workspace.load_results(result_file_path)
+		results = scripts.model.workspace.load_results(result_file_path)
 		results["distributions"].append(distribution_information)
 		if not simulate:
-			workspace.save_results(result_file_path, results)
+			scripts.model.workspace.save_results(result_file_path, results)
 
 
 def create_fileset(component):

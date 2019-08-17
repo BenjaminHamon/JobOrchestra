@@ -4,7 +4,7 @@ import os
 import subprocess
 import uuid
 
-import scripts.workspace as workspace
+import scripts.model.workspace
 
 
 logger = logging.getLogger("Main")
@@ -54,7 +54,7 @@ def save_results(run_identifier, result_file_path, simulate):
 	}
 
 	if result_file_path:
-		results = workspace.load_results(result_file_path)
+		results = scripts.model.workspace.load_results(result_file_path)
 		results["tests"].append(test_results)
 		if not simulate:
-			workspace.save_results(result_file_path, results)
+			scripts.model.workspace.save_results(result_file_path, results)
