@@ -1,6 +1,9 @@
+import datetime
 import logging
 import os
 import subprocess
+
+import scripts.model.workspace
 
 
 logger = logging.getLogger("Linting")
@@ -19,27 +22,72 @@ pylint_message_elements = [
 ]
 
 
-def run_pylint(python_executable, target):
+def run_pylint(python_executable, output_directory, run_identifier, target, simulate): # pylint: disable = too-many-locals
 	pylint_command = [ python_executable, "-u", "-m", "pylint", target ]
 	format_options = [ "--msg-template", pylint_message_separator.join([ "{" + element["pylint_field"] + "}" for element in pylint_message_elements ]) ]
+	start_date = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
 
 	logger.info("+ %s", " ".join(pylint_command))
-	process = subprocess.Popen(pylint_command + format_options, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True)
 
-	all_issues = _process_pylint_output(process.stdout)
-	result_code = process.wait()
+	if simulate:
+		all_issues = []
+		result_code = 0
+
+	else:
+		os.makedirs(output_directory, exist_ok = True)
+		process = subprocess.Popen(pylint_command + format_options, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True)
+		all_issues = _process_pylint_output(process.stdout)
+		result_code = process.wait()
+
 	success = result_code == 0
+	completion_date = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
 
-	issue_counts = {}
+	summary = {}
 	for category in pylint_categories:
-		issue_counts[category] = len([ issue for issue in all_issues if issue["category"] == category ])
+		summary[category] = len([ issue for issue in all_issues if issue["category"] == category ])
 
 	if success:
 		logger.info("Linting succeeded for '%s'", target)
 	else:
-		logger.error("Linting failed for '%s' (%s)", target, ", ".join("%s: %s" % (key, value) for key, value in issue_counts.items() if value > 0))
+		logger.error("Linting failed for '%s' (%s)", target, ", ".join("%s: %s" % (key, value) for key, value in summary.items() if value > 0))
 
-	return { "success": success, "result_code": result_code, "issues": all_issues, "counts": issue_counts }
+	report = {
+		"run_identifier": str(run_identifier),
+		"job": "pylint",
+		"job_parameters": { "target": target },
+		"success": success,
+		"summary": summary,
+		"results": all_issues,
+		"start_date": start_date,
+		"completion_date": completion_date,
+	}
+
+	result_file_path = os.path.join(output_directory, str(run_identifier) + ".json")
+	if not simulate:
+		scripts.model.workspace.save_test_report(result_file_path, report)
+
+	return report
+
+
+def get_aggregated_results(output_directory, run_identifier):
+	result_file_path = os.path.join(output_directory, str(run_identifier) + ".json")
+	all_reports = scripts.model.workspace.load_test_reports(result_file_path)
+
+	success = True
+	summary = { category: 0 for category in pylint_categories }
+
+	for report in all_reports:
+		if report["job"] == "pylint":
+			success = success and report["success"]
+			for category in pylint_categories:
+				summary[category] += report["summary"][category]
+
+	return {
+		"run_identifier": str(run_identifier),
+		"run_type": "pylint",
+		"success": success,
+		"summary": summary,
+	}
 
 
 def _process_pylint_output(output):
