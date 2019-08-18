@@ -23,7 +23,7 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 
 
 def lint_packages(python_executable, run_identifier, component_collection, simulate):
-	logger.info("Running linter for python packages (RunIdentifier: %s)", run_identifier)
+	logger.info("Running linter for packages (RunIdentifier: %s)", run_identifier)
 	print("")
 
 	all_results = []
@@ -41,7 +41,7 @@ def lint_packages(python_executable, run_identifier, component_collection, simul
 
 
 def lint_tests(python_executable, run_identifier, test_directory, simulate):
-	logger.info("Running linter in python tests")
+	logger.info("Running linter for tests (RunIdentifier: %s)", run_identifier)
 	print("")
 
 	pylint_results = scripts.model.linting.run_pylint(python_executable, "test_results", run_identifier, test_directory, simulate)
