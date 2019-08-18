@@ -1,9 +1,9 @@
 import json
 import logging
 import os
-import subprocess
 import uuid
 
+import scripts.model.test
 import scripts.model.workspace
 
 
@@ -26,18 +26,10 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 
 
 def test(python_executable, run_identifier, filter_expression, simulate):
-	logger.info("Running test suite (RunIdentifier: %s)", run_identifier)
+	logger.info("Running test suite (RunIdentifier: '%s', Filter: '%s')", run_identifier, filter_expression)
+	print("")
 
-	os.makedirs("test_results", exist_ok = True)
-
-	pytest_command = [ python_executable, "-m", "pytest", "test", "--verbose" ]
-	pytest_command += [ "--collect-only" ] if simulate else []
-	pytest_command += [ "--basetemp", os.path.join("test_results", str(run_identifier)) ]
-	pytest_command += [ "--json", os.path.join("test_results", str(run_identifier) + ".json") ]
-	pytest_command += [ "-k", filter_expression ] if filter_expression else []
-
-	logger.info("+ %s", " ".join(pytest_command))
-	subprocess.check_call(pytest_command)
+	scripts.model.test.run_pytest(python_executable, "test_results", run_identifier, "./test", filter_expression, simulate)
 
 
 def save_results(run_identifier, result_file_path, simulate):
