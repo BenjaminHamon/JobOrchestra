@@ -1,6 +1,4 @@
-import json
 import logging
-import os
 import uuid
 
 import scripts.model.test
@@ -29,21 +27,13 @@ def test(python_executable, run_identifier, filter_expression, simulate):
 	logger.info("Running test suite (RunIdentifier: '%s', Filter: '%s')", run_identifier, filter_expression)
 	print("")
 
-	scripts.model.test.run_pytest(python_executable, "test_results", run_identifier, "./test", filter_expression, simulate)
+	report = scripts.model.test.run_pytest(python_executable, "test_results", run_identifier, "./test", filter_expression, simulate)
+	if not report["success"]:
+		raise RuntimeError("Test run failed")
 
 
 def save_results(run_identifier, result_file_path, simulate):
-	report_path = os.path.join("test_results", str(run_identifier) + ".json")
-	with open(report_path) as report_file:
-		report = json.load(report_file)
-
-	test_results = {
-		"run_identifier": str(run_identifier),
-		"total": report["report"]["summary"].get("num_tests", 0),
-		"total_succeeded": report["report"]["summary"].get("passed", 0),
-		"total_failed": report["report"]["summary"].get("failed", 0),
-		"total_skipped": report["report"]["summary"].get("skipped", 0),
-	}
+	test_results = scripts.model.test.get_aggregated_results("test_results", run_identifier)
 
 	if result_file_path:
 		results = scripts.model.workspace.load_results(result_file_path)
