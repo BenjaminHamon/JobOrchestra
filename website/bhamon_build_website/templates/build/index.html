@@ -103,6 +103,25 @@
 			</ul>
 		</li>
 		{% endif %}
+		{% if build_results.get('tests', []) %}
+		<li>
+			<p>Tests</p>
+			<ul>
+				{% for test_run in build_results['tests'] %}
+				<li>
+					<span>
+						{{ test_run['run_type'] }} {{ 'succeeded' if test_run['success'] else 'failed ' }}
+					</span>
+					{% if test_run.get('summary_text', none) %}
+					<span>
+						({{ test_run['summary_text'] }})
+					</span>
+					{% endif %}
+				</li>
+				{% endfor %}
+			</ul>
+		</li>
+		{% endif %}
 		{% if build_results.get('artifacts', []) %}
 		<li>
 			<p>Artifacts</p>
