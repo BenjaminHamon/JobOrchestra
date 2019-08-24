@@ -1,18 +1,36 @@
 import json
 import logging
 import os
+import sys
 
 
-log_format = "[{levelname}][{name}] {message}"
+default_log_format = "[{levelname}][{name}] {message}"
+file_log_format = "{asctime} [{levelname}][{name}] {message}"
+date_format = "%Y-%m-%dT%H:%M:%S"
 
 
 def configure_logging(log_level):
-	logging.basicConfig(level = log_level, format = log_format, style = "{")
+	logging.root.setLevel(log_level)
+
 	logging.addLevelName(logging.DEBUG, "Debug")
 	logging.addLevelName(logging.INFO, "Info")
 	logging.addLevelName(logging.WARNING, "Warning")
 	logging.addLevelName(logging.ERROR, "Error")
 	logging.addLevelName(logging.CRITICAL, "Critical")
+
+	formatter = logging.Formatter(default_log_format, date_format, "{")
+	stream_handler = logging.StreamHandler(sys.stdout)
+	stream_handler.setLevel(log_level)
+	stream_handler.formatter = formatter
+	logging.root.addHandler(stream_handler)
+
+
+def configure_log_file(log_level, log_file):
+	formatter = logging.Formatter(file_log_format, date_format, "{")
+	file_handler = logging.FileHandler(log_file, mode = "w")
+	file_handler.setLevel(log_level)
+	file_handler.formatter = formatter
+	logging.root.addHandler(file_handler)
 
 
 def create_default_environment():

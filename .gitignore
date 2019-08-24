@@ -24,6 +24,9 @@ environment.json
 # Generated metadata
 __metadata__.py
 
+# Logs
+*.log
+
 # Python
 __pycache__/
 .pytest_cache/

@@ -24,7 +24,10 @@ def main():
 		configuration_instance = scripts.configuration.load_configuration(environment_instance)
 
 		arguments = parse_arguments(environment_instance, configuration_instance)
-		scripts.environment.configure_logging(logging.getLevelName(arguments.verbosity.upper()))
+		log_level = logging.getLevelName(arguments.verbosity.upper())
+		scripts.environment.configure_logging(log_level)
+		if arguments.log_file is not None:
+			scripts.environment.configure_log_file(log_level, arguments.log_file)
 
 		show_project_information(configuration_instance, arguments.simulate)
 		arguments.func(environment_instance, configuration_instance, arguments)
@@ -40,7 +43,8 @@ def parse_arguments(environment_instance, configuration_instance):
 	main_parser.add_argument("--verbosity", choices = all_log_levels, default = "info",
 			metavar = "<level>", help = "set the logging level (%s)" % ", ".join(all_log_levels))
 	main_parser.add_argument("--simulate", action = "store_true", help = "perform a test run, without writing changes")
-	main_parser.add_argument("--results", help = "set the file path where to store build results")
+	main_parser.add_argument("--log-file", metavar = "<file_path>", help = "set the log file path")
+	main_parser.add_argument("--results", metavar = "<file_path>", help = "set the file path where to store command results")
 
 	subparsers = main_parser.add_subparsers(title = "commands", metavar = "<command>")
 	subparsers.required = True
