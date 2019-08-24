@@ -1,7 +1,8 @@
 import logging
-import os
-import subprocess
 import uuid
+
+import scripts.model.test
+import scripts.model.workspace
 
 
 logger = logging.getLogger("Main")
@@ -14,20 +15,28 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
-	test(environment, arguments.filter, arguments.simulate)
-
-
-def test(environment, filter_expression, simulate):
 	run_identifier = uuid.uuid4()
 
-	logger.info("Running test suite (RunIdentifier: %s)", run_identifier)
+	try:
+		test(environment["python3_executable"], run_identifier, arguments.filter, arguments.simulate)
+	finally:
+		save_results(run_identifier, arguments.results, arguments.simulate)
 
-	os.makedirs("test_results", exist_ok = True)
 
-	pytest_command = [ environment["python3_executable"], "-m", "pytest", "test", "--verbose" ]
-	pytest_command += [ "--collect-only" ] if simulate else []
-	pytest_command += [ "--basetemp", os.path.join("test_results", str(run_identifier)) ]
-	pytest_command += [ "-k", filter_expression ] if filter_expression else []
+def test(python_executable, run_identifier, filter_expression, simulate):
+	logger.info("Running test suite (RunIdentifier: '%s', Filter: '%s')", run_identifier, filter_expression)
+	print("")
 
-	logger.info("+ %s", " ".join(pytest_command))
-	subprocess.check_call(pytest_command)
+	report = scripts.model.test.run_pytest(python_executable, "test_results", run_identifier, "./test", filter_expression, simulate)
+	if not report["success"]:
+		raise RuntimeError("Test run failed")
+
+
+def save_results(run_identifier, result_file_path, simulate):
+	test_results = scripts.model.test.get_aggregated_results("test_results", run_identifier)
+
+	if result_file_path:
+		results = scripts.model.workspace.load_results(result_file_path)
+		results["tests"].append(test_results)
+		if not simulate:
+			scripts.model.workspace.save_results(result_file_path, results)
