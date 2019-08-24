@@ -46,9 +46,17 @@ def assert_log(log_text, log_format, expected_messages = None, failure_log_level
 	if failure_log_levels is None:
 		failure_log_levels = [ "Warning", "Error", "Critical" ]
 
-	log_format = log_format.replace("{levelname}", "{level}").replace("{name}", "{logger}")
+	log_format = log_format.replace("{asctime}", "{date}")
+	log_format = log_format.replace("{levelname}", "{level}")
+	log_format = log_format.replace("{name}", "{logger}")
+
 	log_regex = r"^" + re.escape(log_format) + r"$"
-	log_regex = log_regex.replace(r"\{level\}", r"(?P<level>[a-zA-Z]+)").replace(r"\{logger\}", r"(?P<logger>[a-zA-Z]+)").replace(r"\{message\}", r"(?P<message>.*)")
+	log_regex = log_regex.replace(r"\{date\}", r"(?P<date>[0-9\-]+[ T][0-9:,]+)")
+	log_regex = log_regex.replace(r"\{level\}", r"(?P<level>[a-zA-Z]+)")
+	log_regex = log_regex.replace(r"\{logger\}", r"(?P<logger>[a-zA-Z]+)")
+	log_regex = log_regex.replace(r"\{message\}", r"(?P<message>.*)")
+
+	log_format = log_format.replace("{date}", "").strip()
 
 	all_issues = []
 	log_messages = parse_log(log_text, log_regex)
@@ -69,5 +77,6 @@ def parse_log(log_text, log_regex):
 		log_match = re.search(log_regex, log_line)
 		if log_match:
 			message = log_match.groupdict()
+			del message["date"]
 			all_messages.append(message)
 	return all_messages
