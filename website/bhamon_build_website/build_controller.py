@@ -60,5 +60,12 @@ def abort_build(build_identifier):
 	return flask.redirect(flask.request.referrer or flask.url_for("build_collection_index"))
 
 
+def download_build_archive(build_identifier):
+	archive_response = service_client.raw_get("/build/{build_identifier}/download".format(**locals()))
+	return flask.Response(archive_response.content,
+		headers = { "Content-Disposition": archive_response.headers["Content-Disposition"] },
+		mimetype = archive_response.headers["Content-Type"])
+
+
 def _get_status_collection():
 	return [ "pending", "running", "succeeded", "failed", "exception", "aborted", "cancelled" ]

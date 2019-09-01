@@ -5,6 +5,12 @@
 <h1>Build {{ build['identifier'] }}</h1>
 
 <section>
+	<div class="link-group">
+		<a href="{{ url_for('download_build_archive', build_identifier = build['identifier']) }}">Download as archive</a>
+	</div>
+</section>
+
+<section>
 	<h2>Status</h2>
 	<div class=status-grid>
 		<div class="status-group">

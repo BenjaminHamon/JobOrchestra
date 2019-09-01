@@ -1,9 +1,13 @@
 # pylint: disable = redefined-builtin
 
 import datetime
+import io
+import json
 import logging
 import os
+import time
 import uuid
+import zipfile
 
 
 logger = logging.getLogger("BuildProvider")
@@ -119,6 +123,28 @@ class BuildProvider:
 
 		build.update(update_data)
 		self.database_client.update_one(self.build_table, { "identifier": build["identifier"] }, update_data)
+
+
+	def get_archive(self, build_identifier):
+		build = self.database_client.find_one(self.build_table, { "identifier": build_identifier })
+		if build is None:
+			return None
+
+		file_name = "{job}_{identifier}".format(**build) + ".zip"
+		now = time.gmtime()
+
+		with io.BytesIO() as file_object:
+			with zipfile.ZipFile(file_object, mode = "w", compression = zipfile.ZIP_DEFLATED) as archive:
+				entry_info = zipfile.ZipInfo("build.json", now[0:6])
+				entry_info.external_attr = 0o644 << 16
+				archive.writestr(entry_info, json.dumps(build, indent = 4))
+				for step in build.get("steps", []):
+					log_path = self._get_step_log_path(build_identifier, step["index"])
+					entry_info = zipfile.ZipInfo(os.path.basename(log_path), now[0:6])
+					entry_info.external_attr = 0o644 << 16
+					archive.writestr(entry_info, self.file_storage.load(log_path))
+
+			return { "file_name": file_name, "data": file_object.getvalue(), "type": "zip" }
 
 
 	def convert_to_public(self, build): # pylint: disable = no-self-use

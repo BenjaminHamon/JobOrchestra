@@ -50,6 +50,7 @@ def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/build/<build_identifier>/results", methods = [ "GET" ], view_func = build_controller.get_build_results)
 	application.add_url_rule("/build/<build_identifier>/tasks", methods = [ "GET" ], view_func = build_controller.get_build_tasks)
 	application.add_url_rule("/build/<build_identifier>/abort", methods = [ "POST" ], view_func = build_controller.abort_build)
+	application.add_url_rule("/build/<build_identifier>/download", methods = [ "GET" ], view_func = build_controller.download_build_archive)
 	application.add_url_rule("/job_count", methods = [ "GET" ], view_func = job_controller.get_job_count)
 	application.add_url_rule("/job_collection", methods = [ "GET" ], view_func = job_controller.get_job_collection)
 	application.add_url_rule("/job/<job_identifier>", methods = [ "GET" ], view_func = job_controller.get_job)

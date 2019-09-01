@@ -54,6 +54,7 @@ def register_routes(application):
 	application.add_url_rule("/build/<build_identifier>", methods = [ "GET" ], view_func = build_controller.build_index)
 	application.add_url_rule("/build/<build_identifier>/step/<int:step_index>/log", methods = [ "GET" ], view_func = build_controller.build_step_log)
 	application.add_url_rule("/build/<build_identifier>/abort", methods = [ "POST" ], view_func = build_controller.abort_build)
+	application.add_url_rule("/build/<build_identifier>/download", methods = [ "GET" ], view_func = build_controller.download_build_archive)
 	application.add_url_rule("/job_collection", methods = [ "GET" ], view_func = job_controller.job_collection_index)
 	application.add_url_rule("/job/<job_identifier>", methods = [ "GET" ], view_func = job_controller.job_index)
 	application.add_url_rule("/job/<job_identifier>/trigger", methods = [ "POST" ], view_func = job_controller.trigger_job)

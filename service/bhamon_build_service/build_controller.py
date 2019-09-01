@@ -65,3 +65,9 @@ def get_build_tasks(build_identifier):
 def abort_build(build_identifier):
 	task = flask.current_app.task_provider.create("abort_build", { "build_identifier": build_identifier })
 	return flask.jsonify({ "build_identifier": build_identifier, "task_identifier": task["identifier"] })
+
+
+def download_build_archive(build_identifier):
+	archive = flask.current_app.build_provider.get_archive(build_identifier)
+	headers = { "Content-Disposition": "attachment;filename=" + '"' + archive["file_name"] + '"' }
+	return flask.Response(archive["data"], headers = headers, mimetype = "application/" + archive["type"])
