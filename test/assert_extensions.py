@@ -77,6 +77,6 @@ def parse_log(log_text, log_regex):
 		log_match = re.search(log_regex, log_line)
 		if log_match:
 			message = log_match.groupdict()
-			del message["date"]
+			message.pop("date", None)
 			all_messages.append(message)
 	return all_messages
