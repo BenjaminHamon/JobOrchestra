@@ -50,8 +50,8 @@ def build_index(build_identifier):
 
 
 def build_step_log(build_identifier, step_index):
-	log_text = service_client.get_text("/build/{build_identifier}/step/{step_index}/log".format(**locals()))
-	return flask.Response(log_text, mimetype = "text/plain")
+	log_response = service_client.raw_get("/build/{build_identifier}/step/{step_index}/log".format(**locals()))
+	return flask.Response(log_response.text, mimetype = "text/plain")
 
 
 def abort_build(build_identifier):
