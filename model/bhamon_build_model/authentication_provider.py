@@ -95,7 +95,7 @@ class AuthenticationProvider:
 
 	def get_token(self, user_identifier, token_identifier):
 		token = self.database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
-		return self.convert_to_public(token)
+		return self.convert_to_public(token) if token is not None else None
 
 
 	def create_token(self, user, description, expiration):

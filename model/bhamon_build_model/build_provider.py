@@ -43,7 +43,7 @@ class BuildProvider:
 
 	def get(self, build_identifier):
 		build = self.database_client.find_one(self.build_table, { "identifier": build_identifier })
-		return self.convert_to_public(build)
+		return self.convert_to_public(build) if build is not None else None
 
 
 	def create(self, job_identifier, parameters):
