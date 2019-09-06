@@ -88,8 +88,15 @@ class Supervisor:
 
 
 	def abort_build(self, build_identifier):
-		for worker_instance in self._active_workers.values():
-			worker_instance.abort_build(build_identifier)
+		build = self._build_provider.get(build_identifier)
+		if build["status"] != "running":
+			return False
+
+		worker_instance = self._active_workers.get(build["worker"], None)
+		if worker_instance is None:
+			return False
+
+		worker_instance.abort_build(build_identifier)
 		return True
 
 
