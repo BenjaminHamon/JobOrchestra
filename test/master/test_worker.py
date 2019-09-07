@@ -244,17 +244,16 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 		await worker_local_instance._process_executor(local_executor)
 	except AttributeError:
 		local_executor["local_status"] = "exception"
-		build["status"] = "exception"
 
 	assert local_executor["local_status"] == "exception"
-	assert build["status"] == "exception"
+	assert build["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
 
 	file_storage_instance = MemoryFileStorage()
 	build_provider_instance = BuildProvider(database_client_instance, file_storage_instance)
 	worker_local_instance = Worker("worker_test", worker_connection_instance, build_provider_instance)
 
-	assert build["status"] == "exception"
+	assert build["status"] == "running"
 	assert len(worker_local_instance.executors) == 0
 
 	# none => running (_recover_execution)
@@ -262,7 +261,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	local_executor = worker_local_instance.executors[0]
 
 	assert local_executor["local_status"] == "running"
-	assert build["status"] == "exception"
+	assert build["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
 	assert len(file_storage_instance.storage) == 0
 
@@ -328,10 +327,9 @@ async def test_process_recovery_after_execution():
 		await worker_local_instance._process_executor(local_executor)
 	except AttributeError:
 		local_executor["local_status"] = "exception"
-		build["status"] = "exception"
 
 	assert local_executor["local_status"] == "exception"
-	assert build["status"] == "exception"
+	assert build["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
 
 	remote_executor = worker_remote_instance.find_executor(build["identifier"])
@@ -340,14 +338,14 @@ async def test_process_recovery_after_execution():
 		step["status"] = "succeeded"
 
 	assert local_executor["local_status"] == "exception"
-	assert build["status"] == "exception"
+	assert build["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
 
 	file_storage_instance = MemoryFileStorage()
 	build_provider_instance = BuildProvider(database_client_instance, file_storage_instance)
 	worker_local_instance = Worker("worker_test", worker_connection_instance, build_provider_instance)
 
-	assert build["status"] == "exception"
+	assert build["status"] == "running"
 	assert len(worker_local_instance.executors) == 0
 
 	# none => running (_recover_execution)
@@ -355,7 +353,7 @@ async def test_process_recovery_after_execution():
 	local_executor = worker_local_instance.executors[0]
 
 	assert local_executor["local_status"] == "running"
-	assert build["status"] == "exception"
+	assert build["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
 	assert len(file_storage_instance.storage) == 0
 
