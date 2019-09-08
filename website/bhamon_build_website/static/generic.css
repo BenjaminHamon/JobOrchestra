@@ -173,6 +173,16 @@ table
 	white-space: nowrap;
 }
 
+thead
+{
+	background: #eeeeee;
+}
+
+tbody > tr:hover
+{
+	background: aliceblue;
+}
+
 th, td
 {
 	padding: 5px 10px;
