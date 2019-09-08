@@ -15,8 +15,8 @@ body
 	grid-template-columns: min-content 1fr;
 	grid-template-rows: auto auto 1fr auto;
 	grid-template-areas:
-		"header header"
 		"announcement announcement"
+		"header header"
 		"nav main"
 		"footer footer";
 	margin: 0;
