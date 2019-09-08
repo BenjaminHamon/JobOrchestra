@@ -21,20 +21,39 @@ body
 		"footer footer";
 	margin: 0;
 	min-height: 100%;
-	background: lightgray;
+	background-color: #dddddd;
 	font-family: Arial, Helvetica, sans-serif;
 }
 
-header { grid-area: header; }
-#announcement { grid-area: announcement; }
-nav { grid-area: nav; }
-main { grid-area: main; }
-footer { grid-area: footer; }
+#announcement
+{
+	grid-area: announcement;
+}
+
+header
+{
+	grid-area: header;
+}
+
+nav
+{
+	grid-area: nav;
+}
+
+main
+{
+	grid-area: main;
+}
+
+footer
+{
+	grid-area: footer;
+}
 
 header, nav, main, footer
 {
 	padding: 10px;
-	background: white;
+	background-color: white;
 }
 
 header
@@ -85,9 +104,20 @@ header .login a
 	text-align: center;
 }
 
-#announcement.info { background: lightblue; }
-#announcement.warning { background: orange; }
-#announcement.error { background: red; }
+#announcement.info
+{
+	background-color: #7fdbff;
+}
+
+#announcement.warning
+{
+	background-color: #ff851b;
+}
+
+#announcement.error
+{
+	background-color: #ff4136;
+}
 
 nav
 {
@@ -175,24 +205,24 @@ table
 
 thead
 {
-	background: #eeeeee;
+	background-color: #eeeeee;
 }
 
 tbody > tr:hover
 {
-	background: aliceblue;
+	background-color: #f0f8ff;
 }
 
 th, td
 {
 	padding: 5px 10px;
-	border: 1px solid gray;
+	border: 1px solid #888888;
 }
 
 form input
 {
 	padding: 5px;
-	border: gray 1px solid;
+	border: 1px solid #888888;
 }
 
 form input:read-only
@@ -203,7 +233,7 @@ form input:read-only
 form select
 {
 	padding: 5px;
-	border: gray 1px solid;
+	border: 1px solid #888888;
 	min-width: 100px;
 }
 
@@ -213,7 +243,7 @@ form textarea
 	min-height: 100px;
 	max-height: 300px;
 	resize: vertical;
-	border: gray 1px solid;
+	border: 1px solid #888888;
 }
 
 form button
@@ -256,25 +286,25 @@ form button
 .flash .info
 {
     color: #00529b;
-    background: #bde5f8;
+    background-color: #bde5f8;
 }
 
 .flash .success
 {
     color: #4f8a10;
-    background: #dff2bf;
+    background-color: #dff2bf;
 }
 
 .flash .error
 {
     color: #d8000c;
-    background: #ffd2d2;
+    background-color: #ffd2d2;
 }
 
 .flash .warning
 {
     color: #9f6000;
-    background: #feefb3;
+    background-color: #feefb3;
 }
 
 .link-group
