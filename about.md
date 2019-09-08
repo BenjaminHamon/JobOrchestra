@@ -7,6 +7,8 @@ Build Service uses licensed software from:
   ([Public Domain](https://github.com/benediktschmitt/py-filelock/blob/master/LICENSE.rst))
 - [Flask](http://flask.pocoo.org/)
   ([BSD 3-Clause License](http://flask.pocoo.org/docs/license/))
+- [Font Awesome Free](https://fontawesome.com)
+  ([Font Awesome Free License](https://fontawesome.com/license/free))
 - [Jinja](http://jinja.pocoo.org/)
   ([BSD 3-Clause License](https://github.com/pallets/jinja/blob/master/LICENSE))
 - [Requests](http://docs.python-requests.org/)
