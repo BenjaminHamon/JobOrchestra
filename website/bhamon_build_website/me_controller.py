@@ -23,7 +23,7 @@ def login():
 		try:
 			flask.session["token"] = service_client.post("/me/login", data = parameters)
 			flask.session.permanent = True
-			flask.flash("Login succeeded.", "info")
+			flask.flash("Login succeeded.", "success")
 			return flask.redirect(flask.url_for("home"))
 		except requests.HTTPError as exception:
 			flask.flash("Login failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
@@ -44,7 +44,7 @@ def logout():
 
 		try:
 			service_client.post("/me/logout", { "token_identifier": flask.session["token"]["token_identifier"] })
-			flask.flash("Logout succeeded.", "info")
+			flask.flash("Logout succeeded.", "success")
 			flask.session.clear()
 			return flask.redirect(flask.url_for("home"))
 		except requests.HTTPError as exception:
@@ -79,7 +79,7 @@ def change_password():
 
 		try:
 			service_client.post("/me/change_password", data = parameters)
-			flask.flash("Password change succeeded.", "info")
+			flask.flash("Password change succeeded.", "success")
 			return flask.redirect(flask.url_for("my_profile"))
 		except requests.HTTPError as exception:
 			flask.flash("Password change failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
@@ -99,7 +99,7 @@ def create_my_token():
 
 		try:
 			token = service_client.post("/me/token_create", data = parameters)
-			flask.flash("Token '%s' was created successfully." % token["token_identifier"], "info")
+			flask.flash("Token '%s' was created successfully." % token["token_identifier"], "success")
 			flask.flash("Token secret: '%s'." % token["secret"], "info")
 			return flask.redirect(flask.url_for("my_profile"))
 		except requests.HTTPError as exception:
@@ -112,7 +112,7 @@ def create_my_token():
 def delete_my_token(token_identifier):
 	try:
 		service_client.post("/me/token/{token_identifier}/delete".format(**locals()))
-		flask.flash("Token '%s' was deleted successfully." % token_identifier, "info")
+		flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")
 	except requests.HTTPError as exception:
 		flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, helpers.get_error_message(exception.response.status_code)), "error")
 	return flask.redirect(flask.url_for("my_profile"))

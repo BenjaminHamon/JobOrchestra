@@ -49,7 +49,7 @@ def create_user():
 
 		try:
 			service_client.post("/user/{user_identifier}/create".format(**locals()), data = parameters)
-			flask.flash("User '%s' was created successfully." % user_identifier, "info")
+			flask.flash("User '%s' was created successfully." % user_identifier, "success")
 			return flask.redirect(flask.url_for("user_collection_index"))
 		except requests.HTTPError as exception:
 			flask.flash("User '%s' could not be created: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
@@ -74,7 +74,7 @@ def update_user_identity(user_identifier):
 
 	try:
 		service_client.post("/user/{user_identifier}/update_identity".format(**locals()), data = parameters)
-		flask.flash("Identity for user '%s' was updated successfully." % user_identifier, "info")
+		flask.flash("Identity for user '%s' was updated successfully." % user_identifier, "success")
 	except requests.HTTPError as exception:
 		flask.flash("Identity for user '%s' could not be updated: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
 	return edit_user_resume(user_identifier, parameters)
@@ -85,7 +85,7 @@ def update_user_roles(user_identifier):
 
 	try:
 		service_client.post("/user/{user_identifier}/update_roles".format(**locals()), data = parameters)
-		flask.flash("Roles for user '%s' were updated successfully." % user_identifier, "info")
+		flask.flash("Roles for user '%s' were updated successfully." % user_identifier, "success")
 	except requests.HTTPError as exception:
 		flask.flash( "Roles for user '%s' could not be updated: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
 	return edit_user_resume(user_identifier, parameters)
@@ -110,7 +110,7 @@ def reset_user_password(user_identifier):
 
 		try:
 			service_client.post("/user/{user_identifier}/reset_password".format(**locals()), data = parameters)
-			flask.flash("Password for user '%s' was set successfully." % user_identifier, "info")
+			flask.flash("Password for user '%s' was set successfully." % user_identifier, "success")
 			return flask.redirect(flask.url_for("user_index", user_identifier = user_identifier))
 		except requests.HTTPError as exception:
 			flask.flash("Password for user '%s' could not be set: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
@@ -130,7 +130,7 @@ def create_user_token(user_identifier):
 
 		try:
 			token = service_client.post("/user/{user_identifier}/token_create".format(**locals()), data = parameters)
-			flask.flash("Token '%s' was created successfully." % token["token_identifier"], "info")
+			flask.flash("Token '%s' was created successfully." % token["token_identifier"], "success")
 			flask.flash("Token secret: '%s'." % token["secret"], "info")
 			return flask.redirect(flask.url_for("user_index", user_identifier = user_identifier))
 		except requests.HTTPError as exception:
@@ -143,7 +143,7 @@ def create_user_token(user_identifier):
 def delete_user_token(user_identifier, token_identifier):
 	try:
 		service_client.post("/user/{user_identifier}/token/{token_identifier}/delete".format(**locals()))
-		flask.flash("Token '%s' was deleted successfully." % token_identifier, "info")
+		flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")
 	except requests.HTTPError as exception:
 		flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, helpers.get_error_message(exception.response.status_code)), "error")
 	return flask.redirect(flask.url_for("user_index", user_identifier = user_identifier))

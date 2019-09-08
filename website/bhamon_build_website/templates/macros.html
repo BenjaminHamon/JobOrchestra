@@ -3,7 +3,17 @@
 {% if messages %}
 <section class="flash">
 	{% for category, message in messages %}
+		{% if category == 'info' %}
+	<p class="{{ category }}"><i class="fas fa-info-circle"></i> {{ message }}</p>
+		{% elif category == 'success' %}
+	<p class="{{ category }}"><i class="fas fa-check-circle"></i> {{ message }}</p>
+		{% elif category == 'error' %}
+	<p class="{{ category }}"><i class="fas fa-exclamation-circle"></i> {{ message }}</p>
+		{% elif category == 'warning' %}
+	<p class="{{ category }}"><i class="fas fa-exclamation-circle"></i> {{ message }}</p>
+		{% else %}
 	<p class="{{ category }}">{{ message }}</p>
+		{% endif %}
 	{% endfor %}
 </section>
 {% endif %}

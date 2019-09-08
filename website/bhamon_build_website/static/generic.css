@@ -248,14 +248,33 @@ form button
 	min-width: 100px;
 }
 
+.flash > p
+{
+	padding: 10px;
+}
+
 .flash .info
 {
-	color: green;
+    color: #00529b;
+    background: #bde5f8;
+}
+
+.flash .success
+{
+    color: #4f8a10;
+    background: #dff2bf;
 }
 
 .flash .error
 {
-	color: red;
+    color: #d8000c;
+    background: #ffd2d2;
+}
+
+.flash .warning
+{
+    color: #9f6000;
+    background: #feefb3;
 }
 
 .link-group
