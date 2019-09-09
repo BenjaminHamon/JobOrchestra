@@ -5,20 +5,17 @@ import signal
 import subprocess
 import sys
 import time
-import uuid
 
 import pymongo
 
-import bhamon_build_model.authentication_provider as authentication_provider
-import bhamon_build_model.authorization_provider as authorization_provider
-import bhamon_build_model.build_provider as build_provider
-import bhamon_build_model.file_storage as file_storage
-import bhamon_build_model.job_provider as job_provider
-import bhamon_build_model.json_database_client as json_database_client
-import bhamon_build_model.mongo_database_client as mongo_database_client
-import bhamon_build_model.task_provider as task_provider
-import bhamon_build_model.user_provider as user_provider
-import bhamon_build_model.worker_provider as worker_provider
+from bhamon_build_model.authentication_provider import AuthenticationProvider
+from bhamon_build_model.authorization_provider import AuthorizationProvider
+from bhamon_build_model.build_provider import BuildProvider
+from bhamon_build_model.file_storage import FileStorage
+from bhamon_build_model.job_provider import JobProvider
+from bhamon_build_model.task_provider import TaskProvider
+from bhamon_build_model.user_provider import UserProvider
+from bhamon_build_model.worker_provider import WorkerProvider
 
 from . import environment
 
@@ -30,8 +27,8 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 class Context:
 
 
-	def __init__(self, temporary_directory):
-		environment_instance = environment.load_test_context_environment("json")
+	def __init__(self, temporary_directory, database_type):
+		environment_instance = environment.load_test_context_environment(str(temporary_directory), database_type)
 
 		self.temporary_directory = str(temporary_directory)
 		self.master_address = environment_instance["master_address"]
@@ -41,25 +38,21 @@ class Context:
 		self.website_address = environment_instance["website_address"]
 		self.website_port = environment_instance["website_port"]
 		self.database_uri = environment_instance["database_uri"]
-		self.database_name = "test_build_database_" + str(uuid.uuid4())
 		self.process_collection = []
-
-		if self.database_uri.startswith("mongodb://"):
-			self.database_uri += self.database_name
 
 
 	def __enter__(self):
-		if self.database_uri.startswith("mongodb://"):
-			database_client = pymongo.MongoClient(self.database_uri)
-			database_client.drop_database(self.database_name)
+		if self.database_uri is not None and self.database_uri.startswith("mongodb://"):
+			database_client = pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000)
+			database_client.drop_database(database_client.get_database())
 			database_client.close()
 		return self
 
 
 	def __exit__(self, exception_type, exception_value, traceback):
-		if self.database_uri.startswith("mongodb://"):
+		if self.database_uri is not None and self.database_uri.startswith("mongodb://"):
 			database_client = pymongo.MongoClient(self.database_uri)
-			database_client.drop_database(self.database_name)
+			database_client.drop_database(database_client.get_database())
 			database_client.close()
 		for process in self.process_collection:
 			os.kill(process.pid, shutdown_signal)
@@ -144,14 +137,6 @@ class Context:
 		return process
 
 
-	def create_database_client(self):
-		if self.database_uri == "json":
-			return json_database_client.JsonDatabaseClient(os.path.join(self.temporary_directory, "master"))
-		if self.database_uri.startswith("mongodb://"):
-			return mongo_database_client.MongoDatabaseClient(pymongo.MongoClient(self.database_uri).get_database())
-		raise ValueError("Unsupported database uri '%s'" % self.database_uri)
-
-
 	def configure_worker_authentication(self, worker_collection):
 		providers = self.instantiate_providers()
 		user = providers["user"].create("build-worker", "Build Worker")
@@ -166,15 +151,15 @@ class Context:
 
 
 	def instantiate_providers(self):
-		database_client_instance = self.create_database_client()
-		file_storage_instance = file_storage.FileStorage(os.path.join(self.temporary_directory, "master"))
+		database_client_instance = environment.create_database_client(self.database_uri)
+		file_storage_instance = FileStorage(os.path.join(self.temporary_directory, "master"))
 
 		return {
-			"authentication": authentication_provider.AuthenticationProvider(database_client_instance),
-			"authorization": authorization_provider.AuthorizationProvider(),
-			"build": build_provider.BuildProvider(database_client_instance, file_storage_instance),
-			"job": job_provider.JobProvider(database_client_instance),
-			"task": task_provider.TaskProvider(database_client_instance),
-			"user": user_provider.UserProvider(database_client_instance),
-			"worker": worker_provider.WorkerProvider(database_client_instance),
+			"authentication": AuthenticationProvider(database_client_instance),
+			"authorization": AuthorizationProvider(),
+			"build": BuildProvider(database_client_instance, file_storage_instance),
+			"job": JobProvider(database_client_instance),
+			"task": TaskProvider(database_client_instance),
+			"user": UserProvider(database_client_instance),
+			"worker": WorkerProvider(database_client_instance),
 		}

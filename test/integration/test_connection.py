@@ -3,15 +3,18 @@
 import os
 import time
 
+import pytest
+
 from .. import assert_extensions
 from . import context
 from . import environment
 
 
-def test_worker_disconnection(tmpdir):
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_worker_disconnection(tmpdir, database_type):
 	""" Test a disconnection initiated by the worker """
 
-	with context.Context(tmpdir) as context_instance:
+	with context.Context(tmpdir, database_type) as context_instance:
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
@@ -39,10 +42,11 @@ def test_worker_disconnection(tmpdir):
 	])
 
 
-def test_master_disconnection(tmpdir):
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_master_disconnection(tmpdir, database_type):
 	""" Test a disconnection initiated by the master """
 
-	with context.Context(tmpdir) as context_instance:
+	with context.Context(tmpdir, database_type) as context_instance:
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 

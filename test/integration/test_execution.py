@@ -2,17 +2,20 @@
 
 import time
 
+import pytest
+
 from .. import assert_extensions
 from . import context
 from . import environment
 
 
-def test_job_success(tmpdir):
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_job_success(tmpdir, database_type):
 	""" Test executing a job which should succeed """
 
 	job_identifier = "test_success"
 
-	with context.Context(tmpdir) as context_instance:
+	with context.Context(tmpdir, database_type) as context_instance:
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
@@ -47,12 +50,13 @@ def test_job_success(tmpdir):
 	assert build["status"] == "succeeded"
 
 
-def test_job_failure(tmpdir):
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_job_failure(tmpdir, database_type):
 	""" Test executing a job which should fail """
 
 	job_identifier = "test_failure"
 
-	with context.Context(tmpdir) as context_instance:
+	with context.Context(tmpdir, database_type) as context_instance:
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
@@ -87,12 +91,13 @@ def test_job_failure(tmpdir):
 	assert build["status"] == "failed"
 
 
-def test_job_exception(tmpdir):
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_job_exception(tmpdir, database_type):
 	""" Test executing a job which should raise an exception """
 
 	job_identifier = "test_exception"
 
-	with context.Context(tmpdir) as context_instance:
+	with context.Context(tmpdir, database_type) as context_instance:
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
@@ -128,12 +133,13 @@ def test_job_exception(tmpdir):
 	assert build["status"] == "exception"
 
 
-def test_job_controller_success(tmpdir):
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_job_controller_success(tmpdir, database_type):
 	""" Test executing a controller job which should succeed """
 
 	job_identifier = "test_controller_success"
 
-	with context.Context(tmpdir) as context_instance:
+	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "controller" ])
 
 		providers = context_instance.instantiate_providers()
@@ -176,12 +182,13 @@ def test_job_controller_success(tmpdir):
 	assert len(all_builds) == 3
 
 
-def test_job_controller_failure(tmpdir):
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_job_controller_failure(tmpdir, database_type):
 	""" Test executing a controller job which should fail """
 
 	job_identifier = "test_controller_failure"
 
-	with context.Context(tmpdir) as context_instance:
+	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "controller" ])
 
 		providers = context_instance.instantiate_providers()
