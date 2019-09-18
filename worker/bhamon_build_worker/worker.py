@@ -10,6 +10,7 @@ import time
 
 import websockets
 
+import bhamon_build_worker.worker_logging as worker_logging
 import bhamon_build_worker.worker_storage as worker_storage
 
 
@@ -39,10 +40,13 @@ def run(master_uri, worker_identifier, executor_script):
 	if platform.system() == "Windows":
 		asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
+	worker_logging.configure_logging_handlers()
+
 	logger.info("Starting build worker")
 	_recover(worker_data)
 	main_future = asyncio.gather(_run_client(master_uri, worker_data), _check_signals(worker_data))
-	asyncio.get_event_loop().run_until_complete(main_future)
+	worker_data["asyncio_loop"] = asyncio.get_event_loop()
+	worker_data["asyncio_loop"].run_until_complete(main_future)
 	_terminate(worker_data)
 	logger.info("Exiting build worker")
 
@@ -120,12 +124,12 @@ def _terminate(worker_data):
 		all_futures.append(_terminate_executor(executor, termination_timeout_seconds))
 	asyncio.get_event_loop().run_until_complete(asyncio.gather(*all_futures))
 	for executor in worker_data["active_executors"]:
-		if executor["process"] and executor["process"].returncode is None:
+		if "process" in executor and executor["process"].returncode is None:
 			logger.warning("%s %s is still running (Process: %s)", executor["job_identifier"], executor["build_identifier"], executor["process"].pid)
 
 
 async def _terminate_executor(executor, timeout_seconds):
-	if executor["process"] and executor["process"].returncode is None:
+	if "process" in executor and executor["process"].returncode is None:
 		logger.info("Aborting %s %s", executor["job_identifier"], executor["build_identifier"])
 		os.kill(executor["process"].pid, shutdown_signal)
 
@@ -144,7 +148,7 @@ async def _execute_command(worker_data, command, parameters): # pylint: disable=
 	if command == "execute":
 		return await _execute(worker_data, **parameters)
 	if command == "clean":
-		return _clean(worker_data, **parameters)
+		return await _clean(worker_data, **parameters)
 	if command == "abort":
 		return _abort(worker_data, **parameters)
 	if command == "status":
@@ -171,7 +175,7 @@ def _recover(worker_data):
 		for executor in worker_data["active_executors"]:
 			if executor["build_identifier"] == build_identifier:
 				continue
-		executor = { "job_identifier": job_identifier, "build_identifier": build_identifier, "process": None }
+		executor = { "job_identifier": job_identifier, "build_identifier": build_identifier }
 		worker_data["active_executors"].append(executor)
 
 
@@ -184,19 +188,37 @@ def _list_builds(worker_data):
 
 async def _execute(worker_data, job_identifier, build_identifier, job, parameters):
 	logger.info("Executing %s %s", job_identifier, build_identifier)
-	build_request = { "job_identifier": job_identifier, "build_identifier": build_identifier, "job": job, "parameters": parameters }
+
+	build_request = {
+		"job_identifier": job_identifier,
+		"build_identifier": build_identifier,
+		"job": job,
+		"parameters": parameters,
+	}
+
 	worker_storage.create_build(job_identifier, build_identifier)
 	worker_storage.save_request(job_identifier, build_identifier, build_request)
+
 	executor_command = [ sys.executable, worker_data["executor_script"], job_identifier, build_identifier ]
-	executor_process = await asyncio.create_subprocess_exec(*executor_command, creationflags = subprocess_flags)
-	executor = { "job_identifier": job_identifier, "build_identifier": build_identifier, "process": executor_process }
+	executor_process = await asyncio.create_subprocess_exec(*executor_command, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
+	executor_watcher = worker_data["asyncio_loop"].create_task(_watch_executor(executor_process))
+
+	executor = {
+		"job_identifier": job_identifier,
+		"build_identifier": build_identifier,
+		"process": executor_process,
+		"watcher": executor_watcher,
+	}
+
 	worker_data["active_executors"].append(executor)
 
 
-def _clean(worker_data, job_identifier, build_identifier):
+async def _clean(worker_data, job_identifier, build_identifier):
 	logger.info("Cleaning %s %s", job_identifier, build_identifier)
 	executor = _find_executor(worker_data, build_identifier)
-	if executor["process"] and executor["process"].returncode is None:
+	if "watcher" in executor:
+		await asyncio.wait_for(executor["watcher"], 1)
+	if "process" in executor and executor["process"].returncode is None:
 		raise RuntimeError("Executor is still running for build %s" % build_identifier)
 	worker_data["active_executors"].remove(executor)
 	worker_storage.delete_build(job_identifier, build_identifier)
@@ -205,7 +227,7 @@ def _clean(worker_data, job_identifier, build_identifier):
 def _abort(worker_data, job_identifier, build_identifier):
 	logger.info("Aborting %s %s", job_identifier, build_identifier)
 	executor = _find_executor(worker_data, build_identifier)
-	if executor["process"] and executor["process"].returncode is None:
+	if executor["process"].returncode is None:
 		os.kill(executor["process"].pid, shutdown_signal)
 	# The executor should terminate nicely, if it does not it will stays as running and should be investigated
 	# Forcing termination here would leave orphan processes and the status as running
@@ -232,7 +254,7 @@ def _shutdown(worker_data):
 
 def _retrieve_status(worker_data, job_identifier, build_identifier):
 	executor = _find_executor(worker_data, build_identifier)
-	is_executor_running = executor["process"] and executor["process"].returncode is None
+	is_executor_running = "process" in executor and executor["process"].returncode is None
 	status = worker_storage.load_status(job_identifier, build_identifier)
 	if not is_executor_running and (status["status"] in [ "unknown", "running" ]):
 		logger.error('Build %s executor terminated before completion', build_identifier)
@@ -251,3 +273,19 @@ def _retrieve_log(job_identifier, build_identifier, step_index, step_name):
 
 def _retrieve_results(job_identifier, build_identifier):
 	return worker_storage.load_results(job_identifier, build_identifier)
+
+
+async def _watch_executor(executor_process):
+	raw_logger = logging.getLogger("raw")
+
+	while True:
+		try:
+			line = await asyncio.wait_for(executor_process.stdout.readline(), 1)
+		except asyncio.TimeoutError:
+			continue
+
+		if not line:
+			break
+
+		line = line.decode("utf-8").strip()
+		raw_logger.info(line)
