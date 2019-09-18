@@ -111,9 +111,6 @@ def list_artifact_files(artifact, configuration, parameters):
 		fileset_parameters = copy.deepcopy(fileset_options.get("parameters", {}))
 		fileset_parameters.update(parameters)
 
-		if callable(fileset):
-			fileset = fileset(configuration, fileset_parameters)
-
 		all_files += load_fileset(fileset, fileset_parameters)
 
 	all_files.sort()
@@ -128,9 +125,6 @@ def map_artifact_files(artifact, configuration, parameters):
 		fileset = configuration["filesets"][fileset_options["identifier"]]
 		fileset_parameters = copy.deepcopy(fileset_options.get("parameters", {}))
 		fileset_parameters.update(parameters)
-
-		if callable(fileset):
-			fileset = fileset(configuration, fileset_parameters)
 
 		path_in_workspace = fileset["path_in_workspace"].format(**fileset_parameters)
 		for source in load_fileset(fileset, fileset_parameters):
@@ -167,7 +161,10 @@ def merge_artifact_mapping(artifact_files):
 def load_fileset(fileset, parameters):
 	matched_files = []
 	path_in_workspace = fileset["path_in_workspace"].format(**parameters)
-	for file_pattern in fileset["file_patterns"]:
+
+	for file_function in fileset.get("file_functions", []):
+		matched_files += file_function(path_in_workspace, parameters)
+	for file_pattern in fileset.get("file_patterns", []):
 		matched_files += glob.glob(os.path.join(path_in_workspace, file_pattern.format(**parameters)), recursive = True)
 
 	selected_files = []

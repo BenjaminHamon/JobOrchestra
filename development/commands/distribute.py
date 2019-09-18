@@ -101,10 +101,3 @@ def save_upload_results(component, version, result_file_path, simulate):
 		results["distributions"].append(distribution_information)
 		if not simulate:
 			bhamon_development_toolkit.workspace.save_results(result_file_path, results)
-
-
-def create_fileset(component):
-	return {
-		"path_in_workspace": os.path.join(".artifacts", "distributions", component["name"]),
-		"file_patterns": [ component["name"].replace("-", "_") + "-{version}-py3-none-any.whl" ],
-	}
