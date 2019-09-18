@@ -98,6 +98,7 @@ def save_upload_results(artifact_name, artifact_type, result_file_path, simulate
 
 	if result_file_path:
 		results = bhamon_development_toolkit.workspace.load_results(result_file_path)
+		results["artifacts"] = results.get("artifacts", [])
 		results["artifacts"].append(artifact_information)
 		if not simulate:
 			bhamon_development_toolkit.workspace.save_results(result_file_path, results)

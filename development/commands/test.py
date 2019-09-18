@@ -37,6 +37,7 @@ def save_results(run_identifier, result_file_path, simulate):
 
 	if result_file_path:
 		results = bhamon_development_toolkit.workspace.load_results(result_file_path)
+		results["tests"] = results.get("tests", [])
 		results["tests"].append(test_results)
 		if not simulate:
 			bhamon_development_toolkit.workspace.save_results(result_file_path, results)
