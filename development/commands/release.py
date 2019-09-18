@@ -1,6 +1,6 @@
-import scripts.commands.artifact
-import scripts.commands.clean
-import scripts.commands.distribute
+import development.commands.artifact
+import development.commands.clean
+import development.commands.distribute
 
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
@@ -17,8 +17,8 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 	if arguments.simulate:
 		arguments.artifact_commands = [ "package" ]
 
-	scripts.commands.clean.run(environment, configuration, arguments)
+	development.commands.clean.run(environment, configuration, arguments)
 	print("")
-	scripts.commands.distribute.run(environment, configuration, arguments)
+	development.commands.distribute.run(environment, configuration, arguments)
 	print("")
-	scripts.commands.artifact.run(environment, configuration, arguments)
+	development.commands.artifact.run(environment, configuration, arguments)

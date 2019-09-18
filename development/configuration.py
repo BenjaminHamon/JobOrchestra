@@ -1,27 +1,9 @@
 import datetime
 import glob
+import importlib
 import os
 import subprocess
-
-import scripts.commands.artifact
-import scripts.commands.clean
-import scripts.commands.develop
-import scripts.commands.distribute
-import scripts.commands.lint
-import scripts.commands.release
-import scripts.commands.test
-
-
-def get_command_list():
-	return [
-		scripts.commands.artifact,
-		scripts.commands.clean,
-		scripts.commands.develop,
-		scripts.commands.distribute,
-		scripts.commands.lint,
-		scripts.commands.release,
-		scripts.commands.test,
-	]
+import sys
 
 
 def load_configuration(environment):
@@ -47,6 +29,8 @@ def load_configuration(environment):
 	configuration["project_url"] = "https://github.com/BenjaminHamon/BuildService"
 	configuration["copyright"] = "Copyright (c) 2019 Benjamin Hamon"
 
+	configuration["development_toolkit"] = "git+https://github.com/BenjaminHamon/DevelopmentToolkit@{revision}#subdirectory=toolkit"
+	configuration["development_toolkit_revision"] = "ccaa3b07938c45f0700c277f5a079dcf02bd79fa"
 	configuration["development_dependencies"] = [ "pylint", "pymongo", "pytest", "pytest-asyncio", "pytest-json", "wheel" ]
 
 	configuration["components"] = [
@@ -60,9 +44,9 @@ def load_configuration(environment):
 
 	configuration["project_identifier_for_artifact_server"] = "BuildService"
 
-	configuration["filesets"] = {
-		"distribution": lambda configuration, parameters: scripts.commands.distribute.create_fileset(next(c for c in configuration["components"] if c["name"] == parameters["component"])),
-	}
+	# configuration["filesets"] = {
+	# 	"distribution": lambda configuration, parameters: development.commands.distribute.create_fileset(next(c for c in configuration["components"] if c["name"] == parameters["component"])),
+	# }
 
 	configuration["artifacts"] = {
 		"package": {
@@ -97,3 +81,31 @@ def list_package_data(package, pattern_collection):
 	for pattern in pattern_collection:
 		all_files += glob.glob(package + "/" + pattern, recursive = True)
 	return [ os.path.relpath(path, package) for path in all_files ]
+
+
+def load_commands():
+	all_modules = [
+		"development.commands.artifact",
+		"development.commands.clean",
+		"development.commands.develop",
+		"development.commands.distribute",
+		"development.commands.lint",
+		"development.commands.release",
+		"development.commands.test",
+	]
+
+	return [ import_command(module) for module in all_modules ]
+
+
+def import_command(module_name):
+	try:
+		return {
+			"module_name": module_name,
+			"module": importlib.import_module(module_name),
+		}
+
+	except ImportError:
+		return {
+			"module_name": module_name,
+			"exception": sys.exc_info(),
+		}

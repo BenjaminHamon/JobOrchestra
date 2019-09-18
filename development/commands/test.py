@@ -1,8 +1,8 @@
 import logging
 import uuid
 
-import scripts.model.test
-import scripts.model.workspace
+import bhamon_development_toolkit.python.test
+import bhamon_development_toolkit.workspace
 
 
 logger = logging.getLogger("Main")
@@ -27,16 +27,16 @@ def test(python_executable, run_identifier, filter_expression, simulate):
 	logger.info("Running test suite (RunIdentifier: '%s', Filter: '%s')", run_identifier, filter_expression)
 	print("")
 
-	report = scripts.model.test.run_pytest(python_executable, "test_results", run_identifier, "./test", filter_expression, simulate)
+	report = bhamon_development_toolkit.python.test.run_pytest(python_executable, "test_results", run_identifier, "./test", filter_expression, simulate)
 	if not report["success"]:
 		raise RuntimeError("Test run failed")
 
 
 def save_results(run_identifier, result_file_path, simulate):
-	test_results = scripts.model.test.get_aggregated_results("test_results", run_identifier)
+	test_results = bhamon_development_toolkit.python.test.get_aggregated_results("test_results", run_identifier)
 
 	if result_file_path:
-		results = scripts.model.workspace.load_results(result_file_path)
+		results = bhamon_development_toolkit.workspace.load_results(result_file_path)
 		results["tests"].append(test_results)
 		if not simulate:
-			scripts.model.workspace.save_results(result_file_path, results)
+			bhamon_development_toolkit.workspace.save_results(result_file_path, results)

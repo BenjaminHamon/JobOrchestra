@@ -5,8 +5,8 @@ import sys
 
 sys.path.insert(0, os.path.join(sys.path[0], ".."))
 
-import scripts.configuration # pylint: disable = wrong-import-position
-import scripts.environment # pylint: disable = wrong-import-position
+import development.configuration # pylint: disable = wrong-import-position
+import development.environment # pylint: disable = wrong-import-position
 
 
 logger = logging.getLogger("Main")
@@ -20,14 +20,15 @@ def main():
 	os.chdir(workspace_directory)
 
 	try:
-		environment_instance = scripts.environment.load_environment()
-		configuration_instance = scripts.configuration.load_configuration(environment_instance)
+		environment_instance = development.environment.load_environment()
+		configuration_instance = development.configuration.load_configuration(environment_instance)
+		command_list = development.configuration.load_commands()
 
-		arguments = parse_arguments(environment_instance, configuration_instance)
+		arguments = parse_arguments(environment_instance, configuration_instance, command_list)
 		log_level = logging.getLevelName(arguments.verbosity.upper())
-		scripts.environment.configure_logging(log_level)
+		development.environment.configure_logging(log_level)
 		if arguments.log_file is not None:
-			scripts.environment.configure_log_file(log_level, arguments.log_file)
+			development.environment.configure_log_file(log_level, arguments.log_file)
 
 		show_project_information(configuration_instance, arguments.simulate)
 		arguments.func(environment_instance, configuration_instance, arguments)
@@ -36,7 +37,7 @@ def main():
 		os.chdir(current_directory)
 
 
-def parse_arguments(environment_instance, configuration_instance):
+def parse_arguments(environment_instance, configuration_instance, command_list):
 	all_log_levels = [ "debug", "info", "warning", "error", "critical" ]
 
 	main_parser = argparse.ArgumentParser()
@@ -49,9 +50,9 @@ def parse_arguments(environment_instance, configuration_instance):
 	subparsers = main_parser.add_subparsers(title = "commands", metavar = "<command>")
 	subparsers.required = True
 
-	for command_module in scripts.configuration.get_command_list():
-		command_parser = command_module.configure_argument_parser(environment_instance, configuration_instance, subparsers)
-		command_parser.set_defaults(func = command_module.run)
+	for command in [ command for command in command_list if "module" in command ]:
+		command_parser = command["module"].configure_argument_parser(environment_instance, configuration_instance, subparsers)
+		command_parser.set_defaults(func = command["module"].run)
 
 	return main_parser.parse_args()
 
