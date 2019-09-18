@@ -36,6 +36,9 @@ def run(master_uri, worker_identifier, executor_script):
 	signal.signal(signal.SIGINT, lambda signal_number, frame: _shutdown(worker_data))
 	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(worker_data))
 
+	if platform.system() == "Windows":
+		asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 	logger.info("Starting build worker")
 	_recover(worker_data)
 	main_future = asyncio.gather(_run_client(master_uri, worker_data), _check_signals(worker_data))
@@ -95,7 +98,7 @@ async def _process_connection(connection, worker_data):
 		logger.debug("< %s", request)
 
 		try:
-			result = _execute_command(worker_data, request["command"], request["parameters"])
+			result = await _execute_command(worker_data, request["command"], request["parameters"])
 			response = { "result": result }
 		except Exception as exception: # pylint: disable=broad-except
 			logger.error("Failed to process request %s", request, exc_info = True)
@@ -117,31 +120,29 @@ def _terminate(worker_data):
 		all_futures.append(_terminate_executor(executor, termination_timeout_seconds))
 	asyncio.get_event_loop().run_until_complete(asyncio.gather(*all_futures))
 	for executor in worker_data["active_executors"]:
-		if executor["process"] and executor["process"].poll() is None:
+		if executor["process"] and executor["process"].returncode is None:
 			logger.warning("%s %s is still running (Process: %s)", executor["job_identifier"], executor["build_identifier"], executor["process"].pid)
 
 
 async def _terminate_executor(executor, timeout_seconds):
-	if executor["process"] and executor["process"].poll() is None:
+	if executor["process"] and executor["process"].returncode is None:
 		logger.info("Aborting %s %s", executor["job_identifier"], executor["build_identifier"])
-		termination_start_time = time.time()
 		os.kill(executor["process"].pid, shutdown_signal)
-		while time.time() - termination_start_time < timeout_seconds:
-			await asyncio.sleep(1)
-			if executor["process"].poll() is not None:
-				return
-		logger.warning("Terminating %s %s", executor["job_identifier"], executor["build_identifier"])
-		executor["process"].kill()
-		await asyncio.sleep(1)
+
+		try:
+			await asyncio.wait_for(executor["process"].wait(), timeout_seconds)
+		except asyncio.TimeoutError:
+			logger.warning("Forcing termination for %s %s", executor["job_identifier"], executor["build_identifier"])
+			executor["process"].kill()
 
 
-def _execute_command(worker_data, command, parameters): # pylint: disable=too-many-return-statements
+async def _execute_command(worker_data, command, parameters): # pylint: disable=too-many-return-statements
 	if command == "authenticate":
 		return _authenticate(worker_data)
 	if command == "list":
 		return _list_builds(worker_data)
 	if command == "execute":
-		return _execute(worker_data, **parameters)
+		return await _execute(worker_data, **parameters)
 	if command == "clean":
 		return _clean(worker_data, **parameters)
 	if command == "abort":
@@ -181,13 +182,13 @@ def _list_builds(worker_data):
 	return all_builds
 
 
-def _execute(worker_data, job_identifier, build_identifier, job, parameters):
+async def _execute(worker_data, job_identifier, build_identifier, job, parameters):
 	logger.info("Executing %s %s", job_identifier, build_identifier)
 	build_request = { "job_identifier": job_identifier, "build_identifier": build_identifier, "job": job, "parameters": parameters }
 	worker_storage.create_build(job_identifier, build_identifier)
 	worker_storage.save_request(job_identifier, build_identifier, build_request)
 	executor_command = [ sys.executable, worker_data["executor_script"], job_identifier, build_identifier ]
-	executor_process = subprocess.Popen(executor_command, creationflags = subprocess_flags)
+	executor_process = await asyncio.create_subprocess_exec(*executor_command, creationflags = subprocess_flags)
 	executor = { "job_identifier": job_identifier, "build_identifier": build_identifier, "process": executor_process }
 	worker_data["active_executors"].append(executor)
 
@@ -195,7 +196,7 @@ def _execute(worker_data, job_identifier, build_identifier, job, parameters):
 def _clean(worker_data, job_identifier, build_identifier):
 	logger.info("Cleaning %s %s", job_identifier, build_identifier)
 	executor = _find_executor(worker_data, build_identifier)
-	if executor["process"] and executor["process"].poll() is None:
+	if executor["process"] and executor["process"].returncode is None:
 		raise RuntimeError("Executor is still running for build %s" % build_identifier)
 	worker_data["active_executors"].remove(executor)
 	worker_storage.delete_build(job_identifier, build_identifier)
@@ -204,7 +205,7 @@ def _clean(worker_data, job_identifier, build_identifier):
 def _abort(worker_data, job_identifier, build_identifier):
 	logger.info("Aborting %s %s", job_identifier, build_identifier)
 	executor = _find_executor(worker_data, build_identifier)
-	if executor["process"] and executor["process"].poll() is None:
+	if executor["process"] and executor["process"].returncode is None:
 		os.kill(executor["process"].pid, shutdown_signal)
 	# The executor should terminate nicely, if it does not it will stays as running and should be investigated
 	# Forcing termination here would leave orphan processes and the status as running
@@ -231,7 +232,7 @@ def _shutdown(worker_data):
 
 def _retrieve_status(worker_data, job_identifier, build_identifier):
 	executor = _find_executor(worker_data, build_identifier)
-	is_executor_running = executor["process"] and executor["process"].poll() is None
+	is_executor_running = executor["process"] and executor["process"].returncode is None
 	status = worker_storage.load_status(job_identifier, build_identifier)
 	if not is_executor_running and (status["status"] in [ "unknown", "running" ]):
 		logger.error('Build %s executor terminated before completion', build_identifier)
