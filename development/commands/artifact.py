@@ -72,6 +72,7 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 
 	if "package" in arguments.artifact_commands:
 		artifact_files = artifact_filesets.map_files(artifact, fileset_getter, parameters)
+		artifact_filesets.check_files([ src for src, dst in artifact_files ])
 		artifact_repository.package(artifact["path_in_repository"], artifact_name, artifact_files, arguments.simulate)
 		print("")
 	if "verify" in arguments.artifact_commands:
