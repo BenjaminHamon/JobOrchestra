@@ -56,13 +56,17 @@ def load_configuration(environment):
 			"file_name": "{project}_{version}_package",
 			"installation_directory": ".artifacts/distributions",
 			"path_in_repository": "packages",
+
 			"filesets": [
-				{ "identifier": "distribution", "path_in_archive": "bhamon-build-cli", "parameters": { "component": "bhamon-build-cli" } },
-				{ "identifier": "distribution", "path_in_archive": "bhamon-build-master", "parameters": { "component": "bhamon-build-master" } },
-				{ "identifier": "distribution", "path_in_archive": "bhamon-build-model", "parameters": { "component": "bhamon-build-model" } },
-				{ "identifier": "distribution", "path_in_archive": "bhamon-build-service", "parameters": { "component": "bhamon-build-service" } },
-				{ "identifier": "distribution", "path_in_archive": "bhamon-build-website", "parameters": { "component": "bhamon-build-website" } },
-				{ "identifier": "distribution", "path_in_archive": "bhamon-build-worker", "parameters": { "component": "bhamon-build-worker" } },
+				{
+					"identifier": "distribution",
+					"path_in_archive": component["name"],
+					"parameters": {
+						"component": component["name"],
+					},
+				}
+
+				for component in configuration["components"]
 			],
 		},
 	}
