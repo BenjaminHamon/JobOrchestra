@@ -1,12 +1,11 @@
 import argparse
-import copy
-import filecmp
-import glob
 import logging
-import os
 
-import bhamon_development_toolkit.artifacts
+import bhamon_development_toolkit.artifacts.filesets as artifact_filesets
 import bhamon_development_toolkit.workspace
+
+from bhamon_development_toolkit.artifacts.repository import ArtifactRepository
+from bhamon_development_toolkit.artifacts.server_client import create_artifact_server_client
 
 
 logger = logging.getLogger("Main")
@@ -55,22 +54,24 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 	artifact = configuration["artifacts"][arguments.artifact]
 	artifact_name = artifact["file_name"].format(**parameters)
 
-	artifact_repository = bhamon_development_toolkit.artifacts.ArtifactRepository(".artifacts", configuration["project_identifier_for_artifact_server"])
+	artifact_repository = ArtifactRepository(".artifacts", configuration["project_identifier_for_artifact_server"])
 	if environment.get("artifact_server_url", None) is not None:
 		artifact_server_url = environment["artifact_server_url"]
 		artifact_server_parameters = environment.get("artifact_server_parameters", {})
-		artifact_repository.server_client = bhamon_development_toolkit.artifacts.create_artifact_server_client(artifact_server_url, artifact_server_parameters, environment)
+		artifact_repository.server_client = create_artifact_server_client(artifact_server_url, artifact_server_parameters, environment)
+
+	fileset_getter = lambda fileset_identifier: configuration["filesets"][fileset_identifier]
 
 	if "upload" in arguments.artifact_commands and artifact_repository.server_client is None:
 		raise ValueError("Upload command requires an artifact server")
 
 	if "show" in arguments.artifact_commands:
-		artifact_files = list_artifact_files(artifact, configuration, parameters)
+		artifact_files = artifact_filesets.list_files(artifact, fileset_getter, parameters)
 		artifact_repository.show(artifact_name, artifact_files)
 		print("")
 
 	if "package" in arguments.artifact_commands:
-		artifact_files = merge_artifact_mapping(map_artifact_files(artifact, configuration, parameters))
+		artifact_files = artifact_filesets.map_files(artifact, fileset_getter, parameters)
 		artifact_repository.package(artifact["path_in_repository"], artifact_name, artifact_files, arguments.simulate)
 		print("")
 	if "verify" in arguments.artifact_commands:
@@ -102,77 +103,3 @@ def save_upload_results(artifact_name, artifact_type, result_file_path, simulate
 		results["artifacts"].append(artifact_information)
 		if not simulate:
 			bhamon_development_toolkit.workspace.save_results(result_file_path, results)
-
-
-def list_artifact_files(artifact, configuration, parameters):
-	all_files = []
-
-	for fileset_options in artifact["filesets"]:
-		fileset = configuration["filesets"][fileset_options["identifier"]]
-		fileset_parameters = copy.deepcopy(fileset_options.get("parameters", {}))
-		fileset_parameters.update(parameters)
-
-		all_files += load_fileset(fileset, fileset_parameters)
-
-	all_files.sort()
-
-	return all_files
-
-
-def map_artifact_files(artifact, configuration, parameters):
-	all_files = []
-
-	for fileset_options in artifact["filesets"]:
-		fileset = configuration["filesets"][fileset_options["identifier"]]
-		fileset_parameters = copy.deepcopy(fileset_options.get("parameters", {}))
-		fileset_parameters.update(parameters)
-
-		path_in_workspace = fileset["path_in_workspace"].format(**fileset_parameters)
-		for source in load_fileset(fileset, fileset_parameters):
-			destination = source
-			if "path_in_archive" in fileset_options:
-				destination = os.path.join(fileset_options["path_in_archive"], os.path.relpath(source, path_in_workspace))
-			all_files.append((source, destination.replace("\\", "/")))
-
-	all_files.sort()
-
-	return all_files
-
-
-def merge_artifact_mapping(artifact_files):
-	merged_files = []
-	has_conflicts = False
-
-	for destination in set(dst for src, dst in artifact_files):
-		source_collection = [ src for src, dst in artifact_files if dst == destination ]
-		for source in source_collection[1:]:
-			if not filecmp.cmp(source_collection[0], source):
-				has_conflicts = True
-				logger.error("Mapping conflict: %s, %s => %s", source_collection[0], source, destination)
-		merged_files.append((source_collection[0], destination))
-
-	if has_conflicts:
-		raise ValueError("Artifact mapper has conflicts")
-
-	merged_files.sort()
-
-	return merged_files
-
-
-def load_fileset(fileset, parameters):
-	matched_files = []
-	path_in_workspace = fileset["path_in_workspace"].format(**parameters)
-
-	for file_function in fileset.get("file_functions", []):
-		matched_files += file_function(path_in_workspace, parameters)
-	for file_pattern in fileset.get("file_patterns", []):
-		matched_files += glob.glob(os.path.join(path_in_workspace, file_pattern.format(**parameters)), recursive = True)
-
-	selected_files = []
-	for file_path in matched_files:
-		file_path = file_path.replace("\\", "/")
-		if os.path.isfile(file_path):
-			selected_files.append(file_path)
-
-	selected_files.sort()
-	return selected_files
