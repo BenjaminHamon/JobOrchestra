@@ -40,7 +40,7 @@ def run(master_uri, worker_identifier, executor_script):
 	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(worker_data))
 
 	if platform.system() == "Windows":
-		asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+		asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy()) # pylint: disable = no-member
 
 	worker_logging.configure_logging_handlers()
 
