@@ -28,8 +28,10 @@ class Master:
 
 		self.reload_configuration()
 
+		main_loop = asyncio.get_event_loop()
 		main_future = asyncio.gather(self._supervisor.run_server(), self._task_processor.run())
-		asyncio.get_event_loop().run_until_complete(main_future)
+		main_loop.run_until_complete(main_future)
+		main_loop.close()
 
 		logger.info("Exiting build master")
 

@@ -24,6 +24,8 @@ termination_timeout_seconds = 30
 
 
 def run(master_uri, worker_identifier, executor_script):
+	logger.info("Starting build worker")
+
 	worker_data = {
 		"identifier": worker_identifier,
 		"executor_script": executor_script,
@@ -42,12 +44,15 @@ def run(master_uri, worker_identifier, executor_script):
 
 	worker_logging.configure_logging_handlers()
 
-	logger.info("Starting build worker")
+	main_loop = asyncio.get_event_loop()
+	worker_data["asyncio_loop"] = main_loop
+
 	_recover(worker_data)
 	main_future = asyncio.gather(_run_client(master_uri, worker_data), _check_signals(worker_data))
-	worker_data["asyncio_loop"] = asyncio.get_event_loop()
-	worker_data["asyncio_loop"].run_until_complete(main_future)
+	main_loop.run_until_complete(main_future)
 	_terminate(worker_data)
+	main_loop.close()
+
 	logger.info("Exiting build worker")
 
 
@@ -122,7 +127,7 @@ def _terminate(worker_data):
 	all_futures = []
 	for executor in worker_data["active_executors"]:
 		all_futures.append(_terminate_executor(executor, termination_timeout_seconds))
-	asyncio.get_event_loop().run_until_complete(asyncio.gather(*all_futures))
+	worker_data["asyncio_loop"].run_until_complete(asyncio.gather(*all_futures))
 	for executor in worker_data["active_executors"]:
 		if "process" in executor and executor["process"].returncode is None:
 			logger.warning("%s %s is still running (Process: %s)", executor["job_identifier"], executor["build_identifier"], executor["process"].pid)
