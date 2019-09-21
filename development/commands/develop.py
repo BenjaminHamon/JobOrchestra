@@ -11,40 +11,41 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
-	install_development_toolkit(environment["python3_executable"], configuration["development_toolkit"], configuration["development_toolkit_revision"], arguments.simulate)
+	python_executable = environment["python3_executable"]
+	python_package_repository = environment.get("python_package_repository_web_url", None)
+
+	logger.info("Installing development toolkit")
+	development_toolkit_package = configuration["development_toolkit"].format(revision = configuration["development_toolkit_revision"])
+	install_packages(python_executable, python_package_repository, [ development_toolkit_package ], arguments.simulate)
 	print("")
 
-	install_dependencies(environment["python3_executable"], configuration["development_dependencies"], arguments.simulate)
-	print("")
+	if len(configuration.get("development_dependencies", [])) > 0:
+		logger.info("Installing development dependencies")
+		install_packages(python_executable, python_package_repository, configuration["development_dependencies"], arguments.simulate)
+		print("")
+
+	if len(configuration.get("project_dependencies", [])) > 0:
+		logger.info("Installing project dependencies")
+		install_packages(python_executable, python_package_repository, configuration["project_dependencies"], arguments.simulate)
+		print("")
 
 	for component in configuration["components"]:
 		setup_component(configuration, component, arguments.simulate)
 	print("")
 
-	for component in configuration["components"]:
-		install_component(environment["python3_executable"], component, arguments.simulate)
-		print("")
+	logger.info("Installing project packages")
+	development_package_collection = [ os.path.join(".", component["path"]) for component in configuration["components"] ]
+	install_packages(python_executable, python_package_repository, development_package_collection, arguments.simulate)
 
 
-def install_development_toolkit(python_executable, source, revision, simulate):
-	logger.info("Installing development toolkit")
-
+def install_packages(python_executable, python_package_repository, package_collection, simulate):
 	install_command = [ python_executable, "-m", "pip", "install", "--upgrade" ]
-	if os.path.isdir(source):
-		install_command += [ "--editable", source ]
-	else:
-		install_command += [ source.format(revision = revision) ]
+	install_command += [ "--extra-index", python_package_repository ] if python_package_repository is not None else []
 
-	logger.info("+ %s", " ".join(install_command))
-	if not simulate:
-		subprocess.check_call(install_command)
+	for package in package_collection:
+		install_command += [ "--editable", package ] if os.path.isdir(package) else [ package ]
 
-
-def install_dependencies(python_executable, dependency_collection, simulate):
-	logger.info("Installing development dependencies")
-
-	install_command = [ python_executable, "-m", "pip", "install", "--upgrade" ] + dependency_collection
-	logger.info("+ %s", " ".join(install_command))
+	logger.info("+ %s", " ".join(("'" + x + "'") if " " in x else x for x in install_command))
 	if not simulate:
 		subprocess.check_call(install_command)
 
@@ -61,12 +62,3 @@ def setup_component(configuration, component, simulate):
 	if not simulate:
 		with open(metadata_file_path, "w", encoding = "utf-8") as metadata_file:
 			metadata_file.writelines(metadata_content)
-
-
-def install_component(python_executable, component, simulate):
-	logger.info("Installing development package for '%s'", component["name"])
-
-	install_command = [ python_executable, "-m", "pip", "install", "--upgrade", "--editable", os.path.join(".", component["path"]) ]
-	logger.info("+ %s", " ".join(install_command))
-	if not simulate:
-		subprocess.check_call(install_command)
