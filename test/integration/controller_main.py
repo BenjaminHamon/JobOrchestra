@@ -48,7 +48,7 @@ def parse_arguments():
 
 	arguments = main_parser.parse_args()
 	if hasattr(arguments, "parameters"):
-		arguments.parameters = { key: value for key, value in arguments.parameters }
+		arguments.parameters = dict(arguments.parameters)
 
 	return arguments
 

@@ -149,7 +149,7 @@ class AuthenticationProvider:
 		raise ValueError("Unsupported hash function '%s'" % function)
 
 
-	def hash_token(self, token, function, parameters): # pylint: disable = no-self-use
+	def hash_token(self, token, function, parameters): # pylint: disable = no-self-use, unused-argument
 		if function == "sha256":
 			return hashlib.sha256(bytes.fromhex(token)).hexdigest()
 		raise ValueError("Unsupported hash function '%s'" % function)
