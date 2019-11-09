@@ -23,13 +23,13 @@ The project is structured with a python package for each component as each one h
 
 ## Development
 
-The project include commands to automate development related tasks. They are exposed by the `script/main.py` script. Check the script help, using the `--help` option, for information about commands. You can also run commands with the `--simulate` option to check their behavior before actually running them.
+The project include commands to automate development related tasks. They are exposed by the `development/main.py` script. Check the script help, using the `--help` option, for information about commands. You can also run commands with the `--simulate` option to check their behavior before actually running them.
 
 
 To set up a workspace for development, create a `python3` virtual environment, then run the `develop` command. This will install the project dependencies and packages in your python environment.
 
 ```
-python3 ./scripts/main.py develop
+python3 ./development/main.py develop
 ```
 
 
