@@ -10,7 +10,7 @@ def load_configuration(environment):
 	configuration = {
 		"project": "bhamon-build",
 		"project_name": "Build Service",
-		"project_version": { "identifier": "1.0" },
+		"project_version": { "identifier": "2.0" },
 	}
 
 	branch = subprocess.check_output([ environment["git_executable"], "rev-parse", "--abbrev-ref", "HEAD" ]).decode("utf-8").strip()
