@@ -4,6 +4,7 @@ import logging
 
 import filelock
 
+from bhamon_build_master.job_scheduler import JobScheduler
 from bhamon_build_master.master import Master
 from bhamon_build_master.supervisor import Supervisor
 from bhamon_build_master.task_processor import TaskProcessor
@@ -48,12 +49,18 @@ def create_application(arguments):
 		host = arguments.address,
 		port = arguments.port,
 		worker_provider = worker_provider_instance,
+		build_provider = build_provider_instance,
+	)
+
+	job_scheduler_instance = JobScheduler(
+		supervisor = supervisor_instance,
 		job_provider = job_provider_instance,
 		build_provider = build_provider_instance,
 		worker_selector = worker_selector_instance,
 	)
 
 	master_instance = Master(
+		job_scheduler = job_scheduler_instance,
 		supervisor = supervisor_instance,
 		task_processor = task_processor_instance,
 		job_provider = job_provider_instance,

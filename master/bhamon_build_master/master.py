@@ -10,7 +10,8 @@ logger = logging.getLogger("Master")
 class Master:
 
 
-	def __init__(self, supervisor, task_processor, job_provider, worker_provider, configuration_loader):
+	def __init__(self, job_scheduler, supervisor, task_processor, job_provider, worker_provider, configuration_loader):
+		self._job_scheduler = job_scheduler
 		self._supervisor = supervisor
 		self._task_processor = task_processor
 		self._job_provider = job_provider
@@ -42,10 +43,10 @@ class Master:
 		self._task_processor.register_handler("stop_worker", 50,
 			lambda parameters: stop_worker(self._supervisor, **parameters))
 		self._task_processor.register_handler("abort_build", 90,
-			lambda parameters: abort_build(self._supervisor, **parameters))
+			lambda parameters: abort_build(self._job_scheduler, **parameters))
 		self._task_processor.register_handler("trigger_build", 100,
-			lambda parameters: trigger_build(self._supervisor, **parameters),
-			lambda parameters: cancel_build(self._supervisor, **parameters))
+			lambda parameters: trigger_build(self._job_scheduler, **parameters),
+			lambda parameters: cancel_build(self._job_scheduler, **parameters))
 
 
 	def reload_configuration(self):
@@ -87,16 +88,16 @@ def stop_worker(supervisor, worker_identifier):
 	return "succeeded" if was_stopped else "failed"
 
 
-def trigger_build(supervisor, build_identifier):
-	was_triggered = supervisor.trigger_build(build_identifier)
+def trigger_build(job_scheduler, build_identifier):
+	was_triggered = job_scheduler.trigger_build(build_identifier)
 	return "succeeded" if was_triggered else "pending"
 
 
-def cancel_build(supervisor, build_identifier):
-	was_cancelled = supervisor.cancel_build(build_identifier)
+def cancel_build(job_scheduler, build_identifier):
+	was_cancelled = job_scheduler.cancel_build(build_identifier)
 	return "succeeded" if was_cancelled else "failed"
 
 
-def abort_build(supervisor, build_identifier):
-	was_aborted = supervisor.abort_build(build_identifier)
+def abort_build(job_scheduler, build_identifier):
+	was_aborted = job_scheduler.abort_build(build_identifier)
 	return "succeeded" if was_aborted else "failed"

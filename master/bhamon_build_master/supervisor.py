@@ -13,13 +13,11 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, build_provider, job_provider, worker_provider, worker_selector):
+	def __init__(self, host, port, build_provider, worker_provider):
 		self._host = host
 		self._port = port
 		self._build_provider = build_provider
-		self._job_provider = job_provider
 		self._worker_provider = worker_provider
-		self._worker_selector = worker_selector
 		self._active_workers = {}
 		self._should_shutdown = False
 		self.update_interval_seconds = 10
@@ -61,42 +59,6 @@ class Supervisor:
 			return False
 		logger.info("Flagging worker %s for shutdown", worker_identifier)
 		self._active_workers[worker_identifier].should_shutdown = True
-		return True
-
-
-	def trigger_build(self, build_identifier):
-		build = self._build_provider.get(build_identifier)
-		job = self._job_provider.get(build["job"])
-		if not job["is_enabled"]:
-			return False
-
-		selected_worker = self._worker_selector(self, job)
-		if selected_worker is None:
-			return False
-
-		logger.info("Assigning build %s %s to worker %s", build["job"], build["identifier"], selected_worker)
-		self._active_workers[selected_worker].assign_build(job, build)
-		return True
-
-
-	def cancel_build(self, build_identifier):
-		build = self._build_provider.get(build_identifier)
-		if build["status"] != "pending":
-			return False
-		self._build_provider.update_status(build, status = "cancelled")
-		return True
-
-
-	def abort_build(self, build_identifier):
-		build = self._build_provider.get(build_identifier)
-		if build["status"] != "running":
-			return False
-
-		worker_instance = self._active_workers.get(build["worker"], None)
-		if worker_instance is None:
-			return False
-
-		worker_instance.abort_build(build_identifier)
 		return True
 
 
