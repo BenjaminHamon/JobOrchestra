@@ -21,6 +21,12 @@ def main():
 	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
 
+	application = create_application(arguments)
+	result = arguments.handler(application, arguments)
+	print(json.dumps(result, indent = 4))
+
+
+def create_application(arguments):
 	database_client_instance = environment.create_database_client(arguments.database)
 	file_storage_instance = FileStorage(".")
 
@@ -33,8 +39,7 @@ def main():
 	application.user_provider = UserProvider(database_client_instance)
 	application.worker_provider = WorkerProvider(database_client_instance)
 
-	result = arguments.handler(application, arguments)
-	print(json.dumps(result, indent = 4))
+	return application
 
 
 def parse_arguments():

@@ -15,6 +15,11 @@ def main():
 	environment_instance = environment.load_environment()
 	arguments = parse_arguments()
 
+	application = create_application(environment_instance)
+	application.run(host = arguments.address, port = arguments.port)
+
+
+def create_application(environment_instance):
 	application = flask.Flask(__name__, static_folder = None)
 	application.authorization_provider = AuthorizationProvider()
 	application.service_url = environment_instance["build_service_url"]
@@ -25,7 +30,7 @@ def main():
 	website.register_routes(application)
 	website.register_resources(application)
 
-	application.run(host = arguments.address, port = arguments.port)
+	return application
 
 
 def parse_arguments():

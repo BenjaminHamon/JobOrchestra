@@ -23,46 +23,51 @@ def main():
 	arguments = parse_arguments()
 
 	with filelock.FileLock("build_master.lock", 5):
-		database_client_instance = environment.create_database_client(arguments.database)
-		file_storage_instance = FileStorage(".")
+		application = create_application(arguments)
+		application.run()
 
-		build_provider_instance = BuildProvider(database_client_instance, file_storage_instance)
-		job_provider_instance = JobProvider(database_client_instance)
-		task_provider_instance = TaskProvider(database_client_instance)
-		worker_provider_instance = WorkerProvider(database_client_instance)
 
-		task_processor_instance = TaskProcessor(
-			task_provider = task_provider_instance,
-		)
+def create_application(arguments):
+	database_client_instance = environment.create_database_client(arguments.database)
+	file_storage_instance = FileStorage(".")
 
-		worker_selector_instance = configuration_extensions.WorkerSelector(
-			worker_provider = worker_provider_instance,
-		)
+	build_provider_instance = BuildProvider(database_client_instance, file_storage_instance)
+	job_provider_instance = JobProvider(database_client_instance)
+	task_provider_instance = TaskProvider(database_client_instance)
+	worker_provider_instance = WorkerProvider(database_client_instance)
 
-		supervisor_instance = Supervisor(
-			host = arguments.address,
-			port = arguments.port,
-			worker_provider = worker_provider_instance,
-			job_provider = job_provider_instance,
-			build_provider = build_provider_instance,
-			worker_selector = worker_selector_instance,
-		)
+	task_processor_instance = TaskProcessor(
+		task_provider = task_provider_instance,
+	)
 
-		master_instance = Master(
-			supervisor = supervisor_instance,
-			task_processor = task_processor_instance,
-			job_provider = job_provider_instance,
-			worker_provider = worker_provider_instance,
-			configuration_loader = reload_configuration,
-		)
+	worker_selector_instance = configuration_extensions.WorkerSelector(
+		worker_provider = worker_provider_instance,
+	)
 
-		# Rapid updates to reduce delays in tests
-		supervisor_instance.update_interval_seconds = 1
-		task_processor_instance.update_interval_seconds = 1
+	supervisor_instance = Supervisor(
+		host = arguments.address,
+		port = arguments.port,
+		worker_provider = worker_provider_instance,
+		job_provider = job_provider_instance,
+		build_provider = build_provider_instance,
+		worker_selector = worker_selector_instance,
+	)
 
-		master_instance.register_default_tasks()
+	master_instance = Master(
+		supervisor = supervisor_instance,
+		task_processor = task_processor_instance,
+		job_provider = job_provider_instance,
+		worker_provider = worker_provider_instance,
+		configuration_loader = reload_configuration,
+	)
 
-		master_instance.run()
+	# Rapid updates to reduce delays in tests
+	supervisor_instance.update_interval_seconds = 1
+	task_processor_instance.update_interval_seconds = 1
+
+	master_instance.register_default_tasks()
+
+	return master_instance
 
 
 def parse_arguments():

@@ -21,6 +21,11 @@ def main():
 	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
 
+	application = create_application(arguments)
+	application.run(host = arguments.address, port = arguments.port)
+
+
+def create_application(arguments):
 	database_client_instance = environment.create_database_client(arguments.database)
 	file_storage_instance = FileStorage(".")
 
@@ -37,7 +42,7 @@ def main():
 	service.register_handlers(application)
 	service.register_routes(application)
 
-	application.run(host = arguments.address, port = arguments.port)
+	return application
 
 
 def parse_arguments():
