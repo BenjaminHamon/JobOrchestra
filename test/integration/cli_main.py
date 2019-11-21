@@ -3,15 +3,16 @@ import json
 import logging
 import types
 
+from bhamon_build_model.authentication_provider import AuthenticationProvider
+from bhamon_build_model.authorization_provider import AuthorizationProvider
+from bhamon_build_model.build_provider import BuildProvider
+from bhamon_build_model.file_storage import FileStorage
+from bhamon_build_model.job_provider import JobProvider
+from bhamon_build_model.task_provider import TaskProvider
+from bhamon_build_model.user_provider import UserProvider
+from bhamon_build_model.worker_provider import WorkerProvider
+
 import bhamon_build_cli.admin_controller as admin_controller
-import bhamon_build_model.authentication_provider as authentication_provider
-import bhamon_build_model.authorization_provider as authorization_provider
-import bhamon_build_model.build_provider as build_provider
-import bhamon_build_model.file_storage as file_storage
-import bhamon_build_model.job_provider as job_provider
-import bhamon_build_model.task_provider as task_provider
-import bhamon_build_model.user_provider as user_provider
-import bhamon_build_model.worker_provider as worker_provider
 
 import environment
 
@@ -21,16 +22,16 @@ def main():
 	arguments = parse_arguments()
 
 	database_client_instance = environment.create_database_client(arguments.database)
-	file_storage_instance = file_storage.FileStorage(".")
+	file_storage_instance = FileStorage(".")
 
 	application = types.SimpleNamespace()
-	application.authentication_provider = authentication_provider.AuthenticationProvider(database_client_instance)
-	application.authorization_provider = authorization_provider.AuthorizationProvider()
-	application.build_provider = build_provider.BuildProvider(database_client_instance, file_storage_instance)
-	application.job_provider = job_provider.JobProvider(database_client_instance)
-	application.task_provider = task_provider.TaskProvider(database_client_instance)
-	application.user_provider = user_provider.UserProvider(database_client_instance)
-	application.worker_provider = worker_provider.WorkerProvider(database_client_instance)
+	application.authentication_provider = AuthenticationProvider(database_client_instance)
+	application.authorization_provider = AuthorizationProvider()
+	application.build_provider = BuildProvider(database_client_instance, file_storage_instance)
+	application.job_provider = JobProvider(database_client_instance)
+	application.task_provider = TaskProvider(database_client_instance)
+	application.user_provider = UserProvider(database_client_instance)
+	application.worker_provider = WorkerProvider(database_client_instance)
 
 	result = arguments.handler(application, arguments)
 	print(json.dumps(result, indent = 4))

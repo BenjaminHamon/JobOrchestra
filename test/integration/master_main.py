@@ -4,14 +4,14 @@ import logging
 
 import filelock
 
-import bhamon_build_master.master as master
-import bhamon_build_master.supervisor as supervisor
-import bhamon_build_master.task_processor as task_processor
-import bhamon_build_model.build_provider as build_provider
-import bhamon_build_model.file_storage as file_storage
-import bhamon_build_model.job_provider as job_provider
-import bhamon_build_model.task_provider as task_provider
-import bhamon_build_model.worker_provider as worker_provider
+from bhamon_build_master.master import Master
+from bhamon_build_master.supervisor import Supervisor
+from bhamon_build_master.task_processor import TaskProcessor
+from bhamon_build_model.build_provider import BuildProvider
+from bhamon_build_model.file_storage import FileStorage
+from bhamon_build_model.job_provider import JobProvider
+from bhamon_build_model.task_provider import TaskProvider
+from bhamon_build_model.worker_provider import WorkerProvider
 
 import configuration
 import configuration_extensions
@@ -24,14 +24,14 @@ def main():
 
 	with filelock.FileLock("build_master.lock", 5):
 		database_client_instance = environment.create_database_client(arguments.database)
-		file_storage_instance = file_storage.FileStorage(".")
+		file_storage_instance = FileStorage(".")
 
-		build_provider_instance = build_provider.BuildProvider(database_client_instance, file_storage_instance)
-		job_provider_instance = job_provider.JobProvider(database_client_instance)
-		task_provider_instance = task_provider.TaskProvider(database_client_instance)
-		worker_provider_instance = worker_provider.WorkerProvider(database_client_instance)
+		build_provider_instance = BuildProvider(database_client_instance, file_storage_instance)
+		job_provider_instance = JobProvider(database_client_instance)
+		task_provider_instance = TaskProvider(database_client_instance)
+		worker_provider_instance = WorkerProvider(database_client_instance)
 
-		task_processor_instance = task_processor.TaskProcessor(
+		task_processor_instance = TaskProcessor(
 			task_provider = task_provider_instance,
 		)
 
@@ -39,7 +39,7 @@ def main():
 			worker_provider = worker_provider_instance,
 		)
 
-		supervisor_instance = supervisor.Supervisor(
+		supervisor_instance = Supervisor(
 			host = arguments.address,
 			port = arguments.port,
 			worker_provider = worker_provider_instance,
@@ -48,7 +48,7 @@ def main():
 			worker_selector = worker_selector_instance,
 		)
 
-		master_instance = master.Master(
+		master_instance = Master(
 			supervisor = supervisor_instance,
 			task_processor = task_processor_instance,
 			job_provider = job_provider_instance,
