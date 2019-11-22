@@ -4,7 +4,7 @@ import os
 
 import filelock
 
-import bhamon_build_worker.worker as worker
+from bhamon_build_worker.worker import Worker
 
 import environment
 
@@ -15,7 +15,8 @@ def main():
 	executor_script = os.path.join(os.path.dirname(__file__), "executor_main.py")
 
 	with filelock.FileLock("build_worker.lock", 5):
-		worker.run(arguments.master_uri, arguments.identifier, executor_script)
+		worker_instance = Worker(arguments.identifier, arguments.master_uri, executor_script)
+		worker_instance.run()
 
 
 def parse_arguments():
