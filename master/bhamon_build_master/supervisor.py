@@ -3,7 +3,7 @@ import logging
 
 import websockets
 
-from bhamon_build_master.worker import Worker
+from bhamon_build_master.worker import Worker, WorkerError
 from bhamon_build_master.worker_connection import WorkerConnection
 
 
@@ -63,49 +63,62 @@ class Supervisor:
 
 
 	async def _process_connection(self, connection, path): # pylint: disable = unused-argument
-		worker_identifier = None
 		if self._should_shutdown:
 			return
 
 		try:
-			logger.info("Processing connection: %s", connection)
-
-			connection_instance = WorkerConnection(connection)
-			authentication_response = await connection_instance.execute_command(None, "authenticate")
-			worker_identifier = authentication_response["identifier"]
-			worker_data = self._worker_provider.get(worker_identifier)
-			is_authenticated, reason = self._authenticate_worker(worker_identifier, worker_data)
-			if not is_authenticated:
-				logger.warning("Refused connection from worker %s: %s", worker_identifier, reason)
-
-			else:
-				logger.info("Accepted connection from worker %s", worker_identifier)
-				worker_instance = Worker(worker_identifier, connection_instance, self._build_provider)
-				worker_instance.update_interval_seconds = self.update_interval_seconds
-				if worker_identifier in self._active_workers:
-					raise KeyError("Worker %s is already in active workers" % worker_identifier)
-				self._active_workers[worker_identifier] = worker_instance
-				self._worker_provider.update_status(worker_data, is_active = True)
-
-				try:
-					await worker_instance.run()
-				except websockets.exceptions.ConnectionClosed as exception:
-					if exception.code not in [ 1000, 1001 ]:
-						logger.error("Lost connection with worker %s", worker_identifier, exc_info = True)
-				except Exception: # pylint: disable = broad-except
-					logger.error("Unhandled exception from worker %s", worker_identifier, exc_info = True)
-				finally:
-					logger.info("Terminating connection with worker %s", worker_identifier)
-					del self._active_workers[worker_identifier]
-					self._worker_provider.update_status(worker_data, is_active = False)
-
+			worker_connection = WorkerConnection(connection)
+			await self._process_connection_internal(worker_connection)
+		except WorkerError as exception:
+			logger.error("Worker error: %s", exception)
 		except Exception: # pylint: disable = broad-except
-			logger.error("Unhandled exception from worker %s handler", worker_identifier, exc_info = True)
+			logger.error("Unhandled exception in connection handler", exc_info = True)
 
 
-	def _authenticate_worker(self, worker_identifier, worker_data):
-		if worker_data is None:
-			return False, "Worker is unknown"
+	async def _process_connection_internal(self, connection):
+		logger.info("Receiving connection")
+		authentication_data = await connection.execute_command(None, "authenticate")
+		worker_identifier = authentication_data["identifier"]
+
+		logger.info("Registering worker '%s'", worker_identifier)
+		worker_record = self._register_worker(worker_identifier)
+		worker_instance = self._instantiate_worker(worker_identifier, connection)
+
+		self._worker_provider.update_status(worker_record, is_active = True)
+		self._active_workers[worker_identifier] = worker_instance
+
+		try:
+			logger.info("Worker '%s' is now active", worker_identifier)
+			await self._run_worker(worker_instance)
+
+		finally:
+			logger.info("Terminating connection with worker '%s'", worker_identifier)
+			del self._active_workers[worker_identifier]
+			self._worker_provider.update_status(worker_record, is_active = False)
+
+
+	def _register_worker(self, worker_identifier):
 		if worker_identifier in self._active_workers:
-			return False, "Worker is already connected"
-		return True, ''
+			raise WorkerError("Worker '%s' is already active" % worker_identifier)
+
+		worker_record = self._worker_provider.get(worker_identifier)
+		if worker_record is None:
+			raise WorkerError("Unknown worker '%s'" % worker_identifier)
+
+		return worker_record
+
+
+	def _instantiate_worker(self, worker_identifier, connection):
+		worker_instance = Worker(worker_identifier, connection, self._build_provider)
+		worker_instance.update_interval_seconds = self.update_interval_seconds
+		return worker_instance
+
+
+	async def _run_worker(self, worker_instance):
+		try:
+			await worker_instance.run()
+		except websockets.exceptions.ConnectionClosed as exception:
+			if exception.code not in [ 1000, 1001 ]:
+				logger.error("Lost connection with worker '%s'", worker_instance.identifier, exc_info = True)
+		except Exception: # pylint: disable = broad-except
+			logger.error("Unhandled exception from worker '%s'", worker_instance.identifier, exc_info = True)
