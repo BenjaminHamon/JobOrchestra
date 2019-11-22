@@ -18,6 +18,8 @@ def test_job_success(tmpdir, database_type):
 	job_identifier = "test_success"
 
 	with context.Context(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker_01" ])
+
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
@@ -59,6 +61,8 @@ def test_job_failure(tmpdir, database_type):
 	job_identifier = "test_failure"
 
 	with context.Context(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker_01" ])
+
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
@@ -100,6 +104,8 @@ def test_job_exception(tmpdir, database_type):
 	job_identifier = "test_exception"
 
 	with context.Context(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker_01" ])
+
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
@@ -142,7 +148,7 @@ def test_job_controller_success(tmpdir, database_type):
 	job_identifier = "test_controller_success"
 
 	with context.Context(tmpdir, database_type) as context_instance:
-		context_instance.configure_worker_authentication([ "controller" ])
+		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])
 
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
@@ -191,7 +197,7 @@ def test_job_controller_failure(tmpdir, database_type):
 	job_identifier = "test_controller_failure"
 
 	with context.Context(tmpdir, database_type) as context_instance:
-		context_instance.configure_worker_authentication([ "controller" ])
+		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])
 
 		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()

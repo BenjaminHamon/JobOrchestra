@@ -23,9 +23,11 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 class Worker: # pylint: disable = too-few-public-methods
 
 
-	def __init__(self, identifier, master_uri, executor_script):
+	def __init__(self, identifier, master_uri, user, secret, executor_script):
 		self._identifier = identifier
 		self._master_uri = master_uri
+		self._user = user
+		self._secret = secret
 		self._executor_script = executor_script
 
 		self._active_executors = []
@@ -175,7 +177,11 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	def _authenticate(self):
-		return { "identifier": self._identifier }
+		return {
+			"worker": self._identifier,
+			"user": self._user,
+			"secret": self._secret,
+		}
 
 
 	def _recover(self):

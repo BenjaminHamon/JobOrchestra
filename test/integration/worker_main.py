@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import os
 
@@ -14,8 +15,12 @@ def main():
 	arguments = parse_arguments()
 	executor_script = os.path.join(os.path.dirname(__file__), "executor_main.py")
 
+	authentication_file_path = os.path.join(os.getcwd(), "authentication.json")
+	with open(authentication_file_path, "r") as authentication_file:
+		authentication = json.load(authentication_file)
+
 	with filelock.FileLock("build_worker.lock", 5):
-		worker_instance = Worker(arguments.identifier, arguments.master_uri, executor_script)
+		worker_instance = Worker(arguments.identifier, arguments.master_uri, authentication["user"], authentication["secret"], executor_script)
 		worker_instance.run()
 
 

@@ -70,7 +70,7 @@ def test_abort_build_pending():
 
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
-	supervisor_instance = Supervisor(None, None, None, None)
+	supervisor_instance = Supervisor(None, None, None, None, None, None, None)
 	job_scheduler_instance = JobScheduler(supervisor_instance, None, build_provider_instance, None)
 
 	job = { "identifier": "job_test" }
@@ -91,7 +91,7 @@ def test_abort_build_running_connected():
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
 	worker_instance = Worker("worker_test", None, build_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None)
+	supervisor_instance = Supervisor(None, None, None, None, None, None, None)
 	job_scheduler_instance = JobScheduler(supervisor_instance, None, build_provider_instance, None)
 
 	supervisor_instance._active_workers[worker_instance.identifier] = worker_instance
@@ -119,7 +119,7 @@ def test_abort_build_running_disconnected():
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
 	worker_instance = Worker("worker_test", None, build_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None)
+	supervisor_instance = Supervisor(None, None, None, None, None, None, None)
 	job_scheduler_instance = JobScheduler(supervisor_instance, None, build_provider_instance, None)
 
 	job = { "identifier": "job_test" }
@@ -144,7 +144,7 @@ def test_abort_build_completed():
 
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
-	supervisor_instance = Supervisor(None, None, None, None)
+	supervisor_instance = Supervisor(None, None, None, None, None, None, None)
 	job_scheduler_instance = JobScheduler(supervisor_instance, None, build_provider_instance, None)
 
 	job = { "identifier": "job_test" }

@@ -24,10 +24,12 @@ def test_master(tmpdir, database_type):
 	])
 
 
-def test_worker(tmpdir):
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_worker(tmpdir, database_type):
 	""" Test if the worker starts successfully """
 
-	with context.Context(tmpdir, None) as context_instance:
+	with context.Context(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker" ])
 		worker_process = context_instance.invoke_worker("worker")
 
 	worker_expected_messages = [

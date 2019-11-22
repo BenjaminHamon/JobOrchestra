@@ -13,11 +13,14 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, build_provider, worker_provider):
+	def __init__(self, host, port, build_provider, worker_provider, user_provider, authentication_provider, authorization_provider):
 		self._host = host
 		self._port = port
 		self._build_provider = build_provider
 		self._worker_provider = worker_provider
+		self._user_provider = user_provider
+		self._authentication_provider = authentication_provider
+		self._authorization_provider = authorization_provider
 		self._active_workers = {}
 		self._should_shutdown = False
 		self.update_interval_seconds = 10
@@ -27,7 +30,7 @@ class Supervisor:
 		for worker_data in self._worker_provider.get_list():
 			self._worker_provider.update_status(worker_data, is_active = False)
 
-		logger.info("Listening for workers on %s:%s", self._host, self._port)
+		logger.info("Listening for workers on '%s:%s'", self._host, self._port)
 		async with websockets.serve(self._process_connection, self._host, self._port, max_size = 2 ** 30):
 			while not self._should_shutdown or len(self._active_workers) > 0:
 				await asyncio.sleep(1)
@@ -78,7 +81,10 @@ class Supervisor:
 	async def _process_connection_internal(self, connection):
 		logger.info("Receiving connection")
 		authentication_data = await connection.execute_command(None, "authenticate")
-		worker_identifier = authentication_data["identifier"]
+		worker_identifier = authentication_data["worker"]
+
+		logger.info("Checking authorization for worker '%s' (User: '%s')", worker_identifier, authentication_data.get("user", None))
+		self._authorize_worker(worker_identifier, authentication_data.get("user", None), authentication_data.get("secret", None))
 
 		logger.info("Registering worker '%s'", worker_identifier)
 		worker_record = self._register_worker(worker_identifier)
@@ -95,6 +101,15 @@ class Supervisor:
 			logger.info("Terminating connection with worker '%s'", worker_identifier)
 			del self._active_workers[worker_identifier]
 			self._worker_provider.update_status(worker_record, is_active = False)
+
+
+	def _authorize_worker(self, worker, user, secret):
+		if not self._authentication_provider.authenticate_with_token(user, secret):
+			raise WorkerError("Authentication failed for worker '%s' (User: '%s')" % (worker, user))
+
+		user_record = self._user_provider.get(user)
+		if not self._authorization_provider.authorize_worker(user_record):
+			raise WorkerError("Authorization failed for worker '%s' (User: '%s')" % (worker, user))
 
 
 	def _register_worker(self, worker_identifier):
