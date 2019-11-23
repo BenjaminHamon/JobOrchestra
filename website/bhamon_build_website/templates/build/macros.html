@@ -35,7 +35,7 @@
 				</form>
 			</td>
 			{% endif %}
-			<td><a href="{{ url_for('worker_index', worker_identifier = build['worker']) }}">{{ build['worker'] }}</a></td>
+			<td>{% if build['worker'] %}<a href="{{ url_for('worker_index', worker_identifier = build['worker']) }}">{{ build['worker'] }}</a>{% endif %}</td>
 			<td>{{ build['creation_date'] }}</td>
 			<td>{{ build['update_date'] }}</td>
 		</tr>

@@ -52,6 +52,7 @@ class BuildProvider:
 			"job": job_identifier,
 			"parameters": parameters,
 			"status": "pending",
+			"worker": None,
 			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 		}
