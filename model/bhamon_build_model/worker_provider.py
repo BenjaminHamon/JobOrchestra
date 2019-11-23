@@ -64,4 +64,4 @@ class WorkerProvider:
 
 
 	def delete(self, worker_identifier):
-		return self.database_client.delete_one(self.table, { "identifier": worker_identifier })
+		self.database_client.delete_one(self.table, { "identifier": worker_identifier })

@@ -66,4 +66,4 @@ class JobProvider:
 
 
 	def delete(self, job_identifier):
-		return self.database_client.delete_one(self.table, { "identifier": job_identifier })
+		self.database_client.delete_one(self.table, { "identifier": job_identifier })
