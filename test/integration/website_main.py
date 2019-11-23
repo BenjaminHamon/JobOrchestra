@@ -19,6 +19,13 @@ def main():
 	application.run(host = arguments.address, port = arguments.port)
 
 
+def parse_arguments():
+	argument_parser = argparse.ArgumentParser()
+	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
+	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
+	return argument_parser.parse_args()
+
+
 def create_application(environment_instance):
 	application = flask.Flask(__name__, static_folder = None)
 	application.authorization_provider = AuthorizationProvider()
@@ -31,13 +38,6 @@ def create_application(environment_instance):
 	website.register_resources(application)
 
 	return application
-
-
-def parse_arguments():
-	argument_parser = argparse.ArgumentParser()
-	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
-	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
-	return argument_parser.parse_args()
 
 
 if __name__ == "__main__":

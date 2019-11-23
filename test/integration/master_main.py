@@ -31,6 +31,14 @@ def main():
 		application.run()
 
 
+def parse_arguments():
+	argument_parser = argparse.ArgumentParser()
+	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
+	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
+	argument_parser.add_argument("--database", required = True, help = "Set the build database uri")
+	return argument_parser.parse_args()
+
+
 def create_application(arguments):
 	database_client_instance = environment.create_database_client(arguments.database)
 	file_storage_instance = FileStorage(".")
@@ -84,14 +92,6 @@ def create_application(arguments):
 	master_instance.register_default_tasks()
 
 	return master_instance
-
-
-def parse_arguments():
-	argument_parser = argparse.ArgumentParser()
-	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
-	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
-	argument_parser.add_argument("--database", required = True, help = "Set the build database uri")
-	return argument_parser.parse_args()
 
 
 def reload_configuration():

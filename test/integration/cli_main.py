@@ -26,6 +26,18 @@ def main():
 	print(json.dumps(result, indent = 4))
 
 
+def parse_arguments():
+	main_parser = argparse.ArgumentParser()
+	main_parser.add_argument("--database", required = True, metavar = "<uri>", help = "set the build database uri")
+
+	subparsers = main_parser.add_subparsers(title = "commands", metavar = "<command>")
+	subparsers.required = True
+
+	admin_controller.register_commands(subparsers)
+
+	return main_parser.parse_args()
+
+
 def create_application(arguments):
 	database_client_instance = environment.create_database_client(arguments.database)
 	file_storage_instance = FileStorage(".")
@@ -40,18 +52,6 @@ def create_application(arguments):
 	application.worker_provider = WorkerProvider(database_client_instance)
 
 	return application
-
-
-def parse_arguments():
-	main_parser = argparse.ArgumentParser()
-	main_parser.add_argument("--database", required = True, metavar = "<uri>", help = "set the build database uri")
-
-	subparsers = main_parser.add_subparsers(title = "commands", metavar = "<command>")
-	subparsers.required = True
-
-	admin_controller.register_commands(subparsers)
-
-	return main_parser.parse_args()
 
 
 if __name__ == "__main__":
