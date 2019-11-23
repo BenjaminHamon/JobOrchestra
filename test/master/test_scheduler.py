@@ -1,11 +1,12 @@
 # pylint: disable = protected-access
 
-""" Unit tests for Supervisor """
+""" Unit tests for JobScheduler """
 
-from bhamon_build_model.build_provider import BuildProvider
-from bhamon_build_model.memory_database_client import MemoryDatabaseClient
+from bhamon_build_master.job_scheduler import JobScheduler
 from bhamon_build_master.supervisor import Supervisor
 from bhamon_build_master.worker import Worker
+from bhamon_build_model.build_provider import BuildProvider
+from bhamon_build_model.memory_database_client import MemoryDatabaseClient
 
 
 def test_cancel_build_pending():
@@ -13,22 +14,14 @@ def test_cancel_build_pending():
 
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
-
-	supervisor_instance = Supervisor(
-		host = None,
-		port = None,
-		build_provider = build_provider_instance,
-		job_provider = None,
-		worker_provider = None,
-		worker_selector = None,
-	)
+	job_scheduler_instance = JobScheduler(None, None, build_provider_instance, None)
 
 	job = { "identifier": "job_test" }
 	build = build_provider_instance.create(job["identifier"], {})
 
 	assert build["status"] == "pending"
 
-	operation_result = supervisor_instance.cancel_build(build["identifier"])
+	operation_result = job_scheduler_instance.cancel_build(build["identifier"])
 
 	assert operation_result is True
 	assert build["status"] == "cancelled"
@@ -39,15 +32,7 @@ def test_cancel_build_running():
 
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
-
-	supervisor_instance = Supervisor(
-		host = None,
-		port = None,
-		build_provider = build_provider_instance,
-		job_provider = None,
-		worker_provider = None,
-		worker_selector = None,
-	)
+	job_scheduler_instance = JobScheduler(None, None, build_provider_instance, None)
 
 	job = { "identifier": "job_test" }
 	build = build_provider_instance.create(job["identifier"], {})
@@ -55,7 +40,7 @@ def test_cancel_build_running():
 
 	assert build["status"] == "running"
 
-	operation_result = supervisor_instance.cancel_build(build["identifier"])
+	operation_result = job_scheduler_instance.cancel_build(build["identifier"])
 
 	assert operation_result is False
 	assert build["status"] == "running"
@@ -66,15 +51,7 @@ def test_cancel_build_completed():
 
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
-
-	supervisor_instance = Supervisor(
-		host = None,
-		port = None,
-		build_provider = build_provider_instance,
-		job_provider = None,
-		worker_provider = None,
-		worker_selector = None,
-	)
+	job_scheduler_instance = JobScheduler(None, None, build_provider_instance, None)
 
 	job = { "identifier": "job_test" }
 	build = build_provider_instance.create(job["identifier"], {})
@@ -82,7 +59,7 @@ def test_cancel_build_completed():
 
 	assert build["status"] == "succeeded"
 
-	operation_result = supervisor_instance.cancel_build(build["identifier"])
+	operation_result = job_scheduler_instance.cancel_build(build["identifier"])
 
 	assert operation_result is False
 	assert build["status"] == "succeeded"
@@ -93,15 +70,8 @@ def test_abort_build_pending():
 
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
-
-	supervisor_instance = Supervisor(
-		host = None,
-		port = None,
-		build_provider = build_provider_instance,
-		job_provider = None,
-		worker_provider = None,
-		worker_selector = None,
-	)
+	supervisor_instance = Supervisor(None, None, None, None, None, None, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, None, build_provider_instance, None)
 
 	job = { "identifier": "job_test" }
 	build = build_provider_instance.create(job["identifier"], {})
@@ -109,7 +79,7 @@ def test_abort_build_pending():
 	assert build["status"] == "pending"
 	assert len(supervisor_instance._active_workers) == 0
 
-	operation_result = supervisor_instance.abort_build(build["identifier"])
+	operation_result = job_scheduler_instance.abort_build(build["identifier"])
 
 	assert operation_result is False
 	assert build["status"] == "pending"
@@ -121,15 +91,8 @@ def test_abort_build_running_connected():
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
 	worker_instance = Worker("worker_test", None, build_provider_instance)
-
-	supervisor_instance = Supervisor(
-		host = None,
-		port = None,
-		build_provider = build_provider_instance,
-		job_provider = None,
-		worker_provider = None,
-		worker_selector = None,
-	)
+	supervisor_instance = Supervisor(None, None, None, None, None, None, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, None, build_provider_instance, None)
 
 	supervisor_instance._active_workers[worker_instance.identifier] = worker_instance
 
@@ -143,7 +106,7 @@ def test_abort_build_running_connected():
 	assert len(supervisor_instance._active_workers) == 1
 	assert len(worker_instance.executors) == 1
 
-	operation_result = supervisor_instance.abort_build(build["identifier"])
+	operation_result = job_scheduler_instance.abort_build(build["identifier"])
 
 	assert operation_result is True
 	assert build["status"] == "running"
@@ -156,15 +119,8 @@ def test_abort_build_running_disconnected():
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
 	worker_instance = Worker("worker_test", None, build_provider_instance)
-
-	supervisor_instance = Supervisor(
-		host = None,
-		port = None,
-		build_provider = build_provider_instance,
-		job_provider = None,
-		worker_provider = None,
-		worker_selector = None,
-	)
+	supervisor_instance = Supervisor(None, None, None, None, None, None, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, None, build_provider_instance, None)
 
 	job = { "identifier": "job_test" }
 	build = build_provider_instance.create(job["identifier"], {})
@@ -176,7 +132,7 @@ def test_abort_build_running_disconnected():
 	assert len(supervisor_instance._active_workers) == 0
 	assert len(worker_instance.executors) == 1
 
-	operation_result = supervisor_instance.abort_build(build["identifier"])
+	operation_result = job_scheduler_instance.abort_build(build["identifier"])
 
 	assert operation_result is False
 	assert build["status"] == "running"
@@ -188,15 +144,8 @@ def test_abort_build_completed():
 
 	database_client_instance = MemoryDatabaseClient()
 	build_provider_instance = BuildProvider(database_client_instance, None)
-
-	supervisor_instance = Supervisor(
-		host = None,
-		port = None,
-		build_provider = build_provider_instance,
-		job_provider = None,
-		worker_provider = None,
-		worker_selector = None,
-	)
+	supervisor_instance = Supervisor(None, None, None, None, None, None, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, None, build_provider_instance, None)
 
 	job = { "identifier": "job_test" }
 	build = build_provider_instance.create(job["identifier"], {})
@@ -205,7 +154,7 @@ def test_abort_build_completed():
 	assert build["status"] == "succeeded"
 	assert len(supervisor_instance._active_workers) == 0
 
-	operation_result = supervisor_instance.abort_build(build["identifier"])
+	operation_result = job_scheduler_instance.abort_build(build["identifier"])
 
 	assert operation_result is False
 	assert build["status"] == "succeeded"

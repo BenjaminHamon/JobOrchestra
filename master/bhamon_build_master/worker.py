@@ -8,6 +8,10 @@ import websockets
 logger = logging.getLogger("Worker")
 
 
+class WorkerError(Exception):
+	pass
+
+
 class Worker:
 
 

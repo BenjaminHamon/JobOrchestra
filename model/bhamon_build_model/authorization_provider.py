@@ -21,12 +21,18 @@ class AuthorizationProvider:
 		return False
 
 
+	def authorize_worker(self, user):
+		if self.is_authorized_user(user) and "BuildWorker" in user["roles"]:
+			return True
+		return False
+
+
 	def get_administrator_roles(self): # pylint: disable = no-self-use
 		return [ "Administrator" ]
 
 
 	def is_authorized_user(self, user): # pylint: disable = no-self-use
-		return (user is not None) and (user["is_enabled"])
+		return user is not None and user["is_enabled"]
 
 
 	def is_public_route(self, method, route): # pylint: disable = no-self-use

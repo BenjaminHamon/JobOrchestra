@@ -10,7 +10,8 @@ logger = logging.getLogger("Master")
 class Master:
 
 
-	def __init__(self, supervisor, task_processor, job_provider, worker_provider, configuration_loader):
+	def __init__(self, job_scheduler, supervisor, task_processor, job_provider, worker_provider, configuration_loader):
+		self._job_scheduler = job_scheduler
 		self._supervisor = supervisor
 		self._task_processor = task_processor
 		self._job_provider = job_provider
@@ -42,31 +43,22 @@ class Master:
 		self._task_processor.register_handler("stop_worker", 50,
 			lambda parameters: stop_worker(self._supervisor, **parameters))
 		self._task_processor.register_handler("abort_build", 90,
-			lambda parameters: abort_build(self._supervisor, **parameters))
+			lambda parameters: abort_build(self._job_scheduler, **parameters))
 		self._task_processor.register_handler("trigger_build", 100,
-			lambda parameters: trigger_build(self._supervisor, **parameters),
-			lambda parameters: cancel_build(self._supervisor, **parameters))
+			lambda parameters: trigger_build(self._job_scheduler, **parameters),
+			lambda parameters: cancel_build(self._job_scheduler, **parameters))
 
 
 	def reload_configuration(self):
 		logger.info("Reloading configuration")
 		configuration = self._configuration_loader()
 
-		all_existing_workers = self._worker_provider.get_list()
-		for existing_worker in all_existing_workers:
-			if existing_worker["identifier"] not in [ worker["identifier"] for worker in configuration["workers"] ]:
-				logger.info("Removing worker %s", existing_worker["identifier"])
-				self._worker_provider.delete(existing_worker["identifier"])
-				self._supervisor.stop_worker(existing_worker["identifier"])
 		all_existing_jobs = self._job_provider.get_list()
 		for existing_job in all_existing_jobs:
 			if existing_job["identifier"] not in [ job["identifier"] for job in configuration["jobs"] ]:
 				logger.info("Removing job %s", existing_job["identifier"])
 				self._job_provider.delete(existing_job["identifier"])
 
-		for worker in configuration["workers"]:
-			logger.info("Adding/Updating worker %s", worker["identifier"])
-			self._worker_provider.create_or_update(worker["identifier"], worker["properties"], worker["description"])
 		for job in configuration["jobs"]:
 			logger.info("Adding/Updating job %s", job["identifier"])
 			self._job_provider.create_or_update(job["identifier"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["description"])
@@ -87,16 +79,16 @@ def stop_worker(supervisor, worker_identifier):
 	return "succeeded" if was_stopped else "failed"
 
 
-def trigger_build(supervisor, build_identifier):
-	was_triggered = supervisor.trigger_build(build_identifier)
+def trigger_build(job_scheduler, build_identifier):
+	was_triggered = job_scheduler.trigger_build(build_identifier)
 	return "succeeded" if was_triggered else "pending"
 
 
-def cancel_build(supervisor, build_identifier):
-	was_cancelled = supervisor.cancel_build(build_identifier)
+def cancel_build(job_scheduler, build_identifier):
+	was_cancelled = job_scheduler.cancel_build(build_identifier)
 	return "succeeded" if was_cancelled else "failed"
 
 
-def abort_build(supervisor, build_identifier):
-	was_aborted = supervisor.abort_build(build_identifier)
+def abort_build(job_scheduler, build_identifier):
+	was_aborted = job_scheduler.abort_build(build_identifier)
 	return "succeeded" if was_aborted else "failed"

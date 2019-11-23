@@ -27,28 +27,19 @@ class WorkerProvider:
 		return self.database_client.find_one(self.table, { "identifier": worker_identifier })
 
 
-	def create_or_update(self, worker_identifier, properties, description):
-		worker = self.get(worker_identifier)
+	def create(self, worker_identifier, owner):
+		worker = {
+			"identifier": worker_identifier,
+			"owner": owner,
+			"properties": {},
+			"is_enabled": True,
+			"is_active": False,
+			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+		}
 
-		if worker is None:
-			worker = {
-				"identifier": worker_identifier,
-				"properties": properties,
-				"description": description,
-				"is_enabled": True,
-				"is_active": False,
-				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-			}
-			self.database_client.insert_one(self.table, worker)
-
-		else:
-			update_data = {
-				"properties": properties,
-				"description": description,
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-			}
-			self.database_client.update_one(self.table, { "identifier": worker_identifier }, update_data)
+		self.database_client.insert_one(self.table, worker)
+		return worker
 
 
 	def update_status(self, worker, is_active = None, is_enabled = None):
@@ -62,5 +53,29 @@ class WorkerProvider:
 		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
 
 
-	def delete(self, worker_identifier):
-		return self.database_client.delete_one(self.table, { "identifier": worker_identifier })
+	def update_properties(self, worker, properties):
+		update_data = {
+			"properties": properties,
+			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+		}
+
+		worker.update(update_data)
+		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
+
+
+	def delete(self, worker_identifier, build_provider):
+		worker_record = self.get(worker_identifier)
+		if worker_record is None:
+			raise ValueError("Worker '%s' does not exist" % worker_identifier)
+
+		if worker_record["is_enabled"]:
+			raise ValueError("Worker '%s' is enabled" % worker_identifier)
+		if worker_record["is_active"]:
+			raise ValueError("Worker '%s' is active" % worker_identifier)
+
+		if build_provider.count(worker = worker_identifier, status = "pending") > 0:
+			raise ValueError("Worker '%s' has pending builds" % worker_identifier)
+		if build_provider.count(worker = worker_identifier, status = "running") > 0:
+			raise ValueError("Worker '%s' has running builds" % worker_identifier)
+
+		self.database_client.delete_one(self.table, { "identifier": worker_identifier })

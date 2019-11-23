@@ -15,6 +15,8 @@ def test_worker_disconnection(tmpdir, database_type):
 	""" Test a disconnection initiated by the worker """
 
 	with context.Context(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker_01" ])
+
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
@@ -24,8 +26,11 @@ def test_worker_disconnection(tmpdir, database_type):
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Accepted connection from worker worker_01" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker worker_01" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Receiving connection" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Checking authorization for worker 'worker_01' (User: 'build-worker')" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Registering worker 'worker_01'" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' is now active" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker 'worker_01'" },
 		{ "level": "Info", "logger": "Master", "message": "Exiting build master" },
 	]
 
@@ -47,6 +52,8 @@ def test_master_disconnection(tmpdir, database_type):
 	""" Test a disconnection initiated by the master """
 
 	with context.Context(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker_01" ])
+
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
@@ -56,8 +63,11 @@ def test_master_disconnection(tmpdir, database_type):
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Accepted connection from worker worker_01" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker worker_01" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Receiving connection" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Checking authorization for worker 'worker_01' (User: 'build-worker')" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Registering worker 'worker_01'" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' is now active" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker 'worker_01'" },
 		{ "level": "Info", "logger": "Master", "message": "Exiting build master" },
 	]
 
