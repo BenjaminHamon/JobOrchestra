@@ -23,11 +23,12 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 class Worker: # pylint: disable = too-few-public-methods
 
 
-	def __init__(self, identifier, master_uri, user, secret, executor_script):
+	def __init__(self, identifier, master_uri, user, secret, properties, executor_script):
 		self._identifier = identifier
 		self._master_uri = master_uri
 		self._user = user
 		self._secret = secret
+		self._properties = properties
 		self._executor_script = executor_script
 
 		self._active_executors = []
@@ -155,6 +156,8 @@ class Worker: # pylint: disable = too-few-public-methods
 	async def _execute_command(self, command, parameters): # pylint: disable=too-many-return-statements
 		if command == "authenticate":
 			return self._authenticate()
+		if command == "properties":
+			return self._get_properties()
 		if command == "list":
 			return self._list_builds()
 		if command == "execute":
@@ -182,6 +185,10 @@ class Worker: # pylint: disable = too-few-public-methods
 			"user": self._user,
 			"secret": self._secret,
 		}
+
+
+	def _get_properties(self):
+		return self._properties
 
 
 	def _recover(self):

@@ -20,7 +20,7 @@ def main():
 		authentication = json.load(authentication_file)
 
 	with filelock.FileLock("build_worker.lock", 5):
-		worker_instance = Worker(arguments.identifier, arguments.master_uri, authentication["user"], authentication["secret"], executor_script)
+		worker_instance = create_application(arguments, authentication, executor_script)
 		worker_instance.run()
 
 
@@ -29,6 +29,23 @@ def parse_arguments():
 	argument_parser.add_argument("--identifier", required = True, help = "Set the identifier for this worker")
 	argument_parser.add_argument("--master-uri", required = True, help = "Set the websocket uri to the build master")
 	return argument_parser.parse_args()
+
+
+def create_application(arguments, authentication, executor_script):
+	properties = {
+		"project": [ "test_project" ],
+		"is_controller": arguments.identifier == "controller",
+		"executor_limit": 100 if arguments.identifier == "controller" else 1,
+	}
+
+	return Worker(
+		identifier = arguments.identifier,
+		master_uri = arguments.master_uri,
+		user = authentication["user"],
+		secret = authentication["secret"],
+		properties = properties,
+		executor_script = executor_script,
+	)
 
 
 if __name__ == "__main__":

@@ -27,8 +27,9 @@ class Supervisor:
 
 
 	async def run_server(self):
-		for worker_data in self._worker_provider.get_list():
-			self._worker_provider.update_status(worker_data, is_active = False)
+		for worker_record in self._worker_provider.get_list():
+			if worker_record["is_active"]:
+				self._worker_provider.update_status(worker_record, is_active = False)
 
 		logger.info("Listening for workers on '%s:%s'", self._host, self._port)
 		async with websockets.serve(self._process_connection, self._host, self._port, max_size = 2 ** 30):
@@ -51,10 +52,10 @@ class Supervisor:
 		if worker_identifier not in self._active_workers:
 			return False
 
-		worker_data = self._worker_provider.get(worker_identifier)
+		worker_record = self._worker_provider.get(worker_identifier)
 		worker_instance = self._active_workers[worker_identifier]
 
-		return worker_data["is_enabled"] and not worker_instance.should_shutdown
+		return worker_record["is_enabled"] and not worker_instance.should_shutdown
 
 
 	def stop_worker(self, worker_identifier):
@@ -87,7 +88,8 @@ class Supervisor:
 		self._authorize_worker(worker_identifier, authentication_data.get("user", None), authentication_data.get("secret", None))
 
 		logger.info("Registering worker '%s'", worker_identifier)
-		worker_record = self._register_worker(worker_identifier)
+		properties = await connection.execute_command(None, "properties")
+		worker_record = self._register_worker(worker_identifier, authentication_data["user"], properties)
 		worker_instance = self._instantiate_worker(worker_identifier, connection)
 
 		self._worker_provider.update_status(worker_record, is_active = True)
@@ -112,13 +114,17 @@ class Supervisor:
 			raise WorkerError("Authorization failed for worker '%s' (User: '%s')" % (worker, user))
 
 
-	def _register_worker(self, worker_identifier):
+	def _register_worker(self, worker_identifier, owner, properties):
 		if worker_identifier in self._active_workers:
 			raise WorkerError("Worker '%s' is already active" % worker_identifier)
 
 		worker_record = self._worker_provider.get(worker_identifier)
 		if worker_record is None:
-			raise WorkerError("Unknown worker '%s'" % worker_identifier)
+			worker_record = self._worker_provider.create(worker_identifier, owner)
+		if worker_record["owner"] != owner:
+			raise WorkerError("Worker '%s' is owned by another user (Expected: '%s', Actual: '%s')" % (worker_identifier, worker_record["user"], owner))
+
+		self._worker_provider.update_properties(worker_record, properties)
 
 		return worker_record
 

@@ -27,28 +27,19 @@ class WorkerProvider:
 		return self.database_client.find_one(self.table, { "identifier": worker_identifier })
 
 
-	def create_or_update(self, worker_identifier, properties, description):
-		worker = self.get(worker_identifier)
+	def create(self, worker_identifier, owner):
+		worker = {
+			"identifier": worker_identifier,
+			"owner": owner,
+			"properties": {},
+			"is_enabled": True,
+			"is_active": False,
+			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+		}
 
-		if worker is None:
-			worker = {
-				"identifier": worker_identifier,
-				"properties": properties,
-				"description": description,
-				"is_enabled": True,
-				"is_active": False,
-				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-			}
-			self.database_client.insert_one(self.table, worker)
-
-		else:
-			update_data = {
-				"properties": properties,
-				"description": description,
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-			}
-			self.database_client.update_one(self.table, { "identifier": worker_identifier }, update_data)
+		self.database_client.insert_one(self.table, worker)
+		return worker
 
 
 	def update_status(self, worker, is_active = None, is_enabled = None):
@@ -58,6 +49,16 @@ class WorkerProvider:
 		if is_enabled is not None:
 			update_data["is_enabled"] = is_enabled
 		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		worker.update(update_data)
+		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
+
+
+	def update_properties(self, worker, properties):
+		update_data = {
+			"properties": properties,
+			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+		}
+
 		worker.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
 

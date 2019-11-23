@@ -1,8 +1,7 @@
 def configure():
-	workers = configure_workers()
 	jobs = configure_jobs()
 
-	return { "jobs": jobs, "workers": workers }
+	return { "jobs": jobs }
 
 
 def configure_jobs():
@@ -122,35 +121,3 @@ def test_controller_failure():
 			{ "name": "wait", "command": controller_script + [ "wait" ] },
 		],
 	}
-
-
-def configure_workers():
-	return [
-		{
-			"identifier": "controller",
-			"description": "Test build controller",
-			"properties": {
-				"project": [ "test_project" ],
-				"is_controller": True,
-				"executor_limit": 100,
-			},
-		},
-		{
-			"identifier": "worker_01",
-			"description": "Test build worker",
-			"properties": {
-				"project": [ "test_project" ],
-				"is_controller": False,
-				"executor_limit": 1,
-			},
-		},
-		{
-			"identifier": "worker_02",
-			"description": "Test build worker",
-			"properties": {
-				"project": [ "test_project" ],
-				"is_controller": False,
-				"executor_limit": 1,
-			},
-		},
-	]
