@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 import requests
@@ -6,6 +7,7 @@ import requests
 logger = logging.getLogger("GitHub")
 
 website_url = "https://github.com"
+status_url = "https://www.githubstatus.com"
 api_url = "https://api.github.com"
 
 
@@ -14,6 +16,51 @@ class GitHubClient:
 
 	def __init__(self, access_token = None):
 		self.access_token = access_token
+
+
+	def get_service_status(self):
+		return self.get_api_status()
+
+
+	def get_api_status(self):
+		result = {
+			"service": "GitHub",
+			"website_url": website_url,
+			"status_url": status_url,
+		}
+
+		try:
+			rate_limit = self.get_api_rate_limit()
+			result.update({ "status": "available", "rate_limit": rate_limit })
+		except requests.HTTPError as exception:
+			result.update({
+				"status": "unavailable",
+				"status_code": exception.response.status_code,
+				"status_message": exception.response.reason,
+			})
+
+		return result
+
+
+	def get_api_rate_limit(self):
+		rate_limit_raw = self.send_get_request("/rate_limit")
+
+		rate_limit = {
+			"status": "unknown",
+			"limit": rate_limit_raw["resources"]["core"]["limit"],
+			"remaining": rate_limit_raw["resources"]["core"]["remaining"],
+			"reset": datetime.datetime.utcfromtimestamp(rate_limit_raw["resources"]["core"]["reset"]).isoformat() + "Z",
+			"raw_response": rate_limit_raw,
+		}
+
+		if rate_limit["remaining"] < rate_limit["limit"] * 0.1:
+			rate_limit["status"] = "critical"
+		elif rate_limit["remaining"] < rate_limit["limit"] * 0.5:
+			rate_limit["status"] = "warning"
+		else:
+			rate_limit["status"] = "okay"
+
+		return rate_limit
 
 
 	def get_repository(self, repository): # pylint: disable = unused-argument
