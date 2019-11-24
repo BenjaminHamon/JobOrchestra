@@ -42,6 +42,8 @@ def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/help", methods = [ "GET" ], view_func = help)
 	application.add_url_rule("/admin/information", methods = [ "GET" ], view_func = admin_controller.information)
 	application.add_url_rule("/admin/reload", methods = [ "POST" ], view_func = admin_controller.reload)
+	application.add_url_rule("/admin/service_collection", methods = [ "GET" ], view_func = admin_controller.get_service_collection)
+	application.add_url_rule("/admin/service/<service_identifier>", methods = [ "GET" ], view_func = admin_controller.get_service_status)
 	application.add_url_rule("/job_count", methods = [ "GET" ], view_func = job_controller.get_job_count)
 	application.add_url_rule("/job_collection", methods = [ "GET" ], view_func = job_controller.get_job_collection)
 	application.add_url_rule("/job/<job_identifier>", methods = [ "GET" ], view_func = job_controller.get_job)

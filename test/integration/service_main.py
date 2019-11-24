@@ -48,6 +48,8 @@ def create_application(arguments):
 	application.user_provider = UserProvider(database_client_instance)
 	application.worker_provider = WorkerProvider(database_client_instance)
 
+	application.external_services = {}
+
 	service.configure(application)
 	service.register_handlers(application)
 	service.register_routes(application)

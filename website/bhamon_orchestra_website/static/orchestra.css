@@ -68,6 +68,10 @@ td > .action-group button
 .status-indicator.enabled { background-color: green; }
 .status-indicator.disabled { background-color: gray; }
 
+.status-indicator.okay { background-color: green; }
+.status-indicator.warning { background-color: yellow; }
+.status-indicator.critical { background-color: red; }
+
 .uuid-input
 {
 	width: 250px;
