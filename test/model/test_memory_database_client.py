@@ -1,6 +1,6 @@
 """ Unit tests for MemoryDatabaseClient """
 
-import bhamon_build_model.memory_database_client as memory_database_client
+import bhamon_build_model.database.memory_database_client as memory_database_client
 
 
 def test_single():

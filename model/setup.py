@@ -17,7 +17,12 @@ parameters = development.configuration.get_setuptools_parameters(configuration_i
 parameters.update({
 	"name": "bhamon-build-model",
 	"description": "Model library for build service",
-	"packages": [ "bhamon_build_model" ],
+
+	"packages": [
+		"bhamon_build_model",
+		"bhamon_build_model/database",
+	],
+
 	"python_requires": "~= 3.5",
 	"install_requires": [ "python2-secrets ; python_version < '3.6'" ],
 })

@@ -6,7 +6,7 @@ from bhamon_build_master.job_scheduler import JobScheduler
 from bhamon_build_master.supervisor import Supervisor
 from bhamon_build_master.worker import Worker
 from bhamon_build_model.build_provider import BuildProvider
-from bhamon_build_model.memory_database_client import MemoryDatabaseClient
+from bhamon_build_model.database.memory_database_client import MemoryDatabaseClient
 
 
 def test_cancel_build_pending():

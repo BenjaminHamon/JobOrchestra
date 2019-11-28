@@ -1,17 +1,16 @@
-# pylint: disable = no-self-use
-# pylint: disable = redefined-builtin
+# pylint: disable = no-self-use, redefined-builtin
 
 import json
 import logging
 import os
 
-import bhamon_build_model.database_client as database_client
+from bhamon_build_model.database.database_client import DatabaseClient
 
 
 logger = logging.getLogger("JsonDatabaseClient")
 
 
-class JsonDatabaseClient(database_client.DatabaseClient):
+class JsonDatabaseClient(DatabaseClient):
 	""" Client for a database storing data as json files, intended for development only. """
 
 

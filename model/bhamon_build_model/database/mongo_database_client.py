@@ -1,17 +1,16 @@
-# pylint: disable = no-self-use
-# pylint: disable = redefined-builtin
+# pylint: disable = no-self-use, redefined-builtin
 
 import logging
 
 import pymongo
 
-import bhamon_build_model.database_client as database_client
+from bhamon_build_model.database.database_client import DatabaseClient
 
 
 logger = logging.getLogger("MongoDatabaseClient")
 
 
-class MongoDatabaseClient(database_client.DatabaseClient):
+class MongoDatabaseClient(DatabaseClient):
 	""" Client for a MongoDB database. """
 
 

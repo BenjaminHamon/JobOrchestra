@@ -6,7 +6,7 @@ import flask
 from bhamon_build_model.authentication_provider import AuthenticationProvider
 from bhamon_build_model.authorization_provider import AuthorizationProvider
 from bhamon_build_model.build_provider import BuildProvider
-from bhamon_build_model.file_storage import FileStorage
+from bhamon_build_model.database.file_storage import FileStorage
 from bhamon_build_model.job_provider import JobProvider
 from bhamon_build_model.task_provider import TaskProvider
 from bhamon_build_model.user_provider import UserProvider

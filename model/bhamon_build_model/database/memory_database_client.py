@@ -1,15 +1,14 @@
-# pylint: disable = no-self-use
-# pylint: disable = redefined-builtin
+# pylint: disable = no-self-use, redefined-builtin
 
 import logging
 
-import bhamon_build_model.database_client as database_client
+from bhamon_build_model.database.database_client import DatabaseClient
 
 
 logger = logging.getLogger("MemoryDatabaseClient")
 
 
-class MemoryDatabaseClient(database_client.DatabaseClient):
+class MemoryDatabaseClient(DatabaseClient):
 	""" Client for a database storing data in memory, intended for development only. """
 
 

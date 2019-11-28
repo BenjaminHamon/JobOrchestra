@@ -3,7 +3,7 @@
 """ Unit tests for TaskProcessor """
 
 from bhamon_build_model.task_provider import TaskProvider
-from bhamon_build_model.memory_database_client import MemoryDatabaseClient
+from bhamon_build_model.database.memory_database_client import MemoryDatabaseClient
 from bhamon_build_master.task_processor import TaskProcessor
 
 
