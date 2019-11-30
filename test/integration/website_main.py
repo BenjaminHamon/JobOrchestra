@@ -37,7 +37,20 @@ def create_application(environment_instance):
 	website.register_routes(application)
 	website.register_resources(application)
 
+	application.add_url_rule("/me/routes", methods = [ "GET" ], view_func = list_routes)
+
 	return application
+
+
+def list_routes():
+	route_collection = []
+	for rule in flask.current_app.url_map.iter_rules():
+		if "GET" in rule.methods and not rule.rule.startswith("/static/"):
+			is_authorized = flask.current_app.authorization_provider.authorize_request(flask.request.user, "GET", rule.rule)
+			if is_authorized:
+				route_collection.append(rule.rule)
+	route_collection.sort()
+	return flask.jsonify(route_collection)
 
 
 if __name__ == "__main__":

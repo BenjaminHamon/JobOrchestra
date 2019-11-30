@@ -156,6 +156,14 @@ class Context:
 				json.dump(token, authentication_file, indent = 4)
 
 
+	def configure_website_authentication(self):
+		providers = self.instantiate_providers()
+		user = providers["user"].create("viewer", "viewer")
+		providers["user"].update_roles(user, [ "Viewer" ])
+		providers["authentication"].set_password("viewer", "password")
+		return ("viewer", "password")
+
+
 	def instantiate_providers(self):
 		database_client_instance = environment.create_database_client(self.database_uri)
 		file_storage_instance = FileStorage(os.path.join(self.temporary_directory, "master"))
