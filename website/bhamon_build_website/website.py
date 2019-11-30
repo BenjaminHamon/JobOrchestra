@@ -30,6 +30,7 @@ def configure(application, title = None, copyright = None, version = None, date 
 	application.config["WEBSITE_VERSION"] = version if version is not None else bhamon_build_website.__version__
 	application.config["WEBSITE_DATE"] = date if date is not None else bhamon_build_website.__date__
 
+	application.jinja_env.undefined = jinja2.StrictUndefined()
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True
 	application.jinja_env.filters["strip_pagination_arguments"] = helpers.strip_pagination_arguments
