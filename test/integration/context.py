@@ -73,6 +73,7 @@ class Context:
 
 	def invoke_master(self):
 		return self.invoke(
+			identifier = "master",
 			script = "master_main.py",
 			arguments = [ "--address", self.master_address, "--port", str(self.master_port), "--database", self.database_uri ],
 			workspace = os.path.join(self.temporary_directory, "master"),
@@ -81,6 +82,7 @@ class Context:
 
 	def invoke_worker(self, worker_identifier):
 		return self.invoke(
+			identifier = worker_identifier,
 			script = "worker_main.py",
 			arguments = [ "--identifier", worker_identifier, "--master-uri", "ws://%s:%s" % (self.master_address, self.master_port) ],
 			workspace = os.path.join(self.temporary_directory, worker_identifier),
@@ -94,6 +96,7 @@ class Context:
 		os.makedirs(executor_build_directory)
 
 		return self.invoke(
+			identifier = worker_identifier + "_" + "executor",
 			script = "executor_main.py",
 			arguments = [ job_identifier, build_identifier ],
 			workspace = worker_directory,
@@ -102,6 +105,7 @@ class Context:
 
 	def invoke_service(self):
 		return self.invoke(
+			identifier = "service",
 			script = "service_main.py",
 			arguments = [ "--address", self.service_address, "--port", str(self.service_port), "--database", self.database_uri ],
 			workspace = os.path.join(self.temporary_directory, "master"),
@@ -110,31 +114,33 @@ class Context:
 
 	def invoke_website(self):
 		return self.invoke(
+			identifier = "website",
 			script = "website_main.py",
 			arguments = [ "--address", self.website_address, "--port", str(self.website_port) ],
 			workspace = os.path.join(self.temporary_directory, "website"),
 		)
 
 
-	def invoke(self, script, arguments, workspace):
+	def invoke(self, identifier, script, arguments, workspace):
 		script_root = os.path.dirname(os.path.realpath(__file__))
 		command = [ sys.executable, os.path.join(script_root, script) ] + arguments
 
 		os.makedirs(workspace, exist_ok = True)
 
-		process = subprocess.Popen(
-			command,
-			cwd = workspace,
-			stdout = subprocess.PIPE,
-			stderr = subprocess.PIPE,
-			creationflags = subprocess_flags,
-		)
+		with open(os.path.join(self.temporary_directory, identifier + "_" + "stdout.log"), mode = "w") as stdout_file:
+			with open(os.path.join(self.temporary_directory, identifier + "_" + "stderr.log"), mode = "w") as stderr_file:
+				process = subprocess.Popen(command, cwd = workspace, stdout = stdout_file, stderr = stderr_file, creationflags = subprocess_flags)
 
 		self.process_collection.append(process)
 
 		time.sleep(1) # Wait for initialization
 
-		return process
+		return {
+			"identifier": identifier,
+			"process": process,
+			"stdout_file_path": os.path.join(self.temporary_directory, identifier + "_" + "stdout.log"),
+			"stderr_file_path": os.path.join(self.temporary_directory, identifier + "_" + "stderr.log"),
+		}
 
 
 	def configure_worker_authentication(self, worker_collection):

@@ -20,9 +20,9 @@ def test_worker_disconnection(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		os.kill(worker_process.pid, context.shutdown_signal)
+		os.kill(worker_process["process"].pid, context.shutdown_signal)
 		time.sleep(1) # Wait for disconnection
-		os.kill(master_process.pid, context.shutdown_signal)
+		os.kill(master_process["process"].pid, context.shutdown_signal)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
@@ -42,8 +42,8 @@ def test_worker_disconnection(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "worker_01", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
 
@@ -57,9 +57,9 @@ def test_master_disconnection(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		os.kill(master_process.pid, context.shutdown_signal)
+		os.kill(master_process["process"].pid, context.shutdown_signal)
 		time.sleep(1) # Wait for disconnection
-		os.kill(worker_process.pid, context.shutdown_signal)
+		os.kill(worker_process["process"].pid, context.shutdown_signal)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
@@ -80,6 +80,6 @@ def test_master_disconnection(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "worker_01", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])

@@ -20,7 +20,7 @@ def test_master(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
 	])
 
 
@@ -39,7 +39,7 @@ def test_worker(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "worker", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
 
@@ -54,7 +54,7 @@ def test_executor(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "executor", "process": executor_process, "expected_result_code": 1, "log_format": environment.log_format, "expected_messages": executor_expected_messages },
+		{ "process": executor_process, "expected_result_code": 1, "log_format": environment.log_format, "expected_messages": executor_expected_messages },
 	])
 
 
@@ -66,7 +66,7 @@ def test_service(tmpdir, database_type):
 		service_process = context_instance.invoke_service()
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "service", "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
 	])
 
 
@@ -77,5 +77,5 @@ def test_website(tmpdir):
 		website_process = context_instance.invoke_website()
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "website", "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
 	])

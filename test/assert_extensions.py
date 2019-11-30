@@ -16,25 +16,28 @@ def assert_multi_process(process_information_collection):
 	__tracebackhide__ = True # pylint: disable = unused-variable
 
 	for process_information in process_information_collection:
-		process_information["result_code"] = process_information["process"].poll()
-		process_information["stdout"] = process_information["process"].stdout.read().decode()
-		process_information["stderr"] = process_information["process"].stderr.read().decode()
+		process_information["result_code"] = process_information["process"]["process"].poll()
+
+		with open(process_information["process"]["stdout_file_path"], mode = "r") as stdout_file:
+			process_information["stdout"] = stdout_file.read().strip()
+		with open(process_information["process"]["stderr_file_path"], mode = "r") as stderr_file:
+			process_information["stderr"] = stderr_file.read().strip()
 
 		if process_information["stdout"]:
-			sys.stdout.write("  # %s\n" % process_information["identifier"])
+			sys.stdout.write("  # %s\n" % process_information["process"]["identifier"])
 			sys.stdout.write(process_information["stdout"])
-			sys.stderr.write("\n")
+			sys.stdout.write("\n\n")
 		if process_information["stderr"]:
-			sys.stderr.write("  # %s\n" % process_information["identifier"])
+			sys.stderr.write("  # %s\n" % process_information["process"]["identifier"])
 			sys.stderr.write(process_information["stderr"])
-			sys.stderr.write("\n")
+			sys.stderr.write("\n\n")
 
 	for process_information in process_information_collection:
 		if process_information["result_code"] is None:
-			pytest.fail("Process %s did not complete" % process_information["identifier"])
+			pytest.fail("Process %s did not complete" % process_information["process"]["identifier"])
 		if process_information["result_code"] != process_information["expected_result_code"]:
 			pytest.fail("Process %s completed with result code %s, expected %s"
-				% (process_information["identifier"], process_information["result_code"], process_information["expected_result_code"]))
+				% (process_information["process"]["identifier"], process_information["result_code"], process_information["expected_result_code"]))
 		assert_log(process_information["stderr"], process_information["log_format"], process_information["expected_messages"])
 
 
