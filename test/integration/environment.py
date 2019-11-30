@@ -2,7 +2,6 @@ import logging
 import os
 import re
 import sys
-import uuid
 
 import pymongo
 
@@ -58,8 +57,8 @@ def load_test_context_environment(temporary_directory, database_type):
 
 
 def get_test_context_database_uri(temporary_directory, database_type):
-	run_identifier = uuid.UUID(os.path.basename(os.path.dirname(temporary_directory)))
-	database_name = "test_build_database_" + str(run_identifier)
+	run_identifier = os.path.basename(os.path.dirname(temporary_directory))
+	database_name = "test_build_database_" + run_identifier
 
 	if database_type == "json":
 		return "json://" + os.path.join(temporary_directory, "master")

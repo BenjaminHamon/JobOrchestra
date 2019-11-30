@@ -10,17 +10,16 @@ logger = logging.getLogger("Main")
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 	parser = subparsers.add_parser("test", help = "run the test suite")
+	parser.add_argument("--identifier", default = str(uuid.uuid4()), help = "specify a identifier for the run (default to a GUID)")
 	parser.add_argument("--filter", help = "specify a string expression to select tests to run")
 	return parser
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
-	run_identifier = uuid.uuid4()
-
 	try:
-		test(environment["python3_executable"], run_identifier, arguments.filter, arguments.simulate)
+		test(environment["python3_executable"], arguments.identifier, arguments.filter, arguments.simulate)
 	finally:
-		save_results(run_identifier, arguments.results, arguments.simulate)
+		save_results(arguments.identifier, arguments.results, arguments.simulate)
 
 
 def test(python_executable, run_identifier, filter_expression, simulate):

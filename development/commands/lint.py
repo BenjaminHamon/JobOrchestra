@@ -9,17 +9,17 @@ logger = logging.getLogger("Main")
 
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
-	return subparsers.add_parser("lint", help = "run linter")
+	parser = subparsers.add_parser("lint", help = "run linter")
+	parser.add_argument("--identifier", default = str(uuid.uuid4()), help = "specify a identifier for the run (default to a GUID)")
+	return parser
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
-	run_identifier = uuid.uuid4()
-
 	try:
-		lint_packages(environment["python3_executable"], run_identifier, configuration["components"], arguments.simulate)
-		lint_tests(environment["python3_executable"], run_identifier, "./test", arguments.simulate)
+		lint_packages(environment["python3_executable"], arguments.identifier, configuration["components"], arguments.simulate)
+		lint_tests(environment["python3_executable"], arguments.identifier, "./test", arguments.simulate)
 	finally:
-		save_results(run_identifier, arguments.results, arguments.simulate)
+		save_results(arguments.identifier, arguments.results, arguments.simulate)
 
 
 def lint_packages(python_executable, run_identifier, component_collection, simulate):
