@@ -42,6 +42,7 @@ class JobProvider:
 				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 			}
+
 			self.database_client.insert_one(self.table, job)
 
 		else:
@@ -53,7 +54,11 @@ class JobProvider:
 				"description": description,
 				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 			}
+
+			job.update(update_data)
 			self.database_client.update_one(self.table, { "identifier": job_identifier }, update_data)
+
+		return job
 
 
 	def update_status(self, job, is_enabled = None):
