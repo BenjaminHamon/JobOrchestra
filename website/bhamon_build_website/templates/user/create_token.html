@@ -11,9 +11,17 @@
 		<label for="input-identifier">Identifier</label>
 		<input type="text" class="text-input" id="input-identifier" name="identifier" value="{{ user_identifier }}" readonly>
 		<label for="input-description">Description</label>
+		{% if 'description' in request.form %}
 		<input type="text" class="text-input" id="input-description" name="description" value="{{ request.form['description'] }}" required/>
+		{% else %}
+		<input type="text" class="text-input" id="input-description" name="description" required/>
+		{% endif %}
 		<label for="input-expiration">Expiration</label>
+		{% if 'expiration' in request.form %}
 		<input type="text" class="text-input" id="input-expiration" name="expiration" value="{{ request.form['expiration'] }}"/>
+		{% else %}
+		<input type="text" class="text-input" id="input-expiration" name="expiration"/>
+		{% endif %}
 		<button type="submit">Create Token</button>
 	</form>
 </section>

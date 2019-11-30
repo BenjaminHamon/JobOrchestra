@@ -25,7 +25,7 @@
 			</div>
 		</header>
 
-		{% if config['WEBSITE_ANNOUNCEMENT'] %}
+		{% if 'WEBSITE_ANNOUNCEMENT' in config %}
 		<div id="announcement" class="{{ config['WEBSITE_ANNOUNCEMENT_TYPE'] }}">
 			<p>{{ config['WEBSITE_ANNOUNCEMENT'] }}</p>
 		</div>
