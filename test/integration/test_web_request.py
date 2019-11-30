@@ -66,8 +66,8 @@ def test_website_pages(tmpdir, database_type):
 
 		providers = context_instance.instantiate_providers()
 		job = providers["job"].create_or_update("job_test", None, None, None, None, None)
-		build = providers["build"].create(job["identifier"], {})
-		providers["build"].update_steps(build, [ { "index": 0, "name": "step_0", "status": "pending" } ])
+		run = providers["run"].create(job["identifier"], {})
+		providers["run"].update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 		worker = providers["worker"].create("worker", None)
 
 		service_process = context_instance.invoke_service()
@@ -81,7 +81,7 @@ def test_website_pages(tmpdir, database_type):
 
 		route_collection = response.json()
 		for route in route_collection:
-			route = route.replace("<build_identifier>", build["identifier"])
+			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<int:step_index>", "0")
 			route = route.replace("<job_identifier>", job["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])

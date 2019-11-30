@@ -42,11 +42,11 @@ class Master:
 			lambda parameters: reload_configuration(self))
 		self._task_processor.register_handler("stop_worker", 50,
 			lambda parameters: stop_worker(self._supervisor, **parameters))
-		self._task_processor.register_handler("abort_build", 90,
-			lambda parameters: abort_build(self._job_scheduler, **parameters))
-		self._task_processor.register_handler("trigger_build", 100,
-			lambda parameters: trigger_build(self._job_scheduler, **parameters),
-			lambda parameters: cancel_build(self._job_scheduler, **parameters))
+		self._task_processor.register_handler("abort_run", 90,
+			lambda parameters: abort_run(self._job_scheduler, **parameters))
+		self._task_processor.register_handler("trigger_run", 100,
+			lambda parameters: trigger_run(self._job_scheduler, **parameters),
+			lambda parameters: cancel_run(self._job_scheduler, **parameters))
 
 
 	def reload_configuration(self):
@@ -79,16 +79,16 @@ def stop_worker(supervisor, worker_identifier):
 	return "succeeded" if was_stopped else "failed"
 
 
-def trigger_build(job_scheduler, build_identifier):
-	was_triggered = job_scheduler.trigger_build(build_identifier)
+def trigger_run(job_scheduler, run_identifier):
+	was_triggered = job_scheduler.trigger_run(run_identifier)
 	return "succeeded" if was_triggered else "pending"
 
 
-def cancel_build(job_scheduler, build_identifier):
-	was_cancelled = job_scheduler.cancel_build(build_identifier)
+def cancel_run(job_scheduler, run_identifier):
+	was_cancelled = job_scheduler.cancel_run(run_identifier)
 	return "succeeded" if was_cancelled else "failed"
 
 
-def abort_build(job_scheduler, build_identifier):
-	was_aborted = job_scheduler.abort_build(build_identifier)
+def abort_run(job_scheduler, run_identifier):
+	was_aborted = job_scheduler.abort_run(run_identifier)
 	return "succeeded" if was_aborted else "failed"

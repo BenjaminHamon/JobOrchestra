@@ -63,7 +63,7 @@ class WorkerProvider:
 		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
 
 
-	def delete(self, worker_identifier, build_provider):
+	def delete(self, worker_identifier, run_provider):
 		worker_record = self.get(worker_identifier)
 		if worker_record is None:
 			raise ValueError("Worker '%s' does not exist" % worker_identifier)
@@ -73,9 +73,9 @@ class WorkerProvider:
 		if worker_record["is_active"]:
 			raise ValueError("Worker '%s' is active" % worker_identifier)
 
-		if build_provider.count(worker = worker_identifier, status = "pending") > 0:
-			raise ValueError("Worker '%s' has pending builds" % worker_identifier)
-		if build_provider.count(worker = worker_identifier, status = "running") > 0:
-			raise ValueError("Worker '%s' has running builds" % worker_identifier)
+		if run_provider.count(worker = worker_identifier, status = "pending") > 0:
+			raise ValueError("Worker '%s' has pending runs" % worker_identifier)
+		if run_provider.count(worker = worker_identifier, status = "running") > 0:
+			raise ValueError("Worker '%s' has running runs" % worker_identifier)
 
 		self.database_client.delete_one(self.table, { "identifier": worker_identifier })

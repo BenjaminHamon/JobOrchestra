@@ -138,18 +138,18 @@ class Worker: # pylint: disable = too-few-public-methods
 		self._asyncio_loop.run_until_complete(asyncio.gather(*all_futures))
 		for executor in self._active_executors:
 			if "process" in executor and executor["process"].returncode is None:
-				logger.warning("%s %s is still running (Process: %s)", executor["job_identifier"], executor["build_identifier"], executor["process"].pid)
+				logger.warning("%s %s is still running (Process: %s)", executor["job_identifier"], executor["run_identifier"], executor["process"].pid)
 
 
 	async def _terminate_executor(self, executor, timeout_seconds):
 		if "process" in executor and executor["process"].returncode is None:
-			logger.info("Aborting %s %s", executor["job_identifier"], executor["build_identifier"])
+			logger.info("Aborting %s %s", executor["job_identifier"], executor["run_identifier"])
 			os.kill(executor["process"].pid, shutdown_signal)
 
 			try:
 				await asyncio.wait_for(executor["process"].wait(), timeout_seconds)
 			except asyncio.TimeoutError:
-				logger.warning("Forcing termination for %s %s", executor["job_identifier"], executor["build_identifier"])
+				logger.warning("Forcing termination for %s %s", executor["job_identifier"], executor["run_identifier"])
 				executor["process"].kill()
 
 
@@ -159,7 +159,7 @@ class Worker: # pylint: disable = too-few-public-methods
 		if command == "properties":
 			return self._get_properties()
 		if command == "list":
-			return self._list_builds()
+			return self._list_runs()
 		if command == "execute":
 			return await self._execute(**parameters)
 		if command == "clean":
@@ -192,43 +192,43 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	def _recover(self):
-		all_builds = worker_storage.list_builds()
-		for job_identifier, build_identifier in all_builds:
-			logger.info("Recovering %s %s", job_identifier, build_identifier)
+		all_runs = worker_storage.list_runs()
+		for job_identifier, run_identifier in all_runs:
+			logger.info("Recovering %s %s", job_identifier, run_identifier)
 			for executor in self._active_executors:
-				if executor["build_identifier"] == build_identifier:
+				if executor["run_identifier"] == run_identifier:
 					continue
-			executor = { "job_identifier": job_identifier, "build_identifier": build_identifier }
+			executor = { "job_identifier": job_identifier, "run_identifier": run_identifier }
 			self._active_executors.append(executor)
 
 
-	def _list_builds(self):
-		all_builds = []
+	def _list_runs(self):
+		all_runs = []
 		for executor in self._active_executors:
-			all_builds.append({ "job_identifier": executor["job_identifier"], "build_identifier": executor["build_identifier"] })
-		return all_builds
+			all_runs.append({ "job_identifier": executor["job_identifier"], "run_identifier": executor["run_identifier"] })
+		return all_runs
 
 
-	async def _execute(self, job_identifier, build_identifier, job, parameters):
-		logger.info("Executing %s %s", job_identifier, build_identifier)
+	async def _execute(self, job_identifier, run_identifier, job, parameters):
+		logger.info("Executing %s %s", job_identifier, run_identifier)
 
-		build_request = {
+		run_request = {
 			"job_identifier": job_identifier,
-			"build_identifier": build_identifier,
+			"run_identifier": run_identifier,
 			"job": job,
 			"parameters": parameters,
 		}
 
-		worker_storage.create_build(job_identifier, build_identifier)
-		worker_storage.save_request(job_identifier, build_identifier, build_request)
+		worker_storage.create_run(job_identifier, run_identifier)
+		worker_storage.save_request(job_identifier, run_identifier, run_request)
 
-		executor_command = [ sys.executable, self._executor_script, job_identifier, build_identifier ]
+		executor_command = [ sys.executable, self._executor_script, job_identifier, run_identifier ]
 		executor_process = await asyncio.create_subprocess_exec(*executor_command, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
 		executor_watcher = self._asyncio_loop.create_task(self._watch_executor(executor_process))
 
 		executor = {
 			"job_identifier": job_identifier,
-			"build_identifier": build_identifier,
+			"run_identifier": run_identifier,
 			"process": executor_process,
 			"watcher": executor_watcher,
 		}
@@ -236,31 +236,31 @@ class Worker: # pylint: disable = too-few-public-methods
 		self._active_executors.append(executor)
 
 
-	async def _clean(self, job_identifier, build_identifier):
-		logger.info("Cleaning %s %s", job_identifier, build_identifier)
-		executor = self._find_executor(build_identifier)
+	async def _clean(self, job_identifier, run_identifier):
+		logger.info("Cleaning %s %s", job_identifier, run_identifier)
+		executor = self._find_executor(run_identifier)
 		if "watcher" in executor:
 			await asyncio.wait_for(executor["watcher"], 1)
 		if "process" in executor and executor["process"].returncode is None:
-			raise RuntimeError("Executor is still running for build %s" % build_identifier)
+			raise RuntimeError("Executor is still running for run %s" % run_identifier)
 		self._active_executors.remove(executor)
-		worker_storage.delete_build(job_identifier, build_identifier)
+		worker_storage.delete_run(job_identifier, run_identifier)
 
 
-	def _abort(self, job_identifier, build_identifier):
-		logger.info("Aborting %s %s", job_identifier, build_identifier)
-		executor = self._find_executor(build_identifier)
+	def _abort(self, job_identifier, run_identifier):
+		logger.info("Aborting %s %s", job_identifier, run_identifier)
+		executor = self._find_executor(run_identifier)
 		if executor["process"].returncode is None:
 			os.kill(executor["process"].pid, shutdown_signal)
 		# The executor should terminate nicely, if it does not it will stays as running and should be investigated
 		# Forcing termination here would leave orphan processes and the status as running
 
 
-	def _find_executor(self, build_identifier):
+	def _find_executor(self, run_identifier):
 		for executor in self._active_executors:
-			if executor["build_identifier"] == build_identifier:
+			if executor["run_identifier"] == run_identifier:
 				return executor
-		raise KeyError("Executor not found for %s" % build_identifier)
+		raise KeyError("Executor not found for %s" % run_identifier)
 
 
 	def _request_shutdown(self):
@@ -275,27 +275,27 @@ class Worker: # pylint: disable = too-few-public-methods
 			self._active_connection_task.cancel()
 
 
-	def _retrieve_status(self, job_identifier, build_identifier):
-		executor = self._find_executor(build_identifier)
+	def _retrieve_status(self, job_identifier, run_identifier):
+		executor = self._find_executor(run_identifier)
 		is_executor_running = "process" in executor and executor["process"].returncode is None
-		status = worker_storage.load_status(job_identifier, build_identifier)
+		status = worker_storage.load_status(job_identifier, run_identifier)
 		if not is_executor_running and (status["status"] in [ "unknown", "running" ]):
-			logger.error('Build %s executor terminated before completion', build_identifier)
+			logger.error("Run '%s' terminated before completion", run_identifier)
 			status["status"] = "exception"
-			worker_storage.save_status(job_identifier, build_identifier, status)
+			worker_storage.save_status(job_identifier, run_identifier, status)
 		return status
 
 
-	def _retrieve_request(self, job_identifier, build_identifier): # pylint: disable = no-self-use
-		return worker_storage.load_request(job_identifier, build_identifier)
+	def _retrieve_request(self, job_identifier, run_identifier): # pylint: disable = no-self-use
+		return worker_storage.load_request(job_identifier, run_identifier)
 
 
-	def _retrieve_log(self, job_identifier, build_identifier, step_index, step_name): # pylint: disable = no-self-use
-		return worker_storage.load_log(job_identifier, build_identifier, step_index, step_name)
+	def _retrieve_log(self, job_identifier, run_identifier, step_index, step_name): # pylint: disable = no-self-use
+		return worker_storage.load_log(job_identifier, run_identifier, step_index, step_name)
 
 
-	def _retrieve_results(self, job_identifier, build_identifier): # pylint: disable = no-self-use
-		return worker_storage.load_results(job_identifier, build_identifier)
+	def _retrieve_results(self, job_identifier, run_identifier): # pylint: disable = no-self-use
+		return worker_storage.load_results(job_identifier, run_identifier)
 
 
 	async def _watch_executor(self, executor_process):

@@ -13,10 +13,10 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, build_provider, worker_provider, user_provider, authentication_provider, authorization_provider):
+	def __init__(self, host, port, run_provider, worker_provider, user_provider, authentication_provider, authorization_provider):
 		self._host = host
 		self._port = port
-		self._build_provider = build_provider
+		self._run_provider = run_provider
 		self._worker_provider = worker_provider
 		self._user_provider = user_provider
 		self._authentication_provider = authentication_provider
@@ -130,7 +130,7 @@ class Supervisor:
 
 
 	def _instantiate_worker(self, worker_identifier, connection):
-		worker_instance = Worker(worker_identifier, connection, self._build_provider)
+		worker_instance = Worker(worker_identifier, connection, self._run_provider)
 		worker_instance.update_interval_seconds = self.update_interval_seconds
 		return worker_instance
 

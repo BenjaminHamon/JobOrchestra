@@ -24,7 +24,7 @@ def get_worker(worker_identifier):
 	return flask.jsonify(flask.current_app.worker_provider.get(worker_identifier))
 
 
-def get_worker_builds(worker_identifier):
+def get_worker_runs(worker_identifier):
 	query_parameters = {
 		"worker": worker_identifier,
 		"status": flask.request.args.get("status", default = None),
@@ -33,7 +33,7 @@ def get_worker_builds(worker_identifier):
 		"order_by": [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ],
 	}
 
-	return flask.jsonify(flask.current_app.build_provider.get_list(**query_parameters))
+	return flask.jsonify(flask.current_app.run_provider.get_list(**query_parameters))
 
 
 def get_worker_tasks(worker_identifier):

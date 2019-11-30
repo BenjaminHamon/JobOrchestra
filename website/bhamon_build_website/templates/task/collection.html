@@ -7,8 +7,8 @@
 <section>
 	<div class="table-container">
 		<form method="get" action="{{ url_for('task_collection_index') }}">
-			<label for="input-build">Build</label>
-			<input type="text" class="uuid-input" id="input-build" name="build" value="{{ request.args.get('build', '') }}"/>
+			<label for="input-run">Run</label>
+			<input type="text" class="uuid-input" id="input-run" name="run" value="{{ request.args.get('run', '') }}"/>
 			<label for="input-worker">Worker</label>
 			<select id="input-worker" name="worker">
 				<option></option>

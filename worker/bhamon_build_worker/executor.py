@@ -19,7 +19,7 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 termination_timeout_seconds = 30
 
 
-def run(job_identifier, build_identifier, environment):
+def run(job_identifier, run_identifier, environment):
 	executor_data = {
 		"should_shutdown": False,
 	}
@@ -29,15 +29,15 @@ def run(job_identifier, build_identifier, environment):
 	signal.signal(signal.SIGINT, lambda signal_number, frame: _shutdown(executor_data))
 	signal.signal(signal.SIGTERM, lambda signal_number, frame: _shutdown(executor_data))
 
-	logger.info("(%s) Executing %s", build_identifier, job_identifier)
-	build_request = worker_storage.load_request(job_identifier, build_identifier)
+	logger.info("(%s) Executing %s", run_identifier, job_identifier)
+	run_request = worker_storage.load_request(job_identifier, run_identifier)
 
-	build_status = {
-		"job_identifier": build_request["job_identifier"],
-		"build_identifier": build_request["build_identifier"],
-		"workspace": os.path.join("workspaces", build_request["job"]["workspace"]),
+	run_status = {
+		"job_identifier": run_request["job_identifier"],
+		"run_identifier": run_request["run_identifier"],
+		"workspace": os.path.join("workspaces", run_request["job"]["workspace"]),
 		"environment": environment,
-		"parameters": build_request["parameters"],
+		"parameters": run_request["parameters"],
 		"status": "running",
 		"steps": [
 			{
@@ -46,101 +46,101 @@ def run(job_identifier, build_identifier, environment):
 				"command": step["command"],
 				"status": "pending",
 			}
-			for step_index, step in enumerate(build_request["job"]["steps"])
+			for step_index, step in enumerate(run_request["job"]["steps"])
 		],
 
 		"start_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 		"completion_date": None,
 	}
 
-	logger.info("(%s) Build is starting", build_identifier)
+	logger.info("(%s) Run is starting", run_identifier)
 
 	try:
-		worker_storage.save_status(job_identifier, build_identifier, build_status)
+		worker_storage.save_status(job_identifier, run_identifier, run_status)
 
-		if not os.path.exists(build_status["workspace"]):
-			os.makedirs(build_status["workspace"])
+		if not os.path.exists(run_status["workspace"]):
+			os.makedirs(run_status["workspace"])
 
 		# Prevent executor pyvenv from overriding a python executable specified in a command
 		if "__PYVENV_LAUNCHER__" in os.environ:
 			del os.environ["__PYVENV_LAUNCHER__"]
 
-		build_final_status = "succeeded"
+		run_final_status = "succeeded"
 		is_skipping = False
 
-		for step_index, step in enumerate(build_status["steps"]):
+		for step_index, step in enumerate(run_status["steps"]):
 			if not is_skipping and executor_data["should_shutdown"]:
-				build_final_status = "aborted"
+				run_final_status = "aborted"
 				is_skipping = True
-			_execute_step(executor_data, job_identifier, build_identifier, build_status, step_index, step, is_skipping)
+			_execute_step(executor_data, job_identifier, run_identifier, run_status, step_index, step, is_skipping)
 			if not is_skipping and step["status"] != "succeeded":
-				build_final_status = step["status"]
+				run_final_status = step["status"]
 				is_skipping = True
 
-		build_status["status"] = build_final_status
-		build_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
-		worker_storage.save_status(job_identifier, build_identifier, build_status)
+		run_status["status"] = run_final_status
+		run_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		worker_storage.save_status(job_identifier, run_identifier, run_status)
 
 	except: # pylint: disable = bare-except
-		logger.error("(%s) Build raised an exception", build_identifier, exc_info = True)
-		build_status["status"] = "exception"
-		build_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
-		worker_storage.save_status(job_identifier, build_identifier, build_status)
+		logger.error("(%s) Run raised an exception", run_identifier, exc_info = True)
+		run_status["status"] = "exception"
+		run_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		worker_storage.save_status(job_identifier, run_identifier, run_status)
 
-	logger.info("(%s) Build completed with status %s", build_identifier, build_status["status"])
+	logger.info("(%s) Run completed with status %s", run_identifier, run_status["status"])
 
 
-def _execute_step(executor_data, job_identifier, build_identifier, build_status, step_index, step, is_skipping):
-	logger.info("(%s) Step %s is starting", build_identifier, step["name"])
+def _execute_step(executor_data, job_identifier, run_identifier, run_status, step_index, step, is_skipping):
+	logger.info("(%s) Step %s is starting", run_identifier, step["name"])
 
 	try:
 		step["status"] = "running"
-		worker_storage.save_status(job_identifier, build_identifier, build_status)
+		worker_storage.save_status(job_identifier, run_identifier, run_status)
 
-		log_file_path = worker_storage.get_log_path(job_identifier, build_identifier, step_index, step["name"])
-		result_file_path = os.path.join(build_status["workspace"], "build_results", build_identifier, "results.json")
+		log_file_path = worker_storage.get_log_path(job_identifier, run_identifier, step_index, step["name"])
+		result_file_path = os.path.join(run_status["workspace"], "run_results", run_identifier, "results.json")
 
 		if is_skipping:
 			step["status"] = "skipped"
 
 		else:
-			step_command = _format_command(step["command"], build_status, result_file_path, log_file_path)
-			logger.info("(%s) + %s", build_identifier, " ".join(step_command))
-			step["status"] = _execute_command(executor_data, build_identifier, step_command, build_status["workspace"], log_file_path)
+			step_command = _format_command(step["command"], run_status, result_file_path, log_file_path)
+			logger.info("(%s) + %s", run_identifier, " ".join(step_command))
+			step["status"] = _execute_command(executor_data, run_identifier, step_command, run_status["workspace"], log_file_path)
 
 			if os.path.isfile(result_file_path):
 				with open(result_file_path, "r") as result_file:
 					results = json.load(result_file)
-				worker_storage.save_results(job_identifier, build_identifier, results)
+				worker_storage.save_results(job_identifier, run_identifier, results)
 
-		worker_storage.save_status(job_identifier, build_identifier, build_status)
+		worker_storage.save_status(job_identifier, run_identifier, run_status)
 
 	except: # pylint: disable = bare-except
-		logger.error("(%s) Step %s raised an exception", build_identifier, step["name"], exc_info = True)
+		logger.error("(%s) Step %s raised an exception", run_identifier, step["name"], exc_info = True)
 		step["status"] = "exception"
-		worker_storage.save_status(job_identifier, build_identifier, build_status)
+		worker_storage.save_status(job_identifier, run_identifier, run_status)
 
-	logger.info("(%s) Step %s completed with status %s", build_identifier, step["name"], step["status"])
+	logger.info("(%s) Step %s completed with status %s", run_identifier, step["name"], step["status"])
 
 
-def _format_command(command, build_status, result_file_path, log_file_path):
+def _format_command(command, run_status, result_file_path, log_file_path):
 	results = {}
 	if os.path.isfile(result_file_path):
 		with open(result_file_path, "r") as result_file:
 			results = json.load(result_file)
 
 	format_parameters = {
-		"environment": build_status["environment"],
-		"parameters": build_status["parameters"],
+		"environment": run_status["environment"],
+		"parameters": run_status["parameters"],
 		"results": results,
-		"result_file_path": os.path.relpath(result_file_path, build_status["workspace"]),
+		"result_file_path": os.path.relpath(result_file_path, run_status["workspace"]),
 	}
 
 	try:
 		return [ argument.format(**format_parameters) for argument in command ]
 	except KeyError:
 		with open(log_file_path, "w") as log_file:
-			log_file.write("# Workspace: %s\n" % os.path.abspath(build_status["workspace"]))
+			log_file.write("# Workspace: %s\n" % os.path.abspath(run_status["workspace"]))
 			log_file.write("# Command: %s\n" % " ".join(command))
 			log_file.write("\n")
 			log_file.write("Exception while formatting the step command\n")
@@ -149,7 +149,7 @@ def _format_command(command, build_status, result_file_path, log_file_path):
 		raise
 
 
-def _execute_command(executor_data, build_identifier, command, workspace, log_file_path):
+def _execute_command(executor_data, run_identifier, command, workspace, log_file_path):
 	with open(log_file_path, "w") as log_file:
 		log_file.write("# Workspace: %s\n" % os.path.abspath(workspace))
 		log_file.write("# Command: %s\n" % " ".join(command))
@@ -164,19 +164,19 @@ def _execute_command(executor_data, build_identifier, command, workspace, log_fi
 		finally:
 			os.chdir(executor_directory)
 
-		return _wait_process(executor_data, build_identifier, child_process)
+		return _wait_process(executor_data, run_identifier, child_process)
 
 
-def _wait_process(executor_data, build_identifier, child_process):
+def _wait_process(executor_data, run_identifier, child_process):
 	result = None
 	while result is None:
 		if executor_data["should_shutdown"]:
-			logger.info("(%s) Terminating child process", build_identifier)
+			logger.info("(%s) Terminating child process", run_identifier)
 			os.kill(child_process.pid, shutdown_signal)
 			try:
 				result = child_process.wait(timeout = termination_timeout_seconds)
 			except subprocess.TimeoutExpired:
-				logger.warning("(%s) Terminating child process (force)", build_identifier)
+				logger.warning("(%s) Terminating child process (force)", run_identifier)
 				child_process.kill()
 			return "aborted"
 		time.sleep(1)

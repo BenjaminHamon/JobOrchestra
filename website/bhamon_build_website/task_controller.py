@@ -15,7 +15,7 @@ def task_collection_index():
 	query_parameters = {
 		"type": helpers.none_if_empty(flask.request.args.get("type", default = None)),
 		"status": helpers.none_if_empty(flask.request.args.get("status", default = None)),
-		"build": helpers.none_if_empty(flask.request.args.get("build", default = None)),
+		"run": helpers.none_if_empty(flask.request.args.get("run", default = None)),
 		"worker": helpers.none_if_empty(flask.request.args.get("worker", default = None)),
 	}
 

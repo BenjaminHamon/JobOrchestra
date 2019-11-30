@@ -22,7 +22,7 @@ class AuthorizationProvider:
 
 
 	def authorize_worker(self, user):
-		if self.is_authorized_user(user) and "BuildWorker" in user["roles"]:
+		if self.is_authorized_user(user) and "Worker" in user["roles"]:
 			return True
 		return False
 
@@ -67,18 +67,18 @@ class AuthorizationProvider:
 			if "Administrator" in user_roles:
 				return True
 
-		if method == "GET" and domain in [ "build", "job", "task", "worker" ]:
+		if method == "GET" and domain in [ "job", "run", "task", "worker" ]:
 			if "Viewer" in user_roles:
 				return True
-		if method == "POST" and domain in [ "build", "job", "task", "worker" ]:
+		if method == "POST" and domain in [ "job", "run", "task", "worker" ]:
 			if "Operator" in user_roles:
 				return True
 
-		if method == "GET" and route == "/build/<build_identifier>":
-			if "BuildWorker" in user_roles:
+		if method == "GET" and route == "/run/<run_identifier>":
+			if "Worker" in user_roles:
 				return True
 		if method == "POST" and route == "/job/<job_identifier>/trigger":
-			if "BuildWorker" in user_roles:
+			if "Worker" in user_roles:
 				return True
 
 		return False
@@ -95,7 +95,7 @@ class AuthorizationProvider:
 			if "Viewer" in user_roles:
 				return True
 
-		if view in [ "build-actions", "job-actions", "task-actions", "worker-actions" ]:
+		if view in [ "job-actions", "run-actions", "task-actions", "worker-actions" ]:
 			if "Operator" in user_roles:
 				return True
 

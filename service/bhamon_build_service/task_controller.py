@@ -10,7 +10,7 @@ def get_task_count():
 	query_parameters = {
 		"type": flask.request.args.get("type", default = None),
 		"status": flask.request.args.get("status", default = None),
-		"build": flask.request.args.get("build", default = None),
+		"run": flask.request.args.get("run", default = None),
 		"worker": flask.request.args.get("worker", default = None),
 	}
 
@@ -21,7 +21,7 @@ def get_task_collection():
 	query_parameters = {
 		"type": flask.request.args.get("type", default = None),
 		"status": flask.request.args.get("status", default = None),
-		"build": flask.request.args.get("build", default = None),
+		"run": flask.request.args.get("run", default = None),
 		"worker": flask.request.args.get("worker", default = None),
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
 		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),

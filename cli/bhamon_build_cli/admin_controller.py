@@ -24,7 +24,7 @@ def create_authentication_token(application, arguments): # pylint: disable = unu
 
 def delete_worker(application, arguments): # pylint: disable = unused-argument
 	worker = input("Worker: ")
-	application.worker_provider.delete(worker, application.build_provider)
+	application.worker_provider.delete(worker, application.run_provider)
 
 
 def reload_configuration(application, arguments): # pylint: disable = unused-argument

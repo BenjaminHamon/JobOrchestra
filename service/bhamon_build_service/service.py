@@ -8,9 +8,9 @@ import bhamon_build_service
 import bhamon_build_service.helpers as helpers
 
 import bhamon_build_service.admin_controller as admin_controller
-import bhamon_build_service.build_controller as build_controller
 import bhamon_build_service.job_controller as job_controller
 import bhamon_build_service.me_controller as me_controller
+import bhamon_build_service.run_controller as run_controller
 import bhamon_build_service.task_controller as task_controller
 import bhamon_build_service.user_controller as user_controller
 import bhamon_build_service.worker_controller as worker_controller
@@ -41,20 +41,20 @@ def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/help", methods = [ "GET" ], view_func = help)
 	application.add_url_rule("/admin/information", methods = [ "GET" ], view_func = admin_controller.information)
 	application.add_url_rule("/admin/reload", methods = [ "POST" ], view_func = admin_controller.reload)
-	application.add_url_rule("/build_count", methods = [ "GET" ], view_func = build_controller.get_build_count)
-	application.add_url_rule("/build_collection", methods = [ "GET" ], view_func = build_controller.get_build_collection)
-	application.add_url_rule("/build/<build_identifier>", methods = [ "GET" ], view_func = build_controller.get_build)
-	application.add_url_rule("/build/<build_identifier>/step_collection", methods = [ "GET" ], view_func = build_controller.get_build_step_collection)
-	application.add_url_rule("/build/<build_identifier>/step/<int:step_index>", methods = [ "GET" ], view_func = build_controller.get_build_step)
-	application.add_url_rule("/build/<build_identifier>/step/<int:step_index>/log", methods = [ "GET" ], view_func = build_controller.get_build_step_log)
-	application.add_url_rule("/build/<build_identifier>/results", methods = [ "GET" ], view_func = build_controller.get_build_results)
-	application.add_url_rule("/build/<build_identifier>/tasks", methods = [ "GET" ], view_func = build_controller.get_build_tasks)
-	application.add_url_rule("/build/<build_identifier>/abort", methods = [ "POST" ], view_func = build_controller.abort_build)
-	application.add_url_rule("/build/<build_identifier>/download", methods = [ "GET" ], view_func = build_controller.download_build_archive)
+	application.add_url_rule("/run_count", methods = [ "GET" ], view_func = run_controller.get_run_count)
+	application.add_url_rule("/run_collection", methods = [ "GET" ], view_func = run_controller.get_run_collection)
+	application.add_url_rule("/run/<run_identifier>", methods = [ "GET" ], view_func = run_controller.get_run)
+	application.add_url_rule("/run/<run_identifier>/step_collection", methods = [ "GET" ], view_func = run_controller.get_run_step_collection)
+	application.add_url_rule("/run/<run_identifier>/step/<int:step_index>", methods = [ "GET" ], view_func = run_controller.get_run_step)
+	application.add_url_rule("/run/<run_identifier>/step/<int:step_index>/log", methods = [ "GET" ], view_func = run_controller.get_run_step_log)
+	application.add_url_rule("/run/<run_identifier>/results", methods = [ "GET" ], view_func = run_controller.get_run_results)
+	application.add_url_rule("/run/<run_identifier>/tasks", methods = [ "GET" ], view_func = run_controller.get_run_tasks)
+	application.add_url_rule("/run/<run_identifier>/abort", methods = [ "POST" ], view_func = run_controller.abort_run)
+	application.add_url_rule("/run/<run_identifier>/download", methods = [ "GET" ], view_func = run_controller.download_run_archive)
 	application.add_url_rule("/job_count", methods = [ "GET" ], view_func = job_controller.get_job_count)
 	application.add_url_rule("/job_collection", methods = [ "GET" ], view_func = job_controller.get_job_collection)
 	application.add_url_rule("/job/<job_identifier>", methods = [ "GET" ], view_func = job_controller.get_job)
-	application.add_url_rule("/job/<job_identifier>/builds", methods = [ "GET" ], view_func = job_controller.get_job_builds)
+	application.add_url_rule("/job/<job_identifier>/runs", methods = [ "GET" ], view_func = job_controller.get_job_runs)
 	application.add_url_rule("/job/<job_identifier>/trigger", methods = [ "POST" ], view_func = job_controller.trigger_job)
 	application.add_url_rule("/job/<job_identifier>/enable", methods = [ "POST" ], view_func = job_controller.enable_job)
 	application.add_url_rule("/job/<job_identifier>/disable", methods = [ "POST" ], view_func = job_controller.disable_job)
@@ -87,7 +87,7 @@ def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/worker_count", methods = [ "GET" ], view_func = worker_controller.get_worker_count)
 	application.add_url_rule("/worker_collection", methods = [ "GET" ], view_func = worker_controller.get_worker_collection)
 	application.add_url_rule("/worker/<worker_identifier>", methods = [ "GET" ], view_func = worker_controller.get_worker)
-	application.add_url_rule("/worker/<worker_identifier>/builds", methods = [ "GET" ], view_func = worker_controller.get_worker_builds)
+	application.add_url_rule("/worker/<worker_identifier>/runs", methods = [ "GET" ], view_func = worker_controller.get_worker_runs)
 	application.add_url_rule("/worker/<worker_identifier>/tasks", methods = [ "GET" ], view_func = worker_controller.get_worker_tasks)
 	application.add_url_rule("/worker/<worker_identifier>/stop", methods = [ "POST" ], view_func = worker_controller.stop_worker)
 	application.add_url_rule("/worker/<worker_identifier>/enable", methods = [ "POST" ], view_func = worker_controller.enable_worker)

@@ -27,8 +27,8 @@ def job_collection_index():
 
 def job_index(job_identifier):
 	job = service_client.get("/job/{job_identifier}".format(**locals()))
-	job_builds = service_client.get("/job/{job_identifier}/builds".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] })
-	return flask.render_template("job/index.html", title = "Job " + job["identifier"], job = job, job_builds = job_builds)
+	job_runs = service_client.get("/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] })
+	return flask.render_template("job/index.html", title = "Job " + job["identifier"], job = job, job_runs = job_runs)
 
 
 def trigger_job(job_identifier):

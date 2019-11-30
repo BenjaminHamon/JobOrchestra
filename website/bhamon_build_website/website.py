@@ -12,9 +12,9 @@ import bhamon_build_website.helpers as helpers
 import bhamon_build_website.service_client as service_client
 
 import bhamon_build_website.admin_controller as admin_controller
-import bhamon_build_website.build_controller as build_controller
 import bhamon_build_website.job_controller as job_controller
 import bhamon_build_website.me_controller as me_controller
+import bhamon_build_website.run_controller as run_controller
 import bhamon_build_website.task_controller as task_controller
 import bhamon_build_website.user_controller as user_controller
 import bhamon_build_website.worker_controller as worker_controller
@@ -51,11 +51,6 @@ def register_routes(application):
 	application.add_url_rule("/", methods = [ "GET" ], view_func = home)
 	application.add_url_rule("/admin", methods = [ "GET" ], view_func = admin_controller.administration_index)
 	application.add_url_rule("/admin/reload", methods = [ "POST" ], view_func = admin_controller.reload_service)
-	application.add_url_rule("/build_collection", methods = [ "GET" ], view_func = build_controller.build_collection_index)
-	application.add_url_rule("/build/<build_identifier>", methods = [ "GET" ], view_func = build_controller.build_index)
-	application.add_url_rule("/build/<build_identifier>/step/<int:step_index>/log", methods = [ "GET" ], view_func = build_controller.build_step_log)
-	application.add_url_rule("/build/<build_identifier>/abort", methods = [ "POST" ], view_func = build_controller.abort_build)
-	application.add_url_rule("/build/<build_identifier>/download", methods = [ "GET" ], view_func = build_controller.download_build_archive)
 	application.add_url_rule("/job_collection", methods = [ "GET" ], view_func = job_controller.job_collection_index)
 	application.add_url_rule("/job/<job_identifier>", methods = [ "GET" ], view_func = job_controller.job_index)
 	application.add_url_rule("/job/<job_identifier>/trigger", methods = [ "POST" ], view_func = job_controller.trigger_job)
@@ -67,6 +62,11 @@ def register_routes(application):
 	application.add_url_rule("/me/change_password", methods = [ "GET", "POST" ], view_func = me_controller.change_password)
 	application.add_url_rule("/me/token_create", methods = [ "GET", "POST" ], view_func = me_controller.create_my_token)
 	application.add_url_rule("/me/token/<token_identifier>/delete", methods = [ "POST" ], view_func = me_controller.delete_my_token)
+	application.add_url_rule("/run_collection", methods = [ "GET" ], view_func = run_controller.run_collection_index)
+	application.add_url_rule("/run/<run_identifier>", methods = [ "GET" ], view_func = run_controller.run_index)
+	application.add_url_rule("/run/<run_identifier>/step/<int:step_index>/log", methods = [ "GET" ], view_func = run_controller.run_step_log)
+	application.add_url_rule("/run/<run_identifier>/abort", methods = [ "POST" ], view_func = run_controller.abort_run)
+	application.add_url_rule("/run/<run_identifier>/download", methods = [ "GET" ], view_func = run_controller.download_run_archive)
 	application.add_url_rule("/task_collection", methods = [ "GET" ], view_func = task_controller.task_collection_index)
 	application.add_url_rule("/task/<task_identifier>/cancel", methods = [ "POST" ], view_func = task_controller.cancel_task)
 	application.add_url_rule("/user_collection", methods = [ "GET" ], view_func = user_controller.user_collection_index)

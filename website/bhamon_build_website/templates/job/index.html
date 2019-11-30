@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% import 'build/macros.html' as build_macros %}
+{% import 'run/macros.html' as run_macros %}
 
 {% block content %}
 <h1>Job {{ job['identifier'] }}</h1>
@@ -44,13 +44,13 @@
 		<label for="trigger-parameter-{{parameter['key']}}">{{ parameter['key'] }}</label>
 		<input type="text" class="text-input" id="trigger-parameter-{{parameter['key']}}" name="parameter-{{ parameter['key'] }}"/>
 		{% endfor %}
-		<button type="submit">Trigger build</button>
+		<button type="submit">Trigger run</button>
 	</form>
 </section>
 {% endif %}
 
 <section>
-	<h2><a href="{{ url_for('build_collection_index', job = job['identifier']) }}" title="View all builds">Builds</a></h2>
-	{{ build_macros.build_table(job_builds) }}
+	<h2><a href="{{ url_for('run_collection_index', job = job['identifier']) }}" title="View all runs">Runs</a></h2>
+	{{ run_macros.run_table(job_runs) }}
 </section>
 {% endblock %}

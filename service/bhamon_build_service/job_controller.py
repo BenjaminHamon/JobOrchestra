@@ -24,7 +24,7 @@ def get_job(job_identifier):
 	return flask.jsonify(flask.current_app.job_provider.get(job_identifier))
 
 
-def get_job_builds(job_identifier):
+def get_job_runs(job_identifier):
 	query_parameters = {
 		"job": job_identifier,
 		"status": flask.request.args.get("status", default = None),
@@ -33,14 +33,14 @@ def get_job_builds(job_identifier):
 		"order_by": [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ],
 	}
 
-	return flask.jsonify(flask.current_app.build_provider.get_list(**query_parameters))
+	return flask.jsonify(flask.current_app.run_provider.get_list(**query_parameters))
 
 
 def trigger_job(job_identifier):
 	parameters = flask.request.get_json()
-	build = flask.current_app.build_provider.create(job_identifier, parameters)
-	task = flask.current_app.task_provider.create("trigger_build", { "build_identifier": build["identifier"] })
-	return flask.jsonify({ "job_identifier": job_identifier, "build_identifier": build["identifier"], "task_identifier": task["identifier"] })
+	run = flask.current_app.run_provider.create(job_identifier, parameters)
+	task = flask.current_app.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
+	return flask.jsonify({ "job_identifier": job_identifier, "run_identifier": run["identifier"], "task_identifier": task["identifier"] })
 
 
 def enable_job(job_identifier):

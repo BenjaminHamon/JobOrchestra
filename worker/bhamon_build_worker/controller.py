@@ -13,37 +13,37 @@ request_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300 ]
 wait_delay_seconds = 10
 
 
-def trigger_build(service_url, result_file_path, job_identifier, parameters, authorization = None):
-	message = "Triggering build for job %s" % job_identifier
+def trigger_run(service_url, result_file_path, job_identifier, parameters, authorization = None):
+	message = "Triggering run for job %s" % job_identifier
 	response = _try_request(message, lambda: _service_post(service_url, "/job/" + job_identifier + "/trigger", authorization = authorization, data = parameters))
-	logger.info("Build: %s, Task: %s", response["build_identifier"], response["task_identifier"])
+	logger.info("Run: %s, Task: %s", response["run_identifier"], response["task_identifier"])
 
 	results = workspace.load_results(result_file_path)
-	results["child_builds"] = results.get("child_builds", [])
-	results["child_builds"].append(response)
+	results["child_runs"] = results.get("child_runs", [])
+	results["child_runs"].append(response)
 	workspace.save_results(result_file_path, results)
 
 
-def wait_build(service_url, result_file_path, authorization = None):
+def wait_run(service_url, result_file_path, authorization = None):
 	results = workspace.load_results(result_file_path)
 
-	for build in results["child_builds"]:
-		build["build_status"] = "unknown"
+	for run in results["child_runs"]:
+		run["run_status"] = "unknown"
 
-	while any(build["build_status"] in [ "unknown", "pending", "running" ] for build in results["child_builds"]):
+	while any(run["run_status"] in [ "unknown", "pending", "running" ] for run in results["child_runs"]):
 		time.sleep(wait_delay_seconds)
 
-		for build in results["child_builds"]:
-			if build["build_status"] in [ "unknown", "pending", "running" ]:
-				response = _try_request(None, lambda: _service_get(service_url, "/build/" + build["build_identifier"], authorization = authorization))
-				if build["build_status"] in [ "unknown", "pending" ] and response["status"] == "running":
-					logger.info("Build %s is running", response["identifier"])
-				build["build_status"] = response["status"]
+		for run in results["child_runs"]:
+			if run["run_status"] in [ "unknown", "pending", "running" ]:
+				response = _try_request(None, lambda: _service_get(service_url, "/run/" + run["run_identifier"], authorization = authorization))
+				if run["run_status"] in [ "unknown", "pending" ] and response["status"] == "running":
+					logger.info("run %s is running", response["identifier"])
+				run["run_status"] = response["status"]
 				if response["status"] not in [ "pending", "running" ]:
-					logger.info("Build %s completed with status %s", response["identifier"], response["status"])
+					logger.info("Run %s completed with status %s", response["identifier"], response["status"])
 
-	if any(build["build_status"] != "succeeded" for build in results["child_builds"]):
-		raise RuntimeError("One or more builds failed")
+	if any(run["run_status"] != "succeeded" for run in results["child_runs"]):
+		raise RuntimeError("One or more runs failed")
 
 
 def _try_request(message, send_request):

@@ -27,10 +27,10 @@ def worker_collection_index():
 
 def worker_index(worker_identifier):
 	worker = service_client.get("/worker/{worker_identifier}".format(**locals()))
-	worker_builds = service_client.get("/worker/{worker_identifier}/builds".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] })
+	worker_runs = service_client.get("/worker/{worker_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] })
 	worker_tasks = service_client.get("/worker/{worker_identifier}/tasks".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] })
 	return flask.render_template("worker/index.html", title = "Worker " + worker["identifier"],
-			worker = worker, worker_builds = worker_builds, worker_tasks = worker_tasks)
+			worker = worker, worker_runs = worker_runs, worker_tasks = worker_tasks)
 
 
 def stop_worker(worker_identifier):
