@@ -30,7 +30,7 @@ def load_configuration(environment):
 	configuration["copyright"] = "Copyright (c) 2019 Benjamin Hamon"
 
 	configuration["development_toolkit"] = "git+https://github.com/BenjaminHamon/DevelopmentToolkit@{revision}#subdirectory=toolkit"
-	configuration["development_toolkit_revision"] = "b1c386f93914950249b478a476bcb5347cfa0143"
+	configuration["development_toolkit_revision"] = "accc870aef83214146821aff4e7dd9a7903bcfbd"
 	configuration["development_dependencies"] = [ "pylint", "pymongo", "pytest", "pytest-asyncio", "pytest-json", "wheel" ]
 
 	configuration["components"] = [
@@ -98,6 +98,7 @@ def load_commands():
 		"development.commands.distribute",
 		"development.commands.lint",
 		"development.commands.release",
+		"development.commands.test_distribution",
 		"development.commands.test",
 	]
 

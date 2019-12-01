@@ -40,7 +40,7 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 		metavar = "<key=value>", help = "set parameters for the artifact")
 	parser.add_argument("--overwrite", action = "store_true",
 		help = "overwrite existing artifact on upload")
-	return parser
+	parser.set_defaults(func = run)
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument

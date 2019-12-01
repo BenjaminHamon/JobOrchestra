@@ -5,6 +5,7 @@ import shutil
 import subprocess
 
 import bhamon_development_toolkit.python.distribution
+import bhamon_development_toolkit.python.system
 import bhamon_development_toolkit.workspace
 
 
@@ -24,7 +25,7 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 	parser = subparsers.add_parser("distribute", help = "create distribution packages")
 	parser.add_argument("distribute_commands", type = parse_command_parameter,
 		metavar = "<command[+command]>", help = "set the command(s) to execute for the distribution, separated by '+' (%s)" % ", ".join(available_commands))
-	return parser
+	parser.set_defaults(func = run)
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
@@ -102,3 +103,25 @@ def save_upload_results(component, version, result_file_path, simulate):
 		results["distributions"].append(distribution_information)
 		if not simulate:
 			bhamon_development_toolkit.workspace.save_results(result_file_path, results)
+
+
+def install_for_test(python_executable, python_package_repository, configuration, simulate):
+	if len(configuration.get("development_dependencies", [])) > 0:
+		logger.info("Installing development dependencies")
+		bhamon_development_toolkit.python.system.install_packages(python_executable, python_package_repository, configuration.get("development_dependencies", []), simulate)
+		print("")
+
+	if len(configuration.get("project_dependencies", [])) > 0:
+		logger.info("Installing project dependencies")
+		bhamon_development_toolkit.python.system.install_packages(python_executable, python_package_repository, configuration.get("project_dependencies", []), simulate)
+		print("")
+
+	logger.info("Installing project packages")
+
+	project_packages = []
+	for component in configuration["components"]:
+		archive_name = component["name"].replace("-", "_") + "-" + configuration["project_version"]["full"]
+		archive_path = os.path.join(".artifacts", "distributions", component["name"], archive_name + "-py3-none-any.whl")
+		project_packages.append(archive_path)
+
+	bhamon_development_toolkit.python.system.install_packages(python_executable, None, project_packages, simulate)

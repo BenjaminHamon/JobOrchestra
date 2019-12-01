@@ -4,7 +4,8 @@ import development.commands.distribute
 
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
-	return subparsers.add_parser("release", help = "build a package for release")
+	parser = subparsers.add_parser("release", help = "build a package for release")
+	parser.set_defaults(func = run)
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
