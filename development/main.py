@@ -13,6 +13,11 @@ logger = logging.getLogger("Main")
 
 
 def main():
+
+	# Prevent active pyvenv from overriding a python executable specified in a command
+	if "__PYVENV_LAUNCHER__" in os.environ:
+		del os.environ["__PYVENV_LAUNCHER__"]
+
 	current_directory = os.getcwd()
 	script_path = os.path.realpath(__file__)
 	workspace_directory = os.path.dirname(os.path.dirname(script_path))
