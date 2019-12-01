@@ -24,7 +24,7 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 	parser = subparsers.add_parser("distribute", help = "create distribution packages")
 	parser.add_argument("distribute_commands", type = parse_command_parameter,
 		metavar = "<command[+command]>", help = "set the command(s) to execute for the distribution, separated by '+' (%s)" % ", ".join(available_commands))
-	return parser
+	parser.set_defaults(func = run)
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument

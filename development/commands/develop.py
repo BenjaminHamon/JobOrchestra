@@ -7,7 +7,8 @@ logger = logging.getLogger("Main")
 
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
-	return subparsers.add_parser("develop", help = "setup workspace for development")
+	parser = subparsers.add_parser("develop", help = "setup workspace for development")
+	parser.set_defaults(func = run)
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument

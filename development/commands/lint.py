@@ -11,7 +11,7 @@ logger = logging.getLogger("Main")
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 	parser = subparsers.add_parser("lint", help = "run linter")
 	parser.add_argument("--identifier", default = str(uuid.uuid4()), help = "specify a identifier for the run (default to a GUID)")
-	return parser
+	parser.set_defaults(func = run)
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument

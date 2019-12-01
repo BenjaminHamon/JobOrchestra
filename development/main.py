@@ -56,8 +56,7 @@ def parse_arguments(environment_instance, configuration_instance, command_list):
 	subparsers.required = True
 
 	for command in [ command for command in command_list if "module" in command ]:
-		command_parser = command["module"].configure_argument_parser(environment_instance, configuration_instance, subparsers)
-		command_parser.set_defaults(func = command["module"].run)
+		command["module"].configure_argument_parser(environment_instance, configuration_instance, subparsers)
 
 	return main_parser.parse_args()
 
