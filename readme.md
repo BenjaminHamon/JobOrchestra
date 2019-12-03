@@ -1,5 +1,7 @@
 # Build Service
 
+(Build Service is being renamed to Job Orchestra for the version 2)
+
 
 ## Overview
 
