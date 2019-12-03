@@ -8,8 +8,8 @@ import sys
 
 def load_configuration(environment):
 	configuration = {
-		"project": "bhamon-build",
-		"project_name": "Build Service",
+		"project": "bhamon-orchestra",
+		"project_name": "Job Orchestra",
 		"project_version": { "identifier": "2.0" },
 	}
 
@@ -26,7 +26,7 @@ def load_configuration(environment):
 
 	configuration["author"] = "Benjamin Hamon"
 	configuration["author_email"] = "hamon.benjamin@gmail.com"
-	configuration["project_url"] = "https://github.com/BenjaminHamon/BuildService"
+	configuration["project_url"] = "https://github.com/BenjaminHamon/JobOrchestra"
 	configuration["copyright"] = "Copyright (c) 2019 Benjamin Hamon"
 
 	configuration["development_toolkit"] = "git+https://github.com/BenjaminHamon/DevelopmentToolkit@{revision}#subdirectory=toolkit"
@@ -34,15 +34,15 @@ def load_configuration(environment):
 	configuration["development_dependencies"] = [ "pylint", "pymongo", "pytest", "pytest-asyncio", "pytest-json", "wheel" ]
 
 	configuration["components"] = [
-		{ "name": "bhamon-build-cli", "path": "cli", "packages": [ "bhamon_build_cli" ] },
-		{ "name": "bhamon-build-master", "path": "master", "packages": [ "bhamon_build_master" ] },
-		{ "name": "bhamon-build-model", "path": "model", "packages": [ "bhamon_build_model" ] },
-		{ "name": "bhamon-build-service", "path": "service", "packages": [ "bhamon_build_service" ] },
-		{ "name": "bhamon-build-website", "path": "website", "packages": [ "bhamon_build_website" ] },
-		{ "name": "bhamon-build-worker", "path": "worker", "packages": [ "bhamon_build_worker" ] },
+		{ "name": "bhamon-orchestra-cli", "path": "cli", "packages": [ "bhamon_orchestra_cli" ] },
+		{ "name": "bhamon-orchestra-master", "path": "master", "packages": [ "bhamon_orchestra_master" ] },
+		{ "name": "bhamon-orchestra-model", "path": "model", "packages": [ "bhamon_orchestra_model" ] },
+		{ "name": "bhamon-orchestra-service", "path": "service", "packages": [ "bhamon_orchestra_service" ] },
+		{ "name": "bhamon-orchestra-website", "path": "website", "packages": [ "bhamon_orchestra_website" ] },
+		{ "name": "bhamon-orchestra-worker", "path": "worker", "packages": [ "bhamon_orchestra_worker" ] },
 	]
 
-	configuration["project_identifier_for_artifact_server"] = "BuildService"
+	configuration["project_identifier_for_artifact_server"] = "JobOrchestra"
 
 	configuration["filesets"] = {
 		"distribution": {

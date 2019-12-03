@@ -3,16 +3,16 @@ import json
 import logging
 import types
 
-from bhamon_build_model.authentication_provider import AuthenticationProvider
-from bhamon_build_model.authorization_provider import AuthorizationProvider
-from bhamon_build_model.database.file_storage import FileStorage
-from bhamon_build_model.job_provider import JobProvider
-from bhamon_build_model.run_provider import RunProvider
-from bhamon_build_model.task_provider import TaskProvider
-from bhamon_build_model.user_provider import UserProvider
-from bhamon_build_model.worker_provider import WorkerProvider
+from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
+from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
+from bhamon_orchestra_model.database.file_storage import FileStorage
+from bhamon_orchestra_model.job_provider import JobProvider
+from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_model.task_provider import TaskProvider
+from bhamon_orchestra_model.user_provider import UserProvider
+from bhamon_orchestra_model.worker_provider import WorkerProvider
 
-import bhamon_build_cli.admin_controller as admin_controller
+import bhamon_orchestra_cli.admin_controller as admin_controller
 
 import environment
 

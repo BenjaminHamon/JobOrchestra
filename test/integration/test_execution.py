@@ -33,16 +33,16 @@ def test_job_success(tmpdir, database_type):
 		run = providers["run"].get(run["identifier"])
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s %s" % (job_identifier, run["identifier"]) },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s %s with status succeeded" % (job_identifier, run["identifier"]) },
-		{ "level": "Info", "logger": "Master", "message": "Exiting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Executing %s %s" % (job_identifier, run["identifier"]) },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -76,16 +76,16 @@ def test_job_failure(tmpdir, database_type):
 		run = providers["run"].get(run["identifier"])
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s %s" % (job_identifier, run["identifier"]) },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s %s with status failed" % (job_identifier, run["identifier"]) },
-		{ "level": "Info", "logger": "Master", "message": "Exiting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Executing %s %s" % (job_identifier, run["identifier"]) },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -119,17 +119,17 @@ def test_job_exception(tmpdir, database_type):
 		run = providers["run"].get(run["identifier"])
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s %s" % (job_identifier, run["identifier"]) },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s %s with status exception" % (job_identifier, run["identifier"]) },
-		{ "level": "Info", "logger": "Master", "message": "Exiting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Executing %s %s" % (job_identifier, run["identifier"]) },
 		{ "level": "Error", "logger": "Executor", "message": "(%s) Step exception raised an exception" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([

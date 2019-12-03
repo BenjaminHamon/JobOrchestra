@@ -5,7 +5,7 @@ import os
 
 import filelock
 
-from bhamon_build_worker.worker import Worker
+from bhamon_orchestra_worker.worker import Worker
 
 import environment
 

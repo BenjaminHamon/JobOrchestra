@@ -2,7 +2,7 @@ import argparse
 import json
 import logging
 
-import bhamon_build_worker.controller as controller
+import bhamon_orchestra_worker.controller as controller
 
 import environment
 

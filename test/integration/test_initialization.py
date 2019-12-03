@@ -15,8 +15,8 @@ def test_master(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
-		{ "level": "Info", "logger": "Master", "message": "Exiting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Starting master" },
+		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -33,9 +33,9 @@ def test_worker(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker")
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Error", "logger": "Worker", "message": "Failed to connect to master" },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([

@@ -2,11 +2,11 @@
 
 """ Unit tests for JobScheduler """
 
-from bhamon_build_master.job_scheduler import JobScheduler
-from bhamon_build_master.supervisor import Supervisor
-from bhamon_build_master.worker import Worker
-from bhamon_build_model.database.memory_database_client import MemoryDatabaseClient
-from bhamon_build_model.run_provider import RunProvider
+from bhamon_orchestra_master.job_scheduler import JobScheduler
+from bhamon_orchestra_master.supervisor import Supervisor
+from bhamon_orchestra_master.worker import Worker
+from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
+from bhamon_orchestra_model.run_provider import RunProvider
 
 
 def test_cancel_run_pending():

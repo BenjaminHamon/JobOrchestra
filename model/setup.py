@@ -15,12 +15,12 @@ parameters = development.configuration.get_setuptools_parameters(configuration_i
 
 
 parameters.update({
-	"name": "bhamon-build-model",
-	"description": "Model library for build service",
+	"name": "bhamon-orchestra-model",
+	"description": "Model library for Job Orchestra",
 
 	"packages": [
-		"bhamon_build_model",
-		"bhamon_build_model/database",
+		"bhamon_orchestra_model",
+		"bhamon_orchestra_model/database",
 	],
 
 	"python_requires": "~= 3.5",

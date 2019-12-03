@@ -4,7 +4,7 @@ import os
 
 import filelock
 
-import bhamon_build_worker.executor as executor
+import bhamon_orchestra_worker.executor as executor
 
 import environment
 
@@ -14,7 +14,7 @@ def main():
 	environment.configure_logging(logging.INFO)
 	environment_instance = environment.load_environment()
 	environment_instance["script_root"] = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
-	environment_instance["build_worker_authentication"] = os.path.join(os.getcwd(), "authentication.json")
+	environment_instance["orchestra_worker_authentication"] = os.path.join(os.getcwd(), "authentication.json")
 	executor_run_directory = os.path.join("runs", arguments.job_identifier + "_" + arguments.run_identifier)
 
 	with filelock.FileLock(os.path.join(executor_run_directory, "executor.lock"), 5):

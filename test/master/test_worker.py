@@ -4,10 +4,10 @@
 
 import pytest
 
-from bhamon_build_model.database.memory_database_client import MemoryDatabaseClient
-from bhamon_build_model.database.memory_file_storage import MemoryFileStorage
-from bhamon_build_model.run_provider import RunProvider
-from bhamon_build_master.worker import Worker
+from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
+from bhamon_orchestra_model.database.memory_file_storage import MemoryFileStorage
+from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_master.worker import Worker
 
 from .run_provider_fake import RunProviderFake
 from .worker_connection_mock import WorkerConnectionMock
