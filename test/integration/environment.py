@@ -5,8 +5,8 @@ import sys
 
 import pymongo
 
-from bhamon_build_model.database.json_database_client import JsonDatabaseClient
-from bhamon_build_model.database.mongo_database_client import MongoDatabaseClient
+from bhamon_orchestra_model.database.json_database_client import JsonDatabaseClient
+from bhamon_orchestra_model.database.mongo_database_client import MongoDatabaseClient
 
 
 log_format = "[{levelname}][{name}] {message}"
@@ -38,7 +38,7 @@ def create_database_client(database_uri):
 def load_environment():
 	return {
 		"python3_executable": sys.executable,
-		"build_service_url": "http://localhost:5902",
+		"orchestra_service_url": "http://localhost:5902",
 	}
 
 
@@ -58,7 +58,7 @@ def load_test_context_environment(temporary_directory, database_type):
 
 def get_test_context_database_uri(temporary_directory, database_type):
 	run_identifier = os.path.basename(os.path.dirname(temporary_directory))
-	database_name = "test_build_database_" + run_identifier
+	database_name = "orchestra_test_%s" % run_identifier
 
 	if database_type == "json":
 		return "json://" + os.path.join(temporary_directory, "master")

@@ -3,9 +3,9 @@ import logging
 
 import flask
 
-from bhamon_build_model.authorization_provider import AuthorizationProvider
+from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 
-import bhamon_build_website.website as website
+import bhamon_orchestra_website.website as website
 
 import environment
 
@@ -29,7 +29,7 @@ def parse_arguments():
 def create_application(environment_instance):
 	application = flask.Flask(__name__, static_folder = None)
 	application.authorization_provider = AuthorizationProvider()
-	application.service_url = environment_instance["build_service_url"]
+	application.service_url = environment_instance["orchestra_service_url"]
 	application.secret_key = "secret"
 
 	website.configure(application)

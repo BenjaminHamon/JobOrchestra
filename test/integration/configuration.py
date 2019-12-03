@@ -73,8 +73,8 @@ def test_exception():
 
 def test_controller_success():
 	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
-	controller_script += [ "--service-url", "{environment[build_service_url]}", ]
-	controller_script += [ "--authentication", "{environment[build_worker_authentication]}" ]
+	controller_script += [ "--service-url", "{environment[orchestra_service_url]}", ]
+	controller_script += [ "--authentication", "{environment[orchestra_worker_authentication]}" ]
 	controller_script += [ "--results", "{result_file_path}" ]
 
 	return {
@@ -99,8 +99,8 @@ def test_controller_success():
 
 def test_controller_failure():
 	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
-	controller_script += [ "--service-url", "{environment[build_service_url]}", ]
-	controller_script += [ "--authentication", "{environment[build_worker_authentication]}" ]
+	controller_script += [ "--service-url", "{environment[orchestra_service_url]}", ]
+	controller_script += [ "--authentication", "{environment[orchestra_worker_authentication]}" ]
 	controller_script += [ "--results", "{result_file_path}" ]
 
 	return {

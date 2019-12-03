@@ -1,0 +1,45 @@
+{% macro run_table(run_collection) %}
+<table>
+	<thead>
+		<tr>
+			<th>Job</th>
+			<th>Identifier</th>
+			<th>Status</th>
+			{% if authorize_view("run-actions") %}
+			<th>Actions</th>
+			{% endif %}
+			<th>Worker</th>
+			<th>Creation date</th>
+			<th>Update date</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for run in run_collection %}
+		<tr>
+			<td><a href="{{ url_for('job_index', job_identifier = run['job']) }}">{{ run['job'] }}</a></td>
+			<td><a href="{{ url_for('run_index', run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a></td>
+			<td>
+				<div class="status-group">
+					<div class="status-indicator {{ run['status'] }}"></div>
+					<div class="status-text">{{ run['status'] }}</div>
+				</div>
+			</td>
+			{% if authorize_view("run-actions") %}
+			<td>
+				<form class="action-group" method="post">
+					{% if run['status'] == 'running' %}
+					<button formaction="{{ url_for('abort_run', run_identifier = run['identifier']) }}">Abort</button>
+					{% else %}
+					<button formaction="{{ url_for('abort_run', run_identifier = run['identifier']) }}" disabled>Abort</button>
+					{% endif %}
+				</form>
+			</td>
+			{% endif %}
+			<td>{% if run['worker'] %}<a href="{{ url_for('worker_index', worker_identifier = run['worker']) }}">{{ run['worker'] }}</a>{% endif %}</td>
+			<td>{{ run['creation_date'] }}</td>
+			<td>{{ run['update_date'] }}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endmacro %}

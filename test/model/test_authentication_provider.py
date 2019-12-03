@@ -3,8 +3,8 @@
 import datetime
 import secrets
 
-import bhamon_build_model.authentication_provider as authentication_provider
-import bhamon_build_model.database.memory_database_client as memory_database_client
+import bhamon_orchestra_model.authentication_provider as authentication_provider
+import bhamon_orchestra_model.database.memory_database_client as memory_database_client
 
 
 def test_password_success():

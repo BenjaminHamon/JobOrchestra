@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+
+	<head>
+		<title>{{ title }} - {{ config['WEBSITE_TITLE'] }}</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename = 'font_awesome/css/fontawesome.css') }}">
+		<link rel="stylesheet" href="{{ url_for('static', filename = 'font_awesome/css/solid.css') }}">
+		<link rel="stylesheet" href="{{ url_for('static', filename = 'generic.css') }}">
+		<link rel="stylesheet" href="{{ url_for('static', filename = 'orchestra.css') }}">
+	</head>
+
+	<body>
+
+		<header>
+			<div class="title">
+				<a href="{{ url_for('home') }}">{{ config['WEBSITE_TITLE'] }}</a>
+			</div>
+			<div class="login">
+				{% if not "token" in session %}
+				<span><a href="{{ url_for('login') }}">Log In</a></span>
+				{% else %}
+				<span>Logged in as <a href="{{ url_for('my_profile') }}">{{ session["user"]["display_name"] }} ({{ session["user"]["identifier"] }})</a></span>
+				<span><a href="{{ url_for('logout') }}">Log Out</a></span>
+				{% endif %}
+			</div>
+		</header>
+
+		{% if 'WEBSITE_ANNOUNCEMENT' in config %}
+		<div id="announcement" class="{{ config['WEBSITE_ANNOUNCEMENT_TYPE'] }}">
+			<p>{{ config['WEBSITE_ANNOUNCEMENT'] }}</p>
+		</div>
+		{% endif %}
+
+		<nav>
+			{% if authorize_view('nav-admin') %}
+			<div>
+				<a href="{{ url_for('administration_index') }}">Admin</a>
+				<a href="{{ url_for('user_collection_index') }}">Users</a>
+			</div>
+			{% endif %}
+			{% if authorize_view('nav-main') %}
+			<div>
+				<a href="{{ url_for('job_collection_index') }}">Jobs</a>
+				<a href="{{ url_for('run_collection_index') }}">Runs</a>
+				<a href="{{ url_for('worker_collection_index') }}">Workers</a>
+				<a href="{{ url_for('task_collection_index') }}">Tasks</a>
+			</div>
+			{% endif %}
+		</nav>
+
+		<main>
+
+			{% block content %}{% endblock %}
+
+		</main>
+
+		<footer>
+			{% if config['WEBSITE_VERSION'] %}
+			<p>Version {{ config['WEBSITE_VERSION'] }} ({{ config['WEBSITE_DATE'] }})</p>
+			<p>{{ config['WEBSITE_COPYRIGHT'].replace("(c)", "©") }}</p>
+			{% else %}
+			<p>Development Version</p>
+			{% endif %}
+		</footer>
+
+	</body>
+
+	{% block scripts %}{% endblock %}
+
+</html>

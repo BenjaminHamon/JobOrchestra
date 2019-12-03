@@ -8,14 +8,14 @@ import time
 
 import pymongo
 
-from bhamon_build_model.authentication_provider import AuthenticationProvider
-from bhamon_build_model.authorization_provider import AuthorizationProvider
-from bhamon_build_model.build_provider import BuildProvider
-from bhamon_build_model.database.file_storage import FileStorage
-from bhamon_build_model.job_provider import JobProvider
-from bhamon_build_model.task_provider import TaskProvider
-from bhamon_build_model.user_provider import UserProvider
-from bhamon_build_model.worker_provider import WorkerProvider
+from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
+from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
+from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_model.database.file_storage import FileStorage
+from bhamon_orchestra_model.job_provider import JobProvider
+from bhamon_orchestra_model.task_provider import TaskProvider
+from bhamon_orchestra_model.user_provider import UserProvider
+from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 from . import environment
 
@@ -89,16 +89,16 @@ class Context:
 		)
 
 
-	def invoke_executor(self, worker_identifier, job_identifier, build_identifier):
+	def invoke_executor(self, worker_identifier, job_identifier, run_identifier):
 		worker_directory = os.path.join(self.temporary_directory, worker_identifier)
-		executor_build_directory = os.path.join(worker_directory, "builds", job_identifier + "_" + build_identifier)
+		executor_run_directory = os.path.join(worker_directory, "runs", job_identifier + "_" + run_identifier)
 
-		os.makedirs(executor_build_directory)
+		os.makedirs(executor_run_directory)
 
 		return self.invoke(
 			identifier = worker_identifier + "_" + "executor",
 			script = "executor_main.py",
-			arguments = [ job_identifier, build_identifier ],
+			arguments = [ job_identifier, run_identifier ],
 			workspace = worker_directory,
 		)
 
@@ -145,9 +145,9 @@ class Context:
 
 	def configure_worker_authentication(self, worker_collection):
 		providers = self.instantiate_providers()
-		user = providers["user"].create("build-worker", "Build Worker")
-		providers["user"].update_roles(user, "BuildWorker")
-		token = providers["authentication"].create_token("build-worker", None, None)
+		user = providers["user"].create("worker", "Worker")
+		providers["user"].update_roles(user, "Worker")
+		token = providers["authentication"].create_token("worker", None, None)
 
 		for worker in worker_collection:
 			worker_directory = os.path.join(self.temporary_directory, worker)
@@ -171,7 +171,7 @@ class Context:
 		return {
 			"authentication": AuthenticationProvider(database_client_instance),
 			"authorization": AuthorizationProvider(),
-			"build": BuildProvider(database_client_instance, file_storage_instance),
+			"run": RunProvider(database_client_instance, file_storage_instance),
 			"job": JobProvider(database_client_instance),
 			"task": TaskProvider(database_client_instance),
 			"user": UserProvider(database_client_instance),

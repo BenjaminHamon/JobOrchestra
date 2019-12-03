@@ -17,12 +17,12 @@ parameters = development.configuration.get_setuptools_parameters(configuration_i
 resource_patterns = [ 'static/**/*.css', 'static/**/*.js', 'templates/**/*.html' ]
 
 parameters.update({
-	"name": "bhamon-build-website",
-	"description": "Website component for the build service, exposing a web interface for the master",
-	"packages": [ "bhamon_build_website" ],
+	"name": "bhamon-orchestra-website",
+	"description": "Website component for Job Orchestra, exposing a web interface for the master",
+	"packages": [ "bhamon_orchestra_website" ],
 	"python_requires": "~= 3.5",
 	"install_requires": [ "flask ~= 1.0", "requests ~= 2.21" ],
-	"package_data": { "bhamon_build_website": development.configuration.list_package_data("bhamon_build_website", resource_patterns) },
+	"package_data": { "bhamon_orchestra_website": development.configuration.list_package_data("bhamon_orchestra_website", resource_patterns) },
 })
 
 setuptools.setup(**parameters)

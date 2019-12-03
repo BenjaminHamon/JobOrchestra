@@ -14,7 +14,7 @@ class WorkerRemoteMock:
 		if command == "authenticate":
 			return self._authenticate()
 		if command == "list":
-			return self._list_builds()
+			return self._list_runs()
 		if command == "execute":
 			return self._execute(**parameters)
 		if command == "clean":
@@ -34,39 +34,39 @@ class WorkerRemoteMock:
 		raise ValueError("Unknown command '%s'" % command)
 
 
-	def find_executor(self, build_identifier):
+	def find_executor(self, run_identifier):
 		for executor in self.executors:
-			if executor["build_identifier"] == build_identifier:
+			if executor["run_identifier"] == run_identifier:
 				return executor
-		raise KeyError("Executor not found for %s" % build_identifier)
+		raise KeyError("Executor not found for %s" % run_identifier)
 
 
 	def _authenticate(self):
 		return { "identifier": self.worker_identifier }
 
 
-	def _list_builds(self):
-		all_builds = []
+	def _list_runs(self):
+		all_runs = []
 		for executor in self.executors:
-			all_builds.append({ "job_identifier": executor["job_identifier"], "build_identifier": executor["build_identifier"] })
-		return all_builds
+			all_runs.append({ "job_identifier": executor["job_identifier"], "run_identifier": executor["run_identifier"] })
+		return all_runs
 
 
-	def _execute(self, job_identifier, build_identifier, job, parameters):
+	def _execute(self, job_identifier, run_identifier, job, parameters):
 		executor = {
 			"job_identifier": job_identifier,
-			"build_identifier": build_identifier,
+			"run_identifier": run_identifier,
 
 			"request": {
 				"job_identifier": job_identifier,
-				"build_identifier": build_identifier,
+				"run_identifier": run_identifier,
 				"job": job,
 				"parameters": parameters,
 			},
 
 			"status": {
 				"job_identifier": job_identifier,
-				"build_identifier": build_identifier,
+				"run_identifier": run_identifier,
 				"status": "running",
 				"steps": [
 					{ "index": 0, "name": "first", "status": "pending" },
@@ -79,33 +79,33 @@ class WorkerRemoteMock:
 		self.executors.append(executor)
 
 
-	def _clean(self, job_identifier, build_identifier):
-		executor = self.find_executor(build_identifier)
+	def _clean(self, job_identifier, run_identifier):
+		executor = self.find_executor(run_identifier)
 		if executor["status"]["status"] == "running":
-			raise RuntimeError("Executor is still running for build %s" % build_identifier)
+			raise RuntimeError("Executor is still running for run %s" % run_identifier)
 		self.executors.remove(executor)
 
 
-	def _abort(self, job_identifier, build_identifier):
-		executor = self.find_executor(build_identifier)
+	def _abort(self, job_identifier, run_identifier):
+		executor = self.find_executor(run_identifier)
 		executor["status"]["status"] = "aborted"
 
 
-	def _retrieve_status(self, job_identifier, build_identifier):
-		executor = self.find_executor(build_identifier)
+	def _retrieve_status(self, job_identifier, run_identifier):
+		executor = self.find_executor(run_identifier)
 		return executor["status"]
 
 
-	def _retrieve_request(self, job_identifier, build_identifier):
-		executor = self.find_executor(build_identifier)
+	def _retrieve_request(self, job_identifier, run_identifier):
+		executor = self.find_executor(run_identifier)
 		return executor["request"]
 
 
-	def _retrieve_log(self, job_identifier, build_identifier, step_index, step_name):
+	def _retrieve_log(self, job_identifier, run_identifier, step_index, step_name):
 		return ""
 
 
-	def _retrieve_results(self, job_identifier, build_identifier):
+	def _retrieve_results(self, job_identifier, run_identifier):
 		return {}
 
 

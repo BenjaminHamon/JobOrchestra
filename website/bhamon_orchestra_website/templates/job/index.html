@@ -1,0 +1,56 @@
+{% extends 'layout.html' %}
+{% import 'run/macros.html' as run_macros %}
+
+{% block content %}
+<h1>Job {{ job['identifier'] }}</h1>
+
+<section>
+	<h2>Description</h2>
+	<p>{{ job['description'] }}</p>
+</section>
+
+<section>
+	<h2>Status</h2>
+	<div class=status-grid>
+		{% if job['is_enabled'] %}
+		<div class="status-group">
+			<div class="status-indicator enabled"></div>
+			<div class="status-text">Enabled</div>
+		</div>
+			{% if authorize_view("job-actions") %}
+		<form method="post">
+			<button formaction="{{ url_for('disable_job', job_identifier = job['identifier']) }}">Disable</button>
+		</form>
+			{% endif %}
+		{% else %}
+		<div class="status-group">
+			<div class="status-indicator disabled"></div>
+			<div class="status-text">Disabled</div>
+		</div>
+			{% if authorize_view("job-actions") %}
+		<form method="post">
+			<button formaction="{{ url_for('enable_job', job_identifier = job['identifier']) }}">Enable</button>
+		</form>
+			{% endif %}
+		{% endif %}
+	</div>
+</section>
+
+{% if authorize_view("job-actions") %}
+<section>
+	<h2>Trigger</h2>
+	<form class="generic-form" method="post" action="{{ url_for('trigger_job', job_identifier = job['identifier']) }}">
+		{% for parameter in job['parameters'] %}
+		<label for="trigger-parameter-{{parameter['key']}}">{{ parameter['key'] }}</label>
+		<input type="text" class="text-input" id="trigger-parameter-{{parameter['key']}}" name="parameter-{{ parameter['key'] }}"/>
+		{% endfor %}
+		<button type="submit">Trigger run</button>
+	</form>
+</section>
+{% endif %}
+
+<section>
+	<h2><a href="{{ url_for('run_collection_index', job = job['identifier']) }}" title="View all runs">Runs</a></h2>
+	{{ run_macros.run_table(job_runs) }}
+</section>
+{% endblock %}

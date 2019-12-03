@@ -25,20 +25,20 @@ def test_worker_disconnection(tmpdir, database_type):
 		os.kill(master_process["process"].pid, context.shutdown_signal)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Receiving connection" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Checking authorization for worker 'worker_01' (User: 'build-worker')" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Checking authorization for worker 'worker_01' (User: 'worker')" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Registering worker 'worker_01'" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' is now active" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker 'worker_01'" },
-		{ "level": "Info", "logger": "Master", "message": "Exiting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Connected to master, waiting for commands" },
 		{ "level": "Info", "logger": "Worker", "message": "Closed connection to master" },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -62,21 +62,21 @@ def test_master_disconnection(tmpdir, database_type):
 		os.kill(worker_process["process"].pid, context.shutdown_signal)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Receiving connection" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Checking authorization for worker 'worker_01' (User: 'build-worker')" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Checking authorization for worker 'worker_01' (User: 'worker')" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Registering worker 'worker_01'" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' is now active" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker 'worker_01'" },
-		{ "level": "Info", "logger": "Master", "message": "Exiting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Connected to master, waiting for commands" },
 		{ "level": "Info", "logger": "Worker", "message": "Closed connection to master" },
 		{ "level": "Info", "logger": "Worker", "message": "Retrying connection in 10 seconds" },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([

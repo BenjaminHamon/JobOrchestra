@@ -1,9 +1,9 @@
-# Build Service
+# Job Orchestra
 
 
 ## Overview
 
-Build Service is a toolkit for building a service which manages distributed job execution across a computer network.
+Job Orchestra is a toolkit for building a service which manages distributed job execution across a computer network.
 A common use for it would be in a continuous integration pipeline.
 
 The project is open source software. See [About](about.md) for more information.
@@ -11,12 +11,12 @@ The project is open source software. See [About](about.md) for more information.
 
 ## Architecture
 
-A build service setup includes several components:
-* The database, which stores information about workers, jobs, builds, tasks.
-* The master, which executes tasks, distributes builds to workers and retrieves results to be saved in the database.
+A job orchestra setup includes several components:
+* The database, which stores information about workers, jobs, runs, tasks.
+* The master, which executes tasks, distributes runs to workers and retrieves results to be saved in the database.
 * The service, which exposes a web api to retrieve information from the database and to create tasks for the master.
 * The website, a web interface on top of the service for it to be usable by end users.
-* The workers, which executes builds assigned to them by the masters and send back results.
+* The workers, which executes runs assigned to them by the masters and send back results.
 
 The project is structured with a python package for each component as each one has its own process and can run separately from the others. The model package includes common code, in particular providers for the database.
 
@@ -35,7 +35,7 @@ python3 ./development/main.py develop
 
 ## Instance Setup
 
-A build service instance includes several components, each with its process which could run on its own host, with its own environment. A typical setup includes a master, a service, a website and several workers.
+A job orchestra instance includes several components, each with its process which could run on its own host, with its own environment. A typical setup includes a master, a service, a website and several workers.
 
 You need to write entry point scripts for all the components, as well as the master configuration. The test suite includes an example used by [integration tests](test/integration).
 

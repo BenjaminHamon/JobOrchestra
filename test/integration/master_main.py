@@ -4,18 +4,18 @@ import logging
 
 import filelock
 
-from bhamon_build_master.job_scheduler import JobScheduler
-from bhamon_build_master.master import Master
-from bhamon_build_master.supervisor import Supervisor
-from bhamon_build_master.task_processor import TaskProcessor
-from bhamon_build_model.authentication_provider import AuthenticationProvider
-from bhamon_build_model.authorization_provider import AuthorizationProvider
-from bhamon_build_model.build_provider import BuildProvider
-from bhamon_build_model.database.file_storage import FileStorage
-from bhamon_build_model.job_provider import JobProvider
-from bhamon_build_model.task_provider import TaskProvider
-from bhamon_build_model.user_provider import UserProvider
-from bhamon_build_model.worker_provider import WorkerProvider
+from bhamon_orchestra_master.job_scheduler import JobScheduler
+from bhamon_orchestra_master.master import Master
+from bhamon_orchestra_master.supervisor import Supervisor
+from bhamon_orchestra_master.task_processor import TaskProcessor
+from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
+from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
+from bhamon_orchestra_model.database.file_storage import FileStorage
+from bhamon_orchestra_model.job_provider import JobProvider
+from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_model.task_provider import TaskProvider
+from bhamon_orchestra_model.user_provider import UserProvider
+from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 import configuration
 import configuration_extensions
@@ -26,7 +26,7 @@ def main():
 	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
 
-	with filelock.FileLock("build_master.lock", 5):
+	with filelock.FileLock("master.lock", 5):
 		application = create_application(arguments)
 		application.run()
 
@@ -35,7 +35,7 @@ def parse_arguments():
 	argument_parser = argparse.ArgumentParser()
 	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
 	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
-	argument_parser.add_argument("--database", required = True, help = "Set the build database uri")
+	argument_parser.add_argument("--database", required = True, help = "Set the database uri")
 	return argument_parser.parse_args()
 
 
@@ -45,8 +45,8 @@ def create_application(arguments):
 
 	authentication_provider_instance = AuthenticationProvider(database_client_instance)
 	authorization_provider_instance = AuthorizationProvider()
-	build_provider_instance = BuildProvider(database_client_instance, file_storage_instance)
 	job_provider_instance = JobProvider(database_client_instance)
+	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
 	task_provider_instance = TaskProvider(database_client_instance)
 	user_provider_instance = UserProvider(database_client_instance)
 	worker_provider_instance = WorkerProvider(database_client_instance)
@@ -63,7 +63,7 @@ def create_application(arguments):
 		host = arguments.address,
 		port = arguments.port,
 		worker_provider = worker_provider_instance,
-		build_provider = build_provider_instance,
+		run_provider = run_provider_instance,
 		user_provider = user_provider_instance,
 		authentication_provider = authentication_provider_instance,
 		authorization_provider = authorization_provider_instance,
@@ -72,7 +72,7 @@ def create_application(arguments):
 	job_scheduler_instance = JobScheduler(
 		supervisor = supervisor_instance,
 		job_provider = job_provider_instance,
-		build_provider = build_provider_instance,
+		run_provider = run_provider_instance,
 		worker_selector = worker_selector_instance,
 	)
 
