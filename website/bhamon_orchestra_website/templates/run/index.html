@@ -54,7 +54,8 @@
 				<th>Index</th>
 				<th>Name</th>
 				<th>Status</th>
-				<th>Log</th>
+				<th>Details</th>
+				<th>Raw log</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -68,7 +69,8 @@
 						<div class="status-text">{{ step['status'] }}</div>
 					</div>
 				</td>
-				<td><a href="{{ url_for('run_step_log', run_identifier = run['identifier'], step_index = step['index']) }}">Log</a></td>
+				<td><a href="{{ url_for('run_step', run_identifier = run['identifier'], step_index = step['index']) }}">Details</a></td>
+				<td><a href="{{ url_for('run_step_log', run_identifier = run['identifier'], step_index = step['index']) }}">Raw log</a></td>
 			</tr>
 			{% endfor %}
 		</tbody>

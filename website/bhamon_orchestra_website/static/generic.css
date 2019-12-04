@@ -182,7 +182,7 @@ section > h2
 	font-size: 120%;
 }
 
-section > div, section > form, section > table, section > ul, section > p
+section > div, section > form, section > table, section > ul, section > p, section > pre
 {
 	margin: 5px;
 }
@@ -377,4 +377,11 @@ form button
 .page-navigation > .disabled
 {
 	visibility: hidden;
+}
+
+pre
+{
+	padding: 10px;
+	background: #eeeeee;
+	white-space: pre-wrap;
 }

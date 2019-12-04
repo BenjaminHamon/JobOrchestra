@@ -46,12 +46,26 @@ def run_index(run_identifier):
 		"run_tasks": service_client.get("/run/{run_identifier}/tasks".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
-	return flask.render_template("run/index.html", title = "Run " + view_data["run"]["identifier"][:18], **view_data)
+	return flask.render_template("run/index.html", title = "Run " + run_identifier[:18], **view_data)
+
+
+def run_step(run_identifier, step_index):
+	step_collection = service_client.get("/run/{run_identifier}/step_collection".format(**locals()))
+
+	view_data = {
+		"run_identifier": run_identifier,
+		"current": step_collection[step_index],
+		"previous": step_collection[step_index - 1] if step_index > 0 else None,
+		"next": step_collection[step_index + 1] if step_index < (len(step_collection) - 1) else None,
+		"log_text": service_client.raw_get("/run/{run_identifier}/step/{step_index}/log".format(**locals())).text,
+	}
+
+	return flask.render_template("run/step.html", title = "Run " + run_identifier[:18], **view_data)
 
 
 def run_step_log(run_identifier, step_index):
-	log_response = service_client.raw_get("/run/{run_identifier}/step/{step_index}/log".format(**locals()))
-	return flask.Response(log_response.text, mimetype = "text/plain")
+	log_text = service_client.raw_get("/run/{run_identifier}/step/{step_index}/log".format(**locals())).text
+	return flask.Response(log_text, mimetype = "text/plain")
 
 
 def abort_run(run_identifier):

@@ -1,0 +1,57 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Run {{ run_identifier }} > Step {{ current["index"] }} {{ current["name"] }}</h1>
+
+<section>
+	<div class="page-navigation">
+		{% if previous %}
+		<a href="{{ url_for('run_step', run_identifier = run_identifier, step_index = previous['index']) }}" title="Previous step"> < </a>
+		{% else %}
+		<a title="Previous step" class="disabled"> < </a>
+		{% endif %}
+		<a href="{{ url_for('run_index', run_identifier = run_identifier) }}">Index</a>
+		{% if next %}
+		<a href="{{ url_for('run_step', run_identifier = run_identifier, step_index = next['index']) }}" title="Next step"> > </a>
+		{% else %}
+		<a title="Next step" class="disabled"> > </a>
+		{% endif %}
+	</div>
+	{# <div class="link-group-container">
+		<div class="link-group">
+			<a href="{{ url_for('run_step_log', run_identifier = run_identifier, step_index = current['index']) }}">Raw log</a>
+		</div>
+		<div class="page-navigation">
+			{% if previous %}
+			<a href="{{ url_for('run_step', run_identifier = run_identifier, step_index = previous['index']) }}" title="Previous step"> < </a>
+			{% else %}
+			<a title="Previous step" class="disabled"> < </a>
+			{% endif %}
+			<a href="{{ url_for('run_index', run_identifier = run_identifier) }}">Index</a>
+			{% if next %}
+			<a href="{{ url_for('run_step', run_identifier = run_identifier, step_index = next['index']) }}" title="Next step"> > </a>
+			{% else %}
+			<a title="Next step" class="disabled"> > </a>
+			{% endif %}
+		</div>
+	</div> #}
+</section>
+
+<section>
+	<h2>Status</h2>
+	<div class=status-grid>
+		<div class="status-group">
+			<div class="status-indicator {{ current['status'] }}"></div>
+			<div class="status-text">{{ current['status'] }}</div>
+		</div>
+	</div>
+</section>
+
+{% if log_text %}
+<section>
+	<h2><a href="{{ url_for('run_step_log', run_identifier = run_identifier, step_index = current['index']) }}">Log</a></h2>
+	<pre class="log-text">{{ log_text }}</pre>
+</section>
+{% endif %}
+
+{% endblock %}
