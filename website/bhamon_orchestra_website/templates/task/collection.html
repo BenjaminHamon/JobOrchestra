@@ -33,6 +33,7 @@
 			</select>
 			<button type="submit">Apply filters</button>
 		</form>
+		{{ shared_macros.page_navigation('task_collection_index', pagination) }}
 		{{ task_macros.task_table(task_collection) }}
 		{{ shared_macros.page_navigation('task_collection_index', pagination) }}
 	</div>

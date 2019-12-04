@@ -15,6 +15,7 @@
 
 <section>
 	<div class="table-container">
+		{{ shared_macros.page_navigation('user_collection_index', pagination) }}
 		{{ user_macros.user_table(user_collection) }}
 		{{ shared_macros.page_navigation('user_collection_index', pagination) }}
 	</div>

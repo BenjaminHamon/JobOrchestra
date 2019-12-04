@@ -6,6 +6,7 @@
 <h1>Workers</h1>
 <section>
 	<div class="table-container">
+		{{ shared_macros.page_navigation('worker_collection_index', pagination) }}
 		{{ worker_macros.worker_table(worker_collection) }}
 		{{ shared_macros.page_navigation('worker_collection_index', pagination) }}
 	</div>

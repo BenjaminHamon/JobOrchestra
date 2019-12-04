@@ -329,7 +329,7 @@ form button
 {
 	display: flex;
 	flex-direction: row;
-	margin-bottom: 10px;
+	margin-bottom: 20px;
 	align-items: center;
 }
 
@@ -345,11 +345,16 @@ form button
 	min-width: 100px;
 }
 
+.table-container > table
+{
+	margin: 10px 0;
+}
+
 .page-navigation
 {
 	display: flex;
 	flex-direction: row;
-	margin: 10px 50px 0 50px;
+	margin: 0 50px;
 }
 
 .page-navigation > p

@@ -42,6 +42,7 @@
 			</select>
 			<button type="submit">Apply filters</button>
 		</form>
+		{{ shared_macros.page_navigation('run_collection_index', pagination) }}
 		{{ run_macros.run_table(run_collection) }}
 		{{ shared_macros.page_navigation('run_collection_index', pagination) }}
 	</div>

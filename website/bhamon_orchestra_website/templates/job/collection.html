@@ -6,6 +6,7 @@
 <h1>Jobs</h1>
 <section>
 	<div class="table-container">
+		{{ shared_macros.page_navigation('job_collection_index', pagination) }}
 		{{ job_macros.job_table(job_collection) }}
 		{{ shared_macros.page_navigation('job_collection_index', pagination) }}
 	</div>
