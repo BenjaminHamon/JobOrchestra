@@ -2,22 +2,18 @@ import asyncio
 import base64
 import json
 import logging
-import os
 import platform
 import signal
-import subprocess
 import sys
 import traceback
 
 from bhamon_orchestra_model.network.websocket import WebSocketClient
+from bhamon_orchestra_worker.executor_watcher import ExecutorWatcher
 import bhamon_orchestra_worker.worker_logging as worker_logging
 import bhamon_orchestra_worker.worker_storage as worker_storage
 
 
 logger = logging.getLogger("Worker")
-
-shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT # pylint: disable = no-member
-subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 
 class Worker: # pylint: disable = too-few-public-methods
@@ -104,23 +100,11 @@ class Worker: # pylint: disable = too-few-public-methods
 	def _terminate(self):
 		all_futures = []
 		for executor in self._active_executors:
-			all_futures.append(self._terminate_executor(executor, self.termination_timeout_seconds))
+			all_futures.append(executor.terminate(self.termination_timeout_seconds))
 		self._asyncio_loop.run_until_complete(asyncio.gather(*all_futures))
 		for executor in self._active_executors:
-			if "process" in executor and executor["process"].returncode is None:
-				logger.warning("%s %s is still running (Process: %s)", executor["job_identifier"], executor["run_identifier"], executor["process"].pid)
-
-
-	async def _terminate_executor(self, executor, timeout_seconds):
-		if "process" in executor and executor["process"].returncode is None:
-			logger.info("Aborting %s %s", executor["job_identifier"], executor["run_identifier"])
-			os.kill(executor["process"].pid, shutdown_signal)
-
-			try:
-				await asyncio.wait_for(executor["process"].wait(), timeout_seconds)
-			except asyncio.TimeoutError:
-				logger.warning("Forcing termination for %s %s", executor["job_identifier"], executor["run_identifier"])
-				executor["process"].kill()
+			if executor.is_running():
+				logger.warning("%s %s is still running (Process: %s)", executor.job_identifier, executor.run_identifier, executor.process.pid)
 
 
 	async def _execute_command(self, command, parameters): # pylint: disable=too-many-return-statements
@@ -156,16 +140,16 @@ class Worker: # pylint: disable = too-few-public-methods
 		for job_identifier, run_identifier in all_runs:
 			logger.info("Recovering %s %s", job_identifier, run_identifier)
 			for executor in self._active_executors:
-				if executor["run_identifier"] == run_identifier:
+				if executor.run_identifier == run_identifier:
 					continue
-			executor = { "job_identifier": job_identifier, "run_identifier": run_identifier }
+			executor = ExecutorWatcher(job_identifier, run_identifier)
 			self._active_executors.append(executor)
 
 
 	def _list_runs(self):
 		all_runs = []
 		for executor in self._active_executors:
-			all_runs.append({ "job_identifier": executor["job_identifier"], "run_identifier": executor["run_identifier"] })
+			all_runs.append({ "job_identifier": executor.job_identifier, "run_identifier": executor.run_identifier })
 		return all_runs
 
 
@@ -182,27 +166,18 @@ class Worker: # pylint: disable = too-few-public-methods
 		worker_storage.create_run(job_identifier, run_identifier)
 		worker_storage.save_request(job_identifier, run_identifier, run_request)
 
+		executor = ExecutorWatcher(job_identifier, run_identifier)
 		executor_command = [ sys.executable, self._executor_script, job_identifier, run_identifier ]
-		executor_process = await asyncio.create_subprocess_exec(*executor_command, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
-		executor_watcher = self._asyncio_loop.create_task(self._watch_executor(executor_process))
-
-		executor = {
-			"job_identifier": job_identifier,
-			"run_identifier": run_identifier,
-			"process": executor_process,
-			"watcher": executor_watcher,
-		}
-
 		self._active_executors.append(executor)
+		await executor.start(executor_command)
 
 
 	async def _clean(self, job_identifier, run_identifier):
 		logger.info("Cleaning %s %s", job_identifier, run_identifier)
 		executor = self._find_executor(run_identifier)
-		if "watcher" in executor:
-			await asyncio.wait_for(executor["watcher"], 1)
-		if "process" in executor and executor["process"].returncode is None:
+		if executor.is_running():
 			raise RuntimeError("Executor is still running for run %s" % run_identifier)
+		await executor.wait_futures()
 		self._active_executors.remove(executor)
 		worker_storage.delete_run(job_identifier, run_identifier)
 
@@ -210,15 +185,13 @@ class Worker: # pylint: disable = too-few-public-methods
 	def _abort(self, job_identifier, run_identifier):
 		logger.info("Aborting %s %s", job_identifier, run_identifier)
 		executor = self._find_executor(run_identifier)
-		if executor["process"].returncode is None:
-			os.kill(executor["process"].pid, shutdown_signal)
-		# The executor should terminate nicely, if it does not it will stays as running and should be investigated
-		# Forcing termination here would leave orphan processes and the status as running
+		if executor.is_running():
+			executor.abort()
 
 
 	def _find_executor(self, run_identifier):
 		for executor in self._active_executors:
-			if executor["run_identifier"] == run_identifier:
+			if executor.run_identifier == run_identifier:
 				return executor
 		raise KeyError("Executor not found for %s" % run_identifier)
 
@@ -237,7 +210,7 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	def _retrieve_status(self, job_identifier, run_identifier):
 		executor = self._find_executor(run_identifier)
-		is_executor_running = "process" in executor and executor["process"].returncode is None
+		is_executor_running = executor.is_running()
 		status = worker_storage.load_status(job_identifier, run_identifier)
 		if not is_executor_running and (status["status"] in [ "unknown", "running" ]):
 			logger.error("Run '%s' terminated before completion", run_identifier)
@@ -256,19 +229,3 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	def _retrieve_results(self, job_identifier, run_identifier): # pylint: disable = no-self-use
 		return worker_storage.load_results(job_identifier, run_identifier)
-
-
-	async def _watch_executor(self, executor_process):
-		raw_logger = logging.getLogger("raw")
-
-		while True:
-			try:
-				line = await asyncio.wait_for(executor_process.stdout.readline(), 1)
-			except asyncio.TimeoutError:
-				continue
-
-			if not line:
-				break
-
-			line = line.decode("utf-8").strip()
-			raw_logger.info(line)
