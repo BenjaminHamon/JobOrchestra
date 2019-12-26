@@ -7,6 +7,7 @@ import signal
 import subprocess
 import sys
 import time
+import traceback
 
 import websockets
 
@@ -119,7 +120,7 @@ class Worker: # pylint: disable = too-few-public-methods
 				response = { "result": result }
 			except Exception as exception: # pylint: disable=broad-except
 				logger.error("Failed to process request %s", request, exc_info = True)
-				response = { "error": str(exception) }
+				response = { "error": "".join(traceback.format_exception_only(exception.__class__, exception)).strip() }
 
 			logger.debug("> %s", response)
 
