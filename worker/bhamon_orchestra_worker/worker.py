@@ -11,6 +11,7 @@ import traceback
 
 import websockets
 
+from bhamon_orchestra_model.network.websocket import WebSocketConnection
 import bhamon_orchestra_worker.worker_logging as worker_logging
 import bhamon_orchestra_worker.worker_storage as worker_storage
 
@@ -82,7 +83,7 @@ class Worker: # pylint: disable = too-few-public-methods
 					async with websockets.connect(self._master_uri) as connection:
 						logger.info("Connected to master, waiting for commands")
 						connection_attempt_counter = 0
-						await self._process_connection(connection)
+						await self._process_connection(WebSocketConnection(connection))
 				except websockets.exceptions.ConnectionClosed as exception:
 					if exception.code not in [ 1000, 1001 ]:
 						raise
@@ -107,7 +108,7 @@ class Worker: # pylint: disable = too-few-public-methods
 	async def _process_connection(self, connection):
 		while not self._should_shutdown:
 			try:
-				self._active_connection_task = asyncio.ensure_future(connection.recv())
+				self._active_connection_task = asyncio.ensure_future(connection.receive())
 				request = json.loads(await self._active_connection_task)
 				self._active_connection_task = None
 			except asyncio.CancelledError:

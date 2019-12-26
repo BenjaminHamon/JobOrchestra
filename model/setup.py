@@ -21,6 +21,7 @@ parameters.update({
 	"packages": [
 		"bhamon_orchestra_model",
 		"bhamon_orchestra_model/database",
+		"bhamon_orchestra_model/network",
 	],
 
 	"python_requires": "~= 3.5",
