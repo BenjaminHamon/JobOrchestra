@@ -3,9 +3,9 @@ import logging
 
 import websockets
 
+from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.network.websocket import WebSocketConnection
 from bhamon_orchestra_master.worker import Worker, WorkerError
-from bhamon_orchestra_master.worker_connection import WorkerConnection
 
 
 logger = logging.getLogger("Supervisor")
@@ -72,19 +72,37 @@ class Supervisor:
 
 		try:
 			logger.info("Connection from worker '%s' (User: '%s', RemoteAddress: '%s')", connection.worker, connection.user, connection.remote_address[0])
-			worker_connection = WorkerConnection(WebSocketConnection(connection))
-			await self._process_connection_internal(connection.user, connection.worker, worker_connection)
+			messenger_instance = Messenger(WebSocketConnection(connection))
+			messenger_instance.identifier = "%s:%s" % connection.remote_address
+			messenger_future = asyncio.ensure_future(messenger_instance.run())
+
+			try:
+				await self._process_connection_internal(connection.user, connection.worker, messenger_instance)
+			finally:
+				messenger_future.cancel()
+				messenger_instance.dispose()
+
+				try:
+					await messenger_future
+				except asyncio.CancelledError:
+					pass
+				except websockets.exceptions.ConnectionClosed as exception:
+					if exception.code not in [ 1000, 1001 ]:
+						logger.error("Lost connection", exc_info = True)
+				except Exception: # pylint: disable = broad-except
+					logger.error("Unhandled exception in messenger", exc_info = True)
+
 		except WorkerError as exception:
 			logger.error("Worker error: %s", exception)
 		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception in connection handler", exc_info = True)
 
 
-	async def _process_connection_internal(self, user, worker_identifier, connection):
+	async def _process_connection_internal(self, user, worker_identifier, messenger_instance):
 		logger.info("Registering worker '%s'", worker_identifier)
-		properties = await connection.execute_command(None, "properties")
+		properties = await messenger_instance.send_request({ "command": "properties" })
 		worker_record = self._register_worker(worker_identifier, user, properties)
-		worker_instance = self._instantiate_worker(worker_identifier, connection)
+		worker_instance = self._instantiate_worker(worker_identifier, messenger_instance)
 
 		self._worker_provider.update_status(worker_record, is_active = True)
 		self._active_workers[worker_identifier] = worker_instance
@@ -114,8 +132,8 @@ class Supervisor:
 		return worker_record
 
 
-	def _instantiate_worker(self, worker_identifier, connection):
-		worker_instance = Worker(worker_identifier, connection, self._run_provider)
+	def _instantiate_worker(self, worker_identifier, messenger_instance):
+		worker_instance = Worker(worker_identifier, messenger_instance, self._run_provider)
 		worker_instance.update_interval_seconds = self.update_interval_seconds
 		return worker_instance
 

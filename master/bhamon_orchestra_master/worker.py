@@ -15,9 +15,9 @@ class WorkerError(Exception):
 class Worker:
 
 
-	def __init__(self, identifier, connection, run_provider):
+	def __init__(self, identifier, messenger, run_provider):
 		self.identifier = identifier
-		self._connection = connection
+		self._messenger = messenger
 		self._run_provider = run_provider
 		self.should_disconnect = False
 		self.should_shutdown = False
@@ -51,9 +51,9 @@ class Worker:
 		except Exception: # pylint: disable = broad-except
 			logger.error("(%s) Unhandled exception while recovering runs", self.identifier, exc_info = True)
 
-		while not self.should_disconnect and (not self.should_shutdown or len(self.executors) > 0):
+		while not self.should_disconnect and not self._messenger.is_disposed and (not self.should_shutdown or len(self.executors) > 0):
 			update_start = time.time()
-			await self._connection.ping()
+			await self._messenger.connection.ping()
 
 			all_executors = list(self.executors)
 			for executor in all_executors:
@@ -77,13 +77,17 @@ class Worker:
 			except asyncio.CancelledError:
 				break
 
-		if self.should_shutdown and len(self.executors) == 0:
-			await self._connection.execute_command(self.identifier, "shutdown")
+		if self.should_shutdown and not self._messenger.is_disposed and len(self.executors) == 0:
+			await self._execute_remote_command("shutdown")
+
+
+	async def _execute_remote_command(self, command, parameters = None):
+		return await self._messenger.send_request({ "command": command, "parameters": parameters if parameters is not None else {} })
 
 
 	async def _recover_executors(self):
 		recovered_executors = []
-		runs_to_recover = await self._connection.execute_command(self.identifier, "list")
+		runs_to_recover = await self._execute_remote_command("list")
 		for run_information in runs_to_recover:
 			executor = await self._recover_execution(**run_information)
 			recovered_executors.append(executor)
@@ -124,18 +128,18 @@ class Worker:
 	async def _start_execution(self, run, job):
 		logger.info("(%s) Starting run %s %s", self.identifier, run["job"], run["identifier"])
 		execute_request = { "job_identifier": run["job"], "run_identifier": run["identifier"], "job": job, "parameters": run["parameters"] }
-		await self._connection.execute_command(self.identifier, "execute", execute_request)
+		await self._execute_remote_command("execute", execute_request)
 
 
 	async def _abort_execution(self, run):
 		logger.info("(%s) Aborting run %s %s", self.identifier, run["job"], run["identifier"])
 		abort_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
-		await self._connection.execute_command(self.identifier, "abort", abort_request)
+		await self._execute_remote_command("abort", abort_request)
 
 
 	async def _update_execution(self, run):
 		status_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
-		status_response = await self._connection.execute_command(self.identifier, "status", status_request)
+		status_response = await self._execute_remote_command("status", status_request)
 		if status_response["status"] != "unknown":
 			properties_to_update = [ "status", "start_date", "completion_date" ]
 			self._run_provider.update_status(run, ** { key: value for key, value in status_response.items() if key in properties_to_update })
@@ -147,13 +151,13 @@ class Worker:
 
 	async def _finish_execution(self, run):
 		clean_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
-		await self._connection.execute_command(self.identifier, "clean", clean_request)
+		await self._execute_remote_command("clean", clean_request)
 		logger.info("(%s) Completed run %s %s with status %s", self.identifier, run["job"], run["identifier"], run["status"])
 
 
 	async def _retrieve_request(self, job_identifier, run_identifier):
 		parameters = { "job_identifier": job_identifier, "run_identifier": run_identifier }
-		return await self._connection.execute_command(self.identifier, "request", parameters)
+		return await self._execute_remote_command("request", parameters)
 
 
 	async def _retrieve_logs(self, run):
@@ -167,11 +171,11 @@ class Worker:
 					"step_index": run_step["index"],
 					"step_name": run_step["name"],
 				}
-				log_text = await self._connection.execute_command(self.identifier, "log", log_request)
+				log_text = await self._execute_remote_command("log", log_request)
 				self._run_provider.set_step_log(run["identifier"], run_step["index"], log_text)
 
 
 	async def _retrieve_results(self, run):
 		results_request = { "job_identifier": run["job"], "run_identifier": run["identifier"], }
-		results = await self._connection.execute_command(self.identifier, "results", results_request)
+		results = await self._execute_remote_command("results", results_request)
 		self._run_provider.set_results(run, results)

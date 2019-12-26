@@ -1,12 +1,11 @@
 import asyncio
 import base64
-import json
 import logging
 import platform
 import signal
 import sys
-import traceback
 
+from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.network.websocket import WebSocketClient
 from bhamon_orchestra_worker.executor_watcher import ExecutorWatcher
 import bhamon_orchestra_worker.worker_logging as worker_logging
@@ -27,9 +26,10 @@ class Worker: # pylint: disable = too-few-public-methods
 		self._properties = properties
 		self._executor_script = executor_script
 
-		self._client_future = None
 		self._active_executors = []
 		self._asyncio_loop = None
+		self._messenger = None
+		self._messenger_future = None
 		self._should_shutdown = False
 
 		self.connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
@@ -52,7 +52,7 @@ class Worker: # pylint: disable = too-few-public-methods
 		self._asyncio_loop = asyncio.get_event_loop()
 
 		self._recover()
-		main_future = asyncio.gather(self._run_client(), self._check_signals())
+		main_future = asyncio.gather(self._run_worker(), self._run_messenger(), self._check_signals())
 		self._asyncio_loop.run_until_complete(main_future)
 		self._terminate()
 		self._asyncio_loop.close()
@@ -66,35 +66,45 @@ class Worker: # pylint: disable = too-few-public-methods
 			await asyncio.sleep(1)
 
 
-	async def _run_client(self):
+	async def _run_worker(self):
+		while not self._should_shutdown:
+			await asyncio.sleep(1)
+
+		if self._messenger_future is not None:
+			self._messenger_future.cancel()
+
+
+	async def _run_messenger(self):
 		try:
 			websocket_client_instance = WebSocketClient("master", self._master_uri)
 			authentication_data = base64.b64encode(b"%s:%s" % (self._user.encode(), self._secret.encode())).decode()
 			headers = { "Authorization": "Basic" + " " + authentication_data, "X-Orchestra-Worker": self._identifier }
-			self._client_future = asyncio.ensure_future(websocket_client_instance.run_forever(self._process_connection, extra_headers = headers))
-			await self._client_future
+			self._messenger_future = asyncio.ensure_future(websocket_client_instance.run_forever(self._process_connection, extra_headers = headers))
+			await self._messenger_future
 		except asyncio.CancelledError:
 			pass
 		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception", exc_info = True)
 		finally:
-			self._client_future = None
+			self._messenger_future = None
 
 
 	async def _process_connection(self, connection):
-		while not self._should_shutdown:
-			request = json.loads(await connection.receive())
-			logger.debug("< %s", request)
+		messenger_instance = Messenger(connection)
+		messenger_instance.identifier = "%s:%s" % connection.connection.remote_address
+		messenger_instance.request_handler = self._handle_request
 
-			try:
-				result = await self._execute_command(request["command"], request["parameters"])
-				response = { "result": result }
-			except Exception as exception: # pylint: disable=broad-except
-				logger.error("Failed to process request %s", request, exc_info = True)
-				response = { "error": "".join(traceback.format_exception_only(exception.__class__, exception)).strip() }
+		self._messenger = messenger_instance
 
-			logger.debug("> %s", response)
-			await connection.send(json.dumps(response))
+		try:
+			await messenger_instance.run()
+		finally:
+			messenger_instance.dispose()
+			self._messenger = None
+
+
+	async def _handle_request(self, request):
+		return await self._execute_command(request["command"], request.get("parameters", {}))
 
 
 	def _terminate(self):
@@ -204,8 +214,6 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	def _shutdown(self):
 		self._should_shutdown = True
-		if self._client_future:
-			self._client_future.cancel()
 
 
 	def _retrieve_status(self, job_identifier, run_identifier):
