@@ -1,6 +1,19 @@
 # pylint: disable = no-self-use, unused-argument
 
 
+class MessengerMock: # pylint: disable = too-few-public-methods
+	""" Mock a messenger for a WorkerRemoteMock """
+
+
+	def __init__(self, remote_handler):
+		self.remote_handler = remote_handler
+
+
+	async def send_request(self, data):
+		return self.remote_handler(data)
+
+
+
 class WorkerRemoteMock:
 	""" Mock a remote worker process to execute commands """
 
@@ -8,6 +21,10 @@ class WorkerRemoteMock:
 	def __init__(self, worker_identifier):
 		self.worker_identifier = worker_identifier
 		self.executors = []
+
+
+	def handle_request(self, request):
+		return self.execute_command(request["command"], request["parameters"])
 
 
 	def execute_command(self, command, parameters): # pylint: disable = too-many-return-statements

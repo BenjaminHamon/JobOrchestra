@@ -10,8 +10,7 @@ from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_master.worker import Worker
 
 from .run_provider_fake import RunProviderFake
-from .worker_connection_mock import WorkerConnectionMock
-from .worker_remote_mock import WorkerRemoteMock
+from .worker_remote_mock import MessengerMock, WorkerRemoteMock
 
 
 @pytest.mark.asyncio
@@ -20,8 +19,8 @@ async def test_start_execution_success():
 
 	run_provider_instance = RunProviderFake()
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = { "identifier": "run_test", "job": job["identifier"], "status": "pending", "parameters": {} }
@@ -34,8 +33,8 @@ async def test_abort_execution_success():
 
 	run_provider_instance = RunProviderFake()
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = { "identifier": "run_test", "job": job["identifier"], "status": "running", "steps": [] }
@@ -52,8 +51,8 @@ async def test_update_execution_success():
 
 	run_provider_instance = RunProviderFake()
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = { "identifier": "run_test", "job": job["identifier"], "status": "running", "steps": [] }
@@ -70,8 +69,8 @@ async def test_finish_execution_success():
 
 	run_provider_instance = RunProviderFake()
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = { "identifier": "run_test", "job": job["identifier"], "status": "succeeded", "steps": [] }
@@ -90,8 +89,8 @@ async def test_process_success():
 	file_storage_instance = MemoryFileStorage()
 	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = run_provider_instance.create(job["identifier"], {})
@@ -151,8 +150,8 @@ async def test_process_abort():
 	file_storage_instance = MemoryFileStorage()
 	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = run_provider_instance.create(job["identifier"], {})
@@ -216,8 +215,8 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	database_client_instance = MemoryDatabaseClient()
 	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = run_provider_instance.create(job["identifier"], {})
@@ -251,7 +250,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 
 	file_storage_instance = MemoryFileStorage()
 	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 0
@@ -299,8 +298,8 @@ async def test_process_recovery_after_execution():
 	database_client_instance = MemoryDatabaseClient()
 	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = run_provider_instance.create(job["identifier"], {})
@@ -343,7 +342,7 @@ async def test_process_recovery_after_execution():
 
 	file_storage_instance = MemoryFileStorage()
 	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 0
