@@ -139,6 +139,9 @@ class Supervisor:
 
 
 	async def _run_worker(self, worker_instance):
+		if self._should_shutdown:
+			return
+
 		try:
 			await worker_instance.run()
 		except websockets.exceptions.ConnectionClosed as exception:
