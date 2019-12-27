@@ -36,8 +36,8 @@ def test_worker_disconnection(tmpdir, database_type):
 
 	worker_expected_messages = [
 		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
-		{ "level": "Info", "logger": "Worker", "message": "Connected to master, waiting for commands" },
-		{ "level": "Info", "logger": "Worker", "message": "Closed connection to master" },
+		{ "level": "Info", "logger": "WebSocket", "message": "Connected to master" },
+		{ "level": "Info", "logger": "WebSocket", "message": "Closed connection to master" },
 		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
@@ -73,9 +73,9 @@ def test_master_disconnection(tmpdir, database_type):
 
 	worker_expected_messages = [
 		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
-		{ "level": "Info", "logger": "Worker", "message": "Connected to master, waiting for commands" },
-		{ "level": "Info", "logger": "Worker", "message": "Closed connection to master" },
-		{ "level": "Info", "logger": "Worker", "message": "Retrying connection in 10 seconds" },
+		{ "level": "Info", "logger": "WebSocket", "message": "Connected to master" },
+		{ "level": "Info", "logger": "WebSocket", "message": "Closed connection to master" },
+		{ "level": "Info", "logger": "WebSocket", "message": "Retrying connection in 10 seconds" },
 		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 

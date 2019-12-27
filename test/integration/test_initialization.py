@@ -1,5 +1,7 @@
 """ Integration tests for initialization """
 
+import time
+
 import pytest
 
 from .. import assert_extensions
@@ -32,9 +34,11 @@ def test_worker(tmpdir, database_type):
 		context_instance.configure_worker_authentication([ "worker" ])
 		worker_process = context_instance.invoke_worker("worker")
 
+		time.sleep(2) # Wait for the connection to fail
+
 	worker_expected_messages = [
 		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
-		{ "level": "Error", "logger": "Worker", "message": "Failed to connect to master" },
+		{ "level": "Error", "logger": "WebSocket", "message": "Failed to connect to master" },
 		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 

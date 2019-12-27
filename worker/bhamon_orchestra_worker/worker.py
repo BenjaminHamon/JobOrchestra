@@ -6,12 +6,9 @@ import platform
 import signal
 import subprocess
 import sys
-import time
 import traceback
 
-import websockets
-
-from bhamon_orchestra_model.network.websocket import WebSocketConnection
+from bhamon_orchestra_model.network.websocket import WebSocketClient
 import bhamon_orchestra_worker.worker_logging as worker_logging
 import bhamon_orchestra_worker.worker_storage as worker_storage
 
@@ -33,9 +30,9 @@ class Worker: # pylint: disable = too-few-public-methods
 		self._properties = properties
 		self._executor_script = executor_script
 
+		self._client_future = None
 		self._active_executors = []
 		self._asyncio_loop = None
-		self._active_connection_task = None
 		self._should_shutdown = False
 
 		self.connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
@@ -73,47 +70,21 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	async def _run_client(self):
-		connection_attempt_counter = 0
-
-		while not self._should_shutdown:
-			try:
-				connection_attempt_counter += 1
-				logger.info("Connecting to master on %s (Attempt: %s)", self._master_uri, connection_attempt_counter)
-				try:
-					async with websockets.connect(self._master_uri) as connection:
-						logger.info("Connected to master, waiting for commands")
-						connection_attempt_counter = 0
-						await self._process_connection(WebSocketConnection(connection))
-				except websockets.exceptions.ConnectionClosed as exception:
-					if exception.code not in [ 1000, 1001 ]:
-						raise
-				logger.info("Closed connection to master")
-
-			except OSError:
-				logger.error("Failed to connect to master", exc_info = True)
-			except (websockets.exceptions.ConnectionClosed, websockets.exceptions.InvalidStatusCode):
-				logger.error("Lost connection to master", exc_info = True)
-
-			if not self._should_shutdown:
-				try:
-					connection_attempt_delay = self.connection_attempt_delay_collection[connection_attempt_counter]
-				except IndexError:
-					connection_attempt_delay = self.connection_attempt_delay_collection[-1]
-				logger.info("Retrying connection in %s seconds", connection_attempt_delay)
-				delay_start_time = time.time()
-				while not self._should_shutdown and (time.time() - delay_start_time < connection_attempt_delay):
-					await asyncio.sleep(1)
+		try:
+			websocket_client_instance = WebSocketClient("master", self._master_uri)
+			self._client_future = asyncio.ensure_future(websocket_client_instance.run_forever(self._process_connection))
+			await self._client_future
+		except asyncio.CancelledError:
+			pass
+		except Exception: # pylint: disable = broad-except
+			logger.error("Unhandled exception", exc_info = True)
+		finally:
+			self._client_future = None
 
 
 	async def _process_connection(self, connection):
 		while not self._should_shutdown:
-			try:
-				self._active_connection_task = asyncio.ensure_future(connection.receive())
-				request = json.loads(await self._active_connection_task)
-				self._active_connection_task = None
-			except asyncio.CancelledError:
-				break
-
+			request = json.loads(await connection.receive())
 			logger.debug("< %s", request)
 
 			try:
@@ -124,13 +95,7 @@ class Worker: # pylint: disable = too-few-public-methods
 				response = { "error": "".join(traceback.format_exception_only(exception.__class__, exception)).strip() }
 
 			logger.debug("> %s", response)
-
-			try:
-				self._active_connection_task = asyncio.ensure_future(connection.send(json.dumps(response)))
-				await self._active_connection_task
-				self._active_connection_task = None
-			except asyncio.CancelledError:
-				break
+			await connection.send(json.dumps(response))
 
 
 	def _terminate(self):
@@ -273,8 +238,8 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	def _shutdown(self):
 		self._should_shutdown = True
-		if self._active_connection_task:
-			self._active_connection_task.cancel()
+		if self._client_future:
+			self._client_future.cancel()
 
 
 	def _retrieve_status(self, job_identifier, run_identifier):
