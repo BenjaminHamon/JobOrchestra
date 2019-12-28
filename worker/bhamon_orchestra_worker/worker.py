@@ -135,8 +135,6 @@ class Worker: # pylint: disable = too-few-public-methods
 			return self._retrieve_request(**parameters)
 		if command == "log":
 			return self._retrieve_log(**parameters)
-		if command == "results":
-			return self._retrieve_results(**parameters)
 		if command == "shutdown":
 			return self._request_shutdown()
 		raise ValueError("Unknown command '%s'" % command)
@@ -223,7 +221,3 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	def _retrieve_log(self, job_identifier, run_identifier, step_index, step_name): # pylint: disable = no-self-use
 		return worker_storage.load_log(job_identifier, run_identifier, step_index, step_name)
-
-
-	def _retrieve_results(self, job_identifier, run_identifier): # pylint: disable = no-self-use
-		return worker_storage.load_results(job_identifier, run_identifier)

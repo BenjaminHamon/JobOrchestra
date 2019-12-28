@@ -23,6 +23,7 @@ class ExecutorWatcher:
 		self.process = None
 		self.futures = []
 		self.status_last_timestamp = None
+		self.results_last_timestamp = None
 
 
 	async def start(self, command):
@@ -87,6 +88,12 @@ class ExecutorWatcher:
 			if status["status"] != "unknown":
 				messenger.send_update({ "run": self.run_identifier, "status": status })
 			self.status_last_timestamp = status_timestamp
+
+		results_timestamp = worker_storage.get_results_timestamp(self.job_identifier, self.run_identifier)
+		if results_timestamp != self.results_last_timestamp:
+			results = worker_storage.load_results(self.job_identifier, self.run_identifier)
+			messenger.send_update({ "run": self.run_identifier, "results": results })
+			self.results_last_timestamp = results_timestamp
 
 
 	def _check_termination(self):

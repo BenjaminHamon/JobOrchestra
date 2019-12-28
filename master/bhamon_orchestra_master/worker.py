@@ -103,7 +103,6 @@ class Worker:
 		elif executor["local_status"] == "running":
 			if executor["run"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
 				await self._retrieve_logs(executor["run"])
-				await self._retrieve_results(executor["run"])
 				await self._finish_execution(executor["run"])
 				executor["local_status"] = "done"
 
@@ -114,7 +113,6 @@ class Worker:
 		elif executor["local_status"] == "aborting":
 			if executor["run"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
 				await self._retrieve_logs(executor["run"])
-				await self._retrieve_results(executor["run"])
 				await self._finish_execution(executor["run"])
 				executor["local_status"] = "done"
 
@@ -164,16 +162,13 @@ class Worker:
 				self._run_provider.set_step_log(run["identifier"], run_step["index"], log_text)
 
 
-	async def _retrieve_results(self, run):
-		results_request = { "job_identifier": run["job"], "run_identifier": run["identifier"], }
-		results = await self._execute_remote_command("results", results_request)
-		self._run_provider.set_results(run, results)
-
-
 	async def handle_update(self, update):
 		executor = self._find_executor(update["run"])
+
 		if "status" in update:
 			self._update_status(executor["run"], update["status"])
+		if "results" in update:
+			self._update_results(executor["run"], update["results"])
 
 
 	def _find_executor(self, run_identifier):
@@ -187,3 +182,7 @@ class Worker:
 		properties_to_update = [ "status", "start_date", "completion_date" ]
 		self._run_provider.update_status(run, ** { key: value for key, value in status.items() if key in properties_to_update })
 		self._run_provider.update_steps(run, status.get("steps", []))
+
+
+	def _update_results(self, run, results):
+		self._run_provider.set_results(run, results)
