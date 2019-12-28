@@ -102,9 +102,7 @@ class Worker:
 
 		elif executor["local_status"] == "running":
 			if executor["run"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
-				await self._retrieve_logs(executor["run"])
-				await self._finish_execution(executor["run"])
-				executor["local_status"] = "done"
+				executor["local_status"] = "verifying"
 
 			elif executor["should_abort"]:
 				await self._abort_execution(executor["run"])
@@ -112,9 +110,15 @@ class Worker:
 
 		elif executor["local_status"] == "aborting":
 			if executor["run"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
-				await self._retrieve_logs(executor["run"])
-				await self._finish_execution(executor["run"])
-				executor["local_status"] = "done"
+				executor["local_status"] = "verifying"
+
+		elif executor["local_status"] == "verifying":
+			await self._retrieve_logs(executor["run"])
+			executor["local_status"] = "finishing"
+
+		elif executor["local_status"] == "finishing":
+			await self._finish_execution(executor["run"])
+			executor["local_status"] = "done"
 
 
 	async def _recover_execution(self, job_identifier, run_identifier):
@@ -164,6 +168,9 @@ class Worker:
 
 	async def handle_update(self, update):
 		executor = self._find_executor(update["run"])
+
+		if executor["local_status"] == "finishing":
+			raise RuntimeError("Update received after completion and verification")
 
 		if "status" in update:
 			self._update_status(executor["run"], update["status"])

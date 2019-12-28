@@ -94,8 +94,6 @@ async def test_process_success():
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "pending"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	remote_executor = worker_remote_instance.find_executor(run["identifier"])
 	remote_executor["status"]["status"] = "running"
@@ -104,8 +102,6 @@ async def test_process_success():
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	remote_executor["status"]["status"] = "succeeded"
 	for step in remote_executor["status"]["steps"]:
@@ -115,10 +111,20 @@ async def test_process_success():
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "succeeded"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	# running => done (_finish_execution)
+	# running => verifying
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "verifying"
+	assert run["status"] == "succeeded"
+
+	# verifying => finishing
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "finishing"
+	assert run["status"] == "succeeded"
+
+	# finishing => done (_finish_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "done"
@@ -158,8 +164,6 @@ async def test_process_abort():
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "pending"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	remote_executor = worker_remote_instance.find_executor(run["identifier"])
 	remote_executor["status"]["status"] = "running"
@@ -168,32 +172,36 @@ async def test_process_abort():
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	worker_local_instance.abort_run(run["identifier"])
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	# running => aborting (_abort_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "aborting"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
 
 	assert local_executor["local_status"] == "aborting"
 	assert run["status"] == "aborted"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	# aborting => done (_finish_execution)
+	# aborting => verifying
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "verifying"
+	assert run["status"] == "aborted"
+
+	# verifying => finishing
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "finishing"
+	assert run["status"] == "aborted"
+
+	# finishing => done (_finish_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "done"
@@ -262,8 +270,6 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	remote_executor["status"]["status"] = "succeeded"
 	for step in remote_executor["status"]["steps"]:
@@ -273,10 +279,20 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "succeeded"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	# running => done (_finish_execution)
+	# running => verifying
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "verifying"
+	assert run["status"] == "succeeded"
+
+	# verifying => finishing
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "finishing"
+	assert run["status"] == "succeeded"
+
+	# finishing => done (_finish_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "done"
@@ -342,17 +358,25 @@ async def test_process_recovery_after_execution():
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "succeeded"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	# running => done (_finish_execution)
+	# running => verifying
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "verifying"
+	assert run["status"] == "succeeded"
+
+	# verifying => finishing
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "finishing"
+	assert run["status"] == "succeeded"
+
+	# finishing => done (_finish_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "done"
