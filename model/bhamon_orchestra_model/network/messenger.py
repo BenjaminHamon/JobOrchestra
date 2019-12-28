@@ -16,6 +16,7 @@ class Messenger:
 
 		self.identifier = None
 		self.request_handler = None
+		self.update_handler = None
 		self.messages_to_send = []
 		self.messages_to_wait = []
 		self.messages_to_handle = []
@@ -87,6 +88,15 @@ class Messenger:
 		self.messages_to_send.append(message)
 
 
+	def send_update(self, data):
+		if self.is_disposed:
+			raise RuntimeError("Messenger is disposed")
+
+		identifier = str(uuid.uuid4())
+		message = { "type": "update", "identifier": identifier, "data": data }
+		self.messages_to_send.append(message)
+
+
 	async def _push(self):
 		while True:
 			while len(self.messages_to_send) > 0:
@@ -133,25 +143,60 @@ class Messenger:
 			return
 
 		message = self.messages_to_handle[0]
+
+		try:
+			message_was_handled = await self._handle_message(message)
+			if message_was_handled:
+				self.messages_to_handle.remove(message)
+		except Exception: # pylint: disable = broad-except
+			logger.error("Unhandled exception in message handler", exc_info = True)
+
+
+	async def _handle_message(self, message):
 		if message["type"] == "request":
-			await self._handle_request(message)
-		elif message["type"] == "response":
-			self._handle_response(message)
-		self.messages_to_handle.remove(message)
+			return await self._handle_request(message)
+		if message["type"] == "response":
+			return await self._handle_response(message)
+		if message["type"] == "update":
+			return await self._handle_update(message)
+		raise ValueError("Unsupported message type: '%s'" % message["type"])
 
 
 	async def _handle_request(self, request):
+		if self.request_handler is None:
+			return False
+
+		logger.debug("Handling request '%s'", request["identifier"])
+
 		try:
 			result = await self.request_handler(request["data"]) # pylint: disable = not-callable
 			self._send_response(request["identifier"], result)
 		except Exception as exception: # pylint: disable = broad-except
-			logger.error("Request %s exception", request["identifier"], exc_info = True)
+			logger.error("Handler for request '%s' raised an exception", request["identifier"], exc_info = True)
 			error_result = "".join(traceback.format_exception_only(exception.__class__, exception)).strip()
 			self._send_response_error(request["identifier"], error_result)
 
+		return True
 
-	def _handle_response(self, response):
+
+	async def _handle_response(self, response):
+		logger.debug("Handling response '%s'", response["identifier"])
+
 		request = next(r for r in self.messages_to_wait if r["type"] == "request" and r["identifier"] == response["identifier"])
 		request["response"] = response
 		self._messages_events[request["identifier"]].set()
 		self.messages_to_wait.remove(request)
+		return True
+
+
+	async def _handle_update(self, update):
+		if self.update_handler is None:
+			return False
+
+		logger.debug("Handling update '%s'", update["identifier"])
+
+		try:
+			await self.update_handler(update["data"]) # pylint: disable = not-callable
+		except Exception: # pylint: disable = broad-except
+			logger.error("Handler for update '%s' raised an exception", update["identifier"], exc_info = True)
+		return True
