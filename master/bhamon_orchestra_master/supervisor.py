@@ -23,7 +23,6 @@ class Supervisor:
 
 		self._active_workers = {}
 		self._should_shutdown = False
-		self.update_interval_seconds = 10
 
 
 	async def run_server(self):
@@ -134,7 +133,6 @@ class Supervisor:
 
 	def _instantiate_worker(self, worker_identifier, messenger_instance):
 		worker_instance = Worker(worker_identifier, messenger_instance, self._run_provider)
-		worker_instance.update_interval_seconds = self.update_interval_seconds
 		messenger_instance.update_handler = worker_instance.handle_update
 		return worker_instance
 

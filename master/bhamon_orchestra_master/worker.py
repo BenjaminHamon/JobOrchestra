@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import time
 
 import websockets
 
@@ -23,7 +22,6 @@ class Worker:
 		self.should_disconnect = False
 		self.should_shutdown = False
 		self.executors = []
-		self.update_interval_seconds = 10
 		self._active_asyncio_sleep = None
 
 
@@ -53,9 +51,6 @@ class Worker:
 			logger.error("(%s) Unhandled exception while recovering runs", self.identifier, exc_info = True)
 
 		while not self.should_disconnect and not self._messenger.is_disposed and (not self.should_shutdown or len(self.executors) > 0):
-			update_start = time.time()
-			await self._messenger.connection.ping()
-
 			all_executors = list(self.executors)
 			for executor in all_executors:
 				try:
@@ -69,14 +64,7 @@ class Worker:
 				if executor["local_status"] in [ "done", "exception" ]:
 					self.executors.remove(executor)
 
-			update_end = time.time()
-
-			try:
-				self._active_asyncio_sleep = asyncio.ensure_future(asyncio.sleep(self.update_interval_seconds - (update_end - update_start)))
-				await self._active_asyncio_sleep
-				self._active_asyncio_sleep = None
-			except asyncio.CancelledError:
-				break
+			await asyncio.sleep(0.1)
 
 		if self.should_shutdown and not self._messenger.is_disposed and len(self.executors) == 0:
 			await self._execute_remote_command("shutdown")
