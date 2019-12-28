@@ -78,7 +78,7 @@ class WorkerRemoteMock:
 			"status": {
 				"job_identifier": job_identifier,
 				"run_identifier": run_identifier,
-				"status": "running",
+				"status": "pending",
 				"steps": [
 					{ "index": 0, "name": "first", "status": "pending" },
 					{ "index": 1, "name": "second", "status": "pending" },

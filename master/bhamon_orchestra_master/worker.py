@@ -19,6 +19,7 @@ class Worker:
 		self.identifier = identifier
 		self._messenger = messenger
 		self._run_provider = run_provider
+
 		self.should_disconnect = False
 		self.should_shutdown = False
 		self.executors = []
@@ -100,9 +101,9 @@ class Worker:
 			executor["local_status"] = "running"
 
 		elif executor["local_status"] == "running":
-			await self._update_execution(executor["run"])
-
 			if executor["run"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
+				await self._retrieve_logs(executor["run"])
+				await self._retrieve_results(executor["run"])
 				await self._finish_execution(executor["run"])
 				executor["local_status"] = "done"
 
@@ -111,9 +112,9 @@ class Worker:
 				executor["local_status"] = "aborting"
 
 		elif executor["local_status"] == "aborting":
-			await self._update_execution(executor["run"])
-
 			if executor["run"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
+				await self._retrieve_logs(executor["run"])
+				await self._retrieve_results(executor["run"])
 				await self._finish_execution(executor["run"])
 				executor["local_status"] = "done"
 
@@ -135,18 +136,6 @@ class Worker:
 		logger.info("(%s) Aborting run %s %s", self.identifier, run["job"], run["identifier"])
 		abort_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
 		await self._execute_remote_command("abort", abort_request)
-
-
-	async def _update_execution(self, run):
-		status_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
-		status_response = await self._execute_remote_command("status", status_request)
-		if status_response["status"] != "unknown":
-			properties_to_update = [ "status", "start_date", "completion_date" ]
-			self._run_provider.update_status(run, ** { key: value for key, value in status_response.items() if key in properties_to_update })
-			if "steps" in status_response:
-				self._run_provider.update_steps(run, status_response["steps"])
-				await self._retrieve_logs(run)
-				await self._retrieve_results(run)
 
 
 	async def _finish_execution(self, run):
@@ -179,3 +168,22 @@ class Worker:
 		results_request = { "job_identifier": run["job"], "run_identifier": run["identifier"], }
 		results = await self._execute_remote_command("results", results_request)
 		self._run_provider.set_results(run, results)
+
+
+	async def handle_update(self, update):
+		executor = self._find_executor(update["run"])
+		if "status" in update:
+			self._update_status(executor["run"], update["status"])
+
+
+	def _find_executor(self, run_identifier):
+		for executor in self.executors:
+			if executor["run"]["identifier"] == run_identifier:
+				return executor
+		raise KeyError("Executor not found for %s" % run_identifier)
+
+
+	def _update_status(self, run, status):
+		properties_to_update = [ "status", "start_date", "completion_date" ]
+		self._run_provider.update_status(run, ** { key: value for key, value in status.items() if key in properties_to_update })
+		self._run_provider.update_steps(run, status.get("steps", []))

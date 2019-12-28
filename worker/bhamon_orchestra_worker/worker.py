@@ -68,6 +68,9 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	async def _run_worker(self):
 		while not self._should_shutdown:
+			if self._messenger is not None:
+				for executor in self._active_executors:
+					executor.send_updates(self._messenger)
 			await asyncio.sleep(1)
 
 		if self._messenger_future is not None:
@@ -128,8 +131,6 @@ class Worker: # pylint: disable = too-few-public-methods
 			return await self._clean(**parameters)
 		if command == "abort":
 			return self._abort(**parameters)
-		if command == "status":
-			return self._retrieve_status(**parameters)
 		if command == "request":
 			return self._retrieve_request(**parameters)
 		if command == "log":
@@ -178,8 +179,8 @@ class Worker: # pylint: disable = too-few-public-methods
 
 		executor = ExecutorWatcher(job_identifier, run_identifier)
 		executor_command = [ sys.executable, self._executor_script, job_identifier, run_identifier ]
-		self._active_executors.append(executor)
 		await executor.start(executor_command)
+		self._active_executors.append(executor)
 
 
 	async def _clean(self, job_identifier, run_identifier):
@@ -214,17 +215,6 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	def _shutdown(self):
 		self._should_shutdown = True
-
-
-	def _retrieve_status(self, job_identifier, run_identifier):
-		executor = self._find_executor(run_identifier)
-		is_executor_running = executor.is_running()
-		status = worker_storage.load_status(job_identifier, run_identifier)
-		if not is_executor_running and (status["status"] in [ "unknown", "running" ]):
-			logger.error("Run '%s' terminated before completion", run_identifier)
-			status["status"] = "exception"
-			worker_storage.save_status(job_identifier, run_identifier, status)
-		return status
 
 
 	def _retrieve_request(self, job_identifier, run_identifier): # pylint: disable = no-self-use

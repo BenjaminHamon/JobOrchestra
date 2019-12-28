@@ -45,6 +45,14 @@ def save_request(job_identifier, run_identifier, run_request):
 		_save_data(request_file_path, run_request)
 
 
+def get_status_timestamp(job_identifier, run_identifier):
+	status_file_path = get_file_path(job_identifier, run_identifier, "status.json")
+	with filelock.FileLock(status_file_path + ".lock", filelock_timeout_seconds):
+		if not os.path.isfile(status_file_path):
+			return None
+		return os.path.getmtime(status_file_path)
+
+
 def load_status(job_identifier, run_identifier):
 	status_file_path = get_file_path(job_identifier, run_identifier, "status.json")
 	with filelock.FileLock(status_file_path + ".lock", filelock_timeout_seconds):

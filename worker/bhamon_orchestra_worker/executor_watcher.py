@@ -5,6 +5,8 @@ import platform
 import signal
 import subprocess
 
+import bhamon_orchestra_worker.worker_storage as worker_storage
+
 
 logger = logging.getLogger("ExecutorWatcher")
 
@@ -20,6 +22,7 @@ class ExecutorWatcher:
 		self.run_identifier = run_identifier
 		self.process = None
 		self.futures = []
+		self.status_last_timestamp = None
 
 
 	async def start(self, command):
@@ -73,3 +76,25 @@ class ExecutorWatcher:
 	async def wait_futures(self):
 		if len(self.futures) > 0:
 			await asyncio.wait(self.futures, timeout = 1)
+
+
+	def send_updates(self, messenger):
+		self._check_termination()
+
+		status_timestamp = worker_storage.get_status_timestamp(self.job_identifier, self.run_identifier)
+		if status_timestamp != self.status_last_timestamp:
+			status = worker_storage.load_status(self.job_identifier, self.run_identifier)
+			if status["status"] != "unknown":
+				messenger.send_update({ "run": self.run_identifier, "status": status })
+			self.status_last_timestamp = status_timestamp
+
+
+	def _check_termination(self):
+		if self.is_running():
+			return
+
+		status = worker_storage.load_status(self.job_identifier, self.run_identifier)
+		if status["status"] in [ "unknown", "running" ]:
+			logger.error("Run '%s' terminated before completion", self.run_identifier)
+			status["status"] = "exception"
+			worker_storage.save_status(self.job_identifier, self.run_identifier, status)
