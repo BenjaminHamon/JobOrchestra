@@ -70,7 +70,11 @@ class Worker: # pylint: disable = too-few-public-methods
 		while not self._should_shutdown:
 			if self._messenger is not None:
 				for executor in self._active_executors:
-					executor.send_updates(self._messenger)
+					try:
+						executor.send_updates(self._messenger)
+					except Exception: # pylint: disable = broad-except
+						logger.warning("%s %s failed to send updates", executor.job_identifier, executor.run_identifier, exc_info = True)
+
 			await asyncio.sleep(1)
 
 		if self._messenger_future is not None:
