@@ -17,11 +17,11 @@ class WebSocketClient:
 		self.server_uri = server_uri
 
 
-	async def run_once(self, connection_handler):
+	async def run_once(self, connection_handler, **kwargs):
 		logger.info("Connecting to %s on %s", self.server_identifier, self.server_uri)
 
 		try:
-			connection = await websockets.connect(self.server_uri)
+			connection = await websockets.connect(self.server_uri, **kwargs)
 		except OSError as exception:
 			raise NetworkException from exception
 
@@ -39,7 +39,7 @@ class WebSocketClient:
 				logger.info("Closed connection to %s", self.server_identifier)
 
 
-	async def run_forever(self, connection_handler, connection_attempt_delay_collection = None):
+	async def run_forever(self, connection_handler, connection_attempt_delay_collection = None, **kwargs):
 		if connection_attempt_delay_collection is None:
 			connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
 
@@ -51,7 +51,7 @@ class WebSocketClient:
 				logger.info("Connecting to %s on %s (Attempt: %s)", self.server_identifier, self.server_uri, connection_attempt_counter)
 
 				try:
-					connection = await websockets.connect(self.server_uri)
+					connection = await websockets.connect(self.server_uri, **kwargs)
 				except OSError as exception:
 					raise NetworkException from exception
 

@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 import logging
 import os
@@ -72,7 +73,9 @@ class Worker: # pylint: disable = too-few-public-methods
 	async def _run_client(self):
 		try:
 			websocket_client_instance = WebSocketClient("master", self._master_uri)
-			self._client_future = asyncio.ensure_future(websocket_client_instance.run_forever(self._process_connection))
+			authentication_data = base64.b64encode(b"%s:%s" % (self._user.encode(), self._secret.encode())).decode()
+			headers = { "Authorization": "Basic" + " " + authentication_data, "X-Orchestra-Worker": self._identifier }
+			self._client_future = asyncio.ensure_future(websocket_client_instance.run_forever(self._process_connection, extra_headers = headers))
 			await self._client_future
 		except asyncio.CancelledError:
 			pass
@@ -121,8 +124,6 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	async def _execute_command(self, command, parameters): # pylint: disable=too-many-return-statements
-		if command == "authenticate":
-			return self._authenticate()
 		if command == "properties":
 			return self._get_properties()
 		if command == "list":
@@ -144,14 +145,6 @@ class Worker: # pylint: disable = too-few-public-methods
 		if command == "shutdown":
 			return self._request_shutdown()
 		raise ValueError("Unknown command '%s'" % command)
-
-
-	def _authenticate(self):
-		return {
-			"worker": self._identifier,
-			"user": self._user,
-			"secret": self._secret,
-		}
 
 
 	def _get_properties(self):

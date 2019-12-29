@@ -1,4 +1,5 @@
 import argparse
+import functools
 import importlib
 import logging
 
@@ -6,6 +7,7 @@ import filelock
 
 from bhamon_orchestra_master.job_scheduler import JobScheduler
 from bhamon_orchestra_master.master import Master
+from bhamon_orchestra_master.protocol import WebSocketServerProtocol
 from bhamon_orchestra_master.supervisor import Supervisor
 from bhamon_orchestra_master.task_processor import TaskProcessor
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
@@ -39,7 +41,7 @@ def parse_arguments():
 	return argument_parser.parse_args()
 
 
-def create_application(arguments):
+def create_application(arguments): # pylint: disable = too-many-locals
 	database_client_instance = environment.create_database_client(arguments.database)
 	file_storage_instance = FileStorage(".")
 
@@ -59,14 +61,19 @@ def create_application(arguments):
 		worker_provider = worker_provider_instance,
 	)
 
+	protocol_factory = functools.partial(
+		WebSocketServerProtocol,
+		user_provider = user_provider_instance,
+		authentication_provider = authentication_provider_instance,
+		authorization_provider = authorization_provider_instance,
+	)
+
 	supervisor_instance = Supervisor(
 		host = arguments.address,
 		port = arguments.port,
 		worker_provider = worker_provider_instance,
 		run_provider = run_provider_instance,
-		user_provider = user_provider_instance,
-		authentication_provider = authentication_provider_instance,
-		authorization_provider = authorization_provider_instance,
+		protocol_factory = protocol_factory,
 	)
 
 	job_scheduler_instance = JobScheduler(

@@ -11,8 +11,6 @@ class WorkerRemoteMock:
 
 
 	def execute_command(self, command, parameters): # pylint: disable = too-many-return-statements
-		if command == "authenticate":
-			return self._authenticate()
 		if command == "list":
 			return self._list_runs()
 		if command == "execute":
@@ -39,10 +37,6 @@ class WorkerRemoteMock:
 			if executor["run_identifier"] == run_identifier:
 				return executor
 		raise KeyError("Executor not found for %s" % run_identifier)
-
-
-	def _authenticate(self):
-		return { "identifier": self.worker_identifier }
 
 
 	def _list_runs(self):

@@ -14,14 +14,13 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, run_provider, worker_provider, user_provider, authentication_provider, authorization_provider):
+	def __init__(self, host, port, run_provider, worker_provider, protocol_factory):
 		self._host = host
 		self._port = port
 		self._run_provider = run_provider
 		self._worker_provider = worker_provider
-		self._user_provider = user_provider
-		self._authentication_provider = authentication_provider
-		self._authorization_provider = authorization_provider
+		self._protocol_factory = protocol_factory
+
 		self._active_workers = {}
 		self._should_shutdown = False
 		self.update_interval_seconds = 10
@@ -33,7 +32,7 @@ class Supervisor:
 				self._worker_provider.update_status(worker_record, is_active = False)
 
 		logger.info("Listening for workers on '%s:%s'", self._host, self._port)
-		async with websockets.serve(self._process_connection, self._host, self._port, max_size = 2 ** 30):
+		async with websockets.serve(self._process_connection, self._host, self._port, create_protocol = self._protocol_factory, max_size = 2 ** 30):
 			while not self._should_shutdown or len(self._active_workers) > 0:
 				await asyncio.sleep(1)
 
@@ -72,25 +71,19 @@ class Supervisor:
 			return
 
 		try:
+			logger.info("Connection from worker '%s' (User: '%s', RemoteAddress: '%s')", connection.worker, connection.user, connection.remote_address[0])
 			worker_connection = WorkerConnection(WebSocketConnection(connection))
-			await self._process_connection_internal(worker_connection)
+			await self._process_connection_internal(connection.user, connection.worker, worker_connection)
 		except WorkerError as exception:
 			logger.error("Worker error: %s", exception)
 		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception in connection handler", exc_info = True)
 
 
-	async def _process_connection_internal(self, connection):
-		logger.info("Receiving connection")
-		authentication_data = await connection.execute_command(None, "authenticate")
-		worker_identifier = authentication_data["worker"]
-
-		logger.info("Checking authorization for worker '%s' (User: '%s')", worker_identifier, authentication_data.get("user", None))
-		self._authorize_worker(worker_identifier, authentication_data.get("user", None), authentication_data.get("secret", None))
-
+	async def _process_connection_internal(self, user, worker_identifier, connection):
 		logger.info("Registering worker '%s'", worker_identifier)
 		properties = await connection.execute_command(None, "properties")
-		worker_record = self._register_worker(worker_identifier, authentication_data["user"], properties)
+		worker_record = self._register_worker(worker_identifier, user, properties)
 		worker_instance = self._instantiate_worker(worker_identifier, connection)
 
 		self._worker_provider.update_status(worker_record, is_active = True)
@@ -104,15 +97,6 @@ class Supervisor:
 			logger.info("Terminating connection with worker '%s'", worker_identifier)
 			del self._active_workers[worker_identifier]
 			self._worker_provider.update_status(worker_record, is_active = False)
-
-
-	def _authorize_worker(self, worker, user, secret):
-		if not self._authentication_provider.authenticate_with_token(user, secret):
-			raise WorkerError("Authentication failed for worker '%s' (User: '%s')" % (worker, user))
-
-		user_record = self._user_provider.get(user)
-		if not self._authorization_provider.authorize_worker(user_record):
-			raise WorkerError("Authorization failed for worker '%s' (User: '%s')" % (worker, user))
 
 
 	def _register_worker(self, worker_identifier, owner, properties):
