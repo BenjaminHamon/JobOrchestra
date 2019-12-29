@@ -3,8 +3,6 @@ import logging
 
 import websockets
 
-from bhamon_orchestra_model.network.exception import NetworkException
-
 
 logger = logging.getLogger("WebSocket")
 
@@ -19,11 +17,7 @@ class WebSocketClient:
 
 	async def run_once(self, connection_handler, **kwargs):
 		logger.info("Connecting to %s on %s", self.server_identifier, self.server_uri)
-
-		try:
-			connection = await websockets.connect(self.server_uri, **kwargs)
-		except OSError as exception:
-			raise NetworkException from exception
+		connection = await websockets.connect(self.server_uri, **kwargs)
 
 		try:
 			logger.info("Connected to %s", self.server_identifier)
@@ -49,11 +43,7 @@ class WebSocketClient:
 			try:
 				connection_attempt_counter += 1
 				logger.info("Connecting to %s on %s (Attempt: %s)", self.server_identifier, self.server_uri, connection_attempt_counter)
-
-				try:
-					connection = await websockets.connect(self.server_uri, **kwargs)
-				except OSError as exception:
-					raise NetworkException from exception
+				connection = await websockets.connect(self.server_uri, **kwargs)
 
 				try:
 					connection_attempt_counter = 0
@@ -69,7 +59,7 @@ class WebSocketClient:
 						await connection.close()
 						logger.info("Closed connection to %s", self.server_identifier)
 
-			except NetworkException:
+			except ConnectionError:
 				logger.error("Failed to connect to %s", self.server_identifier, exc_info = True)
 			except websockets.exceptions.InvalidStatusCode:
 				logger.error("Failed to connect to %s", self.server_identifier, exc_info = True)
