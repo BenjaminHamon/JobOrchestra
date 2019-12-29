@@ -3,6 +3,7 @@ import logging
 
 import websockets
 
+from bhamon_orchestra_model.network.websocket import WebSocketConnection
 from bhamon_orchestra_master.worker import Worker, WorkerError
 from bhamon_orchestra_master.worker_connection import WorkerConnection
 
@@ -71,7 +72,7 @@ class Supervisor:
 			return
 
 		try:
-			worker_connection = WorkerConnection(connection)
+			worker_connection = WorkerConnection(WebSocketConnection(connection))
 			await self._process_connection_internal(worker_connection)
 		except WorkerError as exception:
 			logger.error("Worker error: %s", exception)

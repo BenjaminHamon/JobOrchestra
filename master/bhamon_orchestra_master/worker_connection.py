@@ -23,7 +23,7 @@ class WorkerConnection:
 		request = { "command": command, "parameters": parameters }
 		logger.debug("(%s) > %s", worker_identifier, request)
 		await self.connection.send(json.dumps(request))
-		response = json.loads(await self.connection.recv())
+		response = json.loads(await self.connection.receive())
 		logger.debug("(%s) < %s", worker_identifier, response)
 		if "error" in response:
 			raise RuntimeError("Worker error: " + response["error"])
