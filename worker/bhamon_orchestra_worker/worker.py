@@ -68,12 +68,8 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	async def _run_worker(self):
 		while not self._should_shutdown:
-			if self._messenger is not None:
-				for executor in self._active_executors:
-					try:
-						executor.send_updates(self._messenger)
-					except Exception: # pylint: disable = broad-except
-						logger.warning("%s %s failed to send updates", executor.job_identifier, executor.run_identifier, exc_info = True)
+			for executor in self._active_executors:
+				executor.update(self._messenger)
 
 			await asyncio.sleep(1)
 
@@ -109,6 +105,9 @@ class Worker: # pylint: disable = too-few-public-methods
 			messenger_instance.dispose()
 			self._messenger = None
 
+			for executor in self._active_executors:
+				executor.synchronization = "paused"
+
 
 	async def _handle_request(self, request):
 		return await self._execute_command(request["command"], request.get("parameters", {}))
@@ -139,6 +138,8 @@ class Worker: # pylint: disable = too-few-public-methods
 			return self._retrieve_request(**parameters)
 		if command == "log":
 			return self._retrieve_log(**parameters)
+		if command == "resynchronize":
+			return self._resynchronize(**parameters)
 		if command == "shutdown":
 			return self._request_shutdown()
 		raise ValueError("Unknown command '%s'" % command)
@@ -225,3 +226,7 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	def _retrieve_log(self, job_identifier, run_identifier, step_index, step_name): # pylint: disable = no-self-use
 		return worker_storage.load_log(job_identifier, run_identifier, step_index, step_name)
+
+
+	def _resynchronize(self, job_identifier, run_identifier): # pylint: disable = unused-argument
+		self._find_executor(run_identifier).synchronization = "running"

@@ -22,6 +22,8 @@ class ExecutorWatcher:
 		self.run_identifier = run_identifier
 		self.process = None
 		self.futures = []
+		self.status = "unknown"
+		self.synchronization = "unknown"
 		self.status_last_timestamp = None
 		self.results_last_timestamp = None
 
@@ -29,6 +31,7 @@ class ExecutorWatcher:
 	async def start(self, command):
 		self.process = await asyncio.create_subprocess_exec(*command, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
 		self.futures.append(asyncio.ensure_future(self.watch_stdout()))
+		self.synchronization = "running"
 
 
 	async def terminate(self, timeout_seconds):
@@ -79,14 +82,27 @@ class ExecutorWatcher:
 			await asyncio.wait(self.futures, timeout = 1)
 
 
-	def send_updates(self, messenger):
+	def update(self, messenger):
 		self._check_termination()
 
+		if self.synchronization == "running":
+			try:
+				self._send_updates(messenger)
+			except Exception: # pylint: disable = broad-except
+				logger.warning("%s %s failed to send updates", self.job_identifier, self.run_identifier, exc_info = True)
+
+			if self.status in [ "succeeded", "failed", "aborted", "exception" ]:
+				self.synchronization = "done"
+				messenger.send_update({ "run": self.run_identifier, "event": "synchronization_completed" })
+
+
+	def _send_updates(self, messenger):
 		status_timestamp = worker_storage.get_status_timestamp(self.job_identifier, self.run_identifier)
 		if status_timestamp != self.status_last_timestamp:
 			status = worker_storage.load_status(self.job_identifier, self.run_identifier)
 			if status["status"] != "unknown":
 				messenger.send_update({ "run": self.run_identifier, "status": status })
+			self.status = status["status"]
 			self.status_last_timestamp = status_timestamp
 
 		results_timestamp = worker_storage.get_results_timestamp(self.job_identifier, self.run_identifier)

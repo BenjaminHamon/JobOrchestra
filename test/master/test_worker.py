@@ -118,6 +118,8 @@ async def test_process_success():
 	assert local_executor["local_status"] == "verifying"
 	assert run["status"] == "succeeded"
 
+	await worker_local_instance.handle_update({ "run": run["identifier"], "event": "synchronization_completed" })
+
 	# verifying => finishing
 	await worker_local_instance._process_executor(local_executor)
 
@@ -194,6 +196,8 @@ async def test_process_abort():
 
 	assert local_executor["local_status"] == "verifying"
 	assert run["status"] == "aborted"
+
+	await worker_local_instance.handle_update({ "run": run["identifier"], "event": "synchronization_completed" })
 
 	# verifying => finishing
 	await worker_local_instance._process_executor(local_executor)
@@ -286,6 +290,8 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert local_executor["local_status"] == "verifying"
 	assert run["status"] == "succeeded"
 
+	await worker_local_instance.handle_update({ "run": run["identifier"], "event": "synchronization_completed" })
+
 	# verifying => finishing
 	await worker_local_instance._process_executor(local_executor)
 
@@ -302,7 +308,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 
 
 @pytest.mark.asyncio
-async def test_process_recovery_after_execution():
+async def test_process_recovery_after_execution(): # pylint: disable = too-many-statements
 	""" Test running a run which gets recovered after a disconnection and after it completed """
 
 	database_client_instance = MemoryDatabaseClient()
@@ -369,6 +375,8 @@ async def test_process_recovery_after_execution():
 
 	assert local_executor["local_status"] == "verifying"
 	assert run["status"] == "succeeded"
+
+	await worker_local_instance.handle_update({ "run": run["identifier"], "event": "synchronization_completed" })
 
 	# verifying => finishing
 	await worker_local_instance._process_executor(local_executor)

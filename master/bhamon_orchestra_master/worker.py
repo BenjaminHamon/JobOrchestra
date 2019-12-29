@@ -27,7 +27,7 @@ class Worker:
 
 	def assign_run(self, job, run):
 		self._run_provider.update_status(run, worker = self.identifier)
-		executor = { "job": job, "run": run, "local_status": "pending", "should_abort": False }
+		executor = { "job": job, "run": run, "local_status": "pending", "synchronization": "unknown", "should_abort": False }
 		self.executors.append(executor)
 
 
@@ -45,6 +45,8 @@ class Worker:
 	async def run(self):
 		try:
 			self.executors += await self._recover_executors()
+			for executor in self.executors:
+				await self._resynchronize(executor["run"])
 		except websockets.exceptions.ConnectionClosed:
 			raise
 		except Exception: # pylint: disable = broad-except
@@ -101,8 +103,9 @@ class Worker:
 				executor["local_status"] = "verifying"
 
 		elif executor["local_status"] == "verifying":
-			await self._retrieve_logs(executor["run"])
-			executor["local_status"] = "finishing"
+			if executor["synchronization"] == "done":
+				await self._retrieve_logs(executor["run"])
+				executor["local_status"] = "finishing"
 
 		elif executor["local_status"] == "finishing":
 			await self._finish_execution(executor["run"])
@@ -113,7 +116,7 @@ class Worker:
 		logger.info("(%s) Recovering run %s %s", self.identifier, job_identifier, run_identifier)
 		run_request = await self._retrieve_request(job_identifier, run_identifier)
 		run = self._run_provider.get(run_identifier)
-		return { "job": run_request["job"], "run": run, "local_status": "running", "should_abort": False }
+		return { "job": run_request["job"], "run": run, "local_status": "running", "synchronization": "unknown", "should_abort": False }
 
 
 	async def _start_execution(self, run, job):
@@ -132,6 +135,11 @@ class Worker:
 		clean_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
 		await self._execute_remote_command("clean", clean_request)
 		logger.info("(%s) Completed run %s %s with status %s", self.identifier, run["job"], run["identifier"], run["status"])
+
+
+	async def _resynchronize(self, run):
+		resynchronization_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
+		await self._execute_remote_command("resynchronize", resynchronization_request)
 
 
 	async def _retrieve_request(self, job_identifier, run_identifier):
@@ -162,8 +170,12 @@ class Worker:
 
 		if "status" in update:
 			self._update_status(executor["run"], update["status"])
+			executor["synchronization"] = "running"
 		if "results" in update:
 			self._update_results(executor["run"], update["results"])
+			executor["synchronization"] = "running"
+		if "event" in update:
+			self._handle_event(executor, update["event"])
 
 
 	def _find_executor(self, run_identifier):
@@ -181,3 +193,8 @@ class Worker:
 
 	def _update_results(self, run, results):
 		self._run_provider.set_results(run, results)
+
+
+	def _handle_event(self, executor, event): # pylint: disable = no-self-use
+		if event == "synchronization_completed":
+			executor["synchronization"] = "done"
