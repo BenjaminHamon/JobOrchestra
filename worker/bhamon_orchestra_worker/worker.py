@@ -106,7 +106,7 @@ class Worker: # pylint: disable = too-few-public-methods
 			self._messenger = None
 
 			for executor in self._active_executors:
-				executor.synchronization = "paused"
+				executor.pause_synchronization()
 
 
 	async def _handle_request(self, request):
@@ -136,8 +136,6 @@ class Worker: # pylint: disable = too-few-public-methods
 			return self._abort(**parameters)
 		if command == "request":
 			return self._retrieve_request(**parameters)
-		if command == "log":
-			return self._retrieve_log(**parameters)
 		if command == "resynchronize":
 			return self._resynchronize(**parameters)
 		if command == "shutdown":
@@ -224,9 +222,5 @@ class Worker: # pylint: disable = too-few-public-methods
 		return worker_storage.load_request(job_identifier, run_identifier)
 
 
-	def _retrieve_log(self, job_identifier, run_identifier, step_index, step_name): # pylint: disable = no-self-use
-		return worker_storage.load_log(job_identifier, run_identifier, step_index, step_name)
-
-
 	def _resynchronize(self, job_identifier, run_identifier): # pylint: disable = unused-argument
-		self._find_executor(run_identifier).synchronization = "running"
+		self._find_executor(run_identifier).reset_synchronization()

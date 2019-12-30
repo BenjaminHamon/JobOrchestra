@@ -5,7 +5,6 @@
 import pytest
 
 from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
-from bhamon_orchestra_model.database.memory_file_storage import MemoryFileStorage
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_master.worker import Worker
 
@@ -68,8 +67,7 @@ async def test_process_success():
 	""" Test running a run which succeeds """
 
 	database_client_instance = MemoryDatabaseClient()
-	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
+	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -79,7 +77,6 @@ async def test_process_success():
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
-	assert len(file_storage_instance.storage) == 0
 
 	worker_local_instance.assign_run(job, run)
 	local_executor = worker_local_instance.executors[0]
@@ -87,7 +84,6 @@ async def test_process_success():
 	assert local_executor["local_status"] == "pending"
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	# pending => running (_start_execution)
 	await worker_local_instance._process_executor(local_executor)
@@ -132,7 +128,6 @@ async def test_process_success():
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "succeeded"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == len(remote_executor["status"]["steps"])
 
 
 @pytest.mark.asyncio
@@ -140,8 +135,7 @@ async def test_process_abort():
 	""" Test running a run which gets aborted """
 
 	database_client_instance = MemoryDatabaseClient()
-	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
+	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -151,7 +145,6 @@ async def test_process_abort():
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
-	assert len(file_storage_instance.storage) == 0
 
 	worker_local_instance.assign_run(job, run)
 	local_executor = worker_local_instance.executors[0]
@@ -159,7 +152,6 @@ async def test_process_abort():
 	assert local_executor["local_status"] == "pending"
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	# pending => running (_start_execution)
 	await worker_local_instance._process_executor(local_executor)
@@ -211,7 +203,6 @@ async def test_process_abort():
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "aborted"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 
 @pytest.mark.asyncio
@@ -219,8 +210,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	""" Test running a run which gets recovered after a disconnection and while it is running """
 
 	database_client_instance = MemoryDatabaseClient()
-	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
+	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -253,7 +243,6 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	# New worker to simulate disconnection
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -268,7 +257,6 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
 
@@ -304,16 +292,14 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "succeeded"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == len(remote_executor["status"]["steps"])
 
 
 @pytest.mark.asyncio
-async def test_process_recovery_after_execution(): # pylint: disable = too-many-statements
+async def test_process_recovery_after_execution():
 	""" Test running a run which gets recovered after a disconnection and after it completed """
 
 	database_client_instance = MemoryDatabaseClient()
-	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
+	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -346,7 +332,6 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	# New worker to simulate disconnection
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -390,4 +375,3 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "succeeded"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == len(remote_executor["status"]["steps"])

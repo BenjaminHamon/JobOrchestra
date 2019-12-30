@@ -43,8 +43,6 @@ class Worker:
 	async def run(self):
 		try:
 			self.executors += await self._recover_executors()
-			for executor in self.executors:
-				await self._resynchronize(executor["run"])
 		except asyncio.CancelledError:
 			raise
 		except Exception: # pylint: disable = broad-except
@@ -96,13 +94,16 @@ class Worker:
 				await self._abort_execution(executor["run"])
 				executor["local_status"] = "aborting"
 
+			if executor["synchronization"] == "unknown":
+				await self._resynchronize(executor["run"])
+				executor["synchronization"] = "running"
+
 		elif executor["local_status"] == "aborting":
 			if executor["run"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
 				executor["local_status"] = "verifying"
 
 		elif executor["local_status"] == "verifying":
 			if executor["synchronization"] == "done":
-				await self._retrieve_logs(executor["run"])
 				executor["local_status"] = "finishing"
 
 		elif executor["local_status"] == "finishing":
@@ -145,21 +146,6 @@ class Worker:
 		return await self._execute_remote_command("request", parameters)
 
 
-	async def _retrieve_logs(self, run):
-		for run_step in run["steps"]:
-			is_completed = run_step["status"] not in [ "pending", "running" ]
-			has_log = self._run_provider.has_step_log(run["identifier"], run_step["index"])
-			if is_completed and not has_log:
-				log_request = {
-					"job_identifier": run["job"],
-					"run_identifier": run["identifier"],
-					"step_index": run_step["index"],
-					"step_name": run_step["name"],
-				}
-				log_text = await self._execute_remote_command("log", log_request)
-				self._run_provider.set_step_log(run["identifier"], run_step["index"], log_text)
-
-
 	async def handle_update(self, update):
 		executor = self._find_executor(update["run"])
 
@@ -168,10 +154,10 @@ class Worker:
 
 		if "status" in update:
 			self._update_status(executor["run"], update["status"])
-			executor["synchronization"] = "running"
 		if "results" in update:
 			self._update_results(executor["run"], update["results"])
-			executor["synchronization"] = "running"
+		if "log_text" in update:
+			self._update_log_file(executor["run"], update["step_index"], update["log_text"])
 		if "event" in update:
 			self._handle_event(executor, update["event"])
 
@@ -191,6 +177,10 @@ class Worker:
 
 	def _update_results(self, run, results):
 		self._run_provider.set_results(run, results)
+
+
+	def _update_log_file(self, run, step_index, log_text):
+		self._run_provider.set_step_log(run["identifier"], step_index, log_text)
 
 
 	def _handle_event(self, executor, event): # pylint: disable = no-self-use
