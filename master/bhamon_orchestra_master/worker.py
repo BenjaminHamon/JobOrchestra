@@ -1,8 +1,5 @@
 import asyncio
 import logging
-import time
-
-import websockets
 
 
 logger = logging.getLogger("Worker")
@@ -15,20 +12,20 @@ class WorkerError(Exception):
 class Worker:
 
 
-	def __init__(self, identifier, connection, run_provider):
+	def __init__(self, identifier, messenger, run_provider):
 		self.identifier = identifier
-		self._connection = connection
+		self._messenger = messenger
 		self._run_provider = run_provider
+
 		self.should_disconnect = False
 		self.should_shutdown = False
 		self.executors = []
-		self.update_interval_seconds = 10
 		self._active_asyncio_sleep = None
 
 
 	def assign_run(self, job, run):
 		self._run_provider.update_status(run, worker = self.identifier)
-		executor = { "job": job, "run": run, "local_status": "pending", "should_abort": False }
+		executor = { "job": job, "run": run, "local_status": "pending", "synchronization": "unknown", "should_abort": False }
 		self.executors.append(executor)
 
 
@@ -46,20 +43,17 @@ class Worker:
 	async def run(self):
 		try:
 			self.executors += await self._recover_executors()
-		except websockets.exceptions.ConnectionClosed:
+		except asyncio.CancelledError:
 			raise
 		except Exception: # pylint: disable = broad-except
 			logger.error("(%s) Unhandled exception while recovering runs", self.identifier, exc_info = True)
 
 		while not self.should_disconnect and (not self.should_shutdown or len(self.executors) > 0):
-			update_start = time.time()
-			await self._connection.ping()
-
 			all_executors = list(self.executors)
 			for executor in all_executors:
 				try:
 					await self._process_executor(executor)
-				except websockets.exceptions.ConnectionClosed:
+				except asyncio.CancelledError:
 					raise
 				except Exception: # pylint: disable = broad-except
 					logger.error("(%s) Unhandled exception while executing run %s %s", self.identifier, executor["run"]["job"], executor["run"]["identifier"], exc_info = True)
@@ -68,22 +62,19 @@ class Worker:
 				if executor["local_status"] in [ "done", "exception" ]:
 					self.executors.remove(executor)
 
-			update_end = time.time()
-
-			try:
-				self._active_asyncio_sleep = asyncio.ensure_future(asyncio.sleep(self.update_interval_seconds - (update_end - update_start)))
-				await self._active_asyncio_sleep
-				self._active_asyncio_sleep = None
-			except asyncio.CancelledError:
-				break
+			await asyncio.sleep(0.1)
 
 		if self.should_shutdown and len(self.executors) == 0:
-			await self._connection.execute_command(self.identifier, "shutdown")
+			await self._execute_remote_command("shutdown")
+
+
+	async def _execute_remote_command(self, command, parameters = None):
+		return await self._messenger.send_request({ "command": command, "parameters": parameters if parameters is not None else {} })
 
 
 	async def _recover_executors(self):
 		recovered_executors = []
-		runs_to_recover = await self._connection.execute_command(self.identifier, "list")
+		runs_to_recover = await self._execute_remote_command("list")
 		for run_information in runs_to_recover:
 			executor = await self._recover_execution(**run_information)
 			recovered_executors.append(executor)
@@ -96,82 +87,102 @@ class Worker:
 			executor["local_status"] = "running"
 
 		elif executor["local_status"] == "running":
-			await self._update_execution(executor["run"])
-
 			if executor["run"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
-				await self._finish_execution(executor["run"])
-				executor["local_status"] = "done"
+				executor["local_status"] = "verifying"
 
 			elif executor["should_abort"]:
 				await self._abort_execution(executor["run"])
 				executor["local_status"] = "aborting"
 
-		elif executor["local_status"] == "aborting":
-			await self._update_execution(executor["run"])
+			if executor["synchronization"] == "unknown":
+				await self._resynchronize(executor["run"])
+				executor["synchronization"] = "running"
 
+		elif executor["local_status"] == "aborting":
 			if executor["run"]["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
-				await self._finish_execution(executor["run"])
-				executor["local_status"] = "done"
+				executor["local_status"] = "verifying"
+
+		elif executor["local_status"] == "verifying":
+			if executor["synchronization"] == "done":
+				executor["local_status"] = "finishing"
+
+		elif executor["local_status"] == "finishing":
+			await self._finish_execution(executor["run"])
+			executor["local_status"] = "done"
 
 
 	async def _recover_execution(self, job_identifier, run_identifier):
 		logger.info("(%s) Recovering run %s %s", self.identifier, job_identifier, run_identifier)
 		run_request = await self._retrieve_request(job_identifier, run_identifier)
 		run = self._run_provider.get(run_identifier)
-		return { "job": run_request["job"], "run": run, "local_status": "running", "should_abort": False }
+		return { "job": run_request["job"], "run": run, "local_status": "running", "synchronization": "unknown", "should_abort": False }
 
 
 	async def _start_execution(self, run, job):
 		logger.info("(%s) Starting run %s %s", self.identifier, run["job"], run["identifier"])
 		execute_request = { "job_identifier": run["job"], "run_identifier": run["identifier"], "job": job, "parameters": run["parameters"] }
-		await self._connection.execute_command(self.identifier, "execute", execute_request)
+		await self._execute_remote_command("execute", execute_request)
 
 
 	async def _abort_execution(self, run):
 		logger.info("(%s) Aborting run %s %s", self.identifier, run["job"], run["identifier"])
 		abort_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
-		await self._connection.execute_command(self.identifier, "abort", abort_request)
-
-
-	async def _update_execution(self, run):
-		status_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
-		status_response = await self._connection.execute_command(self.identifier, "status", status_request)
-		if status_response["status"] != "unknown":
-			properties_to_update = [ "status", "start_date", "completion_date" ]
-			self._run_provider.update_status(run, ** { key: value for key, value in status_response.items() if key in properties_to_update })
-			if "steps" in status_response:
-				self._run_provider.update_steps(run, status_response["steps"])
-				await self._retrieve_logs(run)
-				await self._retrieve_results(run)
+		await self._execute_remote_command("abort", abort_request)
 
 
 	async def _finish_execution(self, run):
 		clean_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
-		await self._connection.execute_command(self.identifier, "clean", clean_request)
+		await self._execute_remote_command("clean", clean_request)
 		logger.info("(%s) Completed run %s %s with status %s", self.identifier, run["job"], run["identifier"], run["status"])
+
+
+	async def _resynchronize(self, run):
+		resynchronization_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
+		await self._execute_remote_command("resynchronize", resynchronization_request)
 
 
 	async def _retrieve_request(self, job_identifier, run_identifier):
 		parameters = { "job_identifier": job_identifier, "run_identifier": run_identifier }
-		return await self._connection.execute_command(self.identifier, "request", parameters)
+		return await self._execute_remote_command("request", parameters)
 
 
-	async def _retrieve_logs(self, run):
-		for run_step in run["steps"]:
-			is_completed = run_step["status"] not in [ "pending", "running" ]
-			has_log = self._run_provider.has_step_log(run["identifier"], run_step["index"])
-			if is_completed and not has_log:
-				log_request = {
-					"job_identifier": run["job"],
-					"run_identifier": run["identifier"],
-					"step_index": run_step["index"],
-					"step_name": run_step["name"],
-				}
-				log_text = await self._connection.execute_command(self.identifier, "log", log_request)
-				self._run_provider.set_step_log(run["identifier"], run_step["index"], log_text)
+	async def handle_update(self, update):
+		executor = self._find_executor(update["run"])
+
+		if executor["local_status"] == "finishing":
+			raise RuntimeError("Update received after completion and verification")
+
+		if "status" in update:
+			self._update_status(executor["run"], update["status"])
+		if "results" in update:
+			self._update_results(executor["run"], update["results"])
+		if "log_text" in update:
+			self._update_log_file(executor["run"], update["step_index"], update["log_text"])
+		if "event" in update:
+			self._handle_event(executor, update["event"])
 
 
-	async def _retrieve_results(self, run):
-		results_request = { "job_identifier": run["job"], "run_identifier": run["identifier"], }
-		results = await self._connection.execute_command(self.identifier, "results", results_request)
+	def _find_executor(self, run_identifier):
+		for executor in self.executors:
+			if executor["run"]["identifier"] == run_identifier:
+				return executor
+		raise KeyError("Executor not found for %s" % run_identifier)
+
+
+	def _update_status(self, run, status):
+		properties_to_update = [ "status", "start_date", "completion_date" ]
+		self._run_provider.update_status(run, ** { key: value for key, value in status.items() if key in properties_to_update })
+		self._run_provider.update_steps(run, status.get("steps", []))
+
+
+	def _update_results(self, run, results):
 		self._run_provider.set_results(run, results)
+
+
+	def _update_log_file(self, run, step_index, log_text):
+		self._run_provider.set_step_log(run["identifier"], step_index, log_text)
+
+
+	def _handle_event(self, executor, event): # pylint: disable = no-self-use
+		if event == "synchronization_completed":
+			executor["synchronization"] = "done"

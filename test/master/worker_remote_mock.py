@@ -1,6 +1,19 @@
 # pylint: disable = no-self-use, unused-argument
 
 
+class MessengerMock: # pylint: disable = too-few-public-methods
+	""" Mock a messenger for a WorkerRemoteMock """
+
+
+	def __init__(self, remote_handler):
+		self.remote_handler = remote_handler
+
+
+	async def send_request(self, data):
+		return self.remote_handler(data)
+
+
+
 class WorkerRemoteMock:
 	""" Mock a remote worker process to execute commands """
 
@@ -8,6 +21,10 @@ class WorkerRemoteMock:
 	def __init__(self, worker_identifier):
 		self.worker_identifier = worker_identifier
 		self.executors = []
+
+
+	def handle_request(self, request):
+		return self.execute_command(request["command"], request["parameters"])
 
 
 	def execute_command(self, command, parameters): # pylint: disable = too-many-return-statements
@@ -19,14 +36,10 @@ class WorkerRemoteMock:
 			return self._clean(**parameters)
 		if command == "abort":
 			return self._abort(**parameters)
-		if command == "status":
-			return self._retrieve_status(**parameters)
 		if command == "request":
 			return self._retrieve_request(**parameters)
-		if command == "log":
-			return self._retrieve_log(**parameters)
-		if command == "results":
-			return self._retrieve_results(**parameters)
+		if command == "resynchronize":
+			return self._resynchronize(**parameters)
 		if command == "shutdown":
 			return self._request_shutdown()
 		raise ValueError("Unknown command '%s'" % command)
@@ -61,7 +74,7 @@ class WorkerRemoteMock:
 			"status": {
 				"job_identifier": job_identifier,
 				"run_identifier": run_identifier,
-				"status": "running",
+				"status": "pending",
 				"steps": [
 					{ "index": 0, "name": "first", "status": "pending" },
 					{ "index": 1, "name": "second", "status": "pending" },
@@ -85,22 +98,13 @@ class WorkerRemoteMock:
 		executor["status"]["status"] = "aborted"
 
 
-	def _retrieve_status(self, job_identifier, run_identifier):
-		executor = self.find_executor(run_identifier)
-		return executor["status"]
-
-
 	def _retrieve_request(self, job_identifier, run_identifier):
 		executor = self.find_executor(run_identifier)
 		return executor["request"]
 
 
-	def _retrieve_log(self, job_identifier, run_identifier, step_index, step_name):
-		return ""
-
-
-	def _retrieve_results(self, job_identifier, run_identifier):
-		return {}
+	def _resynchronize(self, job_identifier, run_identifier):
+		pass
 
 
 	def _request_shutdown(self):

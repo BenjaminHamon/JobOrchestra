@@ -5,13 +5,11 @@
 import pytest
 
 from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
-from bhamon_orchestra_model.database.memory_file_storage import MemoryFileStorage
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_master.worker import Worker
 
 from .run_provider_fake import RunProviderFake
-from .worker_connection_mock import WorkerConnectionMock
-from .worker_remote_mock import WorkerRemoteMock
+from .worker_remote_mock import MessengerMock, WorkerRemoteMock
 
 
 @pytest.mark.asyncio
@@ -20,8 +18,8 @@ async def test_start_execution_success():
 
 	run_provider_instance = RunProviderFake()
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = { "identifier": "run_test", "job": job["identifier"], "status": "pending", "parameters": {} }
@@ -34,8 +32,8 @@ async def test_abort_execution_success():
 
 	run_provider_instance = RunProviderFake()
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = { "identifier": "run_test", "job": job["identifier"], "status": "running", "steps": [] }
@@ -47,31 +45,13 @@ async def test_abort_execution_success():
 
 
 @pytest.mark.asyncio
-async def test_update_execution_success():
-	""" Test _update_execution in normal conditions """
-
-	run_provider_instance = RunProviderFake()
-	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
-
-	job = { "identifier": "job_test" }
-	run = { "identifier": "run_test", "job": job["identifier"], "status": "running", "steps": [] }
-	executor = { "job_identifier": job["identifier"], "run_identifier": run["identifier"] }
-	executor["status"] = { "status": "running", "steps": [] }
-
-	worker_remote_instance.executors.append(executor)
-	await worker_local_instance._update_execution(run)
-
-
-@pytest.mark.asyncio
 async def test_finish_execution_success():
 	""" Test _finish_execution in normal conditions """
 
 	run_provider_instance = RunProviderFake()
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = { "identifier": "run_test", "job": job["identifier"], "status": "succeeded", "steps": [] }
@@ -87,18 +67,16 @@ async def test_process_success():
 	""" Test running a run which succeeds """
 
 	database_client_instance = MemoryDatabaseClient()
-	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
+	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = run_provider_instance.create(job["identifier"], {})
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
-	assert len(file_storage_instance.storage) == 0
 
 	worker_local_instance.assign_run(job, run)
 	local_executor = worker_local_instance.executors[0]
@@ -106,41 +84,50 @@ async def test_process_success():
 	assert local_executor["local_status"] == "pending"
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	# pending => running (_start_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "pending"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	# running => running (_update_execution)
-	await worker_local_instance._process_executor(local_executor)
+	remote_executor = worker_remote_instance.find_executor(run["identifier"])
+	remote_executor["status"]["status"] = "running"
+
+	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	remote_executor = worker_remote_instance.find_executor(run["identifier"])
 	remote_executor["status"]["status"] = "succeeded"
 	for step in remote_executor["status"]["steps"]:
 		step["status"] = "succeeded"
 
-	assert local_executor["local_status"] == "running"
-	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
+	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
 
-	# running => done (_update_execution + _finish_execution)
+	assert local_executor["local_status"] == "running"
+	assert run["status"] == "succeeded"
+
+	# running => verifying
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "verifying"
+	assert run["status"] == "succeeded"
+
+	await worker_local_instance.handle_update({ "run": run["identifier"], "event": "synchronization_completed" })
+
+	# verifying => finishing
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "finishing"
+	assert run["status"] == "succeeded"
+
+	# finishing => done (_finish_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "succeeded"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == len(remote_executor["status"]["steps"])
 
 
 @pytest.mark.asyncio
@@ -148,18 +135,16 @@ async def test_process_abort():
 	""" Test running a run which gets aborted """
 
 	database_client_instance = MemoryDatabaseClient()
-	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
+	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = run_provider_instance.create(job["identifier"], {})
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
-	assert len(file_storage_instance.storage) == 0
 
 	worker_local_instance.assign_run(job, run)
 	local_executor = worker_local_instance.executors[0]
@@ -167,57 +152,68 @@ async def test_process_abort():
 	assert local_executor["local_status"] == "pending"
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	# pending => running (_start_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "pending"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	# running => running (_update_execution)
-	await worker_local_instance._process_executor(local_executor)
+	remote_executor = worker_remote_instance.find_executor(run["identifier"])
+	remote_executor["status"]["status"] = "running"
+
+	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 	worker_local_instance.abort_run(run["identifier"])
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	# running => aborting (_update_execution + _abort_execution)
+	# running => aborting (_abort_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "aborting"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	# aborting => done (_update_execution + _finish_execution)
+	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
+
+	assert local_executor["local_status"] == "aborting"
+	assert run["status"] == "aborted"
+
+	# aborting => verifying
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "verifying"
+	assert run["status"] == "aborted"
+
+	await worker_local_instance.handle_update({ "run": run["identifier"], "event": "synchronization_completed" })
+
+	# verifying => finishing
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "finishing"
+	assert run["status"] == "aborted"
+
+	# finishing => done (_finish_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "aborted"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
 
 @pytest.mark.asyncio
 async def test_process_recovery_during_execution(): # pylint: disable = too-many-statements
-	""" Test running a run which gets recovered after a local exception and while it is running """
+	""" Test running a run which gets recovered after a disconnection and while it is running """
 
 	database_client_instance = MemoryDatabaseClient()
 	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = run_provider_instance.create(job["identifier"], {})
@@ -239,19 +235,17 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 1
 
-	# running => exception (_update_execution)
-	try:
-		await worker_local_instance._process_executor(local_executor)
-	except AttributeError:
-		local_executor["local_status"] = "exception"
+	remote_executor = worker_remote_instance.find_executor(run["identifier"])
+	remote_executor["status"]["status"] = "running"
 
-	assert local_executor["local_status"] == "exception"
+	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
+
+	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
 
-	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	# New worker to simulate disconnection
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 0
@@ -263,44 +257,52 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	# running => running (_update_execution)
-	await worker_local_instance._process_executor(local_executor)
+	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	remote_executor = worker_remote_instance.find_executor(run["identifier"])
 	remote_executor["status"]["status"] = "succeeded"
 	for step in remote_executor["status"]["steps"]:
 		step["status"] = "succeeded"
 
-	assert local_executor["local_status"] == "running"
-	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
+	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
 
-	# running => done (_update_execution + _finish_execution)
+	assert local_executor["local_status"] == "running"
+	assert run["status"] == "succeeded"
+
+	# running => verifying
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "verifying"
+	assert run["status"] == "succeeded"
+
+	await worker_local_instance.handle_update({ "run": run["identifier"], "event": "synchronization_completed" })
+
+	# verifying => finishing
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "finishing"
+	assert run["status"] == "succeeded"
+
+	# finishing => done (_finish_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "succeeded"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == len(remote_executor["status"]["steps"])
 
 
 @pytest.mark.asyncio
 async def test_process_recovery_after_execution():
-	""" Test running a run which gets recovered after a local exception and after it completed """
+	""" Test running a run which gets recovered after a disconnection and after it completed """
 
 	database_client_instance = MemoryDatabaseClient()
 	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_connection_instance = WorkerConnectionMock(worker_remote_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
 	run = run_provider_instance.create(job["identifier"], {})
@@ -322,31 +324,24 @@ async def test_process_recovery_after_execution():
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 1
 
-	# running => exception (_update_execution)
-	try:
-		await worker_local_instance._process_executor(local_executor)
-	except AttributeError:
-		local_executor["local_status"] = "exception"
-
-	assert local_executor["local_status"] == "exception"
-	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-
 	remote_executor = worker_remote_instance.find_executor(run["identifier"])
-	remote_executor["status"]["status"] = "succeeded"
-	for step in remote_executor["status"]["steps"]:
-		step["status"] = "succeeded"
+	remote_executor["status"]["status"] = "running"
 
-	assert local_executor["local_status"] == "exception"
+	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
+
+	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 1
 
-	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
-	worker_local_instance = Worker("worker_test", worker_connection_instance, run_provider_instance)
+	# New worker to simulate disconnection
+	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 0
+
+	remote_executor["status"]["status"] = "succeeded"
+	for step in remote_executor["status"]["steps"]:
+		step["status"] = "succeeded"
 
 	# none => running (_recover_execution)
 	worker_local_instance.executors = await worker_local_instance._recover_executors()
@@ -354,13 +349,29 @@ async def test_process_recovery_after_execution():
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
-	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == 0
 
-	# running => done (_update_execution + _finish_execution)
+	await worker_local_instance.handle_update({ "run": run["identifier"], "status": remote_executor["status"] })
+
+	assert local_executor["local_status"] == "running"
+	assert run["status"] == "succeeded"
+
+	# running => verifying
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "verifying"
+	assert run["status"] == "succeeded"
+
+	await worker_local_instance.handle_update({ "run": run["identifier"], "event": "synchronization_completed" })
+
+	# verifying => finishing
+	await worker_local_instance._process_executor(local_executor)
+
+	assert local_executor["local_status"] == "finishing"
+	assert run["status"] == "succeeded"
+
+	# finishing => done (_finish_execution)
 	await worker_local_instance._process_executor(local_executor)
 
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "succeeded"
 	assert len(worker_local_instance.executors) == 1
-	assert len(file_storage_instance.storage) == len(remote_executor["status"]["steps"])

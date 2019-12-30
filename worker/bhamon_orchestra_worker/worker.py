@@ -1,23 +1,18 @@
 import asyncio
 import base64
-import json
 import logging
-import os
 import platform
 import signal
-import subprocess
 import sys
-import traceback
 
+from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.network.websocket import WebSocketClient
+from bhamon_orchestra_worker.executor_watcher import ExecutorWatcher
 import bhamon_orchestra_worker.worker_logging as worker_logging
 import bhamon_orchestra_worker.worker_storage as worker_storage
 
 
 logger = logging.getLogger("Worker")
-
-shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT # pylint: disable = no-member
-subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 
 class Worker: # pylint: disable = too-few-public-methods
@@ -31,9 +26,10 @@ class Worker: # pylint: disable = too-few-public-methods
 		self._properties = properties
 		self._executor_script = executor_script
 
-		self._client_future = None
 		self._active_executors = []
 		self._asyncio_loop = None
+		self._messenger = None
+		self._messenger_future = None
 		self._should_shutdown = False
 
 		self.connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
@@ -56,7 +52,7 @@ class Worker: # pylint: disable = too-few-public-methods
 		self._asyncio_loop = asyncio.get_event_loop()
 
 		self._recover()
-		main_future = asyncio.gather(self._run_client(), self._check_signals())
+		main_future = asyncio.gather(self._run_worker(), self._run_messenger(), self._check_signals())
 		self._asyncio_loop.run_until_complete(main_future)
 		self._terminate()
 		self._asyncio_loop.close()
@@ -70,57 +66,61 @@ class Worker: # pylint: disable = too-few-public-methods
 			await asyncio.sleep(1)
 
 
-	async def _run_client(self):
+	async def _run_worker(self):
+		while not self._should_shutdown:
+			for executor in self._active_executors:
+				executor.update(self._messenger)
+
+			await asyncio.sleep(1)
+
+		if self._messenger_future is not None:
+			self._messenger_future.cancel()
+
+
+	async def _run_messenger(self):
 		try:
 			websocket_client_instance = WebSocketClient("master", self._master_uri)
 			authentication_data = base64.b64encode(b"%s:%s" % (self._user.encode(), self._secret.encode())).decode()
 			headers = { "Authorization": "Basic" + " " + authentication_data, "X-Orchestra-Worker": self._identifier }
-			self._client_future = asyncio.ensure_future(websocket_client_instance.run_forever(self._process_connection, extra_headers = headers))
-			await self._client_future
+			self._messenger_future = asyncio.ensure_future(websocket_client_instance.run_forever(self._process_connection, extra_headers = headers))
+			await self._messenger_future
 		except asyncio.CancelledError:
 			pass
 		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception", exc_info = True)
 		finally:
-			self._client_future = None
+			self._messenger_future = None
 
 
 	async def _process_connection(self, connection):
-		while not self._should_shutdown:
-			request = json.loads(await connection.receive())
-			logger.debug("< %s", request)
+		messenger_instance = Messenger(connection)
+		messenger_instance.identifier = "%s:%s" % connection.connection.remote_address
+		messenger_instance.request_handler = self._handle_request
 
-			try:
-				result = await self._execute_command(request["command"], request["parameters"])
-				response = { "result": result }
-			except Exception as exception: # pylint: disable=broad-except
-				logger.error("Failed to process request %s", request, exc_info = True)
-				response = { "error": "".join(traceback.format_exception_only(exception.__class__, exception)).strip() }
+		self._messenger = messenger_instance
 
-			logger.debug("> %s", response)
-			await connection.send(json.dumps(response))
+		try:
+			await messenger_instance.run()
+		finally:
+			messenger_instance.dispose()
+			self._messenger = None
+
+			for executor in self._active_executors:
+				executor.pause_synchronization()
+
+
+	async def _handle_request(self, request):
+		return await self._execute_command(request["command"], request.get("parameters", {}))
 
 
 	def _terminate(self):
 		all_futures = []
 		for executor in self._active_executors:
-			all_futures.append(self._terminate_executor(executor, self.termination_timeout_seconds))
+			all_futures.append(executor.terminate(self.termination_timeout_seconds))
 		self._asyncio_loop.run_until_complete(asyncio.gather(*all_futures))
 		for executor in self._active_executors:
-			if "process" in executor and executor["process"].returncode is None:
-				logger.warning("%s %s is still running (Process: %s)", executor["job_identifier"], executor["run_identifier"], executor["process"].pid)
-
-
-	async def _terminate_executor(self, executor, timeout_seconds):
-		if "process" in executor and executor["process"].returncode is None:
-			logger.info("Aborting %s %s", executor["job_identifier"], executor["run_identifier"])
-			os.kill(executor["process"].pid, shutdown_signal)
-
-			try:
-				await asyncio.wait_for(executor["process"].wait(), timeout_seconds)
-			except asyncio.TimeoutError:
-				logger.warning("Forcing termination for %s %s", executor["job_identifier"], executor["run_identifier"])
-				executor["process"].kill()
+			if executor.is_running():
+				logger.warning("%s %s is still running (Process: %s)", executor.job_identifier, executor.run_identifier, executor.process.pid)
 
 
 	async def _execute_command(self, command, parameters): # pylint: disable=too-many-return-statements
@@ -134,14 +134,10 @@ class Worker: # pylint: disable = too-few-public-methods
 			return await self._clean(**parameters)
 		if command == "abort":
 			return self._abort(**parameters)
-		if command == "status":
-			return self._retrieve_status(**parameters)
 		if command == "request":
 			return self._retrieve_request(**parameters)
-		if command == "log":
-			return self._retrieve_log(**parameters)
-		if command == "results":
-			return self._retrieve_results(**parameters)
+		if command == "resynchronize":
+			return self._resynchronize(**parameters)
 		if command == "shutdown":
 			return self._request_shutdown()
 		raise ValueError("Unknown command '%s'" % command)
@@ -156,16 +152,16 @@ class Worker: # pylint: disable = too-few-public-methods
 		for job_identifier, run_identifier in all_runs:
 			logger.info("Recovering %s %s", job_identifier, run_identifier)
 			for executor in self._active_executors:
-				if executor["run_identifier"] == run_identifier:
+				if executor.run_identifier == run_identifier:
 					continue
-			executor = { "job_identifier": job_identifier, "run_identifier": run_identifier }
+			executor = ExecutorWatcher(job_identifier, run_identifier)
 			self._active_executors.append(executor)
 
 
 	def _list_runs(self):
 		all_runs = []
 		for executor in self._active_executors:
-			all_runs.append({ "job_identifier": executor["job_identifier"], "run_identifier": executor["run_identifier"] })
+			all_runs.append({ "job_identifier": executor.job_identifier, "run_identifier": executor.run_identifier })
 		return all_runs
 
 
@@ -182,27 +178,18 @@ class Worker: # pylint: disable = too-few-public-methods
 		worker_storage.create_run(job_identifier, run_identifier)
 		worker_storage.save_request(job_identifier, run_identifier, run_request)
 
+		executor = ExecutorWatcher(job_identifier, run_identifier)
 		executor_command = [ sys.executable, self._executor_script, job_identifier, run_identifier ]
-		executor_process = await asyncio.create_subprocess_exec(*executor_command, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
-		executor_watcher = self._asyncio_loop.create_task(self._watch_executor(executor_process))
-
-		executor = {
-			"job_identifier": job_identifier,
-			"run_identifier": run_identifier,
-			"process": executor_process,
-			"watcher": executor_watcher,
-		}
-
+		await executor.start(executor_command)
 		self._active_executors.append(executor)
 
 
 	async def _clean(self, job_identifier, run_identifier):
 		logger.info("Cleaning %s %s", job_identifier, run_identifier)
 		executor = self._find_executor(run_identifier)
-		if "watcher" in executor:
-			await asyncio.wait_for(executor["watcher"], 1)
-		if "process" in executor and executor["process"].returncode is None:
+		if executor.is_running():
 			raise RuntimeError("Executor is still running for run %s" % run_identifier)
+		await executor.wait_futures()
 		self._active_executors.remove(executor)
 		worker_storage.delete_run(job_identifier, run_identifier)
 
@@ -210,15 +197,13 @@ class Worker: # pylint: disable = too-few-public-methods
 	def _abort(self, job_identifier, run_identifier):
 		logger.info("Aborting %s %s", job_identifier, run_identifier)
 		executor = self._find_executor(run_identifier)
-		if executor["process"].returncode is None:
-			os.kill(executor["process"].pid, shutdown_signal)
-		# The executor should terminate nicely, if it does not it will stays as running and should be investigated
-		# Forcing termination here would leave orphan processes and the status as running
+		if executor.is_running():
+			executor.abort()
 
 
 	def _find_executor(self, run_identifier):
 		for executor in self._active_executors:
-			if executor["run_identifier"] == run_identifier:
+			if executor.run_identifier == run_identifier:
 				return executor
 		raise KeyError("Executor not found for %s" % run_identifier)
 
@@ -231,44 +216,11 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	def _shutdown(self):
 		self._should_shutdown = True
-		if self._client_future:
-			self._client_future.cancel()
-
-
-	def _retrieve_status(self, job_identifier, run_identifier):
-		executor = self._find_executor(run_identifier)
-		is_executor_running = "process" in executor and executor["process"].returncode is None
-		status = worker_storage.load_status(job_identifier, run_identifier)
-		if not is_executor_running and (status["status"] in [ "unknown", "running" ]):
-			logger.error("Run '%s' terminated before completion", run_identifier)
-			status["status"] = "exception"
-			worker_storage.save_status(job_identifier, run_identifier, status)
-		return status
 
 
 	def _retrieve_request(self, job_identifier, run_identifier): # pylint: disable = no-self-use
 		return worker_storage.load_request(job_identifier, run_identifier)
 
 
-	def _retrieve_log(self, job_identifier, run_identifier, step_index, step_name): # pylint: disable = no-self-use
-		return worker_storage.load_log(job_identifier, run_identifier, step_index, step_name)
-
-
-	def _retrieve_results(self, job_identifier, run_identifier): # pylint: disable = no-self-use
-		return worker_storage.load_results(job_identifier, run_identifier)
-
-
-	async def _watch_executor(self, executor_process):
-		raw_logger = logging.getLogger("raw")
-
-		while True:
-			try:
-				line = await asyncio.wait_for(executor_process.stdout.readline(), 1)
-			except asyncio.TimeoutError:
-				continue
-
-			if not line:
-				break
-
-			line = line.decode("utf-8").strip()
-			raw_logger.info(line)
+	def _resynchronize(self, job_identifier, run_identifier): # pylint: disable = unused-argument
+		self._find_executor(run_identifier).reset_synchronization()

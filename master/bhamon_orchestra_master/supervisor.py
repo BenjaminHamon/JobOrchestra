@@ -3,9 +3,9 @@ import logging
 
 import websockets
 
+from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.network.websocket import WebSocketConnection
 from bhamon_orchestra_master.worker import Worker, WorkerError
-from bhamon_orchestra_master.worker_connection import WorkerConnection
 
 
 logger = logging.getLogger("Supervisor")
@@ -23,7 +23,6 @@ class Supervisor:
 
 		self._active_workers = {}
 		self._should_shutdown = False
-		self.update_interval_seconds = 10
 
 
 	async def run_server(self):
@@ -72,29 +71,57 @@ class Supervisor:
 
 		try:
 			logger.info("Connection from worker '%s' (User: '%s', RemoteAddress: '%s')", connection.worker, connection.user, connection.remote_address[0])
-			worker_connection = WorkerConnection(WebSocketConnection(connection))
-			await self._process_connection_internal(connection.user, connection.worker, worker_connection)
+			messenger_instance = Messenger(WebSocketConnection(connection))
+			messenger_instance.identifier = "%s:%s" % connection.remote_address
+			messenger_future = asyncio.ensure_future(messenger_instance.run())
+			worker_future = asyncio.ensure_future(self._process_connection_internal(connection.user, connection.worker, messenger_instance))
+
+			await asyncio.wait([ messenger_future, worker_future ], return_when = asyncio.FIRST_COMPLETED)
+
+			worker_future.cancel()
+			messenger_future.cancel()
+			messenger_instance.dispose()
+
+			try:
+				await worker_future
+			except asyncio.CancelledError:
+				pass
+			except Exception: # pylint: disable = broad-except
+				logger.error("Unhandled exception from worker '%s'", connection.worker, exc_info = True)
+
+			try:
+				await messenger_future
+			except websockets.exceptions.ConnectionClosed as exception:
+				if exception.code not in [ 1000, 1001 ]:
+					logger.error("Lost connection from worker '%s'", connection.worker, exc_info = True)
+			except asyncio.CancelledError:
+				pass
+			except Exception: # pylint: disable = broad-except
+				logger.error("Unhandled exception from messenger", exc_info = True)
+
+			logger.info("Terminating connection with worker '%s'", connection.worker)
+
 		except WorkerError as exception:
 			logger.error("Worker error: %s", exception)
 		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception in connection handler", exc_info = True)
 
 
-	async def _process_connection_internal(self, user, worker_identifier, connection):
+	async def _process_connection_internal(self, user, worker_identifier, messenger_instance):
 		logger.info("Registering worker '%s'", worker_identifier)
-		properties = await connection.execute_command(None, "properties")
+		properties = await messenger_instance.send_request({ "command": "properties" })
 		worker_record = self._register_worker(worker_identifier, user, properties)
-		worker_instance = self._instantiate_worker(worker_identifier, connection)
+		worker_instance = self._instantiate_worker(worker_identifier, messenger_instance)
 
 		self._worker_provider.update_status(worker_record, is_active = True)
 		self._active_workers[worker_identifier] = worker_instance
 
 		try:
-			logger.info("Worker '%s' is now active", worker_identifier)
-			await self._run_worker(worker_instance)
+			if not self._should_shutdown:
+				logger.info("Worker '%s' is now active", worker_identifier)
+				await worker_instance.run()
 
 		finally:
-			logger.info("Terminating connection with worker '%s'", worker_identifier)
 			del self._active_workers[worker_identifier]
 			self._worker_provider.update_status(worker_record, is_active = False)
 
@@ -114,17 +141,7 @@ class Supervisor:
 		return worker_record
 
 
-	def _instantiate_worker(self, worker_identifier, connection):
-		worker_instance = Worker(worker_identifier, connection, self._run_provider)
-		worker_instance.update_interval_seconds = self.update_interval_seconds
+	def _instantiate_worker(self, worker_identifier, messenger_instance):
+		worker_instance = Worker(worker_identifier, messenger_instance, self._run_provider)
+		messenger_instance.update_handler = worker_instance.handle_update
 		return worker_instance
-
-
-	async def _run_worker(self, worker_instance):
-		try:
-			await worker_instance.run()
-		except websockets.exceptions.ConnectionClosed as exception:
-			if exception.code not in [ 1000, 1001 ]:
-				logger.error("Lost connection with worker '%s'", worker_instance.identifier, exc_info = True)
-		except Exception: # pylint: disable = broad-except
-			logger.error("Unhandled exception from worker '%s'", worker_instance.identifier, exc_info = True)
