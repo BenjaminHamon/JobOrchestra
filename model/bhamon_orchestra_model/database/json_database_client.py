@@ -71,9 +71,7 @@ class JsonDatabaseClient(DatabaseClient):
 			os.makedirs(os.path.dirname(file_path))
 		with open(file_path + ".tmp", "w") as table_data_file:
 			json.dump(table_data, table_data_file, indent = 4)
-		if os.path.exists(file_path):
-			os.remove(file_path)
-		os.rename(file_path + ".tmp", file_path)
+		os.replace(file_path + ".tmp", file_path)
 
 
 	def _match_filter(self, row, filter):

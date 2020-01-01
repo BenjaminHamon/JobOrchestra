@@ -27,6 +27,4 @@ class FileStorage:
 			os.makedirs(os.path.dirname(file_path))
 		with open(file_path + ".tmp", "w") as data_file:
 			data_file.write(data)
-		if os.path.exists(file_path):
-			os.remove(file_path)
-		os.rename(file_path + ".tmp", file_path)
+		os.replace(file_path + ".tmp", file_path)
