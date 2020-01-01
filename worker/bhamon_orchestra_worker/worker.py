@@ -8,6 +8,7 @@ import sys
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.network.websocket import WebSocketClient
 from bhamon_orchestra_worker.executor_watcher import ExecutorWatcher
+from bhamon_orchestra_worker.synchronization import Synchronization
 import bhamon_orchestra_worker.worker_logging as worker_logging
 import bhamon_orchestra_worker.worker_storage as worker_storage
 
@@ -106,7 +107,8 @@ class Worker: # pylint: disable = too-few-public-methods
 			self._messenger = None
 
 			for executor in self._active_executors:
-				executor.pause_synchronization()
+				if executor.synchronization is not None:
+					executor.synchronization.pause()
 
 
 	async def _handle_request(self, request):
@@ -222,5 +224,9 @@ class Worker: # pylint: disable = too-few-public-methods
 		return worker_storage.load_request(job_identifier, run_identifier)
 
 
-	def _resynchronize(self, job_identifier, run_identifier): # pylint: disable = unused-argument
-		self._find_executor(run_identifier).reset_synchronization()
+	def _resynchronize(self, job_identifier, run_identifier):
+		executor = self._find_executor(run_identifier)
+		run_request = worker_storage.load_request(job_identifier, run_identifier)
+
+		executor.synchronization = Synchronization(run_request)
+		executor.synchronization.resume()
