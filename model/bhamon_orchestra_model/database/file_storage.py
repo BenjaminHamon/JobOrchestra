@@ -13,6 +13,11 @@ class FileStorage:
 		return os.path.isfile(file_path)
 
 
+	def get_size(self, file_path):
+		file_path = os.path.join(self._data_directory, file_path)
+		return os.path.getsize(file_path)
+
+
 	def load_or_default(self, file_path, default_value = None):
 		try:
 			return self.load(file_path)

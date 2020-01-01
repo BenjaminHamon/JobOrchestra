@@ -16,6 +16,10 @@ class MemoryFileStorage:
 		return file_path in self.storage
 
 
+	def get_size(self, file_path):
+		return len(self.storage[file_path])
+
+
 	def load_or_default(self, file_path, default_value = None):
 		return self.storage.get(file_path, default_value)
 
