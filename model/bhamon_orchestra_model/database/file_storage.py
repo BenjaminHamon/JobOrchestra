@@ -31,6 +31,20 @@ class FileStorage:
 			return data_file.read()
 
 
+	def load_chunk_or_default(self, file_path, default_value = None, skip = 0, limit = None):
+		try:
+			return self.load_chunk(file_path, skip = skip, limit = limit)
+		except OSError:
+			return default_value
+
+
+	def load_chunk(self, file_path, skip = 0, limit = None):
+		file_path = os.path.join(self._data_directory, file_path)
+		with open(file_path, mode = "r") as data_file:
+			data_file.seek(skip)
+			return data_file.read(limit)
+
+
 	def save(self, file_path, data):
 		file_path = os.path.join(self._data_directory, file_path)
 		if not os.path.exists(os.path.dirname(file_path)):
