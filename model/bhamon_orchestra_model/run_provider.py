@@ -108,8 +108,12 @@ class RunProvider:
 		return self.file_storage.load_or_default(self._get_step_log_path(run_identifier, step_index), "")
 
 
-	def set_step_log(self, run_identifier, step_index, log_text):
-		self.file_storage.save(self._get_step_log_path(run_identifier, step_index), log_text)
+	def append_step_log(self, run_identifier, step_index, log_text):
+		self.file_storage.append_unsafe(self._get_step_log_path(run_identifier, step_index), log_text)
+
+
+	def delete_step_log(self, run_identifier, step_index):
+		self.file_storage.delete(self._get_step_log_path(run_identifier, step_index))
 
 
 	def get_results(self, run_identifier):

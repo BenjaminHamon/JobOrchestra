@@ -1,4 +1,5 @@
 import logging
+import os
 
 import bhamon_orchestra_worker.worker_storage as worker_storage
 
@@ -35,10 +36,18 @@ class Synchronization:
 			self.internal_status = "paused"
 
 
+	def dispose(self):
+		for step in self.run_steps:
+			if "log_file" in step:
+				step["log_file"].close()
+		self.internal_status = "disposed"
+
+
 	def update(self, messenger):
 		if self.internal_status == "running":
 			try:
 				self._send_updates(messenger)
+				self._send_log_updates(messenger)
 			except Exception: # pylint: disable = broad-except
 				logger.warning("%s %s failed to send updates", self.job_identifier, self.run_identifier, exc_info = True)
 
@@ -62,12 +71,49 @@ class Synchronization:
 			messenger.send_update({ "run": self.run_identifier, "results": results })
 			self.results_last_timestamp = results_timestamp
 
+
+	def _send_log_updates(self, messenger):
+		status = worker_storage.load_status(self.job_identifier, self.run_identifier)
+
 		for step in self.run_steps:
 			step_status = status["steps"][step["index"]]["status"]
-			if step["log_status"] == "pending":
-				if step_status == "skipped":
-					step["log_status"] = "done"
-				elif step_status in [ "succeeded", "failed", "aborted", "exception" ]:
-					log_text = worker_storage.load_log(self.job_identifier, self.run_identifier, step["index"], step["name"])
-					messenger.send_update({ "run": self.run_identifier, "step_index": step["index"], "step_name": step["name"], "log_text": log_text })
-					step["status"] = "done"
+
+			if step["log_status"] == "pending" and step_status not in [ "pending", "skipped" ]:
+				log_file_path = worker_storage.get_log_path(self.job_identifier, self.run_identifier, step["index"], step["name"])
+				if os.path.exists(log_file_path):
+					step["log_file"] = open(log_file_path, mode = "r")
+					step["log_status"] = "running"
+
+			while step["log_status"] == "running":
+				log_lines = self._read_lines(step["log_file"], 1024)
+
+				if len(log_lines) > 0:
+					messenger.send_update({ "run": self.run_identifier, "step_index": step["index"], "log_chunk": "".join(log_lines) })
+
+				if step_status == "running":
+					break
+				if len(log_lines) == 0:
+					step["log_status"] = "finishing"
+
+			if step["log_status"] == "finishing":
+				step["log_file"].close()
+				step["log_status"] = "done"
+
+
+	def _read_lines(self, log_file, limit): # pylint: disable = no-self-use
+		all_lines = []
+
+		while len(all_lines) < limit:
+			last_position = log_file.tell()
+			next_line = log_file.readline()
+
+			if not next_line:
+				break
+
+			if not next_line.endswith("\n"):
+				log_file.seek(last_position)
+				break
+
+			all_lines.append(next_line)
+
+		return all_lines

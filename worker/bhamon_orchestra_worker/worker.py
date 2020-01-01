@@ -192,6 +192,8 @@ class Worker: # pylint: disable = too-few-public-methods
 		if executor.is_running():
 			raise RuntimeError("Executor is still running for run %s" % run_identifier)
 		await executor.wait_futures()
+		if executor.synchronization is not None:
+			executor.synchronization.dispose()
 		self._active_executors.remove(executor)
 		worker_storage.delete_run(job_identifier, run_identifier)
 
@@ -227,6 +229,9 @@ class Worker: # pylint: disable = too-few-public-methods
 	def _resynchronize(self, job_identifier, run_identifier):
 		executor = self._find_executor(run_identifier)
 		run_request = worker_storage.load_request(job_identifier, run_identifier)
+
+		if executor.synchronization is not None:
+			executor.synchronization.dispose()
 
 		executor.synchronization = Synchronization(run_request)
 		executor.synchronization.resume()

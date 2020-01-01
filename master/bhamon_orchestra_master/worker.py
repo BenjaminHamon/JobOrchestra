@@ -156,8 +156,8 @@ class Worker:
 			self._update_status(executor["run"], update["status"])
 		if "results" in update:
 			self._update_results(executor["run"], update["results"])
-		if "log_text" in update:
-			self._update_log_file(executor["run"], update["step_index"], update["log_text"])
+		if "log_chunk" in update:
+			self._update_log_file(executor["run"], update["step_index"], update["log_chunk"])
 		if "event" in update:
 			self._handle_event(executor, update["event"])
 
@@ -179,8 +179,8 @@ class Worker:
 		self._run_provider.set_results(run, results)
 
 
-	def _update_log_file(self, run, step_index, log_text):
-		self._run_provider.set_step_log(run["identifier"], step_index, log_text)
+	def _update_log_file(self, run, step_index, log_chunk):
+		self._run_provider.append_step_log(run["identifier"], step_index, log_chunk)
 
 
 	def _handle_event(self, executor, event): # pylint: disable = no-self-use
