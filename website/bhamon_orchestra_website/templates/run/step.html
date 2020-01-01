@@ -17,24 +17,6 @@
 		<a title="Next step" class="disabled"> > </a>
 		{% endif %}
 	</div>
-	{# <div class="link-group-container">
-		<div class="link-group">
-			<a href="{{ url_for('run_step_log', run_identifier = run_identifier, step_index = current['index']) }}">Raw log</a>
-		</div>
-		<div class="page-navigation">
-			{% if previous %}
-			<a href="{{ url_for('run_step', run_identifier = run_identifier, step_index = previous['index']) }}" title="Previous step"> < </a>
-			{% else %}
-			<a title="Previous step" class="disabled"> < </a>
-			{% endif %}
-			<a href="{{ url_for('run_index', run_identifier = run_identifier) }}">Index</a>
-			{% if next %}
-			<a href="{{ url_for('run_step', run_identifier = run_identifier, step_index = next['index']) }}" title="Next step"> > </a>
-			{% else %}
-			<a title="Next step" class="disabled"> > </a>
-			{% endif %}
-		</div>
-	</div> #}
 </section>
 
 <section>
