@@ -108,6 +108,10 @@ class RunProvider:
 		return self.file_storage.load_or_default(self._get_step_log_path(run_identifier, step_index), "")
 
 
+	def get_step_log_chunk(self, run_identifier, step_index, skip = 0, limit = None):
+		return self.file_storage.load_chunk_or_default(self._get_step_log_path(run_identifier, step_index), "", skip = skip, limit = limit)
+
+
 	def get_step_log_size(self, run_identifier, step_index):
 		return self.file_storage.get_size(self._get_step_log_path(run_identifier, step_index))
 

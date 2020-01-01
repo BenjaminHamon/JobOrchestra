@@ -47,6 +47,7 @@ def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/run/<run_identifier>/step_collection", methods = [ "GET" ], view_func = run_controller.get_run_step_collection)
 	application.add_url_rule("/run/<run_identifier>/step/<int:step_index>", methods = [ "GET" ], view_func = run_controller.get_run_step)
 	application.add_url_rule("/run/<run_identifier>/step/<int:step_index>/log", methods = [ "GET" ], view_func = run_controller.get_run_step_log)
+	application.add_url_rule("/run/<run_identifier>/step/<int:step_index>/log_chunk", methods = [ "GET" ], view_func = run_controller.get_run_step_log_chunk)
 	application.add_url_rule("/run/<run_identifier>/results", methods = [ "GET" ], view_func = run_controller.get_run_results)
 	application.add_url_rule("/run/<run_identifier>/tasks", methods = [ "GET" ], view_func = run_controller.get_run_tasks)
 	application.add_url_rule("/run/<run_identifier>/abort", methods = [ "POST" ], view_func = run_controller.abort_run)
