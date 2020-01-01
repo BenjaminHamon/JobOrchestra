@@ -105,7 +105,7 @@ class RunProvider:
 
 
 	def get_step_log(self, run_identifier, step_index):
-		return self.file_storage.load(self._get_step_log_path(run_identifier, step_index))
+		return self.file_storage.load_or_default(self._get_step_log_path(run_identifier, step_index), "")
 
 
 	def set_step_log(self, run_identifier, step_index, log_text):
@@ -143,7 +143,7 @@ class RunProvider:
 					log_path = self._get_step_log_path(run_identifier, step["index"])
 					entry_info = zipfile.ZipInfo(os.path.basename(log_path), now[0:6])
 					entry_info.external_attr = 0o644 << 16
-					archive.writestr(entry_info, self.file_storage.load(log_path))
+					archive.writestr(entry_info, self.file_storage.load_or_default(log_path, ""))
 
 			return { "file_name": file_name, "data": file_object.getvalue(), "type": "zip" }
 

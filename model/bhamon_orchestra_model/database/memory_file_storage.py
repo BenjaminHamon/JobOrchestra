@@ -16,8 +16,12 @@ class MemoryFileStorage:
 		return file_path in self.storage
 
 
+	def load_or_default(self, file_path, default_value = None):
+		return self.storage.get(file_path, default_value)
+
+
 	def load(self, file_path):
-		return self.storage.get(file_path, "")
+		return self.storage[file_path]
 
 
 	def save(self, file_path, data):

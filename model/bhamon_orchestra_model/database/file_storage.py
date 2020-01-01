@@ -13,10 +13,15 @@ class FileStorage:
 		return os.path.isfile(file_path)
 
 
+	def load_or_default(self, file_path, default_value = None):
+		try:
+			return self.load(file_path)
+		except OSError:
+			return default_value
+
+
 	def load(self, file_path):
 		file_path = os.path.join(self._data_directory, file_path)
-		if not os.path.exists(file_path):
-			return ""
 		with open(file_path) as data_file:
 			return data_file.read()
 
