@@ -22,7 +22,7 @@ class FileStorage:
 
 	def load(self, file_path):
 		file_path = os.path.join(self._data_directory, file_path)
-		with open(file_path) as data_file:
+		with open(file_path, mode = "r") as data_file:
 			return data_file.read()
 
 
@@ -30,6 +30,19 @@ class FileStorage:
 		file_path = os.path.join(self._data_directory, file_path)
 		if not os.path.exists(os.path.dirname(file_path)):
 			os.makedirs(os.path.dirname(file_path))
-		with open(file_path + ".tmp", "w") as data_file:
+		with open(file_path + ".tmp", mode = "w") as data_file:
 			data_file.write(data)
 		os.replace(file_path + ".tmp", file_path)
+
+
+	def append_unsafe(self, file_path, data):
+		file_path = os.path.join(self._data_directory, file_path)
+		if not os.path.exists(os.path.dirname(file_path)):
+			os.makedirs(os.path.dirname(file_path))
+		with open(file_path, mode = "a") as data_file:
+			data_file.write(data)
+
+
+	def delete(self, file_path):
+		file_path = os.path.join(self._data_directory, file_path)
+		os.remove(file_path)

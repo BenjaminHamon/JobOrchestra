@@ -26,3 +26,11 @@ class MemoryFileStorage:
 
 	def save(self, file_path, data):
 		self.storage[file_path] = data
+
+
+	def append_unsafe(self, file_path, data):
+		self.storage[file_path] = self.storage.get(file_path, "") + data
+
+
+	def delete(self, file_path):
+		del self.storage[file_path]
