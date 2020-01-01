@@ -137,7 +137,14 @@ class Worker:
 
 
 	async def _resynchronize(self, run):
-		resynchronization_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
+		reset = { "steps": [] }
+
+		for step in self._run_provider.get_all_steps(run["identifier"]):
+			if self._run_provider.has_step_log(run["identifier"], step["index"]):
+				log_size = self._run_provider.get_step_log_size(run["identifier"], step["index"])
+				reset["steps"].append({ "index": step["index"], "log_file_cursor": log_size })
+
+		resynchronization_request = { "job_identifier": run["job"], "run_identifier": run["identifier"], "reset": reset }
 		await self._execute_remote_command("resynchronize", resynchronization_request)
 
 

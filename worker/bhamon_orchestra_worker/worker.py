@@ -226,12 +226,14 @@ class Worker: # pylint: disable = too-few-public-methods
 		return worker_storage.load_request(job_identifier, run_identifier)
 
 
-	def _resynchronize(self, job_identifier, run_identifier):
+	def _resynchronize(self, job_identifier, run_identifier, reset):
 		executor = self._find_executor(run_identifier)
 		run_request = worker_storage.load_request(job_identifier, run_identifier)
 
 		if executor.synchronization is not None:
 			executor.synchronization.dispose()
+			executor.synchronization = None
 
 		executor.synchronization = Synchronization(run_request)
+		executor.synchronization.reset(reset["steps"])
 		executor.synchronization.resume()

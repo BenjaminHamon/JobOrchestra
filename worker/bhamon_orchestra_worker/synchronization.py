@@ -43,6 +43,11 @@ class Synchronization:
 		self.internal_status = "disposed"
 
 
+	def reset(self, step_collection):
+		for step in step_collection:
+			self.run_steps[step["index"]]["log_file_cursor"] = step["log_file_cursor"]
+
+
 	def update(self, messenger):
 		if self.internal_status == "running":
 			try:
@@ -85,6 +90,10 @@ class Synchronization:
 					step["log_status"] = "running"
 
 			while step["log_status"] == "running":
+				if "log_file_cursor" in step:
+					step["log_file"].seek(step["log_file_cursor"])
+					del step["log_file_cursor"]
+
 				log_lines = self._read_lines(step["log_file"], 1024)
 
 				if len(log_lines) > 0:

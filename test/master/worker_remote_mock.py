@@ -103,7 +103,7 @@ class WorkerRemoteMock:
 		return executor["request"]
 
 
-	def _resynchronize(self, job_identifier, run_identifier):
+	def _resynchronize(self, job_identifier, run_identifier, reset):
 		pass
 
 
