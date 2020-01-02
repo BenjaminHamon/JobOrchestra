@@ -35,7 +35,7 @@ class AuthorizationProvider:
 		return user is not None and user["is_enabled"]
 
 
-	def is_public_route(self, method, route): # pylint: disable = no-self-use
+	def is_public_route(self, method, route): # pylint: disable = no-self-use, too-many-return-statements
 		if method == "GET" and route == "/":
 			return True
 		if method == "GET" and route == "/help":
@@ -43,6 +43,12 @@ class AuthorizationProvider:
 		if method == "GET" and route in [ "/me/login", "/me/logout" ]:
 			return True
 		if method == "POST" and route in [ "/me/login", "/me/logout" ]:
+			return True
+		if method == "GET" and route == "/service_proxy":
+			return True
+		if method == "GET" and route.startswith("/service_proxy/"):
+			return True
+		if method == "POST" and route.startswith("/service_proxy/"):
 			return True
 		if method == "GET" and route.startswith("/static/"):
 			return True

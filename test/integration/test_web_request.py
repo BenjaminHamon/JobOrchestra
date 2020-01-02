@@ -85,6 +85,7 @@ def test_website_pages(tmpdir, database_type):
 			route = route.replace("<int:step_index>", "0")
 			route = route.replace("<job_identifier>", job["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])
+			route = route.replace("<path:route>", "help")
 
 			response = session.get(context_instance.get_website_uri() + route, timeout = 10)
 			response.raise_for_status()
