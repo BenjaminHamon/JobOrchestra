@@ -33,7 +33,6 @@ class Worker: # pylint: disable = too-few-public-methods
 		self._messenger_future = None
 		self._should_shutdown = False
 
-		self.connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
 		self.termination_timeout_seconds = 30
 
 

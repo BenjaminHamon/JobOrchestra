@@ -14,6 +14,8 @@ class WebSocketClient:
 		self.server_identifier = server_identifier
 		self.server_uri = server_uri
 
+		self.connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
+
 
 	async def run_once(self, connection_handler, **kwargs):
 		logger.info("Connecting to %s on %s", self.server_identifier, self.server_uri)
@@ -33,10 +35,7 @@ class WebSocketClient:
 				logger.info("Closed connection to %s", self.server_identifier)
 
 
-	async def run_forever(self, connection_handler, connection_attempt_delay_collection = None, **kwargs):
-		if connection_attempt_delay_collection is None:
-			connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
-
+	async def run_forever(self, connection_handler, **kwargs):
 		connection_attempt_counter = 0
 
 		while True:
@@ -67,9 +66,9 @@ class WebSocketClient:
 				logger.error("Lost connection to %s", self.server_identifier, exc_info = True)
 
 			try:
-				connection_attempt_delay = connection_attempt_delay_collection[connection_attempt_counter]
+				connection_attempt_delay = self.connection_attempt_delay_collection[connection_attempt_counter]
 			except IndexError:
-				connection_attempt_delay = connection_attempt_delay_collection[-1]
+				connection_attempt_delay = self.connection_attempt_delay_collection[-1]
 			logger.info("Retrying connection in %s seconds", connection_attempt_delay)
 			await asyncio.sleep(connection_attempt_delay)
 
