@@ -13,9 +13,12 @@ class FileStorage:
 		return os.path.isfile(file_path)
 
 
-	def get_size(self, file_path):
-		file_path = os.path.join(self._data_directory, file_path)
-		return os.path.getsize(file_path)
+	def get_universal_size(self, file_path):
+		"""
+		Return the actual content size once loaded rather than the size of the file itself,
+		which can change because of newline characters being translated.
+		"""
+		return len(self.load(file_path))
 
 
 	def load_or_default(self, file_path, default_value = None):

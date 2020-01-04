@@ -91,7 +91,9 @@ class Synchronization:
 
 			while step["log_status"] == "running":
 				if "log_file_cursor" in step:
-					step["log_file"].seek(step["log_file_cursor"])
+					# The cursor is based on a universal size (to support universal newlines), so we have to use read instead of seek
+					step["log_file"].seek(0)
+					step["log_file"].read(step["log_file_cursor"])
 					del step["log_file_cursor"]
 
 				log_lines = self._read_lines(step["log_file"], 1024)
