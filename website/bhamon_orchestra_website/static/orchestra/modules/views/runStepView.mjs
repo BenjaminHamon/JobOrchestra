@@ -5,6 +5,7 @@ window.onload = function() {
 
 	var view = new RunStepView(runProvider, window.viewData.runIdentifier, window.viewData.stepIndex);
 	view.stepStatus = window.viewData.stepStatus;
+	view.logCursor = window.viewData.logCursor;
 
 	view.statusIndicatorElement = document.getElementsByClassName("status-indicator")[0];
 	view.statusTextElement = document.getElementsByClassName("status-text")[0];
@@ -23,6 +24,7 @@ export class RunStepView {
 		this.stepIndex = stepIndex;
 	
 		this.stepStatus = null;
+		this.logCursor = null;
 		this.refreshInterval = null;
 		this.isRefreshing = false;
 
@@ -79,14 +81,15 @@ export class RunStepView {
 	}
 
 	async refreshLog() {
-		var lastResponseLength = 0;
+		var lastCursor = null;
 
 		do {
-			var responseText = await this.runProvider.getLogChunk(this.runIdentifier, this.stepIndex, this.logTextElement.textContent.length);
-			this.logTextElement.textContent += responseText;
-			lastResponseLength = responseText.length;
+			lastCursor = this.logCursor;
+			var logChunk = await this.runProvider.getLogChunk(this.runIdentifier, this.stepIndex, this.logCursor);
+			this.logTextElement.textContent += logChunk.text;
+			this.logCursor = logChunk.cursor;
 
-		} while (lastResponseLength > 0);
+		} while (lastCursor != this.logCursor);
 	}
 
 	isStepCompleted(status) {

@@ -32,13 +32,14 @@ class MemoryFileStorage:
 		try:
 			return self.load_chunk(file_path, skip = skip, limit = limit)
 		except KeyError:
-			return default_value
+			return default_value, 0
 
 
 	def load_chunk(self, file_path, skip = 0, limit = None):
 		start_index = skip
 		end_index = (skip + limit) if limit is not None else None
-		return self.storage[file_path][ start_index : end_index ]
+		result = self.storage[file_path][ start_index : end_index ]
+		return result, len(result)
 
 
 	def save(self, file_path, data):
