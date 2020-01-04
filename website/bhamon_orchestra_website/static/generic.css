@@ -385,3 +385,8 @@ pre
 	background: #eeeeee;
 	white-space: pre-wrap;
 }
+
+pre:empty
+{
+	display: none;
+}

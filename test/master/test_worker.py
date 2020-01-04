@@ -5,6 +5,7 @@
 import pytest
 
 from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
+from bhamon_orchestra_model.database.memory_file_storage import MemoryFileStorage
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_master.worker import Worker
 
@@ -67,7 +68,8 @@ async def test_process_success():
 	""" Test running a run which succeeds """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
+	file_storage_instance = MemoryFileStorage()
+	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -135,7 +137,8 @@ async def test_process_abort():
 	""" Test running a run which gets aborted """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
+	file_storage_instance = MemoryFileStorage()
+	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -210,7 +213,8 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	""" Test running a run which gets recovered after a disconnection and while it is running """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
+	file_storage_instance = MemoryFileStorage()
+	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -299,7 +303,8 @@ async def test_process_recovery_after_execution():
 	""" Test running a run which gets recovered after a disconnection and after it completed """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
+	file_storage_instance = MemoryFileStorage()
+	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
 	worker_remote_instance = WorkerRemoteMock("worker_test")
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)

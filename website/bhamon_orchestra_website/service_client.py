@@ -4,6 +4,17 @@ import flask
 import requests
 
 
+def proxy(route):
+	method = flask.request.method
+	url = flask.current_app.service_url + route
+	headers = { key: value for (key, value) in flask.request.headers if key != 'Host' }
+	parameters = flask.request.args
+	data = flask.request.get_data()
+	authentication = _get_authentication()
+
+	return requests.request(method, url, auth = authentication, headers = headers, params = parameters, data = data)
+
+
 def get(route, parameters = None):
 	return raw_get(route, headers = { "Content-Type": "application/json" }, parameters = parameters).json()
 

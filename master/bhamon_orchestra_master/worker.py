@@ -137,7 +137,14 @@ class Worker:
 
 
 	async def _resynchronize(self, run):
-		resynchronization_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
+		reset = { "steps": [] }
+
+		for step in self._run_provider.get_all_steps(run["identifier"]):
+			if self._run_provider.has_step_log(run["identifier"], step["index"]):
+				log_size = self._run_provider.get_step_log_size(run["identifier"], step["index"])
+				reset["steps"].append({ "index": step["index"], "log_file_cursor": log_size })
+
+		resynchronization_request = { "job_identifier": run["job"], "run_identifier": run["identifier"], "reset": reset }
 		await self._execute_remote_command("resynchronize", resynchronization_request)
 
 
@@ -156,8 +163,8 @@ class Worker:
 			self._update_status(executor["run"], update["status"])
 		if "results" in update:
 			self._update_results(executor["run"], update["results"])
-		if "log_text" in update:
-			self._update_log_file(executor["run"], update["step_index"], update["log_text"])
+		if "log_chunk" in update:
+			self._update_log_file(executor["run"], update["step_index"], update["log_chunk"])
 		if "event" in update:
 			self._handle_event(executor, update["event"])
 
@@ -179,8 +186,8 @@ class Worker:
 		self._run_provider.set_results(run, results)
 
 
-	def _update_log_file(self, run, step_index, log_text):
-		self._run_provider.set_step_log(run["identifier"], step_index, log_text)
+	def _update_log_file(self, run, step_index, log_chunk):
+		self._run_provider.append_step_log(run["identifier"], step_index, log_chunk)
 
 
 	def _handle_event(self, executor, event): # pylint: disable = no-self-use

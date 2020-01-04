@@ -86,6 +86,8 @@ def register_routes(application):
 	application.add_url_rule("/worker/<worker_identifier>/stop", methods = [ "POST" ], view_func = worker_controller.stop_worker)
 	application.add_url_rule("/worker/<worker_identifier>/enable", methods = [ "POST" ], view_func = worker_controller.enable_worker)
 	application.add_url_rule("/worker/<worker_identifier>/disable", methods = [ "POST" ], view_func = worker_controller.disable_worker)
+	application.add_url_rule("/service_proxy", methods = [ "GET", "POST" ], defaults = { "route": "" }, view_func = proxy_to_service)
+	application.add_url_rule("/service_proxy/<path:route>", methods = [ "GET", "POST" ], view_func = proxy_to_service)
 
 
 def register_resources(application, path_collection = None):
@@ -159,3 +161,8 @@ def send_static_file(filename):
 
 def home():
 	return flask.render_template("home.html", title = "Home")
+
+
+def proxy_to_service(route):
+	response = service_client.proxy("/" + route)
+	return flask.Response(response.content, response.status_code, response.headers.items())

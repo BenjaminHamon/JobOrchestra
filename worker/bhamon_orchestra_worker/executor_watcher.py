@@ -21,11 +21,8 @@ class ExecutorWatcher:
 		self.job_identifier = job_identifier
 		self.run_identifier = run_identifier
 		self.process = None
-		self.futures = []
-		self.status = "unknown"
 		self.synchronization = None
-		self.status_last_timestamp = None
-		self.results_last_timestamp = None
+		self.futures = []
 
 
 	async def start(self, command):
@@ -81,65 +78,11 @@ class ExecutorWatcher:
 			await asyncio.wait(self.futures, timeout = 1)
 
 
-	def reset_synchronization(self):
-		run_request = worker_storage.load_request(self.job_identifier, self.run_identifier)
-
-		self.synchronization = {
-			"status": "running",
-			"steps": [
-				{
-					"index": step_index,
-					"name": step["name"],
-					"log_status": "pending",
-				}
-				for step_index, step in enumerate(run_request["job"]["steps"])
-			],
-		}
-
-
-	def pause_synchronization(self):
-		if self.synchronization is not None:
-			self.synchronization["status"] = "paused"
-
-
 	def update(self, messenger):
 		self._check_termination()
 
-		if self.synchronization is not None and self.synchronization["status"] == "running":
-			try:
-				self._send_updates(messenger)
-			except Exception: # pylint: disable = broad-except
-				logger.warning("%s %s failed to send updates", self.job_identifier, self.run_identifier, exc_info = True)
-
-			if self.status in [ "succeeded", "failed", "aborted", "exception" ]:
-				self.synchronization["status"] = "done"
-				messenger.send_update({ "run": self.run_identifier, "event": "synchronization_completed" })
-
-
-	def _send_updates(self, messenger):
-		status_timestamp = worker_storage.get_status_timestamp(self.job_identifier, self.run_identifier)
-		status = worker_storage.load_status(self.job_identifier, self.run_identifier)
-		if status_timestamp != self.status_last_timestamp:
-			if status["status"] != "unknown":
-				messenger.send_update({ "run": self.run_identifier, "status": status })
-			self.status = status["status"]
-			self.status_last_timestamp = status_timestamp
-
-		results_timestamp = worker_storage.get_results_timestamp(self.job_identifier, self.run_identifier)
-		if results_timestamp != self.results_last_timestamp:
-			results = worker_storage.load_results(self.job_identifier, self.run_identifier)
-			messenger.send_update({ "run": self.run_identifier, "results": results })
-			self.results_last_timestamp = results_timestamp
-
-		for step_synchronization in self.synchronization["steps"]:
-			step_status = status["steps"][step_synchronization["index"]]["status"]
-			if step_synchronization["log_status"] == "pending":
-				if step_status == "skipped":
-					step_synchronization["log_status"] = "done"
-				elif step_status in [ "succeeded", "failed", "aborted", "exception" ]:
-					log_text = worker_storage.load_log(self.job_identifier, self.run_identifier, step_synchronization["index"], step_synchronization["name"])
-					messenger.send_update({ "run": self.run_identifier, "step_index": step_synchronization["index"], "step_name": step_synchronization["name"], "log_text": log_text })
-					step_synchronization["status"] = "done"
+		if self.synchronization is not None:
+			self.synchronization.update(messenger)
 
 
 	def _check_termination(self):

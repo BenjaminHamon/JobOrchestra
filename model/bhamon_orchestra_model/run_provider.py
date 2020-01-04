@@ -105,11 +105,23 @@ class RunProvider:
 
 
 	def get_step_log(self, run_identifier, step_index):
-		return self.file_storage.load_or_default(self._get_step_log_path(run_identifier, step_index), "")
+		return self.file_storage.load_chunk_or_default(self._get_step_log_path(run_identifier, step_index), "", skip = 0, limit = None)
 
 
-	def set_step_log(self, run_identifier, step_index, log_text):
-		self.file_storage.save(self._get_step_log_path(run_identifier, step_index), log_text)
+	def get_step_log_chunk(self, run_identifier, step_index, skip = 0, limit = None):
+		return self.file_storage.load_chunk_or_default(self._get_step_log_path(run_identifier, step_index), "", skip = skip, limit = limit)
+
+
+	def get_step_log_size(self, run_identifier, step_index):
+		return self.file_storage.get_universal_size(self._get_step_log_path(run_identifier, step_index))
+
+
+	def append_step_log(self, run_identifier, step_index, log_text):
+		self.file_storage.append_unsafe(self._get_step_log_path(run_identifier, step_index), log_text)
+
+
+	def delete_step_log(self, run_identifier, step_index):
+		self.file_storage.delete(self._get_step_log_path(run_identifier, step_index))
 
 
 	def get_results(self, run_identifier):

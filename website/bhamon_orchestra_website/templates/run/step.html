@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Run {{ run_identifier }} > Step {{ current["index"] }} {{ current["name"] }}</h1>
+<h1>Run {{ run_identifier }} > Step {{ current['index'] }} {{ current['name'] }}</h1>
 
 <section>
 	<div class="page-navigation">
@@ -17,24 +17,6 @@
 		<a title="Next step" class="disabled"> > </a>
 		{% endif %}
 	</div>
-	{# <div class="link-group-container">
-		<div class="link-group">
-			<a href="{{ url_for('run_step_log', run_identifier = run_identifier, step_index = current['index']) }}">Raw log</a>
-		</div>
-		<div class="page-navigation">
-			{% if previous %}
-			<a href="{{ url_for('run_step', run_identifier = run_identifier, step_index = previous['index']) }}" title="Previous step"> < </a>
-			{% else %}
-			<a title="Previous step" class="disabled"> < </a>
-			{% endif %}
-			<a href="{{ url_for('run_index', run_identifier = run_identifier) }}">Index</a>
-			{% if next %}
-			<a href="{{ url_for('run_step', run_identifier = run_identifier, step_index = next['index']) }}" title="Next step"> > </a>
-			{% else %}
-			<a title="Next step" class="disabled"> > </a>
-			{% endif %}
-		</div>
-	</div> #}
 </section>
 
 <section>
@@ -47,11 +29,22 @@
 	</div>
 </section>
 
-{% if log_text %}
 <section>
 	<h2><a href="{{ url_for('run_step_log', run_identifier = run_identifier, step_index = current['index']) }}">Log</a></h2>
-	<pre class="log-text">{{ log_text }}</pre>
+	<pre id="log-text">{{ log_text }}</pre>
 </section>
-{% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+	window.viewData = {
+		runIdentifier: "{{ run_identifier }}",
+		stepIndex: parseInt("{{ current['index'] }}"),
+		stepStatus: "{{ current['status'] }}",
+		logCursor: "{{ log_cursor }}",
+	};
+</script>
+
+<script type="module" src="{{ url_for('static', filename = 'orchestra/modules/views/runStepView.mjs') }}"></script>
 {% endblock %}
