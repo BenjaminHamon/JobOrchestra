@@ -1,4 +1,4 @@
-# pylint: disable = no-self-use, unused-argument
+# pylint: disable = no-self-use, too-many-arguments, unused-argument
 
 class RunProviderFake:
 	""" Fake run provider for unit tests """

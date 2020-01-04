@@ -14,7 +14,8 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__(self, host, port, run_provider, worker_provider, protocol_factory):
+	def __init__( # pylint: disable = too-many-arguments
+			self, host, port, run_provider, worker_provider, protocol_factory):
 		self._host = host
 		self._port = port
 		self._run_provider = run_provider

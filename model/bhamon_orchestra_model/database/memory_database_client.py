@@ -1,5 +1,3 @@
-# pylint: disable = no-self-use, redefined-builtin
-
 import logging
 
 from bhamon_orchestra_model.database.database_client import DatabaseClient
@@ -16,11 +14,12 @@ class MemoryDatabaseClient(DatabaseClient):
 		self.database = {}
 
 
-	def count(self, table, filter):
+	def count(self, table, filter): # pylint: disable = redefined-builtin
 		return sum(1 for row in self.database.get(table, []) if self._match_filter(row, filter))
 
 
-	def find_many(self, table, filter, skip = 0, limit = None, order_by = None):
+	def find_many( # pylint: disable = too-many-arguments
+			self, table, filter, skip = 0, limit = None, order_by = None): # pylint: disable = redefined-builtin
 		start_index = skip
 		end_index = (skip + limit) if limit is not None else None
 		results = self.database.get(table, [])
@@ -29,7 +28,7 @@ class MemoryDatabaseClient(DatabaseClient):
 		return results[ start_index : end_index ]
 
 
-	def find_one(self, table, filter):
+	def find_one(self, table, filter): # pylint: disable = redefined-builtin
 		return next(( row for row in self.database.get(table, []) if self._match_filter(row, filter) ), None)
 
 
@@ -39,21 +38,21 @@ class MemoryDatabaseClient(DatabaseClient):
 		self.database[table].append(data)
 
 
-	def update_one(self, table, filter, data):
+	def update_one(self, table, filter, data): # pylint: disable = redefined-builtin
 		all_rows = self.database.get(table, [])
 		matched_row = next(( row for row in all_rows if self._match_filter(row, filter) ), None)
 		if matched_row is not None:
 			matched_row.update(data)
 
 
-	def delete_one(self, table, filter):
+	def delete_one(self, table, filter): # pylint: disable = redefined-builtin
 		all_rows = self.database.get(table, [])
 		matched_row = next(( row for row in all_rows if self._match_filter(row, filter) ), None)
 		if matched_row is not None:
 			all_rows.remove(matched_row)
 
 
-	def _match_filter(self, row, filter):
+	def _match_filter(self, row, filter): # pylint: disable = no-self-use, redefined-builtin
 		for key, value in filter.items():
 			data = row
 			for key_part in key.split("."):

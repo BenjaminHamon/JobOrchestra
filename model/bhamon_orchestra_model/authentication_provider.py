@@ -1,5 +1,3 @@
-# pylint: disable = redefined-builtin
-
 import datetime
 import hashlib
 import hmac
@@ -81,13 +79,13 @@ class AuthenticationProvider:
 
 
 	def count_tokens(self, user = None):
-		filter = { "user": user, "type": "token" }
+		filter = { "user": user, "type": "token" } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.count(self.table, filter)
 
 
 	def get_token_list(self, user = None, skip = 0, limit = None, order_by = None):
-		filter = { "user": user, "type": "token" }
+		filter = { "user": user, "type": "token" } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		token_list = self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 		return [ self.convert_to_public(token) for token in token_list ]

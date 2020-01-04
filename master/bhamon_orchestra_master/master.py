@@ -10,7 +10,8 @@ logger = logging.getLogger("Master")
 class Master:
 
 
-	def __init__(self, job_scheduler, supervisor, task_processor, job_provider, worker_provider, configuration_loader):
+	def __init__( # pylint: disable = too-many-arguments
+			self, job_scheduler, supervisor, task_processor, job_provider, worker_provider, configuration_loader):
 		self._job_scheduler = job_scheduler
 		self._supervisor = supervisor
 		self._task_processor = task_processor

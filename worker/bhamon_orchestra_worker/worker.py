@@ -16,10 +16,11 @@ import bhamon_orchestra_worker.worker_storage as worker_storage
 logger = logging.getLogger("Worker")
 
 
-class Worker: # pylint: disable = too-few-public-methods
+class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attributes
 
 
-	def __init__(self, identifier, master_uri, user, secret, properties, executor_script):
+	def __init__( # pylint: disable = too-many-arguments
+			self, identifier, master_uri, user, secret, properties, executor_script):
 		self._identifier = identifier
 		self._master_uri = master_uri
 		self._user = user

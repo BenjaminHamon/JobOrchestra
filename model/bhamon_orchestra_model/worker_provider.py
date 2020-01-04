@@ -1,5 +1,3 @@
-# pylint: disable = redefined-builtin
-
 import datetime
 import logging
 
@@ -49,6 +47,7 @@ class WorkerProvider:
 		if is_enabled is not None:
 			update_data["is_enabled"] = is_enabled
 		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+
 		worker.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
 

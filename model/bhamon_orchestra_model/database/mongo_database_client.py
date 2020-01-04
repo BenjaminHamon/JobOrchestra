@@ -1,5 +1,3 @@
-# pylint: disable = no-self-use, redefined-builtin
-
 import logging
 
 import pymongo
@@ -18,11 +16,12 @@ class MongoDatabaseClient(DatabaseClient):
 		self.mongo_database = mongo_database
 
 
-	def count(self, table, filter):
+	def count(self, table, filter): # pylint: disable = redefined-builtin
 		return self.mongo_database[table].count_documents(filter)
 
 
-	def find_many(self, table, filter, skip = 0, limit = None, order_by = None):
+	def find_many( # pylint: disable = too-many-arguments
+			self, table, filter, skip = 0, limit = None, order_by = None): # pylint: disable = redefined-builtin
 		if limit == 0:
 			return []
 		limit = limit if limit is not None else 0
@@ -30,7 +29,7 @@ class MongoDatabaseClient(DatabaseClient):
 		return list(self.mongo_database[table].find(filter, { "_id": False }, skip = skip, limit = limit, sort = order_by))
 
 
-	def find_one(self, table, filter):
+	def find_one(self, table, filter): # pylint: disable = redefined-builtin
 		return self.mongo_database[table].find_one(filter, { "_id": False })
 
 
@@ -39,11 +38,11 @@ class MongoDatabaseClient(DatabaseClient):
 		del data["_id"]
 
 
-	def update_one(self, table, filter, data):
+	def update_one(self, table, filter, data): # pylint: disable = redefined-builtin
 		self.mongo_database[table].update_one(filter, { "$set": data })
 
 
-	def delete_one(self, table, filter):
+	def delete_one(self, table, filter): # pylint: disable = redefined-builtin
 		self.mongo_database[table].delete_one(filter)
 
 

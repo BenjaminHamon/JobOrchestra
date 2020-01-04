@@ -90,7 +90,8 @@ def run(job_identifier, run_identifier, environment):
 	logger.info("(%s) Run completed with status %s", run_identifier, run_status["status"])
 
 
-def _execute_step(executor_data, job_identifier, run_identifier, run_status, step_index, step, is_skipping):
+def _execute_step( # pylint: disable = too-many-arguments
+		executor_data, job_identifier, run_identifier, run_status, step_index, step, is_skipping):
 	logger.info("(%s) Step %s is starting", run_identifier, step["name"])
 
 	try:

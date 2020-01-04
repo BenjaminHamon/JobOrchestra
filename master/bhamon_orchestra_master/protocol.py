@@ -11,7 +11,8 @@ logger = logging.getLogger("WebSocket")
 class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 
 
-	def __init__(self, ws_handler, ws_server, user_provider, authentication_provider, authorization_provider, **kwargs):
+	def __init__( # pylint: disable = too-many-arguments
+			self, ws_handler, ws_server, user_provider, authentication_provider, authorization_provider, **kwargs):
 		self._user_provider = user_provider
 		self._authentication_provider = authentication_provider
 		self._authorization_provider = authorization_provider

@@ -1,5 +1,3 @@
-# pylint: disable = redefined-builtin
-
 import datetime
 import io
 import json
@@ -23,20 +21,22 @@ class RunProvider:
 
 
 	def count(self, job = None, worker = None, status = None):
-		filter = { "job": job, "worker": worker, "status": status }
+		filter = { "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.count(self.table, filter)
 
 
-	def get_list(self, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
-		filter = { "job": job, "worker": worker, "status": status }
+	def get_list( # pylint: disable = too-many-arguments
+			self, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
+		filter = { "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		run_collection = self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 		return [ self.convert_to_public(run) for run in run_collection ]
 
 
-	def get_list_as_documents(self, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
-		filter = { "job": job, "worker": worker, "status": status }
+	def get_list_as_documents( # pylint: disable = too-many-arguments
+			self, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
+		filter = { "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
@@ -61,7 +61,8 @@ class RunProvider:
 		return run
 
 
-	def update_status(self, run, worker = None, status = None, start_date = None, completion_date = None):
+	def update_status( # pylint: disable = too-many-arguments
+			self, run, worker = None, status = None, start_date = None, completion_date = None):
 		update_data = {}
 		if worker is not None:
 			update_data["worker"] = worker
@@ -72,6 +73,7 @@ class RunProvider:
 		if completion_date is not None:
 			update_data["completion_date"] = completion_date
 		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+
 		run.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": run["identifier"] }, update_data)
 

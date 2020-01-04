@@ -1,5 +1,3 @@
-# pylint: disable = redefined-builtin
-
 import datetime
 import logging
 import uuid
@@ -16,14 +14,15 @@ class TaskProvider:
 		self.table = "task"
 
 
-	def count(self, type = None, status = None, run = None, worker = None):
-		filter = { "type": type, "status": status, "parameters.run_identifier": run, "parameters.worker_identifier": worker }
+	def count(self, type = None, status = None, run = None, worker = None): # pylint: disable = redefined-builtin
+		filter = { "type": type, "status": status, "parameters.run_identifier": run, "parameters.worker_identifier": worker } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.count(self.table, filter)
 
 
-	def get_list(self, type = None, status = None, run = None, worker = None, skip = 0, limit = None, order_by = None):
-		filter = { "type": type, "status": status, "parameters.run_identifier": run, "parameters.worker_identifier": worker }
+	def get_list( # pylint: disable = too-many-arguments
+			self, type = None, status = None, run = None, worker = None, skip = 0, limit = None, order_by = None): # pylint: disable = redefined-builtin
+		filter = { "type": type, "status": status, "parameters.run_identifier": run, "parameters.worker_identifier": worker } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
@@ -32,7 +31,7 @@ class TaskProvider:
 		return self.database_client.find_one(self.table, { "identifier": task_identifier })
 
 
-	def create(self, type, parameters):
+	def create(self, type, parameters): # pylint: disable = redefined-builtin
 		task = {
 			"identifier": str(uuid.uuid4()),
 			"type": type,
@@ -54,5 +53,6 @@ class TaskProvider:
 		if should_cancel is not None:
 			update_data["should_cancel"] = should_cancel
 		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+
 		task.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": task["identifier"] }, task)

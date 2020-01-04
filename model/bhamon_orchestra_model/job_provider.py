@@ -1,5 +1,3 @@
-# pylint: disable = redefined-builtin
-
 import datetime
 import logging
 
@@ -27,7 +25,8 @@ class JobProvider:
 		return self.database_client.find_one(self.table, { "identifier": job_identifier })
 
 
-	def create_or_update(self, job_identifier, workspace, steps, parameters, properties, description):
+	def create_or_update( # pylint: disable = too-many-arguments
+			self, job_identifier, workspace, steps, parameters, properties, description):
 		job = self.get(job_identifier)
 
 		if job is None:

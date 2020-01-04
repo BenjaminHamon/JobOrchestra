@@ -49,6 +49,7 @@ class UserProvider:
 		if display_name is not None:
 			update_data["display_name"] = display_name
 		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+
 		user.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)
 
@@ -68,5 +69,6 @@ class UserProvider:
 		if is_enabled is not None:
 			update_data["is_enabled"] = is_enabled
 		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+
 		user.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)
