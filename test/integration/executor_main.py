@@ -4,7 +4,7 @@ import os
 
 import filelock
 
-import bhamon_orchestra_worker.executor as executor
+from bhamon_orchestra_worker.executor import Executor
 
 import environment
 
@@ -18,7 +18,8 @@ def main():
 	executor_run_directory = os.path.join("runs", arguments.job_identifier + "_" + arguments.run_identifier)
 
 	with filelock.FileLock(os.path.join(executor_run_directory, "executor.lock"), 5):
-		executor.run(arguments.job_identifier, arguments.run_identifier, environment_instance)
+		executor_instance = Executor(arguments.job_identifier, arguments.run_identifier)
+		executor_instance.run(environment_instance)
 
 
 def parse_arguments():
