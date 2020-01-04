@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Run {{ run_identifier }} > Step {{ current["index"] }} {{ current["name"] }}</h1>
+<h1>Run {{ run_identifier }} > Step {{ current['index'] }} {{ current['name'] }}</h1>
 
 <section>
 	<div class="page-navigation">
@@ -29,11 +29,21 @@
 	</div>
 </section>
 
-{% if log_text %}
 <section>
 	<h2><a href="{{ url_for('run_step_log', run_identifier = run_identifier, step_index = current['index']) }}">Log</a></h2>
-	<pre class="log-text">{{ log_text }}</pre>
+	<pre id="log-text">{{ log_text }}</pre>
 </section>
-{% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+	window.viewData = {
+		runIdentifier: "{{ run_identifier }}",
+		stepIndex: parseInt("{{ current['index'] }}"),
+		stepStatus: "{{ current['status'] }}",
+	};
+</script>
+
+<script type="module" src="{{ url_for('static', filename = 'orchestra/modules/views/runStepView.mjs') }}"></script>
 {% endblock %}
