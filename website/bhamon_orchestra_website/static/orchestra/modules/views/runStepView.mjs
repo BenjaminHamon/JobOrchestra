@@ -25,6 +25,7 @@ export class RunStepView {
 	
 		this.stepStatus = null;
 		this.logCursor = null;
+		this.logChunkSize = 1024 * 1024;
 		this.refreshInterval = null;
 		this.isRefreshing = false;
 
@@ -81,15 +82,15 @@ export class RunStepView {
 	}
 
 	async refreshLog() {
-		var lastCursor = null;
+		var lastChunkSize = null;
 
 		do {
-			lastCursor = this.logCursor;
-			var logChunk = await this.runProvider.getLogChunk(this.runIdentifier, this.stepIndex, this.logCursor);
+			var logChunk = await this.runProvider.getLogChunk(this.runIdentifier, this.stepIndex, this.logCursor, this.logChunkSize);
 			this.logTextElement.textContent += logChunk.text;
 			this.logCursor = logChunk.cursor;
+			lastChunkSize = logChunk.text.length;
 
-		} while (lastCursor != this.logCursor);
+		} while (lastChunkSize == this.logChunkSize);
 	}
 
 	isStepCompleted(status) {
