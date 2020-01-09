@@ -2,13 +2,9 @@ import argparse
 import json
 import logging
 
-import bhamon_orchestra_worker.controller as controller
+from bhamon_orchestra_worker.controller import Controller
 
 import environment
-
-
-# Rapid requests to reduce delays in tests
-controller.wait_delay_seconds = 1
 
 
 def main():
@@ -18,7 +14,12 @@ def main():
 	with open(arguments.authentication, "r") as authentication_file:
 		authentication = json.load(authentication_file)
 
-	arguments.func(arguments, (authentication["user"], authentication["secret"]))
+	controller_instance = Controller(arguments.service_url, (authentication["user"], authentication["secret"]))
+
+	# Rapid requests to reduce delays in tests
+	controller_instance.wait_delay_seconds = 1
+
+	arguments.func(controller_instance, arguments)
 
 
 def parse_arguments():
@@ -53,12 +54,12 @@ def parse_arguments():
 	return arguments
 
 
-def trigger_run(arguments, authorization):
-	controller.trigger_run(arguments.service_url, arguments.results, arguments.job_identifier, arguments.parameters, authorization)
+def trigger_run(controller_instance, arguments):
+	controller_instance.trigger_run(arguments.results, arguments.job_identifier, arguments.parameters)
 
 
-def wait_run(arguments, authorization):
-	controller.wait_run(arguments.service_url, arguments.results, authorization)
+def wait_run(controller_instance, arguments):
+	controller_instance.wait_run(arguments.results)
 
 
 if __name__ == "__main__":
