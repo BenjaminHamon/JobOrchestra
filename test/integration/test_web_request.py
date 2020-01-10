@@ -45,6 +45,7 @@ def test_service_routes(tmpdir, database_type):
 		authentication = context_instance.configure_service_authentication()
 
 		providers = context_instance.instantiate_providers()
+		project = providers["project"].create_or_update("examples")
 		job = providers["job"].create_or_update("examples_empty", "examples", None, None, None, None, None)
 		run = providers["run"].create("examples", "examples_empty", {})
 		providers["run"].update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
@@ -58,9 +59,10 @@ def test_service_routes(tmpdir, database_type):
 
 		route_collection = response.json()
 		for route in route_collection:
-			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<int:step_index>", "0")
 			route = route.replace("<job_identifier>", job["identifier"])
+			route = route.replace("<project_identifier>", project["identifier"])
+			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<task_identifier>", task["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])
 
@@ -108,13 +110,14 @@ def test_website_response_with_authorization(tmpdir, database_type):
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
-def test_website_pages(tmpdir, database_type):
+def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-locals
 	""" Test if website responds successfully for accessible pages """
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		authentication = context_instance.configure_website_authentication()
 
 		providers = context_instance.instantiate_providers()
+		project = providers["project"].create_or_update("examples")
 		job = providers["job"].create_or_update("examples_empty", "examples", None, None, None, None, None)
 		run = providers["run"].create("examples", "examples_empty", {})
 		providers["run"].update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
@@ -132,9 +135,10 @@ def test_website_pages(tmpdir, database_type):
 
 		route_collection = response.json()
 		for route in route_collection:
-			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<int:step_index>", "0")
 			route = route.replace("<job_identifier>", job["identifier"])
+			route = route.replace("<project_identifier>", project["identifier"])
+			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<task_identifier>", task["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])
 			route = route.replace("<path:route>", "help")

@@ -10,9 +10,10 @@ import pymongo
 
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
-from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.database.file_storage import FileStorage
 from bhamon_orchestra_model.job_provider import JobProvider
+from bhamon_orchestra_model.project_provider import ProjectProvider
+from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.task_provider import TaskProvider
 from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
@@ -179,8 +180,9 @@ class Context:
 		return {
 			"authentication": AuthenticationProvider(database_client_instance),
 			"authorization": AuthorizationProvider(),
-			"run": RunProvider(database_client_instance, file_storage_instance),
 			"job": JobProvider(database_client_instance),
+			"project": ProjectProvider(database_client_instance),
+			"run": RunProvider(database_client_instance, file_storage_instance),
 			"task": TaskProvider(database_client_instance),
 			"user": UserProvider(database_client_instance),
 			"worker": WorkerProvider(database_client_instance),
