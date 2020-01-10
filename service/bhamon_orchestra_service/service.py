@@ -100,17 +100,18 @@ def log_request():
 
 
 def authorize_request():
+	flask.request.user = None
+
 	if flask.request.url_rule is None:
 		return
 	if flask.current_app.authorization_provider.is_public_route(flask.request.method, flask.request.url_rule.rule):
 		return
 
-	user = None
 	if flask.request.authorization is not None:
 		is_authenticated = flask.current_app.authentication_provider.authenticate_with_token(flask.request.authorization.username, flask.request.authorization.password)
-		user = flask.current_app.user_provider.get(flask.request.authorization.username) if is_authenticated else None
+		flask.request.user = flask.current_app.user_provider.get(flask.request.authorization.username) if is_authenticated else None
 
-	is_authorized = flask.current_app.authorization_provider.authorize_request(user, flask.request.method, flask.request.url_rule.rule)
+	is_authorized = flask.current_app.authorization_provider.authorize_request(flask.request.user, flask.request.method, flask.request.url_rule.rule)
 	if not is_authorized:
 		flask.abort(403)
 
