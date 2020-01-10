@@ -1,7 +1,17 @@
 def configure():
+	projects = configure_projects()
 	jobs = configure_jobs()
 
-	return { "jobs": jobs }
+	return {
+		"projects": projects,
+		"jobs": jobs,
+	}
+
+
+def configure_projects():
+	return [
+		{ "identifier": "examples" },
+	]
 
 
 def configure_jobs():

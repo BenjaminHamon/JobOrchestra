@@ -11,10 +11,11 @@ class Master:
 
 
 	def __init__( # pylint: disable = too-many-arguments
-			self, job_scheduler, supervisor, task_processor, job_provider, worker_provider, configuration_loader):
+			self, job_scheduler, supervisor, task_processor, project_provider, job_provider, worker_provider, configuration_loader):
 		self._job_scheduler = job_scheduler
 		self._supervisor = supervisor
 		self._task_processor = task_processor
+		self._project_provider = project_provider
 		self._job_provider = job_provider
 		self._worker_provider = worker_provider
 		self._configuration_loader = configuration_loader
@@ -53,6 +54,10 @@ class Master:
 	def reload_configuration(self):
 		logger.info("Reloading configuration")
 		configuration = self._configuration_loader()
+
+		for project in configuration["projects"]:
+			logger.info("Adding/Updating project %s", project["identifier"])
+			self._project_provider.create_or_update(project["identifier"])
 
 		all_existing_jobs = self._job_provider.get_list()
 		for existing_job in all_existing_jobs:
