@@ -74,8 +74,8 @@ async def test_process_success():
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
-	job = { "identifier": "job_test" }
-	run = run_provider_instance.create(job["identifier"], {})
+	job = { "identifier": "examples_empty", "project": "examples" }
+	run = run_provider_instance.create(job["project"], job["identifier"], {})
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -143,8 +143,8 @@ async def test_process_abort():
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
-	job = { "identifier": "job_test" }
-	run = run_provider_instance.create(job["identifier"], {})
+	job = { "identifier": "examples_empty", "project": "examples" }
+	run = run_provider_instance.create(job["project"], job["identifier"], {})
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -219,8 +219,8 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
-	job = { "identifier": "job_test" }
-	run = run_provider_instance.create(job["identifier"], {})
+	job = { "identifier": "examples_empty", "project": "examples" }
+	run = run_provider_instance.create(job["project"], job["identifier"], {})
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -309,8 +309,8 @@ async def test_process_recovery_after_execution():
 	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
-	job = { "identifier": "job_test" }
-	run = run_provider_instance.create(job["identifier"], {})
+	job = { "identifier": "examples_empty", "project": "examples" }
+	run = run_provider_instance.create(job["project"], job["identifier"], {})
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0

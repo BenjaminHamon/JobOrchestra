@@ -45,8 +45,8 @@ def test_service_routes(tmpdir, database_type):
 		authentication = context_instance.configure_service_authentication()
 
 		providers = context_instance.instantiate_providers()
-		job = providers["job"].create_or_update("job_test", None, None, None, None, None)
-		run = providers["run"].create(job["identifier"], {})
+		job = providers["job"].create_or_update("examples_empty", "examples", None, None, None, None, None)
+		run = providers["run"].create("examples", "examples_empty", {})
 		providers["run"].update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 		task = providers["task"].create("nothing", {})
 		worker = providers["worker"].create("worker", None)
@@ -115,8 +115,8 @@ def test_website_pages(tmpdir, database_type):
 		authentication = context_instance.configure_website_authentication()
 
 		providers = context_instance.instantiate_providers()
-		job = providers["job"].create_or_update("job_test", None, None, None, None, None)
-		run = providers["run"].create(job["identifier"], {})
+		job = providers["job"].create_or_update("examples_empty", "examples", None, None, None, None, None)
+		run = providers["run"].create("examples", "examples_empty", {})
 		providers["run"].update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 		task = providers["task"].create("nothing", {})
 		worker = providers["worker"].create("worker", None)

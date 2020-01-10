@@ -26,12 +26,13 @@ class JobProvider:
 
 
 	def create_or_update( # pylint: disable = too-many-arguments
-			self, job_identifier, workspace, steps, parameters, properties, description):
+			self, job_identifier, project, workspace, steps, parameters, properties, description):
 		job = self.get(job_identifier)
 
 		if job is None:
 			job = {
 				"identifier": job_identifier,
+				"project": project,
 				"workspace": workspace,
 				"steps": steps,
 				"parameters": parameters,
@@ -46,6 +47,7 @@ class JobProvider:
 
 		else:
 			update_data = {
+				"project": project,
 				"workspace": workspace,
 				"steps": steps,
 				"parameters": parameters,

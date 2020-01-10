@@ -15,7 +15,8 @@ from . import environment
 def test_job_success(tmpdir, database_type):
 	""" Test executing a job which should succeed """
 
-	job_identifier = "test_success"
+	project_identifier = "examples"
+	job_identifier = "examples_success"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
@@ -24,7 +25,7 @@ def test_job_success(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = providers["run"].create(job_identifier, {})
+		run = providers["run"].create(project_identifier, job_identifier, {})
 		task = providers["task"].create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(5)
@@ -58,7 +59,8 @@ def test_job_success(tmpdir, database_type):
 def test_job_failure(tmpdir, database_type):
 	""" Test executing a job which should fail """
 
-	job_identifier = "test_failure"
+	project_identifier = "examples"
+	job_identifier = "examples_failure"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
@@ -67,7 +69,7 @@ def test_job_failure(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = providers["run"].create(job_identifier, {})
+		run = providers["run"].create(project_identifier, job_identifier, {})
 		task = providers["task"].create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(5)
@@ -101,7 +103,8 @@ def test_job_failure(tmpdir, database_type):
 def test_job_exception(tmpdir, database_type):
 	""" Test executing a job which should raise an exception """
 
-	job_identifier = "test_exception"
+	project_identifier = "examples"
+	job_identifier = "examples_exception"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
@@ -110,7 +113,7 @@ def test_job_exception(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = providers["run"].create(job_identifier, {})
+		run = providers["run"].create(project_identifier, job_identifier, {})
 		task = providers["task"].create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(5)
@@ -145,7 +148,8 @@ def test_job_exception(tmpdir, database_type):
 def test_job_controller_success(tmpdir, database_type):
 	""" Test executing a controller job which should succeed """
 
-	job_identifier = "test_controller_success"
+	project_identifier = "examples"
+	job_identifier = "examples_controller_success"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])
@@ -157,7 +161,7 @@ def test_job_controller_success(tmpdir, database_type):
 		worker_01_process = context_instance.invoke_worker("worker_01")
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
-		run = providers["run"].create(job_identifier, {})
+		run = providers["run"].create(project_identifier, job_identifier, {})
 		task = providers["task"].create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(15)
@@ -194,7 +198,8 @@ def test_job_controller_success(tmpdir, database_type):
 def test_job_controller_failure(tmpdir, database_type):
 	""" Test executing a controller job which should fail """
 
-	job_identifier = "test_controller_failure"
+	project_identifier = "examples"
+	job_identifier = "examples_controller_failure"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])
@@ -206,7 +211,7 @@ def test_job_controller_failure(tmpdir, database_type):
 		worker_01_process = context_instance.invoke_worker("worker_01")
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
-		run = providers["run"].create(job_identifier, {})
+		run = providers["run"].create(project_identifier, job_identifier, {})
 		task = providers["task"].create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(15)

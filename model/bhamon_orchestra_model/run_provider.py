@@ -46,9 +46,10 @@ class RunProvider:
 		return self.convert_to_public(run) if run is not None else None
 
 
-	def create(self, job_identifier, parameters):
+	def create(self, project_identifier, job_identifier, parameters):
 		run = {
 			"identifier": str(uuid.uuid4()),
+			"project": project_identifier,
 			"job": job_identifier,
 			"parameters": parameters,
 			"status": "pending",
@@ -163,5 +164,5 @@ class RunProvider:
 
 
 	def convert_to_public(self, run): # pylint: disable = no-self-use
-		keys_to_return = [ "identifier", "job", "worker", "parameters", "status", "start_date", "completion_date", "creation_date", "update_date" ]
+		keys_to_return = [ "identifier", "project", "job", "worker", "parameters", "status", "start_date", "completion_date", "creation_date", "update_date" ]
 		return { key: value for key, value in run.items() if key in keys_to_return }

@@ -62,7 +62,7 @@ class Master:
 
 		for job in configuration["jobs"]:
 			logger.info("Adding/Updating job %s", job["identifier"])
-			self._job_provider.create_or_update(job["identifier"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["description"])
+			self._job_provider.create_or_update(job["identifier"], job["project"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["description"])
 
 
 	def shutdown(self):
