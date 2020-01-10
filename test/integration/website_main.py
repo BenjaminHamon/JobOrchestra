@@ -46,10 +46,11 @@ def list_routes():
 	route_collection = []
 	for rule in flask.current_app.url_map.iter_rules():
 		if "GET" in rule.methods and not rule.rule.startswith("/static/"):
-			is_authorized = flask.current_app.authorization_provider.authorize_request(flask.request.user, "GET", rule.rule)
-			if is_authorized:
+			if flask.current_app.authorization_provider.authorize_request(flask.request.user, "GET", rule.rule):
 				route_collection.append(rule.rule)
+
 	route_collection.sort()
+
 	return flask.jsonify(route_collection)
 
 

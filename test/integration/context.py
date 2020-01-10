@@ -156,6 +156,14 @@ class Context:
 				json.dump(token, authentication_file, indent = 4)
 
 
+	def configure_service_authentication(self):
+		providers = self.instantiate_providers()
+		user = providers["user"].create("viewer", "viewer")
+		providers["user"].update_roles(user, [ "Viewer" ])
+		token = providers["authentication"].create_token("viewer", None, None)
+		return ("viewer", token["secret"])
+
+
 	def configure_website_authentication(self):
 		providers = self.instantiate_providers()
 		user = providers["user"].create("viewer", "viewer")
