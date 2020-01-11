@@ -20,23 +20,23 @@ class RunProvider:
 		self.table = "run"
 
 
-	def count(self, job = None, worker = None, status = None):
-		filter = { "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
+	def count(self, project = None, job = None, worker = None, status = None):
+		filter = { "project": project, "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.count(self.table, filter)
 
 
 	def get_list( # pylint: disable = too-many-arguments
-			self, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
-		filter = { "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
+			self, project = None, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
+		filter = { "project": project, "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		run_collection = self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 		return [ self.convert_to_public(run) for run in run_collection ]
 
 
 	def get_list_as_documents( # pylint: disable = too-many-arguments
-			self, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
-		filter = { "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
+			self, project = None, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
+		filter = { "project": project, "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
