@@ -9,9 +9,17 @@
 <section>
 	<form class="generic-form" method="post" action="{{ url_for('create_user') }}">
 		<label for="input-identifier">Identifier</label>
+		{% if 'identifier' in request.form %}
 		<input type="text" id="input-identifier" name="identifier" value="{{ request.form['identifier'] }}" required/>
+		{% else %}
+		<input type="text" id="input-identifier" name="identifier" required/>
+		{% endif %}
 		<label for="input-display_name">Display name</label>
+		{% if 'display_name' in request.form %}
 		<input type="text" id="input-display_name" name="display_name" value="{{ request.form['display_name'] }}" required/>
+		{% else %}
+		<input type="text" id="input-display_name" name="display_name" required/>
+		{% endif %}
 		<button type="submit">Create</button>
 	</form>
 </section>
