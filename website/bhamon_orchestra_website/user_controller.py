@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument
-
 import datetime
 import logging
 
@@ -31,7 +29,7 @@ def user_collection_index():
 	return flask.render_template("user/collection.html", title = "Users", **view_data)
 
 
-def user_index(user_identifier):
+def user_index(user_identifier): # pylint: disable = unused-argument
 	user = service_client.get("/user/{user_identifier}".format(**locals()))
 	user_tokens = service_client.get("/user/{user_identifier}/token_collection".format(**locals()), { "order_by": [ "update_date descending" ] })
 	user_tokens.sort(key = lambda token: "expiration_date" in token)
@@ -100,12 +98,12 @@ def update_user_roles(user_identifier):
 	return edit_user_resume(user_identifier, parameters)
 
 
-def enable_user(user_identifier):
+def enable_user(user_identifier): # pylint: disable = unused-argument
 	service_client.post("/user/{user_identifier}/enable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("user_collection_index"))
 
 
-def disable_user(user_identifier):
+def disable_user(user_identifier): # pylint: disable = unused-argument
 	service_client.post("/user/{user_identifier}/disable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("user_collection_index"))
 

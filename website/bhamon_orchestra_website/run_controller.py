@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument
-
 import logging
 
 import flask
@@ -67,18 +65,18 @@ def run_step(run_identifier, step_index):
 	return flask.render_template("run/step.html", title = "Run " + run_identifier[:18], **view_data)
 
 
-def run_step_log(run_identifier, step_index):
+def run_step_log(run_identifier, step_index): # pylint: disable = unused-argument
 	log_text = service_client.raw_get("/run/{run_identifier}/step/{step_index}/log".format(**locals())).text
 	return flask.Response(log_text, mimetype = "text/plain")
 
 
-def abort_run(run_identifier):
+def abort_run(run_identifier): # pylint: disable = unused-argument
 	parameters = flask.request.form
 	service_client.post("/run/{run_identifier}/abort".format(**locals()), parameters)
 	return flask.redirect(flask.request.referrer or flask.url_for("run_collection_index"))
 
 
-def download_run_archive(run_identifier):
+def download_run_archive(run_identifier): # pylint: disable = unused-argument
 	archive_response = service_client.raw_get("/run/{run_identifier}/download".format(**locals()))
 	return flask.Response(archive_response.content,
 		headers = { "Content-Disposition": archive_response.headers["Content-Disposition"] },

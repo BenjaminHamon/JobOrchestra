@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument
-
 import logging
 
 import flask
@@ -39,17 +37,17 @@ def worker_index(worker_identifier):
 	return flask.render_template("worker/index.html", title = "Worker " + worker_identifier, **view_data)
 
 
-def stop_worker(worker_identifier):
+def stop_worker(worker_identifier): # pylint: disable = unused-argument
 	parameters = flask.request.form
 	service_client.post("/worker/{worker_identifier}/stop".format(**locals()), parameters)
 	return flask.redirect(flask.request.referrer or flask.url_for("worker_collection_index"))
 
 
-def enable_worker(worker_identifier):
+def enable_worker(worker_identifier): # pylint: disable = unused-argument
 	service_client.post("/worker/{worker_identifier}/enable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("worker_collection_index"))
 
 
-def disable_worker(worker_identifier):
+def disable_worker(worker_identifier): # pylint: disable = unused-argument
 	service_client.post("/worker/{worker_identifier}/disable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("worker_collection_index"))

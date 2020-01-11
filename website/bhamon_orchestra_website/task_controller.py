@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument
-
 import logging
 
 import flask
@@ -38,7 +36,7 @@ def task_collection_index():
 	return flask.render_template("task/collection.html", title = "Tasks", **view_data)
 
 
-def cancel_task(task_identifier):
+def cancel_task(task_identifier): # pylint: disable = unused-argument
 	service_client.post("/task/{task_identifier}/cancel".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("task_collection_index"))
 

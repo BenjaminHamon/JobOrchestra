@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument
-
 import logging
 
 import flask
@@ -43,7 +41,7 @@ def job_index(job_identifier):
 	return flask.render_template("job/index.html", title = "Job " + job_identifier, **view_data)
 
 
-def trigger_job(job_identifier):
+def trigger_job(job_identifier): # pylint: disable = unused-argument
 	parameters = {}
 	for key, value in flask.request.form.items():
 		if key.startswith("parameter-"):
@@ -52,11 +50,11 @@ def trigger_job(job_identifier):
 	return flask.redirect(flask.request.referrer or flask.url_for("job_collection_index"))
 
 
-def enable_job(job_identifier):
+def enable_job(job_identifier): # pylint: disable = unused-argument
 	service_client.post("/job/{job_identifier}/enable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("job_collection_index"))
 
 
-def disable_job(job_identifier):
+def disable_job(job_identifier): # pylint: disable = unused-argument
 	service_client.post("/job/{job_identifier}/disable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("job_collection_index"))
