@@ -159,18 +159,18 @@ class Context:
 
 	def configure_service_authentication(self):
 		providers = self.instantiate_providers()
-		user = providers["user"].create("viewer", "viewer")
-		providers["user"].update_roles(user, [ "Viewer" ])
-		token = providers["authentication"].create_token("viewer", None, None)
-		return ("viewer", token["secret"])
+		user = providers["user"].create("auditor", "auditor")
+		providers["user"].update_roles(user, [ "Auditor" ])
+		token = providers["authentication"].create_token("auditor", None, None)
+		return ("auditor", token["secret"])
 
 
 	def configure_website_authentication(self):
 		providers = self.instantiate_providers()
-		user = providers["user"].create("viewer", "viewer")
-		providers["user"].update_roles(user, [ "Viewer" ])
-		providers["authentication"].set_password("viewer", "password")
-		return ("viewer", "password")
+		user = providers["user"].create("auditor", "auditor")
+		providers["user"].update_roles(user, [ "Auditor" ])
+		providers["authentication"].set_password("auditor", "password")
+		return ("auditor", "password")
 
 
 	def instantiate_providers(self):

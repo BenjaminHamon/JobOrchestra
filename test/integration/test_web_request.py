@@ -51,6 +51,7 @@ def test_service_routes(tmpdir, database_type):
 		providers["run"].update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 		task = providers["task"].create("nothing", {})
 		worker = providers["worker"].create("worker", None)
+		user = providers["user"].create("user", "user")
 
 		service_process = context_instance.invoke_service()
 
@@ -64,6 +65,7 @@ def test_service_routes(tmpdir, database_type):
 			route = route.replace("<project_identifier>", project["identifier"])
 			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<task_identifier>", task["identifier"])
+			route = route.replace("<user_identifier>", user["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])
 
 			response = requests.get(context_instance.get_service_uri() + route, auth = authentication, timeout = 10)
@@ -123,6 +125,7 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 		providers["run"].update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 		task = providers["task"].create("nothing", {})
 		worker = providers["worker"].create("worker", None)
+		user = providers["user"].create("user", "user")
 
 		service_process = context_instance.invoke_service()
 		website_process = context_instance.invoke_website()
@@ -140,6 +143,7 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 			route = route.replace("<project_identifier>", project["identifier"])
 			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<task_identifier>", task["identifier"])
+			route = route.replace("<user_identifier>", user["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])
 			route = route.replace("<path:route>", "help")
 
