@@ -26,5 +26,10 @@ def project_collection_index():
 
 
 def project_index(project_identifier):
-	project = service_client.get("/project/{project_identifier}".format(**locals()))
-	return flask.render_template("project/index.html", title = "Project " + project["identifier"], project = project)
+	view_data = {
+		"project": service_client.get("/project/{project_identifier}".format(**locals())),
+		"project_jobs": service_client.get("/project/{project_identifier}/jobs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"project_runs": service_client.get("/project/{project_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+	}
+
+	return flask.render_template("project/index.html", title = "Project " + project_identifier, **view_data)
