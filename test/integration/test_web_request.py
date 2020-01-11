@@ -59,6 +59,11 @@ def test_service_routes(tmpdir, database_type):
 
 		route_collection = response.json()
 		for route in route_collection:
+			if route == "/project/<project_identifier>/branches":
+				continue
+			if route == "/project/<project_identifier>/revisions":
+				continue
+
 			route = route.replace("<int:step_index>", "0")
 			route = route.replace("<job_identifier>", job["identifier"])
 			route = route.replace("<project_identifier>", project["identifier"])
