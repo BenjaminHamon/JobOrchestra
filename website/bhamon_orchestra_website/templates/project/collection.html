@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+{% import 'project/macros.html' as project_macros %}
+{% import 'macros.html' as shared_macros %}
+
+{% block content %}
+<h1>Projects</h1>
+<section>
+	<div class="table-container">
+		{{ shared_macros.page_navigation('project_collection_index', pagination) }}
+		{{ project_macros.project_table(project_collection) }}
+		{{ shared_macros.page_navigation('project_collection_index', pagination) }}
+	</div>
+</section>
+{% endblock %}
