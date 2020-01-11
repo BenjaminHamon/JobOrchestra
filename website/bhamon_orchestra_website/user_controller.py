@@ -23,8 +23,12 @@ def user_collection_index():
 		"order_by": [ "identifier ascending" ],
 	}
 
-	user_collection = service_client.get("/user_collection", query_parameters)
-	return flask.render_template("user/collection.html", title = "Users", user_collection = user_collection, pagination = pagination)
+	view_data = {
+		"user_collection": service_client.get("/user_collection", query_parameters),
+		"pagination": pagination,
+	}
+
+	return flask.render_template("user/collection.html", title = "Users", **view_data)
 
 
 def user_index(user_identifier):
@@ -36,7 +40,12 @@ def user_index(user_identifier):
 	for token in user_tokens:
 		token["is_active"] = token["expiration_date"] > now if "expiration_date" in token else True
 
-	return flask.render_template("user/index.html", title = "User " + user["display_name"], user = user, user_tokens = user_tokens)
+	view_data = {
+		"user": user,
+		"user_tokens": user_tokens,
+	}
+
+	return flask.render_template("user/index.html", title = "User " + user["display_name"], **view_data)
 
 
 def create_user():

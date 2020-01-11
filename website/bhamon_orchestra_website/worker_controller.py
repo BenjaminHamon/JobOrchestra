@@ -21,16 +21,22 @@ def worker_collection_index():
 		"order_by": [ "identifier ascending" ],
 	}
 
-	worker_collection = service_client.get("/worker_collection", query_parameters)
-	return flask.render_template("worker/collection.html", title = "Workers", worker_collection = worker_collection, pagination = pagination)
+	view_data = {
+		"worker_collection": service_client.get("/worker_collection", query_parameters),
+		"pagination": pagination,
+	}
+
+	return flask.render_template("worker/collection.html", title = "Workers", **view_data)
 
 
 def worker_index(worker_identifier):
-	worker = service_client.get("/worker/{worker_identifier}".format(**locals()))
-	worker_runs = service_client.get("/worker/{worker_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] })
-	worker_tasks = service_client.get("/worker/{worker_identifier}/tasks".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] })
-	return flask.render_template("worker/index.html", title = "Worker " + worker["identifier"],
-			worker = worker, worker_runs = worker_runs, worker_tasks = worker_tasks)
+	view_data = {
+		"worker": service_client.get("/worker/{worker_identifier}".format(**locals())),
+		"worker_runs": service_client.get("/worker/{worker_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"worker_tasks": service_client.get("/worker/{worker_identifier}/tasks".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+	}
+
+	return flask.render_template("worker/index.html", title = "Worker " + worker_identifier, **view_data)
 
 
 def stop_worker(worker_identifier):
