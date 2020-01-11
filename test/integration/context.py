@@ -25,7 +25,7 @@ shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else
 subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 
-class Context:
+class Context: # pylint: disable = too-many-instance-attributes
 
 
 	def __init__(self, temporary_directory, database_type):
@@ -40,6 +40,19 @@ class Context:
 		self.website_port = environment_instance["website_port"]
 		self.database_uri = environment_instance["database_uri"]
 		self.process_collection = []
+
+		if self.database_uri is not None:
+			database_client_instance = environment.create_database_client(self.database_uri)
+			file_storage_instance = FileStorage(os.path.join(self.temporary_directory, "master"))
+
+			self.authentication_provider = AuthenticationProvider(database_client_instance)
+			self.authorization_provider = AuthorizationProvider()
+			self.job_provider = JobProvider(database_client_instance)
+			self.project_provider = ProjectProvider(database_client_instance)
+			self.run_provider = RunProvider(database_client_instance, file_storage_instance)
+			self.task_provider = TaskProvider(database_client_instance)
+			self.user_provider = UserProvider(database_client_instance)
+			self.worker_provider = WorkerProvider(database_client_instance)
 
 
 	def __enter__(self):
@@ -145,10 +158,9 @@ class Context:
 
 
 	def configure_worker_authentication(self, worker_collection):
-		providers = self.instantiate_providers()
-		user = providers["user"].create("worker", "Worker")
-		providers["user"].update_roles(user, "Worker")
-		token = providers["authentication"].create_token("worker", None, None)
+		user = self.user_provider.create("worker", "Worker")
+		self.user_provider.update_roles(user, "Worker")
+		token = self.authentication_provider.create_token("worker", None, None)
 
 		for worker in worker_collection:
 			worker_directory = os.path.join(self.temporary_directory, worker)
@@ -158,32 +170,14 @@ class Context:
 
 
 	def configure_service_authentication(self):
-		providers = self.instantiate_providers()
-		user = providers["user"].create("auditor", "auditor")
-		providers["user"].update_roles(user, [ "Auditor" ])
-		token = providers["authentication"].create_token("auditor", None, None)
+		user = self.user_provider.create("auditor", "auditor")
+		self.user_provider.update_roles(user, [ "Auditor" ])
+		token = self.authentication_provider.create_token("auditor", None, None)
 		return ("auditor", token["secret"])
 
 
 	def configure_website_authentication(self):
-		providers = self.instantiate_providers()
-		user = providers["user"].create("auditor", "auditor")
-		providers["user"].update_roles(user, [ "Auditor" ])
-		providers["authentication"].set_password("auditor", "password")
+		user = self.user_provider.create("auditor", "auditor")
+		self.user_provider.update_roles(user, [ "Auditor" ])
+		self.authentication_provider.set_password("auditor", "password")
 		return ("auditor", "password")
-
-
-	def instantiate_providers(self):
-		database_client_instance = environment.create_database_client(self.database_uri)
-		file_storage_instance = FileStorage(os.path.join(self.temporary_directory, "master"))
-
-		return {
-			"authentication": AuthenticationProvider(database_client_instance),
-			"authorization": AuthorizationProvider(),
-			"job": JobProvider(database_client_instance),
-			"project": ProjectProvider(database_client_instance),
-			"run": RunProvider(database_client_instance, file_storage_instance),
-			"task": TaskProvider(database_client_instance),
-			"user": UserProvider(database_client_instance),
-			"worker": WorkerProvider(database_client_instance),
-		}
