@@ -13,12 +13,16 @@ class JobProvider:
 		self.table = "job"
 
 
-	def count(self):
-		return self.database_client.count(self.table, {})
+	def count(self, project = None):
+		filter = { "project": project } # pylint: disable = redefined-builtin
+		filter = { key: value for key, value in filter.items() if value is not None }
+		return self.database_client.count(self.table, filter)
 
 
-	def get_list(self, skip = 0, limit = None, order_by = None):
-		return self.database_client.find_many(self.table, {}, skip = skip, limit = limit, order_by = order_by)
+	def get_list(self, project = None, skip = 0, limit = None, order_by = None):
+		filter = { "project": project } # pylint: disable = redefined-builtin
+		filter = { key: value for key, value in filter.items() if value is not None }
+		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
 	def get(self, job_identifier):

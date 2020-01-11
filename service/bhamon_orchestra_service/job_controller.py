@@ -7,11 +7,16 @@ logger = logging.getLogger("JobController")
 
 
 def get_job_count():
-	return flask.jsonify(flask.current_app.job_provider.count())
+	query_parameters = {
+		"project": flask.request.args.get("project", default = None),
+	}
+
+	return flask.jsonify(flask.current_app.job_provider.count(**query_parameters))
 
 
 def get_job_collection():
 	query_parameters = {
+		"project": flask.request.args.get("project", default = None),
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
 		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),
 		"order_by": [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ],
