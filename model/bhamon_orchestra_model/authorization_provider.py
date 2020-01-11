@@ -73,7 +73,7 @@ class AuthorizationProvider:
 			if "Administrator" in user_roles:
 				return True
 
-		if method == "GET" and domain in [ "job", "run", "task", "worker" ]:
+		if method == "GET" and domain in [ "job", "project", "run", "task", "worker" ]:
 			if "Viewer" in user_roles:
 				return True
 		if method == "POST" and domain in [ "job", "run", "task", "worker" ]:

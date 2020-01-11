@@ -13,12 +13,16 @@ class JobProvider:
 		self.table = "job"
 
 
-	def count(self):
-		return self.database_client.count(self.table, {})
+	def count(self, project = None):
+		filter = { "project": project } # pylint: disable = redefined-builtin
+		filter = { key: value for key, value in filter.items() if value is not None }
+		return self.database_client.count(self.table, filter)
 
 
-	def get_list(self, skip = 0, limit = None, order_by = None):
-		return self.database_client.find_many(self.table, {}, skip = skip, limit = limit, order_by = order_by)
+	def get_list(self, project = None, skip = 0, limit = None, order_by = None):
+		filter = { "project": project } # pylint: disable = redefined-builtin
+		filter = { key: value for key, value in filter.items() if value is not None }
+		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
 	def get(self, job_identifier):
@@ -26,12 +30,13 @@ class JobProvider:
 
 
 	def create_or_update( # pylint: disable = too-many-arguments
-			self, job_identifier, workspace, steps, parameters, properties, description):
+			self, job_identifier, project, workspace, steps, parameters, properties, description):
 		job = self.get(job_identifier)
 
 		if job is None:
 			job = {
 				"identifier": job_identifier,
+				"project": project,
 				"workspace": workspace,
 				"steps": steps,
 				"parameters": parameters,
@@ -46,6 +51,7 @@ class JobProvider:
 
 		else:
 			update_data = {
+				"project": project,
 				"workspace": workspace,
 				"steps": steps,
 				"parameters": parameters,

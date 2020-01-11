@@ -13,6 +13,7 @@ logger = logging.getLogger("RunController")
 
 def run_collection_index():
 	query_parameters = {
+		"project": helpers.none_if_empty(flask.request.args.get("project", default = None)),
 		"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
 		"worker": helpers.none_if_empty(flask.request.args.get("worker", default = None)),
 		"status": helpers.none_if_empty(flask.request.args.get("status", default = None)),
@@ -28,10 +29,11 @@ def run_collection_index():
 	})
 
 	view_data = {
-		"run_collection": service_client.get("/run_collection", query_parameters),
+		"project_collection": service_client.get("/project_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 		"job_collection": service_client.get("/job_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 		"worker_collection": service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 		"status_collection": _get_status_collection(),
+		"run_collection": service_client.get("/run_collection", query_parameters),
 		"pagination": pagination,
 	}
 

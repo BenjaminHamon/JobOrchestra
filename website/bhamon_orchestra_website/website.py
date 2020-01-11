@@ -14,6 +14,7 @@ import bhamon_orchestra_website.service_client as service_client
 import bhamon_orchestra_website.admin_controller as admin_controller
 import bhamon_orchestra_website.job_controller as job_controller
 import bhamon_orchestra_website.me_controller as me_controller
+import bhamon_orchestra_website.project_controller as project_controller
 import bhamon_orchestra_website.run_controller as run_controller
 import bhamon_orchestra_website.task_controller as task_controller
 import bhamon_orchestra_website.user_controller as user_controller
@@ -62,6 +63,8 @@ def register_routes(application):
 	application.add_url_rule("/me/change_password", methods = [ "GET", "POST" ], view_func = me_controller.change_password)
 	application.add_url_rule("/me/token_create", methods = [ "GET", "POST" ], view_func = me_controller.create_my_token)
 	application.add_url_rule("/me/token/<token_identifier>/delete", methods = [ "POST" ], view_func = me_controller.delete_my_token)
+	application.add_url_rule("/project_collection", methods = [ "GET" ], view_func = project_controller.project_collection_index)
+	application.add_url_rule("/project/<project_identifier>", methods = [ "GET" ], view_func = project_controller.project_index)
 	application.add_url_rule("/run_collection", methods = [ "GET" ], view_func = run_controller.run_collection_index)
 	application.add_url_rule("/run/<run_identifier>", methods = [ "GET" ], view_func = run_controller.run_index)
 	application.add_url_rule("/run/<run_identifier>/step/<int:step_index>", methods = [ "GET" ], view_func = run_controller.run_step)

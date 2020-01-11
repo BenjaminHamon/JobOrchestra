@@ -14,6 +14,7 @@ from bhamon_orchestra_model.authentication_provider import AuthenticationProvide
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.database.file_storage import FileStorage
 from bhamon_orchestra_model.job_provider import JobProvider
+from bhamon_orchestra_model.project_provider import ProjectProvider
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.task_provider import TaskProvider
 from bhamon_orchestra_model.user_provider import UserProvider
@@ -48,6 +49,7 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	authentication_provider_instance = AuthenticationProvider(database_client_instance)
 	authorization_provider_instance = AuthorizationProvider()
 	job_provider_instance = JobProvider(database_client_instance)
+	project_provider_instance = ProjectProvider(database_client_instance)
 	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
 	task_provider_instance = TaskProvider(database_client_instance)
 	user_provider_instance = UserProvider(database_client_instance)
@@ -87,6 +89,7 @@ def create_application(arguments): # pylint: disable = too-many-locals
 		job_scheduler = job_scheduler_instance,
 		supervisor = supervisor_instance,
 		task_processor = task_processor_instance,
+		project_provider = project_provider_instance,
 		job_provider = job_provider_instance,
 		worker_provider = worker_provider_instance,
 		configuration_loader = reload_configuration,

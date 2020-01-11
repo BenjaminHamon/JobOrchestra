@@ -12,23 +12,35 @@ logger = logging.getLogger("JobController")
 
 
 def job_collection_index():
-	item_total = service_client.get("/job_count")
+	query_parameters = {
+		"project": helpers.none_if_empty(flask.request.args.get("project", default = None)),
+	}
+
+	item_total = service_client.get("/job_count", query_parameters)
 	pagination = helpers.get_pagination(item_total)
 
-	query_parameters = {
+	query_parameters.update({
 		"skip": (pagination["page_number"] - 1) * pagination["item_count"],
 		"limit": pagination["item_count"],
 		"order_by": [ "identifier ascending" ],
+	})
+
+	view_data = {
+		"project_collection": service_client.get("/project_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
+		"job_collection": service_client.get("/job_collection", query_parameters),
+		"pagination": pagination,
 	}
 
-	job_collection = service_client.get("/job_collection", query_parameters)
-	return flask.render_template("job/collection.html", title = "Jobs", job_collection = job_collection, pagination = pagination)
+	return flask.render_template("job/collection.html", title = "Jobs", **view_data)
 
 
 def job_index(job_identifier):
-	job = service_client.get("/job/{job_identifier}".format(**locals()))
-	job_runs = service_client.get("/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] })
-	return flask.render_template("job/index.html", title = "Job " + job["identifier"], job = job, job_runs = job_runs)
+	view_data = {
+		"job": service_client.get("/job/{job_identifier}".format(**locals())),
+		"job_runs": service_client.get("/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+	}
+
+	return flask.render_template("job/index.html", title = "Job " + job_identifier, **view_data)
 
 
 def trigger_job(job_identifier):

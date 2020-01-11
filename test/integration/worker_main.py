@@ -33,7 +33,7 @@ def parse_arguments():
 
 def create_application(arguments, authentication, executor_script):
 	properties = {
-		"project": [ "test_project" ],
+		"project": [ "examples" ],
 		"is_controller": arguments.identifier == "controller",
 		"executor_limit": 100 if arguments.identifier == "controller" else 1,
 	}

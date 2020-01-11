@@ -8,6 +8,7 @@ logger = logging.getLogger("RunController")
 
 def get_run_count():
 	query_parameters = {
+		"project": flask.request.args.get("project", default = None),
 		"job": flask.request.args.get("job", default = None),
 		"worker": flask.request.args.get("worker", default = None),
 		"status": flask.request.args.get("status", default = None),
@@ -18,6 +19,7 @@ def get_run_count():
 
 def get_run_collection():
 	query_parameters = {
+		"project": flask.request.args.get("project", default = None),
 		"job": flask.request.args.get("job", default = None),
 		"worker": flask.request.args.get("worker", default = None),
 		"status": flask.request.args.get("status", default = None),

@@ -10,6 +10,7 @@ import bhamon_orchestra_service.helpers as helpers
 import bhamon_orchestra_service.admin_controller as admin_controller
 import bhamon_orchestra_service.job_controller as job_controller
 import bhamon_orchestra_service.me_controller as me_controller
+import bhamon_orchestra_service.project_controller as project_controller
 import bhamon_orchestra_service.run_controller as run_controller
 import bhamon_orchestra_service.task_controller as task_controller
 import bhamon_orchestra_service.user_controller as user_controller
@@ -56,6 +57,11 @@ def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/me/token_collection", methods = [ "GET" ], view_func = me_controller.get_my_token_list)
 	application.add_url_rule("/me/token_create", methods = [ "POST" ], view_func = me_controller.create_my_token)
 	application.add_url_rule("/me/token/<token_identifier>/delete", methods = [ "POST" ], view_func = me_controller.delete_my_token)
+	application.add_url_rule("/project_count", methods = [ "GET" ], view_func = project_controller.get_project_count)
+	application.add_url_rule("/project_collection", methods = [ "GET" ], view_func = project_controller.get_project_collection)
+	application.add_url_rule("/project/<project_identifier>", methods = [ "GET" ], view_func = project_controller.get_project)
+	application.add_url_rule("/project/<project_identifier>/jobs", methods = [ "GET" ], view_func = project_controller.get_project_jobs)
+	application.add_url_rule("/project/<project_identifier>/runs", methods = [ "GET" ], view_func = project_controller.get_project_runs)
 	application.add_url_rule("/run_count", methods = [ "GET" ], view_func = run_controller.get_run_count)
 	application.add_url_rule("/run_collection", methods = [ "GET" ], view_func = run_controller.get_run_collection)
 	application.add_url_rule("/run/<run_identifier>", methods = [ "GET" ], view_func = run_controller.get_run)
