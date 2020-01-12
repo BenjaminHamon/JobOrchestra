@@ -58,7 +58,12 @@ def test_service_routes(tmpdir, database_type):
 		response.raise_for_status()
 
 		route_collection = response.json()
+
 		for route in route_collection:
+
+			# Skip routes with external dependencies
+			if route == "/admin/service/<service_identifier>":
+				continue
 			if route == "/project/<project_identifier>/repository":
 				continue
 			if route == "/project/<project_identifier>/branches":
@@ -144,7 +149,10 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 		response.raise_for_status()
 
 		route_collection = response.json()
+
 		for route in route_collection:
+
+			# Skip routes with external dependencies
 			if route == "/project/<project_identifier>/status":
 				continue
 

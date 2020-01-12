@@ -36,4 +36,51 @@
 	</ul>
 </section>
 {% endif %}
+
+{% if external_service_collection %}
+<section>
+	<h2>External Services</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>Service</th>
+				<th>Status</th>
+				<th>Rate limit</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for external_service in external_service_collection %}
+			<tr>
+				<td>
+					{% if 'website_url' in external_service %}
+					<a href="{{ external_service['website_url'] }}">{{ external_service["service"] }}</a>
+					{% else %}
+					{{ external_service["service"] }}
+					{%endif %}
+				</td>
+				<td>
+					<div class="status-group">
+						<div class="status-indicator {{ external_service['status'] }}"></div>
+						{% if 'status_url' in external_service %}
+						<div class="status-text"><a href="{{ external_service['status_url'] }}">{{ external_service['status'] }}</a></div>
+						{% else %}
+						<div class="status-text">{{ external_service['status'] }}</div>
+						{% endif %}
+					</div>
+				</td>
+				<td>
+					{% if 'rate_limit' in external_service %}
+					<div class="status-group">
+						<div class="status-indicator {{ external_service['rate_limit']['status'] }}"></div>
+						<div class="status-text">{{ external_service['rate_limit']['status'] }}
+							({{ external_service['rate_limit']['remaining']}} / {{ external_service['rate_limit']['limit'] }})</div>
+					</div>
+					{% endif %}
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</section>
+{% endif %}
 {% endblock %}

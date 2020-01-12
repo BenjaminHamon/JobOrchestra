@@ -20,3 +20,14 @@ def information():
 def reload():
 	task = flask.current_app.task_provider.create("reload_configuration", {})
 	return flask.jsonify({ "task_identifier": task["identifier"] })
+
+
+def get_service_collection():
+	return flask.jsonify(list(flask.current_app.external_services.keys()))
+
+
+def get_service_status(service_identifier):
+	service = flask.current_app.external_services.get(service_identifier, None)
+	if service is None:
+		flask.abort(404)
+	return flask.jsonify(service.get_service_status())
