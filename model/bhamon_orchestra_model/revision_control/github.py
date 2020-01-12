@@ -16,6 +16,20 @@ class GitHubClient:
 		self.access_token = access_token
 
 
+	def get_repository(self, repository): # pylint: disable = unused-argument
+		route = "/repos/{repository}".format(**locals())
+		response = self.send_get_request(route)
+
+		return {
+			"identifier": response["full_name"],
+			"owner": response["owner"]["login"],
+			"name": response["name"],
+			"description": response["description"],
+			"url": response["html_url"],
+			"default_branch": response["default_branch"],
+		}
+
+
 	def get_branch_list(self, repository): # pylint: disable = unused-argument
 		route = "/repos/{repository}/branches".format(**locals())
 		response = self.send_get_request(route)

@@ -59,6 +59,8 @@ def test_service_routes(tmpdir, database_type):
 
 		route_collection = response.json()
 		for route in route_collection:
+			if route == "/project/<project_identifier>/repository":
+				continue
 			if route == "/project/<project_identifier>/branches":
 				continue
 			if route == "/project/<project_identifier>/revisions":

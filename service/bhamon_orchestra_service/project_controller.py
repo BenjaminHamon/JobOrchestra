@@ -50,6 +50,18 @@ def get_project_runs(project_identifier):
 	return flask.jsonify(flask.current_app.run_provider.get_list(**query_parameters))
 
 
+def get_project_repository(project_identifier):
+	project = flask.current_app.project_provider.get(project_identifier)
+	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
+
+	query_parameters = {
+		"repository": project["services"]["revision_control"]["repository"],
+	}
+
+	return flask.jsonify(revision_control_client.get_repository(**query_parameters))
+
+
+
 def get_project_branches(project_identifier):
 	project = flask.current_app.project_provider.get(project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
