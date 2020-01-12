@@ -34,12 +34,19 @@ def project_index(project_identifier):
 
 
 def project_status(project_identifier):
+	branch = flask.request.args.get("branch", default = None)
 	status_limit = max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1)
 
+	repository = service_client.get("/project/{project_identifier}/repository".format(**locals()))
+	branch_collection = service_client.get("/project/{project_identifier}/branches".format(**locals()))
 	job_collection = service_client.get("/project/{project_identifier}/jobs".format(**locals()), { "order_by": [ "identifier ascending" ] })
 	context = { "filter_collection": [ { "identifier": job["identifier"], "job": job["identifier"] } for job in job_collection ] }
 
+	if branch is None:
+		branch = repository["default_branch"]
+
 	status_parameters = {
+		"branch": branch,
 		"revision_limit": 20,
 		"run_limit": 1000,
 	}
@@ -56,6 +63,8 @@ def project_status(project_identifier):
 
 	view_data = {
 		"project_identifier": project_identifier,
+		"project_branch": branch,
+		"project_branch_collection": branch_collection,
 		"project_context": context,
 		"project_status": status,
 	}

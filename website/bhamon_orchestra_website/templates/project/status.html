@@ -5,6 +5,19 @@
 
 <section>
 	<div class="table-container">
+		<form method="get" action="{{ url_for('project_status', project_identifier = project_identifier) }}">
+			<label for="input-branch">Branch</label>
+			<select id="input-branch" name="branch">
+				{% for branch in project_branch_collection %}
+					{% if project_branch == branch %}
+				<option selected>{{ branch }}</option>
+					{% else %}
+				<option>{{ branch }}</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+			<button type="submit">Apply</button>
+		</form>
 		<table class="project-status-table">
 			<thead>
 				<tr>
