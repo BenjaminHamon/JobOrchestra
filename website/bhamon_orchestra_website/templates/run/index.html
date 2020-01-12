@@ -80,7 +80,7 @@
 <section>
 	<h2>Results</h2>
 	<ul>
-		{% if run_results.get('revision_control', {}) %}
+		{% if 'revision_control' in run_results %}
 		<li>
 			<p>Revision Control</p>
 			<ul>
@@ -97,7 +97,7 @@
 			</ul>
 		</li>
 		{% endif %}
-		{% if run_results.get('child_runs', []) %}
+		{% if 'child_runs' in run_results %}
 		<li>
 			<p>Child Runs</p>
 			<ul>
@@ -111,7 +111,7 @@
 			</ul>
 		</li>
 		{% endif %}
-		{% if run_results.get('tests', []) %}
+		{% if 'tests' in run_results %}
 		<li>
 			<p>Tests</p>
 			<ul>
@@ -130,7 +130,7 @@
 			</ul>
 		</li>
 		{% endif %}
-		{% if run_results.get('artifacts', []) %}
+		{% if 'artifacts' in run_results %}
 		<li>
 			<p>Artifacts</p>
 			<ul>
@@ -144,7 +144,7 @@
 			</ul>
 		</li>
 		{% endif %}
-		{% if run_results.get('distributions', []) %}
+		{% if 'distributions' in run_results %}
 		<li>
 			<p>Distributions</p>
 			<ul>
