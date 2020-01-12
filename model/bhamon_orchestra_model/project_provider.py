@@ -25,12 +25,13 @@ class ProjectProvider:
 		return self.database_client.find_one(self.table, { "identifier": project_identifier })
 
 
-	def create_or_update(self, project_identifier):
+	def create_or_update(self, project_identifier, services):
 		project = self.get(project_identifier)
 
 		if project is None:
 			project = {
 				"identifier": project_identifier,
+				"services": services,
 				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 			}
@@ -39,6 +40,7 @@ class ProjectProvider:
 
 		else:
 			update_data = {
+				"services": services,
 				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
 			}
 

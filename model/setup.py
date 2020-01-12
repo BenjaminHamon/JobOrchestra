@@ -22,6 +22,7 @@ parameters.update({
 		"bhamon_orchestra_model",
 		"bhamon_orchestra_model/database",
 		"bhamon_orchestra_model/network",
+		"bhamon_orchestra_model/revision_control",
 	],
 
 	"python_requires": "~= 3.5",

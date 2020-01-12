@@ -10,7 +10,7 @@ def configure():
 
 def configure_projects():
 	return [
-		{ "identifier": "examples" },
+		{ "identifier": "examples", "services": {} },
 	]
 
 

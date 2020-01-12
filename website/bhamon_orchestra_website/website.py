@@ -65,6 +65,7 @@ def register_routes(application):
 	application.add_url_rule("/me/token/<token_identifier>/delete", methods = [ "POST" ], view_func = me_controller.delete_my_token)
 	application.add_url_rule("/project_collection", methods = [ "GET" ], view_func = project_controller.project_collection_index)
 	application.add_url_rule("/project/<project_identifier>", methods = [ "GET" ], view_func = project_controller.project_index)
+	application.add_url_rule("/project/<project_identifier>/status", methods = [ "GET" ], view_func = project_controller.project_status)
 	application.add_url_rule("/run_collection", methods = [ "GET" ], view_func = run_controller.run_collection_index)
 	application.add_url_rule("/run/<run_identifier>", methods = [ "GET" ], view_func = run_controller.run_index)
 	application.add_url_rule("/run/<run_identifier>/step/<int:step_index>", methods = [ "GET" ], view_func = run_controller.run_step)

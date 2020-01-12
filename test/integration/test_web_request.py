@@ -44,7 +44,7 @@ def test_service_routes(tmpdir, database_type):
 	with context.Context(tmpdir, database_type) as context_instance:
 		authentication = context_instance.configure_service_authentication()
 
-		project = context_instance.project_provider.create_or_update("examples")
+		project = context_instance.project_provider.create_or_update("examples", {})
 		job = context_instance.job_provider.create_or_update("examples_empty", "examples", None, None, None, None, None)
 		run = context_instance.run_provider.create("examples", "examples_empty", {})
 		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
@@ -59,6 +59,15 @@ def test_service_routes(tmpdir, database_type):
 
 		route_collection = response.json()
 		for route in route_collection:
+			if route == "/project/<project_identifier>/repository":
+				continue
+			if route == "/project/<project_identifier>/branches":
+				continue
+			if route == "/project/<project_identifier>/revisions":
+				continue
+			if route == "/project/<project_identifier>/status":
+				continue
+
 			route = route.replace("<int:step_index>", "0")
 			route = route.replace("<job_identifier>", job["identifier"])
 			route = route.replace("<project_identifier>", project["identifier"])
@@ -117,7 +126,7 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 	with context.Context(tmpdir, database_type) as context_instance:
 		authentication = context_instance.configure_website_authentication()
 
-		project = context_instance.project_provider.create_or_update("examples")
+		project = context_instance.project_provider.create_or_update("examples", {})
 		job = context_instance.job_provider.create_or_update("examples_empty", "examples", None, None, None, None, None)
 		run = context_instance.run_provider.create("examples", "examples_empty", {})
 		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
@@ -136,6 +145,9 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 
 		route_collection = response.json()
 		for route in route_collection:
+			if route == "/project/<project_identifier>/status":
+				continue
+
 			route = route.replace("<int:step_index>", "0")
 			route = route.replace("<job_identifier>", job["identifier"])
 			route = route.replace("<project_identifier>", project["identifier"])
