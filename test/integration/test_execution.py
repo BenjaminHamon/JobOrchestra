@@ -21,17 +21,16 @@ def test_job_success(tmpdir, database_type):
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
 
-		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = providers["run"].create(project_identifier, job_identifier, {})
-		task = providers["task"].create("trigger_run", { "run_identifier": run["identifier"] })
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		task = context_instance.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(5)
 
-		task = providers["task"].get(task["identifier"])
-		run = providers["run"].get(run["identifier"])
+		task = context_instance.task_provider.get(task["identifier"])
+		run = context_instance.run_provider.get(run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -65,17 +64,16 @@ def test_job_failure(tmpdir, database_type):
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
 
-		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = providers["run"].create(project_identifier, job_identifier, {})
-		task = providers["task"].create("trigger_run", { "run_identifier": run["identifier"] })
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		task = context_instance.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(5)
 
-		task = providers["task"].get(task["identifier"])
-		run = providers["run"].get(run["identifier"])
+		task = context_instance.task_provider.get(task["identifier"])
+		run = context_instance.run_provider.get(run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -109,17 +107,16 @@ def test_job_exception(tmpdir, database_type):
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
 
-		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = providers["run"].create(project_identifier, job_identifier, {})
-		task = providers["task"].create("trigger_run", { "run_identifier": run["identifier"] })
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		task = context_instance.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(5)
 
-		task = providers["task"].get(task["identifier"])
-		run = providers["run"].get(run["identifier"])
+		task = context_instance.task_provider.get(task["identifier"])
+		run = context_instance.run_provider.get(run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -154,22 +151,21 @@ def test_job_controller_success(tmpdir, database_type):
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])
 
-		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		service_process = context_instance.invoke_service()
 		controller_process = context_instance.invoke_worker("controller")
 		worker_01_process = context_instance.invoke_worker("worker_01")
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
-		run = providers["run"].create(project_identifier, job_identifier, {})
-		task = providers["task"].create("trigger_run", { "run_identifier": run["identifier"] })
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		task = context_instance.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(15)
 
-		task = providers["task"].get(task["identifier"])
-		run = providers["run"].get(run["identifier"])
-		all_tasks = providers["task"].get_list()
-		all_runs = providers["run"].get_list()
+		task = context_instance.task_provider.get(task["identifier"])
+		run = context_instance.run_provider.get(run["identifier"])
+		all_tasks = context_instance.task_provider.get_list()
+		all_runs = context_instance.run_provider.get_list()
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting run %s %s" % (job_identifier, run["identifier"]) },
@@ -204,22 +200,21 @@ def test_job_controller_failure(tmpdir, database_type):
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])
 
-		providers = context_instance.instantiate_providers()
 		master_process = context_instance.invoke_master()
 		service_process = context_instance.invoke_service()
 		controller_process = context_instance.invoke_worker("controller")
 		worker_01_process = context_instance.invoke_worker("worker_01")
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
-		run = providers["run"].create(project_identifier, job_identifier, {})
-		task = providers["task"].create("trigger_run", { "run_identifier": run["identifier"] })
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		task = context_instance.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(15)
 
-		task = providers["task"].get(task["identifier"])
-		run = providers["run"].get(run["identifier"])
-		all_tasks = providers["task"].get_list()
-		all_runs = providers["run"].get_list()
+		task = context_instance.task_provider.get(task["identifier"])
+		run = context_instance.run_provider.get(run["identifier"])
+		all_tasks = context_instance.task_provider.get_list()
+		all_runs = context_instance.run_provider.get_list()
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting run %s %s" % (job_identifier, run["identifier"]) },

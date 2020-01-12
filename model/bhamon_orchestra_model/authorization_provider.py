@@ -58,6 +58,8 @@ class AuthorizationProvider:
 	def is_authorized_route(self, user_roles, method, route): # pylint: disable = too-many-branches, too-many-return-statements
 		if "Administrator" in user_roles:
 			return True
+		if "Auditor" in user_roles and method == "GET":
+			return True
 
 		if method == "GET" and route == "/":
 			return True
@@ -71,6 +73,8 @@ class AuthorizationProvider:
 
 		if domain in [ "admin", "user" ]:
 			if "Administrator" in user_roles:
+				return True
+			if "Auditor" in user_roles and method == "GET":
 				return True
 
 		if method == "GET" and domain in [ "job", "project", "run", "task", "worker" ]:
@@ -90,14 +94,18 @@ class AuthorizationProvider:
 		return False
 
 
-	def is_authorized_view(self, user_roles, view): # pylint: disable = no-self-use
+	def is_authorized_view(self, user_roles, view): # pylint: disable = no-self-use, too-many-return-statements
 		if "Administrator" in user_roles:
 			return True
 
 		if view in [ "nav-admin" ]:
 			if "Administrator" in user_roles:
 				return True
+			if "Auditor" in user_roles:
+				return True
 		if view in [ "nav-main" ]:
+			if "Auditor" in user_roles:
+				return True
 			if "Viewer" in user_roles:
 				return True
 

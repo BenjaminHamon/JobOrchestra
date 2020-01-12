@@ -44,13 +44,13 @@ def test_service_routes(tmpdir, database_type):
 	with context.Context(tmpdir, database_type) as context_instance:
 		authentication = context_instance.configure_service_authentication()
 
-		providers = context_instance.instantiate_providers()
-		project = providers["project"].create_or_update("examples")
-		job = providers["job"].create_or_update("examples_empty", "examples", None, None, None, None, None)
-		run = providers["run"].create("examples", "examples_empty", {})
-		providers["run"].update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
-		task = providers["task"].create("nothing", {})
-		worker = providers["worker"].create("worker", None)
+		project = context_instance.project_provider.create_or_update("examples")
+		job = context_instance.job_provider.create_or_update("examples_empty", "examples", None, None, None, None, None)
+		run = context_instance.run_provider.create("examples", "examples_empty", {})
+		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
+		task = context_instance.task_provider.create("nothing", {})
+		worker = context_instance.worker_provider.create("worker", None)
+		user = context_instance.user_provider.create("user", "user")
 
 		service_process = context_instance.invoke_service()
 
@@ -64,6 +64,7 @@ def test_service_routes(tmpdir, database_type):
 			route = route.replace("<project_identifier>", project["identifier"])
 			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<task_identifier>", task["identifier"])
+			route = route.replace("<user_identifier>", user["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])
 
 			response = requests.get(context_instance.get_service_uri() + route, auth = authentication, timeout = 10)
@@ -116,13 +117,13 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 	with context.Context(tmpdir, database_type) as context_instance:
 		authentication = context_instance.configure_website_authentication()
 
-		providers = context_instance.instantiate_providers()
-		project = providers["project"].create_or_update("examples")
-		job = providers["job"].create_or_update("examples_empty", "examples", None, None, None, None, None)
-		run = providers["run"].create("examples", "examples_empty", {})
-		providers["run"].update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
-		task = providers["task"].create("nothing", {})
-		worker = providers["worker"].create("worker", None)
+		project = context_instance.project_provider.create_or_update("examples")
+		job = context_instance.job_provider.create_or_update("examples_empty", "examples", None, None, None, None, None)
+		run = context_instance.run_provider.create("examples", "examples_empty", {})
+		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
+		task = context_instance.task_provider.create("nothing", {})
+		worker = context_instance.worker_provider.create("worker", None)
+		user = context_instance.user_provider.create("user", "user")
 
 		service_process = context_instance.invoke_service()
 		website_process = context_instance.invoke_website()
@@ -140,6 +141,7 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 			route = route.replace("<project_identifier>", project["identifier"])
 			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<task_identifier>", task["identifier"])
+			route = route.replace("<user_identifier>", user["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])
 			route = route.replace("<path:route>", "help")
 
