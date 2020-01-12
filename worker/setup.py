@@ -17,7 +17,12 @@ parameters = development.configuration.get_setuptools_parameters(configuration_i
 parameters.update({
 	"name": "bhamon-orchestra-worker",
 	"description": "Worker component for Job Orchestra, responsible for executing runs",
-	"packages": [ "bhamon_orchestra_worker" ],
+
+	"packages": [
+		"bhamon_orchestra_worker",
+		"bhamon_orchestra_worker/revision_control",
+	],
+
 	"python_requires": "~= 3.5",
 	"install_requires": [ "filelock ~= 3.0", "requests ~= 2.21", "websockets ~= 7.0" ],
 })
