@@ -5,36 +5,8 @@ import requests
 
 logger = logging.getLogger("GitHub")
 
-
 website_url = "https://github.com"
 api_url = "https://api.github.com"
-
-
-
-class GitHubRepositoryClient:
-
-
-	def __init__(self, owner, repository, access_token = None):
-		self.owner = owner
-		self.repository = repository
-		self.inner_client = GitHubClient(access_token)
-
-
-	def get_branch_list(self):
-		return self.inner_client.get_branch_list(self.owner, self.repository)
-
-
-	def get_revision_list(self, branch = None, limit = None):
-		return self.inner_client.get_revision_list(self.owner, self.repository, branch = branch, limit = limit)
-
-
-	def get_revision(self, revision):
-		return self.inner_client.get_revision(self.owner, self.repository, revision)
-
-
-	def get_revision_url(self, revision):
-		return self.inner_client.get_revision_url(self.owner, self.repository, revision)
-
 
 
 class GitHubClient:
@@ -44,14 +16,14 @@ class GitHubClient:
 		self.access_token = access_token
 
 
-	def get_branch_list(self, owner, repository): # pylint: disable = unused-argument
-		route = "/repos/{owner}/{repository}/branches".format(**locals())
+	def get_branch_list(self, repository): # pylint: disable = unused-argument
+		route = "/repos/{repository}/branches".format(**locals())
 		response = self.send_get_request(route)
 		return [ item["name"] for item in response ]
 
 
-	def get_revision_list(self, owner, repository, branch = None, limit = None): # pylint: disable = unused-argument
-		route = "/repos/{owner}/{repository}/commits".format(**locals())
+	def get_revision_list(self, repository, branch = None, limit = None): # pylint: disable = unused-argument
+		route = "/repos/{repository}/commits".format(**locals())
 		parameters = { "sha": branch, "per_page": limit }
 		parameters = { key: value for key, value in parameters.items() if value is not None }
 		response = self.send_get_request(route, parameters)
@@ -70,8 +42,8 @@ class GitHubClient:
 		return revision_list
 
 
-	def get_revision(self, owner, repository, revision): # pylint: disable = unused-argument
-		route = "/repos/{owner}/{repository}/commits/{revision}".format(**locals())
+	def get_revision(self, repository, revision): # pylint: disable = unused-argument
+		route = "/repos/{repository}/commits/{revision}".format(**locals())
 		response = self.send_get_request(route)
 
 		return {
@@ -84,8 +56,8 @@ class GitHubClient:
 		}
 
 
-	def get_revision_url(self, owner, repository, revision): # pylint: disable = no-self-use, unused-argument
-		return website_url + "/{owner}/{repository}/commit/{revision}".format(**locals())
+	def get_revision_url(self, repository, revision): # pylint: disable = no-self-use, unused-argument
+		return website_url + "/{repository}/commit/{revision}".format(**locals())
 
 
 	def send_get_request(self, route, parameters = None):

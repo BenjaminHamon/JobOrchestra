@@ -3,7 +3,7 @@ import logging
 import flask
 import requests
 
-from bhamon_orchestra_model.revision_control.github import GitHubRepositoryClient
+from bhamon_orchestra_model.revision_control.github import GitHubClient
 
 
 logger = logging.getLogger("ProjectController")
@@ -53,7 +53,12 @@ def get_project_runs(project_identifier):
 def get_project_branches(project_identifier):
 	project = flask.current_app.project_provider.get(project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
-	return flask.jsonify(revision_control_client.get_branch_list())
+
+	query_parameters = {
+		"repository": project["services"]["revision_control"]["repository"],
+	}
+
+	return flask.jsonify(revision_control_client.get_branch_list(**query_parameters))
 
 
 def get_project_revisions(project_identifier):
@@ -61,6 +66,7 @@ def get_project_revisions(project_identifier):
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 
 	query_parameters = {
+		"repository": project["services"]["revision_control"]["repository"],
 		"branch": flask.request.args.get("branch", default = None),
 		"limit": max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1),
 	}
@@ -70,9 +76,11 @@ def get_project_revisions(project_identifier):
 
 def get_project_status(project_identifier):
 	project = flask.current_app.project_provider.get(project_identifier)
+	repository = project["services"]["revision_control"]["repository"]
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 
 	revision_query_parameters = {
+		"repository": repository,
 		"branch": flask.request.args.get("branch", default = None),
 		"limit": max(min(flask.request.args.get("revision_limit", default = 20, type = int), 100), 1),
 	}
@@ -94,7 +102,7 @@ def get_project_status(project_identifier):
 		revision_identifier = run.get("results", {}).get("revision_control", {}).get("revision")
 		if revision_identifier is None and run["status"] in [ "pending", "running" ]:
 			try:
-				revision_identifier = revision_control_client.get_revision(run["parameters"]["revision"])
+				revision_identifier = revision_control_client.get_revision(repository, run["parameters"]["revision"])
 			except requests.HTTPError:
 				logger.warning("Failed to resolve project '%s' revision '%s'", project_identifier, run["parameters"]["revision"], exc_info = True)
 
@@ -107,6 +115,5 @@ def get_project_status(project_identifier):
 
 def _create_revision_control_client(service):
 	if service["type"] == "github":
-		access_token = flask.current_app.config.get("GITHUB_ACCESS_TOKEN", None)
-		return GitHubRepositoryClient(service["owner"], service["repository"], access_token)
+		return GitHubClient(flask.current_app.config.get("GITHUB_ACCESS_TOKEN", None))
 	raise ValueError("Unsupported service '%s'" % service["type"])
