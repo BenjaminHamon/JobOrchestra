@@ -38,7 +38,7 @@ def create_database_client(database_uri):
 def load_environment():
 	return {
 		"python3_executable": sys.executable,
-		"orchestra_service_url": "http://localhost:5902",
+		"orchestra_service_url": "http://127.0.0.1:5902",
 	}
 
 
@@ -46,11 +46,11 @@ def load_test_context_environment(temporary_directory, database_type):
 	database_uri = get_test_context_database_uri(temporary_directory, database_type) if database_type is not None else None
 
 	return {
-		"master_address": "localhost",
+		"master_address": "127.0.0.1",
 		"master_port": 5901,
-		"service_address": "localhost",
+		"service_address": "127.0.0.1",
 		"service_port": 5902,
-		"website_address": "localhost",
+		"website_address": "127.0.0.1",
 		"website_port": 5903,
 		"database_uri": database_uri,
 	}
@@ -63,7 +63,7 @@ def get_test_context_database_uri(temporary_directory, database_type):
 	if database_type == "json":
 		return "json://" + os.path.join(temporary_directory, "master")
 	if database_type == "mongo":
-		return "mongodb://localhost:27017/" + database_name
+		return "mongodb://127.0.0.1:27017/" + database_name
 	raise ValueError("Unsupported database type '%s'" % database_type)
 
 
