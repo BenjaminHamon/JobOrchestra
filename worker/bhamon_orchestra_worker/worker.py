@@ -50,11 +50,8 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 		worker_logging.configure_logging_handlers()
 
 		self._asyncio_loop = asyncio.get_event_loop()
-
-		self._recover()
 		main_future = asyncio.gather(self._run_worker(), self._check_signals())
 		self._asyncio_loop.run_until_complete(main_future)
-		self._terminate()
 		self._asyncio_loop.close()
 
 		logger.info("Exiting worker")
@@ -67,6 +64,8 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 
 
 	async def _run_worker(self):
+		self._recover()
+
 		messenger_future = asyncio.ensure_future(self._run_messenger())
 
 		while not self._should_shutdown:
@@ -77,6 +76,8 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 
 		messenger_future.cancel()
 		await messenger_future
+
+		await self._terminate()
 
 
 	async def _run_messenger(self):
@@ -113,11 +114,12 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 		return await self._execute_command(request["command"], request.get("parameters", {}))
 
 
-	def _terminate(self):
+	async def _terminate(self):
 		all_futures = []
 		for executor in self._active_executors:
 			all_futures.append(executor.terminate(self.termination_timeout_seconds))
-		self._asyncio_loop.run_until_complete(asyncio.gather(*all_futures))
+		if len(all_futures) > 0:
+			await asyncio.wait(all_futures)
 		for executor in self._active_executors:
 			if executor.is_running():
 				logger.warning("%s %s is still running (Process: %s)", executor.job_identifier, executor.run_identifier, executor.process.pid)
