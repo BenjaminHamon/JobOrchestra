@@ -19,7 +19,7 @@ def main():
 		del os.environ["__PYVENV_LAUNCHER__"]
 
 	current_directory = os.getcwd()
-	script_path = os.path.realpath(__file__)
+	script_path = os.path.abspath(__file__)
 	workspace_directory = os.path.dirname(os.path.dirname(script_path))
 
 	os.chdir(workspace_directory)
