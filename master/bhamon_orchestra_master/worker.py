@@ -43,7 +43,7 @@ class Worker:
 	async def run(self):
 		try:
 			self.executors += await self._recover_executors()
-		except asyncio.CancelledError:
+		except asyncio.CancelledError: # pylint: disable = try-except-raise
 			raise
 		except Exception: # pylint: disable = broad-except
 			logger.error("(%s) Unhandled exception while recovering runs", self.identifier, exc_info = True)
@@ -53,7 +53,7 @@ class Worker:
 			for executor in all_executors:
 				try:
 					await self._process_executor(executor)
-				except asyncio.CancelledError:
+				except asyncio.CancelledError: # pylint: disable = try-except-raise
 					raise
 				except Exception: # pylint: disable = broad-except
 					logger.error("(%s) Unhandled exception while executing run %s %s", self.identifier, executor["run"]["job"], executor["run"]["identifier"], exc_info = True)
