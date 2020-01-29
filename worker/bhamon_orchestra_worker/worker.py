@@ -31,7 +31,6 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 		self._active_executors = []
 		self._asyncio_loop = None
 		self._messenger = None
-		self._messenger_future = None
 		self._should_shutdown = False
 
 		self.termination_timeout_seconds = 30
@@ -53,7 +52,7 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 		self._asyncio_loop = asyncio.get_event_loop()
 
 		self._recover()
-		main_future = asyncio.gather(self._run_worker(), self._run_messenger(), self._check_signals())
+		main_future = asyncio.gather(self._run_worker(), self._check_signals())
 		self._asyncio_loop.run_until_complete(main_future)
 		self._terminate()
 		self._asyncio_loop.close()
@@ -68,14 +67,16 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 
 
 	async def _run_worker(self):
+		messenger_future = asyncio.ensure_future(self._run_messenger())
+
 		while not self._should_shutdown:
 			for executor in self._active_executors:
 				executor.update(self._messenger)
 
 			await asyncio.sleep(1)
 
-		if self._messenger_future is not None:
-			self._messenger_future.cancel()
+		messenger_future.cancel()
+		await messenger_future
 
 
 	async def _run_messenger(self):
@@ -83,14 +84,11 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 			websocket_client_instance = WebSocketClient("master", self._master_uri)
 			authentication_data = base64.b64encode(b"%s:%s" % (self._user.encode(), self._secret.encode())).decode()
 			headers = { "Authorization": "Basic" + " " + authentication_data, "X-Orchestra-Worker": self._identifier }
-			self._messenger_future = asyncio.ensure_future(websocket_client_instance.run_forever(self._process_connection, extra_headers = headers))
-			await self._messenger_future
+			await websocket_client_instance.run_forever(self._process_connection, extra_headers = headers)
 		except asyncio.CancelledError:
 			pass
 		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception", exc_info = True)
-		finally:
-			self._messenger_future = None
 
 
 	async def _process_connection(self, connection):
