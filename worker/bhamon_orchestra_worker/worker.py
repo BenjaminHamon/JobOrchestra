@@ -95,7 +95,7 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 
 	async def _process_connection(self, connection):
 		messenger_instance = Messenger(connection)
-		messenger_instance.identifier = "%s:%s" % connection.connection.remote_address
+		messenger_instance.identifier = connection.connection.remote_address
 		messenger_instance.request_handler = self._handle_request
 
 		self._messenger = messenger_instance

@@ -73,7 +73,7 @@ class Supervisor:
 		try:
 			logger.info("Connection from worker '%s' (User: '%s', RemoteAddress: '%s')", connection.worker, connection.user, connection.remote_address[0])
 			messenger_instance = Messenger(WebSocketConnection(connection))
-			messenger_instance.identifier = "%s:%s" % connection.remote_address
+			messenger_instance.identifier = connection.remote_address
 			messenger_future = asyncio.ensure_future(messenger_instance.run())
 			worker_future = asyncio.ensure_future(self._process_connection_internal(connection.user, connection.worker, messenger_instance))
 
