@@ -17,10 +17,8 @@ class Worker:
 		self._messenger = messenger
 		self._run_provider = run_provider
 
-		self.should_disconnect = False
 		self.should_shutdown = False
 		self.executors = []
-		self._active_asyncio_sleep = None
 
 
 	def assign_run(self, job, run):
@@ -35,11 +33,6 @@ class Worker:
 				executor["should_abort"] = True
 
 
-	def wake_up(self):
-		if self._active_asyncio_sleep:
-			self._active_asyncio_sleep.cancel()
-
-
 	async def run(self):
 		try:
 			self.executors += await self._recover_executors()
@@ -48,7 +41,7 @@ class Worker:
 		except Exception: # pylint: disable = broad-except
 			logger.error("(%s) Unhandled exception while recovering runs", self.identifier, exc_info = True)
 
-		while not self.should_disconnect and (not self.should_shutdown or len(self.executors) > 0):
+		while not self.should_shutdown or len(self.executors) > 0:
 			all_executors = list(self.executors)
 			for executor in all_executors:
 				try:

@@ -16,7 +16,7 @@ import bhamon_orchestra_worker.worker_storage as worker_storage
 logger = logging.getLogger("Worker")
 
 
-class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attributes
+class Worker:
 
 
 	def __init__( # pylint: disable = too-many-arguments
@@ -29,7 +29,6 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 		self._executor_script = executor_script
 
 		self._active_executors = []
-		self._asyncio_loop = None
 		self._messenger = None
 		self._should_shutdown = False
 
@@ -49,47 +48,55 @@ class Worker: # pylint: disable = too-few-public-methods, too-many-instance-attr
 
 		worker_logging.configure_logging_handlers()
 
-		self._asyncio_loop = asyncio.get_event_loop()
-		main_future = asyncio.gather(self._run_worker(), self._check_signals())
-		self._asyncio_loop.run_until_complete(main_future)
-		self._asyncio_loop.close()
+		asyncio_loop = asyncio.get_event_loop()
+		asyncio_loop.run_until_complete(self.run_async())
+		asyncio_loop.close()
 
 		logger.info("Exiting worker")
 
 
-	# Ensure Windows signals are processed even when the asyncio event loop is blocking with nothing happening
-	async def _check_signals(self):
-		while not self._should_shutdown:
-			await asyncio.sleep(1)
-
-
-	async def _run_worker(self):
+	async def run_async(self):
 		self._recover()
 
+		executors_future = asyncio.ensure_future(self._run_executors())
 		messenger_future = asyncio.ensure_future(self._run_messenger())
 
+		try:
+			await asyncio.wait([ executors_future, messenger_future ], return_when = asyncio.FIRST_COMPLETED)
+
+		finally:
+			executors_future.cancel()
+			messenger_future.cancel()
+
+			try:
+				await executors_future
+			except asyncio.CancelledError:
+				pass
+			except Exception: # pylint: disable = broad-except
+				logger.error("Unhandled exception from executors", exc_info = True)
+
+			try:
+				await messenger_future
+			except asyncio.CancelledError:
+				pass
+			except Exception: # pylint: disable = broad-except
+				logger.error("Unhandled exception from messenger", exc_info = True)
+
+			await self._terminate()
+
+
+	async def _run_executors(self):
 		while not self._should_shutdown:
 			for executor in self._active_executors:
 				executor.update(self._messenger)
-
 			await asyncio.sleep(1)
-
-		messenger_future.cancel()
-		await messenger_future
-
-		await self._terminate()
 
 
 	async def _run_messenger(self):
-		try:
-			websocket_client_instance = WebSocketClient("master", self._master_uri)
-			authentication_data = base64.b64encode(b"%s:%s" % (self._user.encode(), self._secret.encode())).decode()
-			headers = { "Authorization": "Basic" + " " + authentication_data, "X-Orchestra-Worker": self._identifier }
-			await websocket_client_instance.run_forever(self._process_connection, extra_headers = headers)
-		except asyncio.CancelledError:
-			pass
-		except Exception: # pylint: disable = broad-except
-			logger.error("Unhandled exception", exc_info = True)
+		websocket_client_instance = WebSocketClient("master", self._master_uri)
+		authentication_data = base64.b64encode(b"%s:%s" % (self._user.encode(), self._secret.encode())).decode()
+		headers = { "Authorization": "Basic" + " " + authentication_data, "X-Orchestra-Worker": self._identifier }
+		await websocket_client_instance.run_forever(self._process_connection, extra_headers = headers)
 
 
 	async def _process_connection(self, connection):

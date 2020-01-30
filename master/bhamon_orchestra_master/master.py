@@ -19,6 +19,7 @@ class Master:
 		self._job_provider = job_provider
 		self._worker_provider = worker_provider
 		self._configuration_loader = configuration_loader
+		self._should_shutdown = False
 
 
 	def run(self):
@@ -31,12 +32,44 @@ class Master:
 
 		self.reload_configuration()
 
-		main_loop = asyncio.get_event_loop()
-		main_future = asyncio.gather(self._supervisor.run_server(), self._task_processor.run())
-		main_loop.run_until_complete(main_future)
-		main_loop.close()
+		asyncio_loop = asyncio.get_event_loop()
+		asyncio_loop.run_until_complete(self.run_async())
+		asyncio_loop.close()
 
 		logger.info("Exiting master")
+
+
+	async def run_async(self):
+		shutdown_future = asyncio.ensure_future(self._watch_shutdown())
+		supervisor_future = asyncio.ensure_future(self._supervisor.run_server())
+		task_processor_future = asyncio.ensure_future(self._task_processor.run())
+
+		try:
+			await asyncio.wait([ shutdown_future, supervisor_future, task_processor_future ], return_when = asyncio.FIRST_COMPLETED)
+
+		finally:
+			shutdown_future.cancel()
+			supervisor_future.cancel()
+			task_processor_future.cancel()
+
+			try:
+				await supervisor_future
+			except asyncio.CancelledError:
+				pass
+			except Exception: # pylint: disable = broad-except
+				logger.error("Unhandled exception from supervisor", exc_info = True)
+
+			try:
+				await task_processor_future
+			except asyncio.CancelledError:
+				pass
+			except Exception: # pylint: disable = broad-except
+				logger.error("Unhandled exception from task processor", exc_info = True)
+
+
+	async def _watch_shutdown(self):
+		while not self._should_shutdown:
+			await asyncio.sleep(1)
 
 
 	def register_default_tasks(self):
@@ -71,8 +104,7 @@ class Master:
 
 
 	def shutdown(self):
-		self._supervisor.shutdown()
-		self._task_processor.shutdown()
+		self._should_shutdown = True
 
 
 def reload_configuration(master):

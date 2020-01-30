@@ -23,7 +23,6 @@ class Supervisor:
 		self._protocol_factory = protocol_factory
 
 		self._active_workers = {}
-		self._should_shutdown = False
 
 
 	async def run_server(self):
@@ -33,15 +32,8 @@ class Supervisor:
 
 		logger.info("Listening for workers on '%s:%s'", self._host, self._port)
 		async with websockets.serve(self._process_connection, self._host, self._port, create_protocol = self._protocol_factory, max_size = 2 ** 30):
-			while not self._should_shutdown or len(self._active_workers) > 0:
+			while True:
 				await asyncio.sleep(1)
-
-
-	def shutdown(self):
-		for worker_instance in self._active_workers.values():
-			worker_instance.should_disconnect = True
-			worker_instance.wake_up()
-		self._should_shutdown = True
 
 
 	def get_worker(self, worker_identifier):
@@ -67,9 +59,6 @@ class Supervisor:
 
 
 	async def _process_connection(self, connection, path): # pylint: disable = unused-argument
-		if self._should_shutdown:
-			return
-
 		try:
 			logger.info("Connection from worker '%s' (User: '%s', RemoteAddress: '%s')", connection.worker, connection.user, connection.remote_address[0])
 			messenger_instance = Messenger(WebSocketConnection(connection))
@@ -77,30 +66,32 @@ class Supervisor:
 			messenger_future = asyncio.ensure_future(messenger_instance.run())
 			worker_future = asyncio.ensure_future(self._process_connection_internal(connection.user, connection.worker, messenger_instance))
 
-			await asyncio.wait([ messenger_future, worker_future ], return_when = asyncio.FIRST_COMPLETED)
-
-			worker_future.cancel()
-			messenger_future.cancel()
-			messenger_instance.dispose()
-
 			try:
-				await worker_future
-			except asyncio.CancelledError:
-				pass
-			except Exception: # pylint: disable = broad-except
-				logger.error("Unhandled exception from worker '%s'", connection.worker, exc_info = True)
+				await asyncio.wait([ messenger_future, worker_future ], return_when = asyncio.FIRST_COMPLETED)
 
-			try:
-				await messenger_future
-			except websockets.exceptions.ConnectionClosed as exception:
-				if exception.code not in [ 1000, 1001 ]:
-					logger.error("Lost connection from worker '%s'", connection.worker, exc_info = True)
-			except asyncio.CancelledError:
-				pass
-			except Exception: # pylint: disable = broad-except
-				logger.error("Unhandled exception from messenger", exc_info = True)
+			finally:
+				worker_future.cancel()
+				messenger_future.cancel()
+				messenger_instance.dispose()
 
-			logger.info("Terminating connection with worker '%s'", connection.worker)
+				try:
+					await worker_future
+				except asyncio.CancelledError:
+					pass
+				except Exception: # pylint: disable = broad-except
+					logger.error("Unhandled exception from worker '%s'", connection.worker, exc_info = True)
+
+				try:
+					await messenger_future
+				except websockets.exceptions.ConnectionClosed as exception:
+					if exception.code not in [ 1000, 1001 ] and not isinstance(exception.__cause__, asyncio.CancelledError):
+						logger.error("Lost connection from worker '%s'", connection.worker, exc_info = True)
+				except asyncio.CancelledError:
+					pass
+				except Exception as exception: # pylint: disable = broad-except
+					logger.error("Unhandled exception from messenger", exc_info = True)
+
+				logger.info("Terminating connection with worker '%s'", connection.worker)
 
 		except WorkerError as exception:
 			logger.error("Worker error: %s", exception)
@@ -118,9 +109,8 @@ class Supervisor:
 		self._active_workers[worker_identifier] = worker_instance
 
 		try:
-			if not self._should_shutdown:
-				logger.info("Worker '%s' is now active", worker_identifier)
-				await worker_instance.run()
+			logger.info("Worker '%s' is now active", worker_identifier)
+			await worker_instance.run()
 
 		finally:
 			del self._active_workers[worker_identifier]
