@@ -77,8 +77,10 @@ class Master:
 			lambda parameters: reload_configuration(self))
 		self._task_processor.register_handler("stop_worker", 50,
 			lambda parameters: stop_worker(self._supervisor, **parameters))
-		self._task_processor.register_handler("abort_run", 90,
+		self._task_processor.register_handler("abort_run", 80,
 			lambda parameters: abort_run(self._job_scheduler, **parameters))
+		self._task_processor.register_handler("cancel_run", 90,
+			lambda parameters: cancel_run(self._job_scheduler, **parameters))
 
 
 	def reload_configuration(self):

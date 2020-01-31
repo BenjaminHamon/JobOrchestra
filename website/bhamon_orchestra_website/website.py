@@ -70,6 +70,7 @@ def register_routes(application):
 	application.add_url_rule("/run/<run_identifier>", methods = [ "GET" ], view_func = run_controller.run_index)
 	application.add_url_rule("/run/<run_identifier>/step/<int:step_index>", methods = [ "GET" ], view_func = run_controller.run_step)
 	application.add_url_rule("/run/<run_identifier>/step/<int:step_index>/log", methods = [ "GET" ], view_func = run_controller.run_step_log)
+	application.add_url_rule("/run/<run_identifier>/cancel", methods = [ "POST" ], view_func = run_controller.cancel_run)
 	application.add_url_rule("/run/<run_identifier>/abort", methods = [ "POST" ], view_func = run_controller.abort_run)
 	application.add_url_rule("/run/<run_identifier>/download", methods = [ "GET" ], view_func = run_controller.download_run_archive)
 	application.add_url_rule("/task_collection", methods = [ "GET" ], view_func = task_controller.task_collection_index)
