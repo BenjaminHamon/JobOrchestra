@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import time
 
 
 logger = logging.getLogger("JobScheduler")
@@ -12,10 +14,40 @@ class JobScheduler:
 		self._job_provider = job_provider
 		self._run_provider = run_provider
 		self._worker_selector = worker_selector
+		self.update_interval_seconds = 10
 
 
-	def trigger_run(self, run_identifier):
-		run = self._run_provider.get(run_identifier)
+	async def run(self):
+		while True:
+			try:
+				update_start = time.time()
+				await self._update()
+				update_end = time.time()
+				await asyncio.sleep(self.update_interval_seconds - (update_end - update_start))
+			except asyncio.CancelledError: # pylint: disable = try-except-raise
+				raise
+			except Exception: # pylint: disable = broad-except
+				logger.error("Unhandled exception", exc_info = True)
+
+
+	async def _update(self):
+		all_runs = self._list_pending_runs()
+
+		for run in all_runs:
+			try:
+				self._trigger_run(run)
+			except Exception: # pylint: disable = broad-except
+				logger.error("Run trigger '%s' raised an exception", run["identifier"], exc_info = True)
+				self._run_provider.update_status(run, status = "exception")
+
+
+	def _list_pending_runs(self):
+		all_runs = self._run_provider.get_list(status = "pending")
+		all_runs = [ run for run in all_runs if run["worker"] is None ]
+		return all_runs
+
+
+	def _trigger_run(self, run):
 		job = self._job_provider.get(run["job"])
 		if not job["is_enabled"]:
 			return False
