@@ -79,9 +79,6 @@ class Master:
 			lambda parameters: stop_worker(self._supervisor, **parameters))
 		self._task_processor.register_handler("abort_run", 90,
 			lambda parameters: abort_run(self._job_scheduler, **parameters))
-		self._task_processor.register_handler("trigger_run", 100,
-			lambda parameters: trigger_run(self._job_scheduler, **parameters),
-			lambda parameters: cancel_run(self._job_scheduler, **parameters))
 
 
 	def reload_configuration(self):
@@ -115,11 +112,6 @@ def reload_configuration(master):
 def stop_worker(supervisor, worker_identifier):
 	was_stopped = supervisor.stop_worker(worker_identifier)
 	return "succeeded" if was_stopped else "failed"
-
-
-def trigger_run(job_scheduler, run_identifier):
-	was_triggered = job_scheduler.trigger_run(run_identifier)
-	return "succeeded" if was_triggered else "pending"
 
 
 def cancel_run(job_scheduler, run_identifier):

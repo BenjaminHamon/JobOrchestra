@@ -25,11 +25,9 @@ def test_job_success(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
-		task = context_instance.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(5)
 
-		task = context_instance.task_provider.get(task["identifier"])
 		run = context_instance.run_provider.get(run["identifier"])
 
 	master_expected_messages = [
@@ -50,7 +48,6 @@ def test_job_success(tmpdir, database_type):
 		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
-	assert task["status"] == "succeeded"
 	assert run["status"] == "succeeded"
 
 
@@ -68,11 +65,9 @@ def test_job_failure(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
-		task = context_instance.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(5)
 
-		task = context_instance.task_provider.get(task["identifier"])
 		run = context_instance.run_provider.get(run["identifier"])
 
 	master_expected_messages = [
@@ -93,7 +88,6 @@ def test_job_failure(tmpdir, database_type):
 		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
-	assert task["status"] == "succeeded"
 	assert run["status"] == "failed"
 
 
@@ -111,11 +105,9 @@ def test_job_exception(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
-		task = context_instance.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(5)
 
-		task = context_instance.task_provider.get(task["identifier"])
 		run = context_instance.run_provider.get(run["identifier"])
 
 	master_expected_messages = [
@@ -137,7 +129,6 @@ def test_job_exception(tmpdir, database_type):
 		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
-	assert task["status"] == "succeeded"
 	assert run["status"] == "exception"
 
 
@@ -158,13 +149,10 @@ def test_job_controller_success(tmpdir, database_type):
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
 		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
-		task = context_instance.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(15)
 
-		task = context_instance.task_provider.get(task["identifier"])
 		run = context_instance.run_provider.get(run["identifier"])
-		all_tasks = context_instance.task_provider.get_list()
 		all_runs = context_instance.run_provider.get_list()
 
 	master_expected_messages = [
@@ -184,9 +172,7 @@ def test_job_controller_success(tmpdir, database_type):
 		{ "process": worker_02_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
 	])
 
-	assert task["status"] == "succeeded"
 	assert run["status"] == "succeeded"
-	assert len(all_tasks) == 3
 	assert len(all_runs) == 3
 
 
@@ -207,13 +193,10 @@ def test_job_controller_failure(tmpdir, database_type):
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
 		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
-		task = context_instance.task_provider.create("trigger_run", { "run_identifier": run["identifier"] })
 
 		time.sleep(15)
 
-		task = context_instance.task_provider.get(task["identifier"])
 		run = context_instance.run_provider.get(run["identifier"])
-		all_tasks = context_instance.task_provider.get_list()
 		all_runs = context_instance.run_provider.get_list()
 
 	master_expected_messages = [
@@ -233,7 +216,5 @@ def test_job_controller_failure(tmpdir, database_type):
 		{ "process": worker_02_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
 	])
 
-	assert task["status"] == "succeeded"
 	assert run["status"] == "failed"
-	assert len(all_tasks) == 3
 	assert len(all_runs) == 3
