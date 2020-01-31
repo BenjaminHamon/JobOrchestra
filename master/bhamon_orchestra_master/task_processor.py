@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import time
 
 
 logger = logging.getLogger("TaskProcessor")
@@ -29,17 +28,14 @@ class TaskProcessor:
 	async def run(self):
 		while True:
 			try:
-				update_start = time.time()
-				await self._update()
-				update_end = time.time()
-				await asyncio.sleep(self.update_interval_seconds - (update_end - update_start))
+				await asyncio.gather(self.update(), asyncio.sleep(self.update_interval_seconds))
 			except asyncio.CancelledError: # pylint: disable = try-except-raise
 				raise
 			except Exception: # pylint: disable = broad-except
 				logger.error("Unhandled exception", exc_info = True)
 
 
-	async def _update(self):
+	async def update(self):
 		all_tasks = self._list_pending_tasks()
 
 		for task in all_tasks:

@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import time
 
 
 logger = logging.getLogger("JobScheduler")
@@ -20,17 +19,14 @@ class JobScheduler:
 	async def run(self):
 		while True:
 			try:
-				update_start = time.time()
-				await self._update()
-				update_end = time.time()
-				await asyncio.sleep(self.update_interval_seconds - (update_end - update_start))
+				await asyncio.gather(self.update(), asyncio.sleep(self.update_interval_seconds))
 			except asyncio.CancelledError: # pylint: disable = try-except-raise
 				raise
 			except Exception: # pylint: disable = broad-except
 				logger.error("Unhandled exception", exc_info = True)
 
 
-	async def _update(self):
+	async def update(self):
 		all_runs = self._list_pending_runs()
 
 		for run in all_runs:
