@@ -84,6 +84,7 @@ def create_application(arguments): # pylint: disable = too-many-locals
 		supervisor = supervisor_instance,
 		job_provider = job_provider_instance,
 		run_provider = run_provider_instance,
+		schedule_provider = schedule_provider_instance,
 		worker_selector = worker_selector_instance,
 	)
 
