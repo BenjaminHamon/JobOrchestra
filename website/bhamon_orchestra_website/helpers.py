@@ -1,6 +1,11 @@
 import math
 
+import cron_descriptor
 import flask
+
+
+cron_descriptor_options = cron_descriptor.Options()
+cron_descriptor_options.use_24hour_time_format = True
 
 
 def none_if_empty(value):
@@ -18,6 +23,10 @@ def get_pagination(item_total):
 
 def strip_pagination_arguments(arguments):
 	return { k: v for k, v in arguments.items() if k not in [ "page", "item_count" ] }
+
+
+def describe_cron_expression(expression):
+	return cron_descriptor.get_description(expression, cron_descriptor_options)
 
 
 def get_error_message(status_code): # pylint: disable = too-many-return-statements

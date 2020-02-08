@@ -1,10 +1,8 @@
 def configure():
-	projects = configure_projects()
-	jobs = configure_jobs()
-
 	return {
-		"projects": projects,
-		"jobs": jobs,
+		"projects": configure_projects(),
+		"jobs": configure_jobs(),
+		"schedules": configure_schedules(),
 	}
 
 
@@ -21,6 +19,20 @@ def configure_jobs():
 		exception(),
 		controller_success(),
 		controller_failure(),
+	]
+
+
+def configure_schedules():
+	return [
+		{
+			"identifier": "example_success_nightly",
+			"project": "examples",
+			"job": "examples_success",
+
+			"parameters": [],
+
+			"expression": "0 0 * * *",
+		}
 	]
 
 

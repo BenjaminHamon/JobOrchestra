@@ -1,0 +1,48 @@
+{% macro schedule_table(schedule_collection) %}
+<table>
+	<thead>
+		<tr>
+			<th>Identifier</th>
+			<th>Enabled</th>
+			<th>Expression</th>
+			{% if authorize_view("schedule-actions") %}
+			<th>Actions</th>
+			{% endif %}
+			<th>Update date</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for schedule in schedule_collection %}
+		<tr>
+			<td><a href="{{ url_for('schedule_index', schedule_identifier = schedule['identifier']) }}">{{ schedule['identifier'] }}</a></td>
+			<td>
+				{% if schedule['is_enabled'] %}
+				<div class="status-group">
+					<div class="status-indicator enabled"></div>
+					<div class="status-text">Enabled</div>
+				</div>
+				{% else %}
+				<div class="status-group">
+					<div class="status-indicator disabled"></div>
+					<div class="status-text">Disabled</div>
+				</div>
+				{% endif %}
+			</td>
+			<td>{{ schedule['expression'] | describe_cron_expression }}</td>
+			{% if authorize_view("schedule-actions") %}
+			<td>
+				<form class="action-group" method="post">
+					{% if schedule['is_enabled'] %}
+					<button formaction="{{ url_for('disable_schedule', schedule_identifier = schedule['identifier']) }}">Disable</button>
+					{% else %}
+					<button formaction="{{ url_for('enable_schedule', schedule_identifier = schedule['identifier']) }}">Enable</button>
+					{% endif %}
+				</form>
+			</td>
+			{% endif %}
+			<td>{{ schedule['update_date'] }}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endmacro %}

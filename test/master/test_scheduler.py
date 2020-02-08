@@ -14,7 +14,7 @@ def test_cancel_run_pending():
 
 	database_client_instance = MemoryDatabaseClient()
 	run_provider_instance = RunProvider(database_client_instance, None)
-	job_scheduler_instance = JobScheduler(None, None, run_provider_instance, None)
+	job_scheduler_instance = JobScheduler(None, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
@@ -32,7 +32,7 @@ def test_cancel_run_running():
 
 	database_client_instance = MemoryDatabaseClient()
 	run_provider_instance = RunProvider(database_client_instance, None)
-	job_scheduler_instance = JobScheduler(None, None, run_provider_instance, None)
+	job_scheduler_instance = JobScheduler(None, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
@@ -51,7 +51,7 @@ def test_cancel_run_completed():
 
 	database_client_instance = MemoryDatabaseClient()
 	run_provider_instance = RunProvider(database_client_instance, None)
-	job_scheduler_instance = JobScheduler(None, None, run_provider_instance, None)
+	job_scheduler_instance = JobScheduler(None, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
@@ -71,7 +71,7 @@ def test_abort_run_pending():
 	database_client_instance = MemoryDatabaseClient()
 	run_provider_instance = RunProvider(database_client_instance, None)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
@@ -92,7 +92,7 @@ def test_abort_run_running_connected():
 	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_instance = Worker("worker_test", None, run_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None, None)
 
 	supervisor_instance._active_workers[worker_instance.identifier] = worker_instance
 
@@ -120,7 +120,7 @@ def test_abort_run_running_disconnected():
 	run_provider_instance = RunProvider(database_client_instance, None)
 	worker_instance = Worker("worker_test", None, run_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
@@ -145,7 +145,7 @@ def test_abort_run_completed():
 	database_client_instance = MemoryDatabaseClient()
 	run_provider_instance = RunProvider(database_client_instance, None)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})

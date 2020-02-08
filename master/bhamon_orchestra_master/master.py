@@ -10,14 +10,16 @@ logger = logging.getLogger("Master")
 class Master:
 
 
-	def __init__( # pylint: disable = too-many-arguments
-			self, job_scheduler, supervisor, task_processor, project_provider, job_provider, worker_provider, configuration_loader):
+	def __init__(self, # pylint: disable = too-many-arguments
+			project_provider, job_provider, schedule_provider, worker_provider,
+			job_scheduler, supervisor, task_processor, configuration_loader):
+		self._project_provider = project_provider
+		self._job_provider = job_provider
+		self._schedule_provider = schedule_provider
+		self._worker_provider = worker_provider
 		self._job_scheduler = job_scheduler
 		self._supervisor = supervisor
 		self._task_processor = task_processor
-		self._project_provider = project_provider
-		self._job_provider = job_provider
-		self._worker_provider = worker_provider
 		self._configuration_loader = configuration_loader
 		self._should_shutdown = False
 
@@ -109,6 +111,16 @@ class Master:
 		for job in configuration["jobs"]:
 			logger.info("Adding/Updating job %s", job["identifier"])
 			self._job_provider.create_or_update(job["identifier"], job["project"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["description"])
+
+		all_existing_schedules = self._schedule_provider.get_list()
+		for existing_schedule in all_existing_schedules:
+			if existing_schedule["identifier"] not in [ schedule["identifier"] for schedule in configuration["schedules"] ]:
+				logger.info("Removing schedule %s", existing_schedule["identifier"])
+				self._schedule_provider.delete(existing_schedule["identifier"])
+
+		for schedule in configuration["schedules"]:
+			logger.info("Adding/Updating schedule %s", schedule["identifier"])
+			self._schedule_provider.create_or_update(schedule["identifier"], schedule["project"], schedule["job"], schedule["parameters"], schedule["expression"])
 
 
 	def shutdown(self):

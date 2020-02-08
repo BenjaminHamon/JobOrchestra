@@ -1,5 +1,9 @@
 import asyncio
+import datetime
 import logging
+
+import dateutil.parser
+import pycron
 
 
 logger = logging.getLogger("JobScheduler")
@@ -8,10 +12,12 @@ logger = logging.getLogger("JobScheduler")
 class JobScheduler:
 
 
-	def __init__(self, supervisor, job_provider, run_provider, worker_selector):
+	def __init__( # pylint: disable = too-many-arguments
+			self, supervisor, job_provider, run_provider, schedule_provider, worker_selector):
 		self._supervisor = supervisor
 		self._job_provider = job_provider
 		self._run_provider = run_provider
+		self._schedule_provider = schedule_provider
 		self._worker_selector = worker_selector
 		self.update_interval_seconds = 10
 
@@ -28,6 +34,16 @@ class JobScheduler:
 
 
 	async def update(self):
+		now = datetime.datetime.utcnow().replace(second = 0, microsecond = 0)
+
+		all_schedules = self._list_active_schedules()
+
+		for schedule in all_schedules:
+			if self._should_schedule_trigger(schedule, now):
+				logger.info("Triggering run for schedule '%s'", schedule["identifier"])
+				run = self._run_provider.create(schedule["project"], schedule["job"], schedule["parameters"])
+				self._schedule_provider.update_status(schedule, last_run = run["identifier"])
+
 		all_runs = self._list_pending_runs()
 
 		for run in all_runs:
@@ -38,10 +54,37 @@ class JobScheduler:
 				self._run_provider.update_status(run, status = "exception")
 
 
+	def _list_active_schedules(self):
+		all_schedules = self._schedule_provider.get_list()
+		all_schedules = [ schedule for schedule in all_schedules if schedule["is_enabled"] ]
+		return all_schedules
+
+
 	def _list_pending_runs(self):
 		all_runs = self._run_provider.get_list(status = "pending")
 		all_runs = [ run for run in all_runs if run["worker"] is None ]
 		return all_runs
+
+
+	def _should_schedule_trigger(self, schedule, now):
+		if not pycron.is_now(schedule["expression"], now):
+			return False
+
+		if schedule["last_run"] is None:
+			return True
+
+		last_run = self._run_provider.get(schedule["last_run"])
+		if last_run is None:
+			return True
+
+		if last_run["status"] in [ "pending", "running" ]:
+			return False
+
+		last_trigger_date = dateutil.parser.parse(last_run["creation_date"]).replace(second = 0, microsecond = 0, tzinfo = None)
+		if last_trigger_date == now:
+			return False
+
+		return True
 
 
 	def _trigger_run(self, run):
@@ -53,7 +96,7 @@ class JobScheduler:
 		if selected_worker is None:
 			return False
 
-		logger.info("Assigning run %s %s to worker %s", run["job"], run["identifier"], selected_worker)
+		logger.info("Assigning run '%s' '%s' to worker '%s'", run["job"], run["identifier"], selected_worker)
 		self._supervisor.get_worker(selected_worker).assign_run(job, run)
 		return True
 

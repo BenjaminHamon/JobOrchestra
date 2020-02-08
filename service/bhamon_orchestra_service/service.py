@@ -12,6 +12,7 @@ import bhamon_orchestra_service.job_controller as job_controller
 import bhamon_orchestra_service.me_controller as me_controller
 import bhamon_orchestra_service.project_controller as project_controller
 import bhamon_orchestra_service.run_controller as run_controller
+import bhamon_orchestra_service.schedule_controller as schedule_controller
 import bhamon_orchestra_service.task_controller as task_controller
 import bhamon_orchestra_service.user_controller as user_controller
 import bhamon_orchestra_service.worker_controller as worker_controller
@@ -80,6 +81,11 @@ def register_routes(application): # pylint: disable = too-many-statements
 	application.add_url_rule("/run/<run_identifier>/cancel", methods = [ "POST" ], view_func = run_controller.cancel_run)
 	application.add_url_rule("/run/<run_identifier>/abort", methods = [ "POST" ], view_func = run_controller.abort_run)
 	application.add_url_rule("/run/<run_identifier>/download", methods = [ "GET" ], view_func = run_controller.download_run_archive)
+	application.add_url_rule("/schedule_count", methods = [ "GET" ], view_func = schedule_controller.get_schedule_count)
+	application.add_url_rule("/schedule_collection", methods = [ "GET" ], view_func = schedule_controller.get_schedule_collection)
+	application.add_url_rule("/schedule/<schedule_identifier>", methods = [ "GET" ], view_func = schedule_controller.get_schedule)
+	application.add_url_rule("/schedule/<schedule_identifier>/enable", methods = [ "POST" ], view_func = schedule_controller.enable_schedule)
+	application.add_url_rule("/schedule/<schedule_identifier>/disable", methods = [ "POST" ], view_func = schedule_controller.disable_schedule)
 	application.add_url_rule("/task_count", methods = [ "GET" ], view_func = task_controller.get_task_count)
 	application.add_url_rule("/task_collection", methods = [ "GET" ], view_func = task_controller.get_task_collection)
 	application.add_url_rule("/task/<task_identifier>", methods = [ "GET" ], view_func = task_controller.get_task)

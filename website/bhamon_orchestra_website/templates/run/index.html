@@ -28,6 +28,7 @@
 		{% endif %}
 	</div>
 	<ul>
+		<li>Project: <a href="{{ url_for('project_index', project_identifier = run['project']) }}" style="display: inline">{{ run['project'] }}</a></li>
 		<li>Job: <a href="{{ url_for('job_index', job_identifier = run['job']) }}" style="display: inline">{{ run['job'] }}</a></li>
 		<li>Worker: {% if run['worker'] %}<a href="{{ url_for('worker_index', worker_identifier = run['worker']) }}" style="display: inline">{{ run['worker'] }}</a>{% endif %}</li>
 		<li>Creation date: {{ run['creation_date'] }}</li>
