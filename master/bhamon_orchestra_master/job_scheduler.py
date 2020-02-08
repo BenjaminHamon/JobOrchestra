@@ -24,6 +24,7 @@ class JobScheduler:
 				raise
 			except Exception: # pylint: disable = broad-except
 				logger.error("Unhandled exception", exc_info = True)
+				await asyncio.sleep(self.update_interval_seconds)
 
 
 	async def update(self):
