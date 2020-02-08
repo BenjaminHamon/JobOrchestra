@@ -1,0 +1,39 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Schedule {{ schedule['identifier'] }}</h1>
+
+<section>
+	<h2>Status</h2>
+	<div class=status-grid>
+		{% if schedule['is_enabled'] %}
+		<div class="status-group">
+			<div class="status-indicator enabled"></div>
+			<div class="status-text">Enabled</div>
+		</div>
+			{% if authorize_view("schedule-actions") %}
+		<form method="post">
+			<button formaction="{{ url_for('disable_schedule', schedule_identifier = schedule['identifier']) }}">Disable</button>
+		</form>
+			{% endif %}
+		{% else %}
+		<div class="status-group">
+			<div class="status-indicator disabled"></div>
+			<div class="status-text">Disabled</div>
+		</div>
+			{% if authorize_view("schedule-actions") %}
+		<form method="post">
+			<button formaction="{{ url_for('enable_schedule', schedule_identifier = schedule['identifier']) }}">Enable</button>
+		</form>
+			{% endif %}
+		{% endif %}
+	</div>
+	<ul>
+		<li>Project: <a href="{{ url_for('project_index', project_identifier = schedule['project']) }}" style="display: inline">{{ schedule['project'] }}</a></li>
+		<li>Job: <a href="{{ url_for('job_index', job_identifier = schedule['job']) }}" style="display: inline">{{ schedule['job'] }}</a></li>
+		<li>Expression: {{ schedule['expression'] }} ({{ schedule['expression'] | describe_cron_expression }})</li>
+		<li>Creation date: {{ schedule['creation_date'] }}</li>
+		<li>Update date: {{ schedule['update_date'] }}</li>
+	</ul>
+</section>
+{% endblock %}

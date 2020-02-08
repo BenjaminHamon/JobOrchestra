@@ -133,6 +133,7 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 
 		project = context_instance.project_provider.create_or_update("examples", {})
 		job = context_instance.job_provider.create_or_update("examples_empty", "examples", None, None, None, None, None)
+		schedule = context_instance.schedule_provider.create_or_update("examples_empty_nightly", "examples", "examples_empty", None, "0 0 * * *")
 		run = context_instance.run_provider.create("examples", "examples_empty", {})
 		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 		task = context_instance.task_provider.create("nothing", {})
@@ -160,6 +161,7 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 			route = route.replace("<job_identifier>", job["identifier"])
 			route = route.replace("<project_identifier>", project["identifier"])
 			route = route.replace("<run_identifier>", run["identifier"])
+			route = route.replace("<schedule_identifier>", schedule["identifier"])
 			route = route.replace("<task_identifier>", task["identifier"])
 			route = route.replace("<user_identifier>", user["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])

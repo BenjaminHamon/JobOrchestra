@@ -16,6 +16,7 @@ import bhamon_orchestra_website.job_controller as job_controller
 import bhamon_orchestra_website.me_controller as me_controller
 import bhamon_orchestra_website.project_controller as project_controller
 import bhamon_orchestra_website.run_controller as run_controller
+import bhamon_orchestra_website.schedule_controller as schedule_controller
 import bhamon_orchestra_website.task_controller as task_controller
 import bhamon_orchestra_website.user_controller as user_controller
 import bhamon_orchestra_website.worker_controller as worker_controller
@@ -34,6 +35,7 @@ def configure(application, title = None, copyright = None, version = None, date 
 	application.jinja_env.undefined = jinja2.StrictUndefined()
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True
+	application.jinja_env.filters["describe_cron_expression"] = helpers.describe_cron_expression
 	application.jinja_env.filters["strip_pagination_arguments"] = helpers.strip_pagination_arguments
 	application.jinja_env.globals["authorize_view"] = authorize_view
 	application.permanent_session_lifetime = datetime.timedelta(days = 7)
@@ -73,6 +75,10 @@ def register_routes(application):
 	application.add_url_rule("/run/<run_identifier>/cancel", methods = [ "POST" ], view_func = run_controller.cancel_run)
 	application.add_url_rule("/run/<run_identifier>/abort", methods = [ "POST" ], view_func = run_controller.abort_run)
 	application.add_url_rule("/run/<run_identifier>/download", methods = [ "GET" ], view_func = run_controller.download_run_archive)
+	application.add_url_rule("/schedule_collection", methods = [ "GET" ], view_func = schedule_controller.schedule_collection_index)
+	application.add_url_rule("/schedule/<schedule_identifier>", methods = [ "GET" ], view_func = schedule_controller.schedule_index)
+	application.add_url_rule("/schedule/<schedule_identifier>/enable", methods = [ "POST" ], view_func = schedule_controller.enable_schedule)
+	application.add_url_rule("/schedule/<schedule_identifier>/disable", methods = [ "POST" ], view_func = schedule_controller.disable_schedule)
 	application.add_url_rule("/task_collection", methods = [ "GET" ], view_func = task_controller.task_collection_index)
 	application.add_url_rule("/task/<task_identifier>/cancel", methods = [ "POST" ], view_func = task_controller.cancel_task)
 	application.add_url_rule("/user_collection", methods = [ "GET" ], view_func = user_controller.user_collection_index)
