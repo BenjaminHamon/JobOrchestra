@@ -76,6 +76,11 @@ def get_run_tasks(run_identifier):
 	return flask.jsonify(flask.current_app.task_provider.get_list(**query_parameters))
 
 
+def cancel_run(run_identifier):
+	task = flask.current_app.task_provider.create("cancel_run", { "run_identifier": run_identifier })
+	return flask.jsonify({ "run_identifier": run_identifier, "task_identifier": task["identifier"] })
+
+
 def abort_run(run_identifier):
 	task = flask.current_app.task_provider.create("abort_run", { "run_identifier": run_identifier })
 	return flask.jsonify({ "run_identifier": run_identifier, "task_identifier": task["identifier"] })

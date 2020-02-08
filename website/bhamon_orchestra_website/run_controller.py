@@ -70,6 +70,12 @@ def run_step_log(run_identifier, step_index): # pylint: disable = unused-argumen
 	return flask.Response(log_text, mimetype = "text/plain")
 
 
+def cancel_run(run_identifier): # pylint: disable = unused-argument
+	parameters = flask.request.form
+	service_client.post("/run/{run_identifier}/cancel".format(**locals()), parameters)
+	return flask.redirect(flask.request.referrer or flask.url_for("run_collection_index"))
+
+
 def abort_run(run_identifier): # pylint: disable = unused-argument
 	parameters = flask.request.form
 	service_client.post("/run/{run_identifier}/abort".format(**locals()), parameters)

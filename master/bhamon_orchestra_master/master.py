@@ -41,16 +41,25 @@ class Master:
 
 	async def run_async(self):
 		shutdown_future = asyncio.ensure_future(self._watch_shutdown())
+		job_scheduler_future = asyncio.ensure_future(self._job_scheduler.run())
 		supervisor_future = asyncio.ensure_future(self._supervisor.run_server())
 		task_processor_future = asyncio.ensure_future(self._task_processor.run())
 
 		try:
-			await asyncio.wait([ shutdown_future, supervisor_future, task_processor_future ], return_when = asyncio.FIRST_COMPLETED)
+			await asyncio.wait([ shutdown_future, job_scheduler_future, supervisor_future, task_processor_future ], return_when = asyncio.FIRST_COMPLETED)
 
 		finally:
 			shutdown_future.cancel()
+			job_scheduler_future.cancel()
 			supervisor_future.cancel()
 			task_processor_future.cancel()
+
+			try:
+				await job_scheduler_future
+			except asyncio.CancelledError:
+				pass
+			except Exception: # pylint: disable = broad-except
+				logger.error("Unhandled exception from job scheduler", exc_info = True)
 
 			try:
 				await supervisor_future
@@ -77,10 +86,9 @@ class Master:
 			lambda parameters: reload_configuration(self))
 		self._task_processor.register_handler("stop_worker", 50,
 			lambda parameters: stop_worker(self._supervisor, **parameters))
-		self._task_processor.register_handler("abort_run", 90,
+		self._task_processor.register_handler("abort_run", 80,
 			lambda parameters: abort_run(self._job_scheduler, **parameters))
-		self._task_processor.register_handler("trigger_run", 100,
-			lambda parameters: trigger_run(self._job_scheduler, **parameters),
+		self._task_processor.register_handler("cancel_run", 90,
 			lambda parameters: cancel_run(self._job_scheduler, **parameters))
 
 
@@ -115,11 +123,6 @@ def reload_configuration(master):
 def stop_worker(supervisor, worker_identifier):
 	was_stopped = supervisor.stop_worker(worker_identifier)
 	return "succeeded" if was_stopped else "failed"
-
-
-def trigger_run(job_scheduler, run_identifier):
-	was_triggered = job_scheduler.trigger_run(run_identifier)
-	return "succeeded" if was_triggered else "pending"
 
 
 def cancel_run(job_scheduler, run_identifier):

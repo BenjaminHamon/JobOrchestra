@@ -24,7 +24,7 @@ class Controller:
 	def trigger_run(self, result_file_path, job_identifier, parameters):
 		message = "Triggering run for job %s" % job_identifier
 		response = self._try_request(message, lambda: self._service_post("/job/" + job_identifier + "/trigger", data = parameters))
-		logger.info("Run: %s, Task: %s", response["run_identifier"], response["task_identifier"])
+		logger.info("Run: %s", response["run_identifier"])
 
 		results = workspace.load_results(result_file_path)
 		results["child_runs"] = results.get("child_runs", [])
