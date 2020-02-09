@@ -6,7 +6,7 @@
 <h1>Schedules</h1>
 <section>
 	<div class="table-container">
-		<form method="get" action="{{ url_for('schedule_collection_index') }}">
+		<form method="get" action="{{ url_for('schedule_controller.show_collection') }}">
 			<label for="input-project">Project</label>
 			<select id="input-project" name="project">
 				<option></option>
@@ -31,9 +31,9 @@
 			</select>
 			<button type="submit">Apply filters</button>
 		</form>
-		{{ shared_macros.page_navigation('schedule_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('schedule_controller.show_collection', pagination) }}
 		{{ schedule_macros.schedule_table(schedule_collection) }}
-		{{ shared_macros.page_navigation('schedule_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('schedule_controller.show_collection', pagination) }}
 	</div>
 </section>
 {% endblock %}

@@ -12,7 +12,7 @@
 	<tbody>
 		{% for user in user_collection %}
 		<tr>
-			<td><a href="{{ url_for('user_index', user_identifier = user['identifier']) }}">{{ user['identifier'] }}</a></td>
+			<td><a href="{{ url_for('user_controller.show', user_identifier = user['identifier']) }}">{{ user['identifier'] }}</a></td>
 			<td>{{ user['display_name'] }}</td>
 			<td>
 				{% if user['is_enabled'] %}
@@ -30,9 +30,9 @@
 			<td>
 				<form class="action-group" method="post">
 					{% if user['is_enabled'] %}
-					<button formaction="{{ url_for('disable_user', user_identifier = user['identifier']) }}">Disable</button>
+					<button formaction="{{ url_for('user_controller.disable', user_identifier = user['identifier']) }}">Disable</button>
 					{% else %}
-					<button formaction="{{ url_for('enable_user', user_identifier = user['identifier']) }}">Enable</button>
+					<button formaction="{{ url_for('user_controller.enable', user_identifier = user['identifier']) }}">Enable</button>
 					{% endif %}
 				</form>
 			</td>
@@ -62,7 +62,7 @@
 			<td>{{ token['description'] if token['description'] }}</td>
 			<td>
 				<form class="action-group" method="post">
-					<button formaction="{{ url_for('delete_my_token', token_identifier = token['identifier']) }}">Delete</button>
+					<button formaction="{{ url_for('me_controller.delete_token', token_identifier = token['identifier']) }}">Delete</button>
 				</form>
 			</td>
 			<td>
@@ -105,7 +105,7 @@
 			<td>{{ token['description'] if token['description'] }}</td>
 			<td>
 				<form class="action-group" method="post">
-					<button formaction="{{ url_for('delete_user_token', user_identifier = token['user'], token_identifier = token['identifier']) }}">Delete</button>
+					<button formaction="{{ url_for('user_controller.delete_token', user_identifier = token['user'], token_identifier = token['identifier']) }}">Delete</button>
 				</form>
 			</td>
 			<td>

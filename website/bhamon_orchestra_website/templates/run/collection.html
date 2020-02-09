@@ -6,7 +6,7 @@
 <h1>Runs</h1>
 <section>
 	<div class="table-container">
-		<form method="get" action="{{ url_for('run_collection_index') }}">
+		<form method="get" action="{{ url_for('run_controller.show_collection') }}">
 			<label for="input-project">Project</label>
 			<select id="input-project" name="project">
 				<option></option>
@@ -53,9 +53,9 @@
 			</select>
 			<button type="submit">Apply filters</button>
 		</form>
-		{{ shared_macros.page_navigation('run_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('run_controller.show_collection', pagination) }}
 		{{ run_macros.run_table(run_collection) }}
-		{{ shared_macros.page_navigation('run_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('run_controller.show_collection', pagination) }}
 	</div>
 </section>
 {% endblock %}

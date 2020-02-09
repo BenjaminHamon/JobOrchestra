@@ -14,7 +14,7 @@ logger = logging.getLogger("MeController")
 def login():
 	if flask.request.method == "GET":
 		if "token" in flask.session:
-			return flask.redirect(flask.url_for("home"))
+			return flask.redirect(flask.url_for("website.home"))
 		return flask.render_template("me/login.html", title = "Log In")
 
 	if flask.request.method == "POST":
@@ -24,7 +24,7 @@ def login():
 			flask.session["token"] = service_client.post("/me/login", data = parameters)
 			flask.session.permanent = True
 			flask.flash("Login succeeded.", "success")
-			return flask.redirect(flask.url_for("home"))
+			return flask.redirect(flask.url_for("website.home"))
 		except requests.HTTPError as exception:
 			flask.flash("Login failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
 			return flask.render_template("me/login.html", title = "Log In")
@@ -35,18 +35,18 @@ def login():
 def logout():
 	if flask.request.method == "GET":
 		if "token" not in flask.session:
-			return flask.redirect(flask.url_for("home"))
+			return flask.redirect(flask.url_for("website.home"))
 		return flask.render_template("me/logout.html", title = "Log Out")
 
 	if flask.request.method == "POST":
 		if "token" not in flask.session:
-			return flask.redirect(flask.url_for("home"))
+			return flask.redirect(flask.url_for("website.home"))
 
 		try:
 			service_client.post("/me/logout", { "token_identifier": flask.session["token"]["token_identifier"] })
 			flask.flash("Logout succeeded.", "success")
 			flask.session.clear()
-			return flask.redirect(flask.url_for("home"))
+			return flask.redirect(flask.url_for("website.home"))
 		except requests.HTTPError as exception:
 			flask.flash("Logout failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
 			return flask.render_template("me/logout.html", title = "Log Out")
@@ -54,7 +54,7 @@ def logout():
 	return flask.abort(405)
 
 
-def my_profile():
+def show_profile():
 	user = service_client.get("/me")
 	user_tokens = service_client.get("/me/token_collection", { "order_by": [ "update_date descending" ] })
 	user_tokens.sort(key = lambda token: "expiration_date" in token)
@@ -80,7 +80,7 @@ def change_password():
 		try:
 			service_client.post("/me/change_password", data = parameters)
 			flask.flash("Password change succeeded.", "success")
-			return flask.redirect(flask.url_for("my_profile"))
+			return flask.redirect(flask.url_for("me_controller.show_profile"))
 		except requests.HTTPError as exception:
 			flask.flash("Password change failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
 			return flask.render_template("me/change_password.html", title = "Change Password")
@@ -88,7 +88,7 @@ def change_password():
 	return flask.abort(405)
 
 
-def create_my_token():
+def create_token():
 	if flask.request.method == "GET":
 		return flask.render_template("me/create_token.html", title = "Create Authentication Token")
 
@@ -101,7 +101,7 @@ def create_my_token():
 			token = service_client.post("/me/token_create", data = parameters)
 			flask.flash("Token '%s' was created successfully." % token["token_identifier"], "success")
 			flask.flash("Token secret: '%s'." % token["secret"], "info")
-			return flask.redirect(flask.url_for("my_profile"))
+			return flask.redirect(flask.url_for("me_controller.show_profile"))
 		except requests.HTTPError as exception:
 			flask.flash("Token could not be created: %s." % helpers.get_error_message(exception.response.status_code), "error")
 			return flask.render_template("me/create_token.html", title = "Create Authentication Token")
@@ -109,10 +109,10 @@ def create_my_token():
 	return flask.abort(405)
 
 
-def delete_my_token(token_identifier):
+def delete_token(token_identifier):
 	try:
 		service_client.post("/me/token/{token_identifier}/delete".format(**locals()))
 		flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")
 	except requests.HTTPError as exception:
 		flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, helpers.get_error_message(exception.response.status_code)), "error")
-	return flask.redirect(flask.url_for("my_profile"))
+	return flask.redirect(flask.url_for("me_controller.show_profile"))

@@ -11,7 +11,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("UserController")
 
 
-def user_collection_index():
+def show_collection():
 	item_total = service_client.get("/user_count")
 	pagination = helpers.get_pagination(item_total)
 
@@ -29,7 +29,7 @@ def user_collection_index():
 	return flask.render_template("user/collection.html", title = "Users", **view_data)
 
 
-def user_index(user_identifier): # pylint: disable = unused-argument
+def show(user_identifier): # pylint: disable = unused-argument
 	user = service_client.get("/user/{user_identifier}".format(**locals()))
 	user_tokens = service_client.get("/user/{user_identifier}/token_collection".format(**locals()), { "order_by": [ "update_date descending" ] })
 	user_tokens.sort(key = lambda token: "expiration_date" in token)
@@ -46,7 +46,7 @@ def user_index(user_identifier): # pylint: disable = unused-argument
 	return flask.render_template("user/index.html", title = "User " + user["display_name"], **view_data)
 
 
-def create_user():
+def create():
 	if flask.request.method == "GET":
 		return flask.render_template("user/create.html", title = "Create User")
 
@@ -57,7 +57,7 @@ def create_user():
 		try:
 			service_client.post("/user/{user_identifier}/create".format(**locals()), data = parameters)
 			flask.flash("User '%s' was created successfully." % user_identifier, "success")
-			return flask.redirect(flask.url_for("user_collection_index"))
+			return flask.redirect(flask.url_for("user_controller.show_collection"))
 		except requests.HTTPError as exception:
 			flask.flash("User '%s' could not be created: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
 			return flask.render_template("user/create.html", title = "Create User")
@@ -65,18 +65,17 @@ def create_user():
 	return flask.abort(405)
 
 
-def edit_user(user_identifier):
-	return edit_user_resume(user_identifier, {})
+def edit(user_identifier, local_parameters = None):
+	if local_parameters is None:
+		local_parameters = {}
 
-
-def edit_user_resume(user_identifier, local_parameters):
 	flask.request.form = service_client.get("/user/{user_identifier}".format(**locals()))
 	flask.request.form.update(local_parameters)
 	flask.request.form["roles"] = "\n".join(flask.request.form["roles"])
 	return flask.render_template("user/edit.html", title = "Edit User", user_identifier = user_identifier)
 
 
-def update_user_identity(user_identifier):
+def update_identity(user_identifier):
 	parameters = { "display_name": flask.request.form["display_name"] }
 
 	try:
@@ -84,10 +83,10 @@ def update_user_identity(user_identifier):
 		flask.flash("Identity for user '%s' was updated successfully." % user_identifier, "success")
 	except requests.HTTPError as exception:
 		flask.flash("Identity for user '%s' could not be updated: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
-	return edit_user_resume(user_identifier, parameters)
+	return edit(user_identifier, parameters)
 
 
-def update_user_roles(user_identifier):
+def update_roles(user_identifier):
 	parameters = { "roles": [ role.strip() for role in flask.request.form["roles"].splitlines() ] }
 
 	try:
@@ -95,20 +94,20 @@ def update_user_roles(user_identifier):
 		flask.flash("Roles for user '%s' were updated successfully." % user_identifier, "success")
 	except requests.HTTPError as exception:
 		flask.flash( "Roles for user '%s' could not be updated: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
-	return edit_user_resume(user_identifier, parameters)
+	return edit(user_identifier, parameters)
 
 
-def enable_user(user_identifier): # pylint: disable = unused-argument
+def enable(user_identifier): # pylint: disable = unused-argument
 	service_client.post("/user/{user_identifier}/enable".format(**locals()))
-	return flask.redirect(flask.request.referrer or flask.url_for("user_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("user_controller.show_collection"))
 
 
-def disable_user(user_identifier): # pylint: disable = unused-argument
+def disable(user_identifier): # pylint: disable = unused-argument
 	service_client.post("/user/{user_identifier}/disable".format(**locals()))
-	return flask.redirect(flask.request.referrer or flask.url_for("user_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("user_controller.show_collection"))
 
 
-def reset_user_password(user_identifier):
+def reset_password(user_identifier):
 	if flask.request.method == "GET":
 		return flask.render_template("user/reset_password.html", title = "Reset User Password", user_identifier = user_identifier)
 
@@ -118,7 +117,7 @@ def reset_user_password(user_identifier):
 		try:
 			service_client.post("/user/{user_identifier}/reset_password".format(**locals()), data = parameters)
 			flask.flash("Password for user '%s' was set successfully." % user_identifier, "success")
-			return flask.redirect(flask.url_for("user_index", user_identifier = user_identifier))
+			return flask.redirect(flask.url_for("user_controller.show", user_identifier = user_identifier))
 		except requests.HTTPError as exception:
 			flask.flash("Password for user '%s' could not be set: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
 			return flask.render_template("user/reset_password.html", title = "Reset User Password", user_identifier = user_identifier)
@@ -126,7 +125,7 @@ def reset_user_password(user_identifier):
 	return flask.abort(405)
 
 
-def create_user_token(user_identifier):
+def create_token(user_identifier):
 	if flask.request.method == "GET":
 		return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user_identifier = user_identifier)
 
@@ -139,7 +138,7 @@ def create_user_token(user_identifier):
 			token = service_client.post("/user/{user_identifier}/token_create".format(**locals()), data = parameters)
 			flask.flash("Token '%s' was created successfully." % token["token_identifier"], "success")
 			flask.flash("Token secret: '%s'." % token["secret"], "info")
-			return flask.redirect(flask.url_for("user_index", user_identifier = user_identifier))
+			return flask.redirect(flask.url_for("user_controller.show", user_identifier = user_identifier))
 		except requests.HTTPError as exception:
 			flask.flash("Token could not be created: %s." % helpers.get_error_message(exception.response.status_code), "error")
 			return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user_identifier = user_identifier)
@@ -147,10 +146,10 @@ def create_user_token(user_identifier):
 	return flask.abort(405)
 
 
-def delete_user_token(user_identifier, token_identifier):
+def delete_token(user_identifier, token_identifier):
 	try:
 		service_client.post("/user/{user_identifier}/token/{token_identifier}/delete".format(**locals()))
 		flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")
 	except requests.HTTPError as exception:
 		flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, helpers.get_error_message(exception.response.status_code)), "error")
-	return flask.redirect(flask.url_for("user_index", user_identifier = user_identifier))
+	return flask.redirect(flask.url_for("user_controller.show", user_identifier = user_identifier))

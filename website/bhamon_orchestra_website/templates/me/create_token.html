@@ -7,7 +7,7 @@
 {{ shared_macros.flash_messages() }}
 
 <section>
-	<form class="generic-form" method="post" action="{{ url_for('create_my_token') }}">
+	<form class="generic-form" method="post" action="{{ url_for('me_controller.create_token') }}">
 		<label for="input-description">Description</label>
 		{% if 'description' in request.form %}
 		<input type="text" class="text-input" id="input-description" name="description" value="{{ request.form['description'] }}" required/>

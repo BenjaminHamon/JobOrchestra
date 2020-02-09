@@ -12,7 +12,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("AdminController")
 
 
-def administration_index():
+def index():
 	view_data = {
 		"website_information": _get_website_information(),
 		"service_information": None,
@@ -41,7 +41,7 @@ def administration_index():
 
 def reload_service():
 	service_client.post("/admin/reload")
-	return flask.redirect(flask.request.referrer or flask.url_for("administration_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("admin_controller.index"))
 
 
 def _get_website_information():

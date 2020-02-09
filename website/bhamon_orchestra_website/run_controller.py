@@ -9,7 +9,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("RunController")
 
 
-def run_collection_index():
+def show_collection():
 	query_parameters = {
 		"project": helpers.none_if_empty(flask.request.args.get("project", default = None)),
 		"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
@@ -38,7 +38,7 @@ def run_collection_index():
 	return flask.render_template("run/collection.html", title = "Runs", **view_data)
 
 
-def run_index(run_identifier):
+def show(run_identifier):
 	view_data = {
 		"run": service_client.get("/run/{run_identifier}".format(**locals())),
 		"run_steps": service_client.get("/run/{run_identifier}/step_collection".format(**locals())),
@@ -49,7 +49,7 @@ def run_index(run_identifier):
 	return flask.render_template("run/index.html", title = "Run " + run_identifier[:18], **view_data)
 
 
-def run_step(run_identifier, step_index):
+def show_step(run_identifier, step_index):
 	step_collection = service_client.get("/run/{run_identifier}/step_collection".format(**locals()))
 	log_response = service_client.raw_get("/run/{run_identifier}/step/{step_index}/log".format(**locals()))
 
@@ -65,24 +65,24 @@ def run_step(run_identifier, step_index):
 	return flask.render_template("run/step.html", title = "Run " + run_identifier[:18], **view_data)
 
 
-def run_step_log(run_identifier, step_index): # pylint: disable = unused-argument
+def show_step_log(run_identifier, step_index): # pylint: disable = unused-argument
 	log_text = service_client.raw_get("/run/{run_identifier}/step/{step_index}/log".format(**locals())).text
 	return flask.Response(log_text, mimetype = "text/plain")
 
 
-def cancel_run(run_identifier): # pylint: disable = unused-argument
+def cancel(run_identifier): # pylint: disable = unused-argument
 	parameters = flask.request.form
 	service_client.post("/run/{run_identifier}/cancel".format(**locals()), parameters)
-	return flask.redirect(flask.request.referrer or flask.url_for("run_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("run_controller.show_collection"))
 
 
-def abort_run(run_identifier): # pylint: disable = unused-argument
+def abort(run_identifier): # pylint: disable = unused-argument
 	parameters = flask.request.form
 	service_client.post("/run/{run_identifier}/abort".format(**locals()), parameters)
-	return flask.redirect(flask.request.referrer or flask.url_for("run_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("run_controller.show_collection"))
 
 
-def download_run_archive(run_identifier): # pylint: disable = unused-argument
+def download_archive(run_identifier): # pylint: disable = unused-argument
 	archive_response = service_client.raw_get("/run/{run_identifier}/download".format(**locals()))
 	return flask.Response(archive_response.content,
 		headers = { "Content-Disposition": archive_response.headers["Content-Disposition"] },

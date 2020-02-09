@@ -9,7 +9,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("ScheduleController")
 
 
-def schedule_collection_index():
+def show_collection():
 	query_parameters = {
 		"project": helpers.none_if_empty(flask.request.args.get("project", default = None)),
 		"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
@@ -34,7 +34,7 @@ def schedule_collection_index():
 	return flask.render_template("schedule/collection.html", title = "Schedules", **view_data)
 
 
-def schedule_index(schedule_identifier):
+def show(schedule_identifier):
 	view_data = {
 		"schedule": service_client.get("/schedule/{schedule_identifier}".format(**locals())),
 	}
@@ -42,11 +42,11 @@ def schedule_index(schedule_identifier):
 	return flask.render_template("schedule/index.html", title = "Schedule " + schedule_identifier, **view_data)
 
 
-def enable_schedule(schedule_identifier): # pylint: disable = unused-argument
+def enable(schedule_identifier): # pylint: disable = unused-argument
 	service_client.post("/schedule/{schedule_identifier}/enable".format(**locals()))
-	return flask.redirect(flask.request.referrer or flask.url_for("schedule_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("schedule_controller.show_collection"))
 
 
-def disable_schedule(schedule_identifier): # pylint: disable = unused-argument
+def disable(schedule_identifier): # pylint: disable = unused-argument
 	service_client.post("/schedule/{schedule_identifier}/disable".format(**locals()))
-	return flask.redirect(flask.request.referrer or flask.url_for("schedule_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("schedule_controller.show_collection"))

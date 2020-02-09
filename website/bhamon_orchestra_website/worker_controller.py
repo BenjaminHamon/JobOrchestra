@@ -9,7 +9,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("WorkerController")
 
 
-def worker_collection_index():
+def show_collection():
 	item_total = service_client.get("/worker_count")
 	pagination = helpers.get_pagination(item_total)
 
@@ -27,7 +27,7 @@ def worker_collection_index():
 	return flask.render_template("worker/collection.html", title = "Workers", **view_data)
 
 
-def worker_index(worker_identifier):
+def show(worker_identifier):
 	view_data = {
 		"worker": service_client.get("/worker/{worker_identifier}".format(**locals())),
 		"worker_runs": service_client.get("/worker/{worker_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
@@ -37,17 +37,17 @@ def worker_index(worker_identifier):
 	return flask.render_template("worker/index.html", title = "Worker " + worker_identifier, **view_data)
 
 
-def stop_worker(worker_identifier): # pylint: disable = unused-argument
+def stop(worker_identifier): # pylint: disable = unused-argument
 	parameters = flask.request.form
 	service_client.post("/worker/{worker_identifier}/stop".format(**locals()), parameters)
-	return flask.redirect(flask.request.referrer or flask.url_for("worker_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("worker_controller.show_collection"))
 
 
-def enable_worker(worker_identifier): # pylint: disable = unused-argument
+def enable(worker_identifier): # pylint: disable = unused-argument
 	service_client.post("/worker/{worker_identifier}/enable".format(**locals()))
-	return flask.redirect(flask.request.referrer or flask.url_for("worker_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("worker_controller.show_collection"))
 
 
-def disable_worker(worker_identifier): # pylint: disable = unused-argument
+def disable(worker_identifier): # pylint: disable = unused-argument
 	service_client.post("/worker/{worker_identifier}/disable".format(**locals()))
-	return flask.redirect(flask.request.referrer or flask.url_for("worker_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("worker_controller.show_collection"))

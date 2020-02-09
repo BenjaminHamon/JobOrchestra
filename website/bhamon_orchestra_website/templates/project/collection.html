@@ -6,9 +6,9 @@
 <h1>Projects</h1>
 <section>
 	<div class="table-container">
-		{{ shared_macros.page_navigation('project_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('project_controller.show_collection', pagination) }}
 		{{ project_macros.project_table(project_collection) }}
-		{{ shared_macros.page_navigation('project_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('project_controller.show_collection', pagination) }}
 	</div>
 </section>
 {% endblock %}
