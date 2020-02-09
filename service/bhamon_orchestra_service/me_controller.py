@@ -8,7 +8,7 @@ import bhamon_orchestra_service.user_controller as user_controller
 logger = logging.getLogger("MeController")
 
 
-def get_my_user():
+def get_user():
 	return flask.jsonify(flask.current_app.user_provider.get(flask.request.authorization.username))
 
 
@@ -60,13 +60,13 @@ def change_password():
 	return flask.jsonify({})
 
 
-def get_my_token_list():
-	return user_controller.get_user_token_list(flask.request.authorization.username)
+def get_token_list():
+	return user_controller.get_token_list(flask.request.authorization.username)
 
 
-def create_my_token():
-	return user_controller.create_user_token(flask.request.authorization.username)
+def create_token():
+	return user_controller.create_token(flask.request.authorization.username)
 
 
-def delete_my_token(token_identifier):
-	return user_controller.delete_user_token(flask.request.authorization.username, token_identifier)
+def delete_token(token_identifier):
+	return user_controller.delete_token(flask.request.authorization.username, token_identifier)

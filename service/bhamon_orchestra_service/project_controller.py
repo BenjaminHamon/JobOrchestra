@@ -9,11 +9,11 @@ from bhamon_orchestra_model.revision_control.github import GitHubClient
 logger = logging.getLogger("ProjectController")
 
 
-def get_project_count():
+def get_count():
 	return flask.jsonify(flask.current_app.project_provider.count())
 
 
-def get_project_collection():
+def get_collection():
 	query_parameters = {
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
 		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),
@@ -23,11 +23,11 @@ def get_project_collection():
 	return flask.jsonify(flask.current_app.project_provider.get_list(**query_parameters))
 
 
-def get_project(project_identifier):
+def get(project_identifier):
 	return flask.jsonify(flask.current_app.project_provider.get(project_identifier))
 
 
-def get_project_jobs(project_identifier):
+def get_jobs(project_identifier):
 	query_parameters = {
 		"project": project_identifier,
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
@@ -38,7 +38,7 @@ def get_project_jobs(project_identifier):
 	return flask.jsonify(flask.current_app.job_provider.get_list(**query_parameters))
 
 
-def get_project_runs(project_identifier):
+def get_runs(project_identifier):
 	query_parameters = {
 		"project": project_identifier,
 		"status": flask.request.args.get("status", default = None),
@@ -50,7 +50,7 @@ def get_project_runs(project_identifier):
 	return flask.jsonify(flask.current_app.run_provider.get_list(**query_parameters))
 
 
-def get_project_repository(project_identifier):
+def get_repository(project_identifier):
 	project = flask.current_app.project_provider.get(project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 
@@ -62,7 +62,7 @@ def get_project_repository(project_identifier):
 
 
 
-def get_project_branches(project_identifier):
+def get_branches(project_identifier):
 	project = flask.current_app.project_provider.get(project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 
@@ -73,7 +73,7 @@ def get_project_branches(project_identifier):
 	return flask.jsonify(revision_control_client.get_branch_list(**query_parameters))
 
 
-def get_project_revisions(project_identifier):
+def get_revisions(project_identifier):
 	project = flask.current_app.project_provider.get(project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 
@@ -86,7 +86,7 @@ def get_project_revisions(project_identifier):
 	return flask.jsonify(revision_control_client.get_revision_list(**query_parameters))
 
 
-def get_project_status(project_identifier):
+def get_status(project_identifier):
 	project = flask.current_app.project_provider.get(project_identifier)
 	repository = project["services"]["revision_control"]["repository"]
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])

@@ -6,7 +6,7 @@ import flask
 logger = logging.getLogger("ScheduleController")
 
 
-def get_schedule_count():
+def get_count():
 	query_parameters = {
 		"project": flask.request.args.get("project", default = None),
 		"job": flask.request.args.get("job", default = None),
@@ -15,7 +15,7 @@ def get_schedule_count():
 	return flask.jsonify(flask.current_app.schedule_provider.count(**query_parameters))
 
 
-def get_schedule_collection():
+def get_collection():
 	query_parameters = {
 		"project": flask.request.args.get("project", default = None),
 		"job": flask.request.args.get("job", default = None),
@@ -27,15 +27,15 @@ def get_schedule_collection():
 	return flask.jsonify(flask.current_app.schedule_provider.get_list(**query_parameters))
 
 
-def get_schedule(schedule_identifier):
+def get(schedule_identifier):
 	return flask.jsonify(flask.current_app.schedule_provider.get(schedule_identifier))
 
 
-def enable_schedule(schedule_identifier):
+def enable(schedule_identifier):
 	flask.current_app.schedule_provider.update_status({ "identifier": schedule_identifier }, is_enabled = True)
 	return flask.jsonify({})
 
 
-def disable_schedule(schedule_identifier):
+def disable(schedule_identifier):
 	flask.current_app.schedule_provider.update_status({ "identifier": schedule_identifier }, is_enabled = False)
 	return flask.jsonify({})
