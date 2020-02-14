@@ -7,7 +7,7 @@
 {{ shared_macros.flash_messages() }}
 
 <section>
-	<form class="generic-form" method="post" action="{{ url_for('create_user') }}">
+	<form class="generic-form" method="post" action="{{ url_for('user_controller.create') }}">
 		<label for="input-identifier">Identifier</label>
 		{% if 'identifier' in request.form %}
 		<input type="text" id="input-identifier" name="identifier" value="{{ request.form['identifier'] }}" required/>

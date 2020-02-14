@@ -7,7 +7,7 @@
 {{ shared_macros.flash_messages() }}
 
 <section>
-	<form class="generic-form" method="post" action="{{ url_for('create_user_token', user_identifier = user_identifier) }}">
+	<form class="generic-form" method="post" action="{{ url_for('user_controller.create_token', user_identifier = user_identifier) }}">
 		<label for="input-identifier">Identifier</label>
 		<input type="text" class="text-input" id="input-identifier" name="identifier" value="{{ user_identifier }}" readonly>
 		<label for="input-description">Description</label>

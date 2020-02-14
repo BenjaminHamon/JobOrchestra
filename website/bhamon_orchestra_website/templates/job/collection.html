@@ -6,7 +6,7 @@
 <h1>Jobs</h1>
 <section>
 	<div class="table-container">
-		<form method="get" action="{{ url_for('job_collection_index') }}">
+		<form method="get" action="{{ url_for('job_controller.show_collection') }}">
 			<label for="input-project">Project</label>
 			<select id="input-project" name="project">
 				<option></option>
@@ -20,9 +20,9 @@
 			</select>
 			<button type="submit">Apply filters</button>
 		</form>
-		{{ shared_macros.page_navigation('job_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('job_controller.show_collection', pagination) }}
 		{{ job_macros.job_table(job_collection) }}
-		{{ shared_macros.page_navigation('job_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('job_controller.show_collection', pagination) }}
 	</div>
 </section>
 {% endblock %}

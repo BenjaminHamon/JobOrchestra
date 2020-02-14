@@ -7,7 +7,7 @@
 {{ shared_macros.flash_messages() }}
 
 <section>
-	<form class="generic-form" method="post" action="{{ url_for('logout') }}">
+	<form class="generic-form" method="post" action="{{ url_for('me_controller.logout') }}">
 		<button type="submit">Confirm and log out</button>
 	</form>
 </section>

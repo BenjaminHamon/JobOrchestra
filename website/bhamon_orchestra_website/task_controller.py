@@ -9,7 +9,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("TaskController")
 
 
-def task_collection_index():
+def show_collection():
 	query_parameters = {
 		"type": helpers.none_if_empty(flask.request.args.get("type", default = None)),
 		"status": helpers.none_if_empty(flask.request.args.get("status", default = None)),
@@ -36,9 +36,9 @@ def task_collection_index():
 	return flask.render_template("task/collection.html", title = "Tasks", **view_data)
 
 
-def cancel_task(task_identifier): # pylint: disable = unused-argument
+def cancel(task_identifier): # pylint: disable = unused-argument
 	service_client.post("/task/{task_identifier}/cancel".format(**locals()))
-	return flask.redirect(flask.request.referrer or flask.url_for("task_collection_index"))
+	return flask.redirect(flask.request.referrer or flask.url_for("task_controller.show_collection"))
 
 
 def _get_status_collection():

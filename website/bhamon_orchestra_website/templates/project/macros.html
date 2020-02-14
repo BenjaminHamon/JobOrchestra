@@ -9,7 +9,7 @@
 	<tbody>
 		{% for project in project_collection %}
 		<tr>
-			<td><a href="{{ url_for('project_index', project_identifier = project['identifier']) }}">{{ project['identifier'] }}</a></td>
+			<td><a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['identifier'] }}</a></td>
 			<td>{{ project['update_date'] }}</td>
 		</tr>
 		{% endfor %}

@@ -27,9 +27,9 @@
 			<td>
 				<form class="action-group" method="post">
 					{% if task['status'] == 'pending' %}
-					<button formaction="{{ url_for('cancel_task', task_identifier = task['identifier']) }}">Cancel</button>
+					<button formaction="{{ url_for('task_controller.cancel', task_identifier = task['identifier']) }}">Cancel</button>
 					{% else %}
-					<button formaction="{{ url_for('cancel_task', task_identifier = task['identifier']) }}" disabled>Cancel</button>
+					<button formaction="{{ url_for('task_controller.cancel', task_identifier = task['identifier']) }}" disabled>Cancel</button>
 					{% endif %}
 				</form>
 			</td>

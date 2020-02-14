@@ -8,13 +8,13 @@
 
 <section>
 	<div>
-		<a href="{{ url_for('user_index', user_identifier = user_identifier) }}">View</a>
+		<a href="{{ url_for('user_controller.show', user_identifier = user_identifier) }}">View</a>
 	</div>
 </section>
 
 <section>
 	<h2>Identity</h2>
-	<form class="generic-form" method="post" action="{{ url_for('update_user_identity', user_identifier = user_identifier) }}">
+	<form class="generic-form" method="post" action="{{ url_for('user_controller.update_identity', user_identifier = user_identifier) }}">
 		<label for="input-identifier">Identifier</label>
 		<input type="text" class="text-input" id="input-identifier" name="identifier" value="{{ user_identifier }}" readonly>
 		<label for="input-display_name">Display name</label>
@@ -25,7 +25,7 @@
 
 <section>
 	<h2>Roles</h2>
-	<form class="generic-form" method="post" action="{{ url_for('update_user_roles', user_identifier = user_identifier) }}">
+	<form class="generic-form" method="post" action="{{ url_for('user_controller.update_roles', user_identifier = user_identifier) }}">
 		<textarea class="textarea-input" name="roles">{{ request.form['roles'] }}</textarea>
 		<button type="submit">Save</button>
 	</form>

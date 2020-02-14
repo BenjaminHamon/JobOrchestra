@@ -9,7 +9,7 @@
 
 <section>
 	<div class="link-group">
-		<a href="{{ url_for('edit_user', user_identifier = user['identifier']) }}">Edit</a>
+		<a href="{{ url_for('user_controller.edit', user_identifier = user['identifier']) }}">Edit</a>
 	</div>
 </section>
 
@@ -39,7 +39,7 @@
 			<div class="status-text">Enabled</div>
 		</div>
 		<form method="post">
-			<button formaction="{{ url_for('disable_user', user_identifier = user['identifier']) }}">Disable</button>
+			<button formaction="{{ url_for('user_controller.disable', user_identifier = user['identifier']) }}">Disable</button>
 		</form>
 		{% else %}
 		<div class="status-group">
@@ -47,7 +47,7 @@
 			<div class="status-text">Disabled</div>
 		</div>
 		<form method="post">
-			<button formaction="{{ url_for('enable_user', user_identifier = user['identifier']) }}">Enable</button>
+			<button formaction="{{ url_for('user_controller.enable', user_identifier = user['identifier']) }}">Enable</button>
 		</form>
 		{% endif %}
 	</div>
@@ -60,8 +60,8 @@
 <section>
 	<h2>Security</h2>
 	<div class="link-group">
-		<a href="{{ url_for('reset_user_password', user_identifier = user['identifier']) }}">Reset password</a>
-		<a href="{{ url_for('create_user_token', user_identifier = user['identifier']) }}">Create token</a>
+		<a href="{{ url_for('user_controller.reset_password', user_identifier = user['identifier']) }}">Reset password</a>
+		<a href="{{ url_for('user_controller.create_token', user_identifier = user['identifier']) }}">Create token</a>
 	</div>
 	{{ user_macros.user_token_table(user_tokens) }}
 </section>

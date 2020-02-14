@@ -39,8 +39,8 @@
 <section>
 	<h2>Security</h2>
 	<div class="link-group">
-		<a href="{{ url_for('change_password') }}">Change Password</a>
-		<a href="{{ url_for('create_my_token') }}">Create token</a>
+		<a href="{{ url_for('me_controller.change_password') }}">Change Password</a>
+		<a href="{{ url_for('me_controller.create_token') }}">Create token</a>
 	</div>
 	{{ user_macros.my_token_table(user_tokens) }}
 </section>

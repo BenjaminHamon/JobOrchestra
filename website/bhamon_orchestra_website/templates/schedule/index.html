@@ -13,7 +13,7 @@
 		</div>
 			{% if authorize_view("schedule-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('disable_schedule', schedule_identifier = schedule['identifier']) }}">Disable</button>
+			<button formaction="{{ url_for('schedule_controller.disable', schedule_identifier = schedule['identifier']) }}">Disable</button>
 		</form>
 			{% endif %}
 		{% else %}
@@ -23,14 +23,14 @@
 		</div>
 			{% if authorize_view("schedule-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('enable_schedule', schedule_identifier = schedule['identifier']) }}">Enable</button>
+			<button formaction="{{ url_for('schedule_controller.enable', schedule_identifier = schedule['identifier']) }}">Enable</button>
 		</form>
 			{% endif %}
 		{% endif %}
 	</div>
 	<ul>
-		<li>Project: <a href="{{ url_for('project_index', project_identifier = schedule['project']) }}" style="display: inline">{{ schedule['project'] }}</a></li>
-		<li>Job: <a href="{{ url_for('job_index', job_identifier = schedule['job']) }}" style="display: inline">{{ schedule['job'] }}</a></li>
+		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = schedule['project']) }}" style="display: inline">{{ schedule['project'] }}</a></li>
+		<li>Job: <a href="{{ url_for('job_controller.show', job_identifier = schedule['job']) }}" style="display: inline">{{ schedule['job'] }}</a></li>
 		<li>Expression: {{ schedule['expression'] }} ({{ schedule['expression'] | describe_cron_expression }})</li>
 		<li>Creation date: {{ schedule['creation_date'] }}</li>
 		<li>Update date: {{ schedule['update_date'] }}</li>

@@ -16,8 +16,8 @@
 	<tbody>
 		{% for run in run_collection %}
 		<tr>
-			<td><a href="{{ url_for('job_index', job_identifier = run['job']) }}">{{ run['job'] }}</a></td>
-			<td><a href="{{ url_for('run_index', run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a></td>
+			<td><a href="{{ url_for('job_controller.show', job_identifier = run['job']) }}">{{ run['job'] }}</a></td>
+			<td><a href="{{ url_for('run_controller.show', run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a></td>
 			<td>
 				<div class="status-group">
 					<div class="status-indicator {{ run['status'] }}"></div>
@@ -28,14 +28,14 @@
 			<td>
 				<form class="action-group" method="post">
 					{% if run['status'] == 'pending' %}
-					<button formaction="{{ url_for('cancel_run', run_identifier = run['identifier']) }}">Cancel</button>
+					<button formaction="{{ url_for('run_controller.cancel', run_identifier = run['identifier']) }}">Cancel</button>
 					{% elif run['status'] == 'running' %}
-					<button formaction="{{ url_for('abort_run', run_identifier = run['identifier']) }}">Abort</button>
+					<button formaction="{{ url_for('run_controller.abort', run_identifier = run['identifier']) }}">Abort</button>
 					{% endif %}
 				</form>
 			</td>
 			{% endif %}
-			<td>{% if run['worker'] %}<a href="{{ url_for('worker_index', worker_identifier = run['worker']) }}">{{ run['worker'] }}</a>{% endif %}</td>
+			<td>{% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker'] }}</a>{% endif %}</td>
 			<td>{{ run['creation_date'] }}</td>
 			<td>{{ run['update_date'] }}</td>
 		</tr>

@@ -9,7 +9,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("ProjectController")
 
 
-def project_collection_index():
+def show_collection():
 	item_total = service_client.get("/project_count")
 	pagination = helpers.get_pagination(item_total)
 
@@ -23,7 +23,7 @@ def project_collection_index():
 	return flask.render_template("project/collection.html", title = "Projects", project_collection = project_collection, pagination = pagination)
 
 
-def project_index(project_identifier):
+def show(project_identifier):
 	view_data = {
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
 		"project_jobs": service_client.get("/project/{project_identifier}/jobs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
@@ -33,7 +33,7 @@ def project_index(project_identifier):
 	return flask.render_template("project/index.html", title = "Project " + project_identifier, **view_data)
 
 
-def project_status(project_identifier):
+def show_status(project_identifier):
 	branch = flask.request.args.get("branch", default = None)
 	status_limit = max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1)
 

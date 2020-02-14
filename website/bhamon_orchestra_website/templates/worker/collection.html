@@ -6,9 +6,9 @@
 <h1>Workers</h1>
 <section>
 	<div class="table-container">
-		{{ shared_macros.page_navigation('worker_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('worker_controller.show_collection', pagination) }}
 		{{ worker_macros.worker_table(worker_collection) }}
-		{{ shared_macros.page_navigation('worker_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('worker_controller.show_collection', pagination) }}
 	</div>
 </section>
 {% endblock %}

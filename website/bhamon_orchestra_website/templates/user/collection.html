@@ -9,15 +9,15 @@
 
 <section>
 	<div class="link-group">
-		<a href="{{ url_for('create_user') }}">Create user</a>
+		<a href="{{ url_for('user_controller.create') }}">Create user</a>
 	</div>
 </section>
 
 <section>
 	<div class="table-container">
-		{{ shared_macros.page_navigation('user_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('user_controller.show_collection', pagination) }}
 		{{ user_macros.user_table(user_collection) }}
-		{{ shared_macros.page_navigation('user_collection_index', pagination) }}
+		{{ shared_macros.page_navigation('user_controller.show_collection', pagination) }}
 	</div>
 </section>
 {% endblock %}

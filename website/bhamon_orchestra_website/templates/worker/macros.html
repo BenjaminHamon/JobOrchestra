@@ -14,7 +14,7 @@
 	<tbody>
 		{% for worker in worker_collection %}
 		<tr>
-			<td><a href="{{ url_for('worker_index', worker_identifier = worker['identifier']) }}">{{ worker['identifier'] }}</a></td>
+			<td><a href="{{ url_for('worker_controller.show', worker_identifier = worker['identifier']) }}">{{ worker['identifier'] }}</a></td>
 			<td>
 				{% if worker['is_active'] %}
 				<div class="status-group">
@@ -45,14 +45,14 @@
 			<td>
 				<form class="action-group" method="post">
 					{% if worker['is_active'] %}
-					<button formaction="{{ url_for('stop_worker', worker_identifier = worker['identifier']) }}">Stop</button>
+					<button formaction="{{ url_for('worker_controller.stop', worker_identifier = worker['identifier']) }}">Stop</button>
 					{% else %}
-					<button formaction="{{ url_for('stop_worker', worker_identifier = worker['identifier']) }}" disabled>Stop</button>
+					<button formaction="{{ url_for('worker_controller.stop', worker_identifier = worker['identifier']) }}" disabled>Stop</button>
 					{% endif %}
 					{% if worker['is_enabled'] %}
-					<button formaction="{{ url_for('disable_worker', worker_identifier = worker['identifier']) }}">Disable</button>
+					<button formaction="{{ url_for('worker_controller.disable', worker_identifier = worker['identifier']) }}">Disable</button>
 					{% else %}
-					<button formaction="{{ url_for('enable_worker', worker_identifier = worker['identifier']) }}">Enable</button>
+					<button formaction="{{ url_for('worker_controller.enable', worker_identifier = worker['identifier']) }}">Enable</button>
 					{% endif %}
 				</form>
 			</td>

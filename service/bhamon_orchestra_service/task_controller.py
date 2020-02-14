@@ -6,7 +6,7 @@ import flask
 logger = logging.getLogger("TaskController")
 
 
-def get_task_count():
+def get_count():
 	query_parameters = {
 		"type": flask.request.args.get("type", default = None),
 		"status": flask.request.args.get("status", default = None),
@@ -17,7 +17,7 @@ def get_task_count():
 	return flask.jsonify(flask.current_app.task_provider.count(**query_parameters))
 
 
-def get_task_collection():
+def get_collection():
 	query_parameters = {
 		"type": flask.request.args.get("type", default = None),
 		"status": flask.request.args.get("status", default = None),
@@ -31,11 +31,11 @@ def get_task_collection():
 	return flask.jsonify(flask.current_app.task_provider.get_list(**query_parameters))
 
 
-def get_task(task_identifier):
+def get(task_identifier):
 	return flask.jsonify(flask.current_app.task_provider.get(task_identifier))
 
 
-def cancel_task(task_identifier):
+def cancel(task_identifier):
 	task = flask.current_app.task_provider.get(task_identifier)
 	if task["status"] == "pending":
 		flask.current_app.task_provider.update_status(task, should_cancel = True)

@@ -15,7 +15,7 @@
 		</div>
 			{% if authorize_view("worker-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('stop_worker', worker_identifier = worker['identifier']) }}">Stop</button>
+			<button formaction="{{ url_for('worker_controller.stop', worker_identifier = worker['identifier']) }}">Stop</button>
 		</form>
 			{% endif %}
 		{% else %}
@@ -25,7 +25,7 @@
 		</div>
 			{% if authorize_view("worker-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('stop_worker', worker_identifier = worker['identifier']) }}" disabled>Stop</button>
+			<button formaction="{{ url_for('worker_controller.stop', worker_identifier = worker['identifier']) }}" disabled>Stop</button>
 		</form>
 			{% endif %}
 		{% endif %}
@@ -36,7 +36,7 @@
 		</div>
 			{% if authorize_view("worker-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('disable_worker', worker_identifier = worker['identifier']) }}">Disable</button>
+			<button formaction="{{ url_for('worker_controller.disable', worker_identifier = worker['identifier']) }}">Disable</button>
 		</form>
 			{% endif %}
 		{% else %}
@@ -46,7 +46,7 @@
 		</div>
 			{% if authorize_view("worker-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('enable_worker', worker_identifier = worker['identifier']) }}">Enable</button>
+			<button formaction="{{ url_for('worker_controller.enable', worker_identifier = worker['identifier']) }}">Enable</button>
 		</form>
 			{% endif %}
 		{% endif %}
@@ -54,12 +54,12 @@
 </section>
 
 <section>
-	<h2><a href="{{ url_for('run_collection_index', worker = worker['identifier']) }}" title="View all runs">Runs</a></h2>
+	<h2><a href="{{ url_for('run_controller.show_collection', worker = worker['identifier']) }}" title="View all runs">Runs</a></h2>
 	{{ run_macros.run_table(worker_runs) }}
 </section>
 
 <section>
-	<h2><a href="{{ url_for('task_collection_index', worker = worker['identifier']) }}" title="View all tasks">Tasks</a></h2>
+	<h2><a href="{{ url_for('task_controller.show_collection', worker = worker['identifier']) }}" title="View all tasks">Tasks</a></h2>
 	{{ task_macros.task_table(worker_tasks) }}
 </section>
 {% endblock %}
