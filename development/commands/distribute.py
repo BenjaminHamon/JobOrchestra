@@ -56,7 +56,7 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 def setup(configuration, component, simulate):
 	logger.info("Generating metadata for '%s'", component["name"])
 
-	metadata_file_path = os.path.join(component["path"], component["packages"][0], "__metadata__.py")
+	metadata_file_path = os.path.join(component["path"], component["name"].replace("-", "_"), "__metadata__.py")
 	metadata_content = ""
 	metadata_content += "__copyright__ = \"%s\"\n" % configuration["copyright"]
 	metadata_content += "__version__ = \"%s\"\n" % configuration["project_version"]["full"]

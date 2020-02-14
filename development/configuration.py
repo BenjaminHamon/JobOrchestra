@@ -34,12 +34,12 @@ def load_configuration(environment):
 	configuration["development_dependencies"] = [ "pylint", "pymongo", "pytest", "pytest-asyncio", "pytest-json", "wheel" ]
 
 	configuration["components"] = [
-		{ "name": "bhamon-orchestra-cli", "path": "cli", "packages": [ "bhamon_orchestra_cli" ] },
-		{ "name": "bhamon-orchestra-master", "path": "master", "packages": [ "bhamon_orchestra_master" ] },
-		{ "name": "bhamon-orchestra-model", "path": "model", "packages": [ "bhamon_orchestra_model" ] },
-		{ "name": "bhamon-orchestra-service", "path": "service", "packages": [ "bhamon_orchestra_service" ] },
-		{ "name": "bhamon-orchestra-website", "path": "website", "packages": [ "bhamon_orchestra_website" ] },
-		{ "name": "bhamon-orchestra-worker", "path": "worker", "packages": [ "bhamon_orchestra_worker" ] },
+		{ "name": "bhamon-orchestra-cli", "path": "cli" },
+		{ "name": "bhamon-orchestra-master", "path": "master" },
+		{ "name": "bhamon-orchestra-model", "path": "model" },
+		{ "name": "bhamon-orchestra-service", "path": "service" },
+		{ "name": "bhamon-orchestra-website", "path": "website" },
+		{ "name": "bhamon-orchestra-worker", "path": "worker" },
 	]
 
 	configuration["project_identifier_for_artifact_server"] = "JobOrchestra"

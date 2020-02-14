@@ -29,7 +29,7 @@ def lint_packages(python_executable, run_identifier, component_collection, simul
 	all_results = []
 
 	for component in component_collection:
-		pylint_results = bhamon_development_toolkit.python.lint.run_pylint(python_executable, "test_results", run_identifier, component["packages"][0], simulate)
+		pylint_results = bhamon_development_toolkit.python.lint.run_pylint(python_executable, "test_results", run_identifier, component["name"].replace("-", "_"), simulate)
 		print("")
 
 		component_results = { "name": component["name"] }
