@@ -1,3 +1,4 @@
+import glob
 import logging
 import os
 import shutil
@@ -22,11 +23,10 @@ def clean(configuration, simulate):
 	directories_to_clean = [ ".artifacts", ".pytest_cache", os.path.join("test", "__pycache__"), "test_results" ]
 
 	for component in configuration["components"]:
-		directories_to_clean.append(os.path.join(component["path"], "build"))
-		directories_to_clean.append(os.path.join(component["path"], "dist"))
-		for package in component["packages"]:
-			directories_to_clean.append(os.path.join(component["path"], package, "__pycache__"))
-			directories_to_clean.append(os.path.join(component["path"], package + ".egg-info"))
+		directories_to_clean += [ os.path.join(component["path"], "build") ]
+		directories_to_clean += [ os.path.join(component["path"], "dist") ]
+		directories_to_clean += [ os.path.join(component["path"], component["name"].replace("-", "_") + ".egg-info") ]
+		directories_to_clean += glob.glob(os.path.join(component["path"], component["name"].replace("-", "_"), "**", "__pycache__"), recursive = True)
 
 	directories_to_clean.sort()
 
@@ -37,7 +37,7 @@ def clean(configuration, simulate):
 				shutil.rmtree(directory)
 
 	for component in configuration["components"]:
-		metadata_file = os.path.join(component["path"], component["packages"][0], "__metadata__.py")
+		metadata_file = os.path.join(component["path"], component["name"].replace("-", "_"), "__metadata__.py")
 		if os.path.exists(metadata_file):
 			logger.info("Removing generated file '%s'", metadata_file)
 			if not simulate:
