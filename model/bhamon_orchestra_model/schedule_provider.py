@@ -67,12 +67,14 @@ class ScheduleProvider:
 
 	def update_status(self, schedule, is_enabled = None, last_run = None):
 		now = self.date_time_provider.now()
-		update_data = {}
-		if is_enabled is not None:
-			update_data["is_enabled"] = is_enabled
-		if last_run is not None:
-			update_data["last_run"] = last_run
-		update_data["update_date"] = self.date_time_provider.serialize(now)
+
+		update_data = {
+			"is_enabled": is_enabled,
+			"last_run": last_run,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		schedule.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": schedule["identifier"] }, schedule)

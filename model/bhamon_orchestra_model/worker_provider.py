@@ -45,12 +45,13 @@ class WorkerProvider:
 	def update_status(self, worker, is_active = None, is_enabled = None):
 		now = self.date_time_provider.now()
 
-		update_data = {}
-		if is_active is not None:
-			update_data["is_active"] = is_active
-		if is_enabled is not None:
-			update_data["is_enabled"] = is_enabled
-		update_data["update_date"] = self.date_time_provider.serialize(now)
+		update_data = {
+			"is_active": is_active,
+			"is_enabled": is_enabled,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		worker.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)

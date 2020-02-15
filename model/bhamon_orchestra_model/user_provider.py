@@ -49,10 +49,12 @@ class UserProvider:
 	def update_identity(self, user, display_name = None):
 		now = self.date_time_provider.now()
 
-		update_data = {}
-		if display_name is not None:
-			update_data["display_name"] = display_name
-		update_data["update_date"] = self.date_time_provider.serialize(now)
+		update_data = {
+			"display_name": display_name,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		user.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)
@@ -73,10 +75,12 @@ class UserProvider:
 	def update_status(self, user, is_enabled = None):
 		now = self.date_time_provider.now()
 
-		update_data = {}
-		if is_enabled is not None:
-			update_data["is_enabled"] = is_enabled
-		update_data["update_date"] = self.date_time_provider.serialize(now)
+		update_data = {
+			"is_enabled": is_enabled,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		user.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)

@@ -67,16 +67,16 @@ class RunProvider:
 	def update_status( # pylint: disable = too-many-arguments
 			self, run, worker = None, status = None, start_date = None, completion_date = None):
 		now = self.date_time_provider.now()
-		update_data = {}
-		if worker is not None:
-			update_data["worker"] = worker
-		if status is not None:
-			update_data["status"] = status
-		if start_date is not None:
-			update_data["start_date"] = start_date
-		if completion_date is not None:
-			update_data["completion_date"] = completion_date
-		update_data["update_date"] = self.date_time_provider.serialize(now)
+
+		update_data = {
+			"worker": worker,
+			"status": status,
+			"start_date": start_date,
+			"completion_date": completion_date,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		run.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": run["identifier"] }, update_data)

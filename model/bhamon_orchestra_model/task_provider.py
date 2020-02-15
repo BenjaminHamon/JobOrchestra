@@ -50,12 +50,14 @@ class TaskProvider:
 
 	def update_status(self, task, status = None, should_cancel = None):
 		now = self.date_time_provider.now()
-		update_data = {}
-		if status is not None:
-			update_data["status"] = status
-		if should_cancel is not None:
-			update_data["should_cancel"] = should_cancel
-		update_data["update_date"] = self.date_time_provider.serialize(now)
+
+		update_data = {
+			"status": status,
+			"should_cancel": should_cancel,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		task.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": task["identifier"] }, task)
