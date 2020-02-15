@@ -78,7 +78,7 @@ class JobProvider:
 		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		job.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": job["identifier"] }, job)
+		self.database_client.update_one(self.table, { "identifier": job["identifier"] }, update_data)
 
 
 	def delete(self, job_identifier):

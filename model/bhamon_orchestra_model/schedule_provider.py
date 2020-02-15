@@ -77,7 +77,7 @@ class ScheduleProvider:
 		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		schedule.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": schedule["identifier"] }, schedule)
+		self.database_client.update_one(self.table, { "identifier": schedule["identifier"] }, update_data)
 
 
 	def delete(self, schedule_identifier):

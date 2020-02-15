@@ -57,7 +57,7 @@ class UserProvider:
 		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		user.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)
+		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, update_data)
 
 
 	def update_roles(self, user, roles):
@@ -69,7 +69,7 @@ class UserProvider:
 		}
 
 		user.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)
+		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, update_data)
 
 
 	def update_status(self, user, is_enabled = None):
@@ -83,4 +83,4 @@ class UserProvider:
 		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		user.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)
+		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, update_data)

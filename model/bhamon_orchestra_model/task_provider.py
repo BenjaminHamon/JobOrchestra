@@ -60,4 +60,4 @@ class TaskProvider:
 		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		task.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": task["identifier"] }, task)
+		self.database_client.update_one(self.table, { "identifier": task["identifier"] }, update_data)
