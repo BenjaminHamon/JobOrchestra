@@ -1,6 +1,11 @@
 import logging
 import uuid
 
+from typing import List, Optional, Tuple
+
+from bhamon_orchestra_model.database.database_client import DatabaseClient
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+
 
 logger = logging.getLogger("TaskProvider")
 
@@ -8,30 +13,31 @@ logger = logging.getLogger("TaskProvider")
 class TaskProvider:
 
 
-	def __init__(self, database_client, date_time_provider):
+	def __init__(self, database_client: DatabaseClient, date_time_provider: DateTimeProvider) -> None:
 		self.database_client = database_client
 		self.date_time_provider = date_time_provider
 		self.table = "task"
 
 
-	def count(self, type = None, status = None, run = None, worker = None): # pylint: disable = redefined-builtin
+	def count(self, type: Optional[str] = None, status: Optional[str] = None, run: Optional[str] = None, worker: Optional[str] = None) -> int: # pylint: disable = redefined-builtin
 		filter = { "type": type, "status": status, "parameters.run_identifier": run, "parameters.worker_identifier": worker } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.count(self.table, filter)
 
 
-	def get_list( # pylint: disable = too-many-arguments
-			self, type = None, status = None, run = None, worker = None, skip = 0, limit = None, order_by = None): # pylint: disable = redefined-builtin
+	def get_list(self, # pylint: disable = too-many-arguments
+			type: Optional[str] = None, status: Optional[str] = None, run: Optional[str] = None, worker: Optional[str] = None, # pylint: disable = redefined-builtin
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
 		filter = { "type": type, "status": status, "parameters.run_identifier": run, "parameters.worker_identifier": worker } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
-	def get(self, task_identifier):
+	def get(self, task_identifier: str) -> Optional[dict]:
 		return self.database_client.find_one(self.table, { "identifier": task_identifier })
 
 
-	def create(self, type, parameters): # pylint: disable = redefined-builtin
+	def create(self, type: str, parameters: dict) -> dict: # pylint: disable = redefined-builtin
 		now = self.date_time_provider.now()
 
 		task = {
@@ -48,7 +54,7 @@ class TaskProvider:
 		return task
 
 
-	def update_status(self, task, status = None, should_cancel = None):
+	def update_status(self, task: dict, status: Optional[str] = None, should_cancel: Optional[bool] = None) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {

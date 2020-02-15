@@ -1,5 +1,11 @@
 import logging
 
+from typing import List, Optional, Tuple
+
+from bhamon_orchestra_model.database.database_client import DatabaseClient
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.run_provider import RunProvider
+
 
 logger = logging.getLogger("WorkerProvider")
 
@@ -7,25 +13,25 @@ logger = logging.getLogger("WorkerProvider")
 class WorkerProvider:
 
 
-	def __init__(self, database_client, date_time_provider):
+	def __init__(self, database_client: DatabaseClient, date_time_provider: DateTimeProvider) -> None:
 		self.database_client = database_client
 		self.date_time_provider = date_time_provider
 		self.table = "worker"
 
 
-	def count(self):
+	def count(self) -> int:
 		return self.database_client.count(self.table, {})
 
 
-	def get_list(self, skip = 0, limit = None, order_by = None):
+	def get_list(self, skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
 		return self.database_client.find_many(self.table, {}, skip = skip, limit = limit, order_by = order_by)
 
 
-	def get(self, worker_identifier):
+	def get(self, worker_identifier: str) -> Optional[dict]:
 		return self.database_client.find_one(self.table, { "identifier": worker_identifier })
 
 
-	def create(self, worker_identifier, owner):
+	def create(self, worker_identifier: str, owner: str) -> dict:
 		now = self.date_time_provider.now()
 
 		worker = {
@@ -42,7 +48,7 @@ class WorkerProvider:
 		return worker
 
 
-	def update_status(self, worker, is_active = None, is_enabled = None):
+	def update_status(self, worker: dict, is_active: Optional[bool] = None, is_enabled: Optional[bool] = None) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
@@ -57,7 +63,7 @@ class WorkerProvider:
 		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
 
 
-	def update_properties(self, worker, properties):
+	def update_properties(self, worker: dict, properties: dict) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
@@ -69,7 +75,7 @@ class WorkerProvider:
 		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
 
 
-	def delete(self, worker_identifier, run_provider):
+	def delete(self, worker_identifier: str, run_provider: RunProvider) -> None:
 		worker_record = self.get(worker_identifier)
 		if worker_record is None:
 			raise ValueError("Worker '%s' does not exist" % worker_identifier)

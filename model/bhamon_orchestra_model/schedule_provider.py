@@ -1,5 +1,10 @@
 import logging
 
+from typing import List, Optional, Tuple
+
+from bhamon_orchestra_model.database.database_client import DatabaseClient
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+
 
 logger = logging.getLogger("ScheduleProvider")
 
@@ -7,31 +12,32 @@ logger = logging.getLogger("ScheduleProvider")
 class ScheduleProvider:
 
 
-	def __init__(self, database_client, date_time_provider):
+	def __init__(self, database_client: DatabaseClient, date_time_provider: DateTimeProvider) -> None:
 		self.database_client = database_client
 		self.date_time_provider = date_time_provider
 		self.table = "schedule"
 
 
-	def count(self, project = None, job = None):
+	def count(self, project: Optional[str] = None, job: Optional[str] = None) -> int:
 		filter = { "project": project, "job": job } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.count(self.table, filter)
 
 
-	def get_list( # pylint: disable = too-many-arguments
-			self, project = None, job = None, skip = 0, limit = None, order_by = None):
+	def get_list(self, # pylint: disable = too-many-arguments
+			project: Optional[str] = None, job: Optional[str] = None,
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
 		filter = { "project": project, "job": job } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
-	def get(self, schedule_identifier):
+	def get(self, schedule_identifier: str) -> Optional[dict]:
 		return self.database_client.find_one(self.table, { "identifier": schedule_identifier })
 
 
-	def create_or_update( # pylint: disable = too-many-arguments
-			self, schedule_identifier, project_identifier, job_identifier, parameters, expression):
+	def create_or_update(self, # pylint: disable = too-many-arguments
+			schedule_identifier: str, project_identifier: str, job_identifier: str, parameters: dict, expression: str) -> dict:
 		now = self.date_time_provider.now()
 		schedule = self.get(schedule_identifier)
 
@@ -65,7 +71,7 @@ class ScheduleProvider:
 		return schedule
 
 
-	def update_status(self, schedule, is_enabled = None, last_run = None):
+	def update_status(self, schedule: dict, is_enabled: Optional[bool] = None, last_run: Optional[str] = None) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
@@ -80,5 +86,5 @@ class ScheduleProvider:
 		self.database_client.update_one(self.table, { "identifier": schedule["identifier"] }, update_data)
 
 
-	def delete(self, schedule_identifier):
+	def delete(self, schedule_identifier: str) -> None:
 		self.database_client.delete_one(self.table, { "identifier": schedule_identifier })
