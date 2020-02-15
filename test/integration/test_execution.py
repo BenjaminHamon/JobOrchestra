@@ -1,5 +1,3 @@
- # pylint: disable = too-many-locals
-
 """ Integration tests for job execution """
 
 import time
