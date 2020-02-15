@@ -1,12 +1,12 @@
 """ Unit tests for MemoryDatabaseClient """
 
-import bhamon_orchestra_model.database.memory_database_client as memory_database_client
+from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
 
 
 def test_single():
 	""" Test database client by performing a few operations with a single object """
 
-	client = memory_database_client.MemoryDatabaseClient()
+	client = MemoryDatabaseClient()
 	table = "object"
 	obj = { "id": 1, "key": "value" }
 
@@ -22,7 +22,7 @@ def test_single():
 def test_many():
 	""" Test database client by performing a few operations with a few objects """
 
-	client = memory_database_client.MemoryDatabaseClient()
+	client = MemoryDatabaseClient()
 	table = "object"
 
 	first_object = { "id": 1, "key": "first" }

@@ -1,4 +1,3 @@
-import datetime
 import logging
 
 
@@ -8,8 +7,9 @@ logger = logging.getLogger("WorkerProvider")
 class WorkerProvider:
 
 
-	def __init__(self, database_client):
+	def __init__(self, database_client, date_time_provider):
 		self.database_client = database_client
+		self.date_time_provider = date_time_provider
 		self.table = "worker"
 
 
@@ -26,14 +26,16 @@ class WorkerProvider:
 
 
 	def create(self, worker_identifier, owner):
+		now = self.date_time_provider.now()
+
 		worker = {
 			"identifier": worker_identifier,
 			"owner": owner,
 			"properties": {},
 			"is_enabled": True,
 			"is_active": False,
-			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"creation_date": self.date_time_provider.serialize(now),
+			"update_date": self.date_time_provider.serialize(now),
 		}
 
 		self.database_client.insert_one(self.table, worker)
@@ -41,21 +43,25 @@ class WorkerProvider:
 
 
 	def update_status(self, worker, is_active = None, is_enabled = None):
+		now = self.date_time_provider.now()
+
 		update_data = {}
 		if is_active is not None:
 			update_data["is_active"] = is_active
 		if is_enabled is not None:
 			update_data["is_enabled"] = is_enabled
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		update_data["update_date"] = self.date_time_provider.serialize(now)
 
 		worker.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
 
 
 	def update_properties(self, worker, properties):
+		now = self.date_time_provider.now()
+
 		update_data = {
 			"properties": properties,
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"update_date": self.date_time_provider.serialize(now),
 		}
 
 		worker.update(update_data)

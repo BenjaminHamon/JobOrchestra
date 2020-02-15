@@ -9,17 +9,18 @@ from bhamon_orchestra_model.database.memory_file_storage import MemoryFileStorag
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_master.worker import Worker
 
-from .run_provider_fake import RunProviderFake
-from .worker_remote_mock import MessengerMock, WorkerRemoteMock
+from ..fakes.fake_date_time_provider import FakeDateTimeProvider
+from ..fakes.fake_run_provider import FakeRunProvider
+from ..fakes.mock_worker_remote import MockMessenger, MockWorkerRemote
 
 
 @pytest.mark.asyncio
 async def test_start_execution_success():
 	""" Test _start_execution in normal conditions """
 
-	run_provider_instance = RunProviderFake()
-	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	run_provider_instance = FakeRunProvider()
+	worker_remote_instance = MockWorkerRemote("worker_test")
+	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
@@ -31,9 +32,9 @@ async def test_start_execution_success():
 async def test_abort_execution_success():
 	""" Test _abort_execution in normal conditions """
 
-	run_provider_instance = RunProviderFake()
-	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	run_provider_instance = FakeRunProvider()
+	worker_remote_instance = MockWorkerRemote("worker_test")
+	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
@@ -49,9 +50,9 @@ async def test_abort_execution_success():
 async def test_finish_execution_success():
 	""" Test _finish_execution in normal conditions """
 
-	run_provider_instance = RunProviderFake()
-	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	run_provider_instance = FakeRunProvider()
+	worker_remote_instance = MockWorkerRemote("worker_test")
+	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "job_test" }
@@ -69,9 +70,10 @@ async def test_process_success():
 
 	database_client_instance = MemoryDatabaseClient()
 	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
-	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
+	worker_remote_instance = MockWorkerRemote("worker_test")
+	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
@@ -138,9 +140,10 @@ async def test_process_abort():
 
 	database_client_instance = MemoryDatabaseClient()
 	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
-	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
+	worker_remote_instance = MockWorkerRemote("worker_test")
+	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
@@ -214,9 +217,10 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 
 	database_client_instance = MemoryDatabaseClient()
 	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
-	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
+	worker_remote_instance = MockWorkerRemote("worker_test")
+	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
@@ -304,9 +308,10 @@ async def test_process_recovery_after_execution():
 
 	database_client_instance = MemoryDatabaseClient()
 	file_storage_instance = MemoryFileStorage()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance)
-	worker_remote_instance = WorkerRemoteMock("worker_test")
-	worker_messenger = MessengerMock(worker_remote_instance.handle_request)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
+	worker_remote_instance = MockWorkerRemote("worker_test")
+	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "identifier": "examples_empty", "project": "examples" }

@@ -1,4 +1,3 @@
-import datetime
 import logging
 
 
@@ -8,8 +7,9 @@ logger = logging.getLogger("ScheduleProvider")
 class ScheduleProvider:
 
 
-	def __init__(self, database_client):
+	def __init__(self, database_client, date_time_provider):
 		self.database_client = database_client
+		self.date_time_provider = date_time_provider
 		self.table = "schedule"
 
 
@@ -32,6 +32,7 @@ class ScheduleProvider:
 
 	def create_or_update( # pylint: disable = too-many-arguments
 			self, schedule_identifier, project_identifier, job_identifier, parameters, expression):
+		now = self.date_time_provider.now()
 		schedule = self.get(schedule_identifier)
 
 		if schedule is None:
@@ -43,8 +44,8 @@ class ScheduleProvider:
 				"expression": expression,
 				"is_enabled": False,
 				"last_run": None,
-				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+				"creation_date": self.date_time_provider.serialize(now),
+				"update_date": self.date_time_provider.serialize(now),
 			}
 
 			self.database_client.insert_one(self.table, schedule)
@@ -55,7 +56,7 @@ class ScheduleProvider:
 				"job": job_identifier,
 				"parameters": parameters,
 				"expression": expression,
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+				"update_date": self.date_time_provider.serialize(now),
 			}
 
 			schedule.update(update_data)
@@ -65,12 +66,13 @@ class ScheduleProvider:
 
 
 	def update_status(self, schedule, is_enabled = None, last_run = None):
+		now = self.date_time_provider.now()
 		update_data = {}
 		if is_enabled is not None:
 			update_data["is_enabled"] = is_enabled
 		if last_run is not None:
 			update_data["last_run"] = last_run
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		update_data["update_date"] = self.date_time_provider.serialize(now)
 
 		schedule.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": schedule["identifier"] }, schedule)

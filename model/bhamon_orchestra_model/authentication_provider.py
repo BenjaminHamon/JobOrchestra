@@ -1,4 +1,3 @@
-import datetime
 import hashlib
 import hmac
 import logging
@@ -12,8 +11,9 @@ logger = logging.getLogger("AuthenticationProvider")
 class AuthenticationProvider:
 
 
-	def __init__(self, database_client):
+	def __init__(self, database_client, date_time_provider):
 		self.database_client = database_client
+		self.date_time_provider = date_time_provider
 		self.table = "user_authentication"
 
 		self.password_salt_size = 32
@@ -26,7 +26,7 @@ class AuthenticationProvider:
 
 
 	def set_password(self, user, password):
-		now = datetime.datetime.utcnow().replace(microsecond = 0)
+		now = self.date_time_provider.now()
 		authentication = self.database_client.find_one(self.table, { "user": user, "type": "password" })
 
 		if authentication is None:
@@ -34,8 +34,8 @@ class AuthenticationProvider:
 				"identifier": str(uuid.uuid4()),
 				"user": user,
 				"type": "password",
-				"creation_date": now.isoformat() + "Z",
-				"update_date": now.isoformat() + "Z",
+				"creation_date": self.date_time_provider.serialize(now),
+				"update_date": self.date_time_provider.serialize(now),
 			}
 
 			self.database_client.insert_one(self.table, authentication)
@@ -44,7 +44,7 @@ class AuthenticationProvider:
 			"hash_function": self.password_hash_function,
 			"hash_function_parameters": self.password_hash_function_parameters,
 			"hash_function_salt": secrets.token_hex(self.password_salt_size),
-			"update_date": now.isoformat() + "Z",
+			"update_date": self.date_time_provider.serialize(now),
 		})
 
 		authentication["secret"] = self.hash_password(password, authentication["hash_function_salt"], authentication["hash_function"], authentication["hash_function_parameters"])
@@ -66,7 +66,7 @@ class AuthenticationProvider:
 
 
 	def authenticate_with_token(self, user_identifier, secret):
-		now = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		now = self.date_time_provider.serialize(self.date_time_provider.now())
 		user_tokens = self.database_client.find_many(self.table, { "user": user_identifier, "type": "token" })
 
 		for token in user_tokens:
@@ -97,7 +97,7 @@ class AuthenticationProvider:
 
 
 	def create_token(self, user, description, expiration):
-		now = datetime.datetime.utcnow().replace(microsecond = 0)
+		now = self.date_time_provider.now()
 
 		token = {
 			"identifier": str(uuid.uuid4()),
@@ -106,12 +106,12 @@ class AuthenticationProvider:
 			"description": description,
 			"hash_function": self.token_hash_function,
 			"hash_function_parameters": self.token_hash_function_parameters,
-			"creation_date": now.isoformat() + "Z",
-			"update_date": now.isoformat() + "Z",
+			"creation_date": self.date_time_provider.serialize(now),
+			"update_date": self.date_time_provider.serialize(now),
 		}
 
 		if expiration is not None:
-			token["expiration_date"] = (now + expiration).isoformat() + "Z"
+			token["expiration_date"] = self.date_time_provider.serialize(now + expiration)
 
 		secret = secrets.token_hex(self.token_size)
 		token["secret"] = self.hash_token(secret, token["hash_function"], token["hash_function_parameters"])
@@ -127,11 +127,11 @@ class AuthenticationProvider:
 		if "expiration_date" not in token:
 			raise ValueError("Token '%s' does not expire" % token_identifier)
 
-		now = datetime.datetime.utcnow().replace(microsecond = 0)
+		now = self.date_time_provider.now()
 
 		update_data = {
-			"expiration_date": (now + expiration).isoformat() + "Z",
-			"update_date": now.isoformat() + "Z",
+			"expiration_date": self.date_time_provider.serialize(now + expiration),
+			"update_date": self.date_time_provider.serialize(now),
 		}
 
 		self.database_client.update_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" }, update_data)

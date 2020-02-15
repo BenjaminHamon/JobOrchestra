@@ -11,6 +11,7 @@ import pymongo
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.database.file_storage import FileStorage
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.project_provider import ProjectProvider
 from bhamon_orchestra_model.run_provider import RunProvider
@@ -45,16 +46,17 @@ class Context: # pylint: disable = too-many-instance-attributes
 		if self.database_uri is not None:
 			database_client_instance = environment.create_database_client(self.database_uri)
 			file_storage_instance = FileStorage(os.path.join(self.temporary_directory, "master"))
+			date_time_provider_instance = DateTimeProvider()
 
-			self.authentication_provider = AuthenticationProvider(database_client_instance)
+			self.authentication_provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 			self.authorization_provider = AuthorizationProvider()
-			self.job_provider = JobProvider(database_client_instance)
-			self.project_provider = ProjectProvider(database_client_instance)
-			self.run_provider = RunProvider(database_client_instance, file_storage_instance)
-			self.schedule_provider = ScheduleProvider(database_client_instance)
-			self.task_provider = TaskProvider(database_client_instance)
-			self.user_provider = UserProvider(database_client_instance)
-			self.worker_provider = WorkerProvider(database_client_instance)
+			self.job_provider = JobProvider(database_client_instance, date_time_provider_instance)
+			self.project_provider = ProjectProvider(database_client_instance, date_time_provider_instance)
+			self.run_provider = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
+			self.schedule_provider = ScheduleProvider(database_client_instance, date_time_provider_instance)
+			self.task_provider = TaskProvider(database_client_instance, date_time_provider_instance)
+			self.user_provider = UserProvider(database_client_instance, date_time_provider_instance)
+			self.worker_provider = WorkerProvider(database_client_instance, date_time_provider_instance)
 
 
 	def __enter__(self):

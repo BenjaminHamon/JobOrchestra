@@ -8,13 +8,16 @@ from bhamon_orchestra_master.worker import Worker
 from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
 from bhamon_orchestra_model.run_provider import RunProvider
 
+from ..fakes.fake_date_time_provider import FakeDateTimeProvider
+
 
 def test_cancel_run_pending():
 	""" Test cancelling a pending run """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
-	job_scheduler_instance = JobScheduler(None, None, run_provider_instance, None, None)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
+	job_scheduler_instance = JobScheduler(None, date_time_provider_instance, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
@@ -31,8 +34,9 @@ def test_cancel_run_running():
 	""" Test cancelling an in progress run """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
-	job_scheduler_instance = JobScheduler(None, None, run_provider_instance, None, None)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
+	job_scheduler_instance = JobScheduler(None, date_time_provider_instance, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
@@ -50,8 +54,9 @@ def test_cancel_run_completed():
 	""" Test cancelling a completed run """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
-	job_scheduler_instance = JobScheduler(None, None, run_provider_instance, None, None)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
+	job_scheduler_instance = JobScheduler(None, date_time_provider_instance, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
@@ -69,9 +74,10 @@ def test_abort_run_pending():
 	""" Test aborting a pending run """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
@@ -89,10 +95,11 @@ def test_abort_run_running_connected():
 	""" Test aborting an in progress run on a connected worker """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	worker_instance = Worker("worker_test", None, run_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
 
 	supervisor_instance._active_workers[worker_instance.identifier] = worker_instance
 
@@ -117,10 +124,11 @@ def test_abort_run_running_disconnected():
 	""" Test aborting an in progress run on a disconnected worker """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	worker_instance = Worker("worker_test", None, run_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
@@ -143,9 +151,10 @@ def test_abort_run_completed():
 	""" Test aborting a completed run """
 
 	database_client_instance = MemoryDatabaseClient()
-	run_provider_instance = RunProvider(database_client_instance, None)
+	date_time_provider_instance = FakeDateTimeProvider()
+	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, None, run_provider_instance, None, None)
+	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
 
 	job = { "identifier": "examples_empty", "project": "examples" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
