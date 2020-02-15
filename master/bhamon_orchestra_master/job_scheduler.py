@@ -1,8 +1,6 @@
 import asyncio
-import datetime
 import logging
 
-import dateutil.parser
 import pycron
 
 
@@ -13,8 +11,9 @@ class JobScheduler:
 
 
 	def __init__( # pylint: disable = too-many-arguments
-			self, supervisor, job_provider, run_provider, schedule_provider, worker_selector):
+			self, supervisor, date_time_provider, job_provider, run_provider, schedule_provider, worker_selector):
 		self._supervisor = supervisor
+		self._date_time_provider = date_time_provider
 		self._job_provider = job_provider
 		self._run_provider = run_provider
 		self._schedule_provider = schedule_provider
@@ -34,7 +33,7 @@ class JobScheduler:
 
 
 	async def update(self):
-		now = datetime.datetime.utcnow().replace(second = 0, microsecond = 0)
+		now = self._date_time_provider.now().replace(second = 0)
 
 		all_schedules = self._list_active_schedules()
 
@@ -80,7 +79,7 @@ class JobScheduler:
 		if last_run["status"] in [ "pending", "running" ]:
 			return False
 
-		last_trigger_date = dateutil.parser.parse(last_run["creation_date"]).replace(second = 0, microsecond = 0, tzinfo = None)
+		last_trigger_date = self._date_time_provider.deserialize(last_run["creation_date"]).replace(second = 0)
 		if last_trigger_date == now:
 			return False
 

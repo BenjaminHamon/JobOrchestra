@@ -1,4 +1,3 @@
-import datetime
 import logging
 import re
 
@@ -9,8 +8,9 @@ logger = logging.getLogger("UserProvider")
 class UserProvider:
 
 
-	def __init__(self, database_client):
+	def __init__(self, database_client, date_time_provider):
 		self.database_client = database_client
+		self.date_time_provider = date_time_provider
 		self.table = "user"
 		self.user_identifier_regex = re.compile(r"^[a-zA-Z0-9_\-\.]{3,32}$")
 
@@ -31,13 +31,15 @@ class UserProvider:
 		if self.user_identifier_regex.search(user_identifier) is None:
 			raise ValueError("User identifier is invalid: '%s'" % user_identifier)
 
+		now = self.date_time_provider.now()
+
 		user = {
 			"identifier": user_identifier,
 			"display_name": display_name,
 			"roles": [],
 			"is_enabled": True,
-			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"creation_date": self.date_time_provider.serialize(now),
+			"update_date": self.date_time_provider.serialize(now),
 		}
 
 		self.database_client.insert_one(self.table, user)
@@ -45,19 +47,25 @@ class UserProvider:
 
 
 	def update_identity(self, user, display_name = None):
-		update_data = {}
-		if display_name is not None:
-			update_data["display_name"] = display_name
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		now = self.date_time_provider.now()
+
+		update_data = {
+			"display_name": display_name,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		user.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)
 
 
 	def update_roles(self, user, roles):
+		now = self.date_time_provider.now()
+
 		update_data = {
 			"roles": roles,
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"update_date": self.date_time_provider.serialize(now),
 		}
 
 		user.update(update_data)
@@ -65,10 +73,14 @@ class UserProvider:
 
 
 	def update_status(self, user, is_enabled = None):
-		update_data = {}
-		if is_enabled is not None:
-			update_data["is_enabled"] = is_enabled
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		now = self.date_time_provider.now()
+
+		update_data = {
+			"is_enabled": is_enabled,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		user.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, user)

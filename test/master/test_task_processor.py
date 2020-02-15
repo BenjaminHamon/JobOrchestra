@@ -6,12 +6,15 @@ from bhamon_orchestra_model.task_provider import TaskProvider
 from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
 from bhamon_orchestra_master.task_processor import TaskProcessor
 
+from ..fakes.fake_date_time_provider import FakeDateTimeProvider
+
 
 def test_list_pending_tasks():
 	""" Test listing pending tasks """
 
 	database_client_instance = MemoryDatabaseClient()
-	task_provider_instance = TaskProvider(database_client_instance)
+	date_time_provider_instance = FakeDateTimeProvider()
+	task_provider_instance = TaskProvider(database_client_instance, date_time_provider_instance)
 	task_processor_instance = TaskProcessor(task_provider_instance)
 
 	task_processor_instance.register_handler("test", 10, lambda parameters: "succeeded")
@@ -29,7 +32,8 @@ def test_execute_task_success():
 	""" Test executing a task which succeeds """
 
 	database_client_instance = MemoryDatabaseClient()
-	task_provider_instance = TaskProvider(database_client_instance)
+	date_time_provider_instance = FakeDateTimeProvider()
+	task_provider_instance = TaskProvider(database_client_instance, date_time_provider_instance)
 	task_processor_instance = TaskProcessor(task_provider_instance)
 
 	task_processor_instance.register_handler("test", 10, lambda parameters: "succeeded")
@@ -46,7 +50,8 @@ def test_execute_task_unknown():
 	""" Test executing a task which has no handler """
 
 	database_client_instance = MemoryDatabaseClient()
-	task_provider_instance = TaskProvider(database_client_instance)
+	date_time_provider_instance = FakeDateTimeProvider()
+	task_provider_instance = TaskProvider(database_client_instance, date_time_provider_instance)
 	task_processor_instance = TaskProcessor(task_provider_instance)
 
 	unknown_task = task_provider_instance.create("unknown", {})
@@ -65,7 +70,8 @@ def test_execute_task_cancellation():
 	""" Test executing a task which was cancelled """
 
 	database_client_instance = MemoryDatabaseClient()
-	task_provider_instance = TaskProvider(database_client_instance)
+	date_time_provider_instance = FakeDateTimeProvider()
+	task_provider_instance = TaskProvider(database_client_instance, date_time_provider_instance)
 	task_processor_instance = TaskProcessor(task_provider_instance)
 
 	task_processor_instance.register_handler("test", 10, lambda parameters: "succeeded")
@@ -84,7 +90,8 @@ def test_execute_task_cancellation_handler():
 	""" Test executing a task which was cancelled and has a cancellation handler """
 
 	database_client_instance = MemoryDatabaseClient()
-	task_provider_instance = TaskProvider(database_client_instance)
+	date_time_provider_instance = FakeDateTimeProvider()
+	task_provider_instance = TaskProvider(database_client_instance, date_time_provider_instance)
 	task_processor_instance = TaskProcessor(task_provider_instance)
 
 	task_processor_instance.register_handler("test", 10, lambda parameters: "succeeded", lambda parameters: None)

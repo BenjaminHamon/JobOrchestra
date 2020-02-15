@@ -1,7 +1,7 @@
 # pylint: disable = no-self-use, unused-argument
 
 
-class MessengerMock: # pylint: disable = too-few-public-methods
+class MockMessenger: # pylint: disable = too-few-public-methods
 	""" Mock a messenger for a WorkerRemoteMock """
 
 
@@ -14,7 +14,7 @@ class MessengerMock: # pylint: disable = too-few-public-methods
 
 
 
-class WorkerRemoteMock:
+class MockWorkerRemote:
 	""" Mock a remote worker process to execute commands """
 
 

@@ -1,4 +1,3 @@
-import datetime
 import json
 import logging
 import os
@@ -22,9 +21,10 @@ termination_timeout_seconds = 30
 class Executor: # pylint: disable = too-few-public-methods
 
 
-	def __init__(self, job_identifier, run_identifier):
+	def __init__(self, job_identifier, run_identifier, date_time_provider):
 		self.job_identifier = job_identifier
 		self.run_identifier = run_identifier
+		self._date_time_provider = date_time_provider
 
 		self._run_status = None
 
@@ -73,7 +73,7 @@ class Executor: # pylint: disable = too-few-public-methods
 				for step_index, step in enumerate(run_request["job"]["steps"])
 			],
 
-			"start_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"start_date": self._date_time_provider.serialize(self._date_time_provider.now()),
 			"completion_date": None,
 		}
 
@@ -84,7 +84,7 @@ class Executor: # pylint: disable = too-few-public-methods
 		logger.info("(%s) Run is starting", self.run_identifier)
 
 		try:
-			self._run_status["start_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+			self._run_status["start_date"] = self._date_time_provider.serialize(self._date_time_provider.now())
 			worker_storage.save_status(self.job_identifier, self.run_identifier, self._run_status)
 
 			if not os.path.exists(self._run_status["workspace"]):
@@ -103,13 +103,13 @@ class Executor: # pylint: disable = too-few-public-methods
 					is_skipping = True
 
 			self._run_status["status"] = run_final_status
-			self._run_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+			self._run_status["completion_date"] = self._date_time_provider.serialize(self._date_time_provider.now())
 			worker_storage.save_status(self.job_identifier, self.run_identifier, self._run_status)
 
 		except: # pylint: disable = bare-except
 			logger.error("(%s) Run raised an exception", self.run_identifier, exc_info = True)
 			self._run_status["status"] = "exception"
-			self._run_status["completion_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+			self._run_status["completion_date"] = self._date_time_provider.serialize(self._date_time_provider.now())
 			worker_storage.save_status(self.job_identifier, self.run_identifier, self._run_status)
 
 		logger.info("(%s) Run completed with status %s", self.run_identifier, self._run_status["status"])

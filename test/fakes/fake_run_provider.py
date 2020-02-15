@@ -1,6 +1,6 @@
 # pylint: disable = no-self-use, too-many-arguments, unused-argument
 
-class RunProviderFake:
+class FakeRunProvider:
 	""" Fake run provider for unit tests """
 
 	def count(self, job = None, worker = None, status = None):

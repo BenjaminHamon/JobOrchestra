@@ -1,4 +1,3 @@
-import datetime
 import logging
 import uuid
 
@@ -9,8 +8,9 @@ logger = logging.getLogger("TaskProvider")
 class TaskProvider:
 
 
-	def __init__(self, database_client):
+	def __init__(self, database_client, date_time_provider):
 		self.database_client = database_client
+		self.date_time_provider = date_time_provider
 		self.table = "task"
 
 
@@ -32,14 +32,16 @@ class TaskProvider:
 
 
 	def create(self, type, parameters): # pylint: disable = redefined-builtin
+		now = self.date_time_provider.now()
+
 		task = {
 			"identifier": str(uuid.uuid4()),
 			"type": type,
 			"parameters": parameters,
 			"status": "pending",
 			"should_cancel": False,
-			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"creation_date": self.date_time_provider.serialize(now),
+			"update_date": self.date_time_provider.serialize(now),
 		}
 
 		self.database_client.insert_one(self.table, task)
@@ -47,12 +49,15 @@ class TaskProvider:
 
 
 	def update_status(self, task, status = None, should_cancel = None):
-		update_data = {}
-		if status is not None:
-			update_data["status"] = status
-		if should_cancel is not None:
-			update_data["should_cancel"] = should_cancel
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		now = self.date_time_provider.now()
+
+		update_data = {
+			"status": status,
+			"should_cancel": should_cancel,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		task.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": task["identifier"] }, task)

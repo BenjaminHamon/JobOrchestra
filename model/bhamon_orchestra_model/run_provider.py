@@ -1,4 +1,3 @@
-import datetime
 import io
 import json
 import logging
@@ -14,9 +13,10 @@ logger = logging.getLogger("RunProvider")
 class RunProvider:
 
 
-	def __init__(self, database_client, file_storage):
+	def __init__(self, database_client, file_storage, date_time_provider):
 		self.database_client = database_client
 		self.file_storage = file_storage
+		self.date_time_provider = date_time_provider
 		self.table = "run"
 
 
@@ -47,6 +47,8 @@ class RunProvider:
 
 
 	def create(self, project_identifier, job_identifier, parameters):
+		now = self.date_time_provider.now()
+
 		run = {
 			"identifier": str(uuid.uuid4()),
 			"project": project_identifier,
@@ -54,8 +56,8 @@ class RunProvider:
 			"parameters": parameters,
 			"status": "pending",
 			"worker": None,
-			"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"creation_date": self.date_time_provider.serialize(now),
+			"update_date": self.date_time_provider.serialize(now),
 		}
 
 		self.database_client.insert_one(self.table, run)
@@ -64,16 +66,17 @@ class RunProvider:
 
 	def update_status( # pylint: disable = too-many-arguments
 			self, run, worker = None, status = None, start_date = None, completion_date = None):
-		update_data = {}
-		if worker is not None:
-			update_data["worker"] = worker
-		if status is not None:
-			update_data["status"] = status
-		if start_date is not None:
-			update_data["start_date"] = start_date
-		if completion_date is not None:
-			update_data["completion_date"] = completion_date
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		now = self.date_time_provider.now()
+
+		update_data = {
+			"worker": worker,
+			"status": status,
+			"start_date": start_date,
+			"completion_date": completion_date,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		run.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": run["identifier"] }, update_data)
@@ -88,9 +91,11 @@ class RunProvider:
 
 
 	def update_steps(self, run, step_collection):
+		now = self.date_time_provider.now()
+
 		update_data = {
 			"steps": step_collection,
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"update_date": self.date_time_provider.serialize(now),
 		}
 
 		run.update(update_data)
@@ -132,9 +137,11 @@ class RunProvider:
 
 
 	def set_results(self, run, results):
+		now = self.date_time_provider.now()
+
 		update_data = {
 			"results": results,
-			"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+			"update_date": self.date_time_provider.serialize(now),
 		}
 
 		run.update(update_data)

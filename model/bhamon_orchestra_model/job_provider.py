@@ -1,4 +1,3 @@
-import datetime
 import logging
 
 
@@ -8,8 +7,9 @@ logger = logging.getLogger("JobProvider")
 class JobProvider:
 
 
-	def __init__(self, database_client):
+	def __init__(self, database_client, date_time_provider):
 		self.database_client = database_client
+		self.date_time_provider = date_time_provider
 		self.table = "job"
 
 
@@ -31,6 +31,7 @@ class JobProvider:
 
 	def create_or_update( # pylint: disable = too-many-arguments
 			self, job_identifier, project, workspace, steps, parameters, properties, description):
+		now = self.date_time_provider.now()
 		job = self.get(job_identifier)
 
 		if job is None:
@@ -43,8 +44,8 @@ class JobProvider:
 				"properties": properties,
 				"description": description,
 				"is_enabled": True,
-				"creation_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+				"creation_date": self.date_time_provider.serialize(now),
+				"update_date": self.date_time_provider.serialize(now),
 			}
 
 			self.database_client.insert_one(self.table, job)
@@ -57,7 +58,7 @@ class JobProvider:
 				"parameters": parameters,
 				"properties": properties,
 				"description": description,
-				"update_date": datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z",
+				"update_date": self.date_time_provider.serialize(now),
 			}
 
 			job.update(update_data)
@@ -67,10 +68,15 @@ class JobProvider:
 
 
 	def update_status(self, job, is_enabled = None):
-		update_data = {}
-		if is_enabled is not None:
-			update_data["is_enabled"] = is_enabled
-		update_data["update_date"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+		now = self.date_time_provider.now()
+
+		update_data = {
+			"is_enabled": is_enabled,
+			"update_date": self.date_time_provider.serialize(now),
+		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
+
 		job.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": job["identifier"] }, job)
 
