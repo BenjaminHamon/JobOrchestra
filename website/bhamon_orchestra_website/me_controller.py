@@ -1,4 +1,3 @@
-import datetime
 import logging
 
 import flask
@@ -59,7 +58,7 @@ def show_profile():
 	user_tokens = service_client.get("/me/token_collection", { "order_by": [ "update_date descending" ] })
 	user_tokens.sort(key = lambda token: "expiration_date" in token)
 
-	now = datetime.datetime.utcnow().replace(microsecond = 0).isoformat() + "Z"
+	now = flask.current_app.date_time_provider.serialize(flask.current_app.date_time_provider.now())
 	for token in user_tokens:
 		token["is_active"] = token["expiration_date"] > now if "expiration_date" in token else True
 

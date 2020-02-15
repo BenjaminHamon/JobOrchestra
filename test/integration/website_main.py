@@ -4,6 +4,7 @@ import logging
 import flask
 
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 
 import bhamon_orchestra_website.website as website
 
@@ -29,6 +30,7 @@ def parse_arguments():
 def create_application(environment_instance):
 	application = flask.Flask(__name__, static_folder = None)
 	application.authorization_provider = AuthorizationProvider()
+	application.date_time_provider = DateTimeProvider()
 	application.service_url = environment_instance["orchestra_service_url"]
 	application.secret_key = "secret"
 
