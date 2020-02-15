@@ -150,7 +150,7 @@ def test_job_controller_success(tmpdir, database_type):
 
 		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
 
-		time.sleep(15)
+		time.sleep(10)
 
 		run = context_instance.run_provider.get(run["identifier"])
 		all_runs = context_instance.run_provider.get_list()
@@ -194,7 +194,7 @@ def test_job_controller_failure(tmpdir, database_type):
 
 		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
 
-		time.sleep(15)
+		time.sleep(10)
 
 		run = context_instance.run_provider.get(run["identifier"])
 		all_runs = context_instance.run_provider.get_list()
