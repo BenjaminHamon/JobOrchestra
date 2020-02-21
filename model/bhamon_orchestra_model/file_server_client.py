@@ -4,12 +4,12 @@ import requests
 class FileServerClient: # pylint: disable = too-few-public-methods
 
 
-	def __init__(self, name, website_url):
+	def __init__(self, name: str, website_url: str) -> None:
 		self.name = name
 		self.website_url = website_url
 
 
-	def get_service_status(self):
+	def get_service_status(self) -> dict:
 		result = {
 			"service": self.name,
 			"website_url": self.website_url,

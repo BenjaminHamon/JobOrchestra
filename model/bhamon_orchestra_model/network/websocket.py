@@ -1,24 +1,53 @@
 import asyncio
 import logging
 
+from typing import Callable
+
 import websockets
+
+from bhamon_orchestra_model.network.connection import NetworkConnection
 
 
 logger = logging.getLogger("WebSocket")
 
 
+
+class WebSocketConnection(NetworkConnection):
+	""" Network connection implementation for WebSocket """
+
+
+	def __init__(self, connection: websockets.WebSocketClientProtocol) -> None:
+		self.connection = connection
+
+
+	async def ping(self) -> None:
+		""" Send a ping """
+		return await self.connection.ping()
+
+
+	async def send(self, data: str) -> None:
+		""" Send a message """
+		await self.connection.send(data)
+
+
+	async def receive(self) -> str:
+		""" Receive the next message """
+		return await self.connection.recv()
+
+
+
 class WebSocketClient:
 
 
-	def __init__(self, server_identifier, server_uri):
+	def __init__(self, server_identifier: str, server_uri: str) -> None:
 		self.server_identifier = server_identifier
 		self.server_uri = server_uri
 
 		self.connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
 
 
-	async def run_once(self, connection_handler, **kwargs):
-		logger.info("Connecting to %s on %s", self.server_identifier, self.server_uri)
+	async def run_once(self, connection_handler: Callable[[WebSocketConnection],None], **kwargs) -> None:
+		logger.info("Connecting to %s (Uri: '%s')", self.server_identifier, self.server_uri)
 		connection = await websockets.connect(self.server_uri, **kwargs)
 
 		try:
@@ -35,7 +64,7 @@ class WebSocketClient:
 				logger.info("Closed connection to %s", self.server_identifier)
 
 
-	async def run_forever(self, connection_handler, **kwargs):
+	async def run_forever(self, connection_handler: Callable[[WebSocketConnection],None], **kwargs) -> None:
 		connection_attempt_counter = 0
 
 		while True:
@@ -71,23 +100,3 @@ class WebSocketClient:
 				connection_attempt_delay = self.connection_attempt_delay_collection[-1]
 			logger.info("Retrying connection in %s seconds", connection_attempt_delay)
 			await asyncio.sleep(connection_attempt_delay)
-
-
-
-class WebSocketConnection:
-
-
-	def __init__(self, connection):
-		self.connection = connection
-
-
-	async def ping(self):
-		return await self.connection.ping()
-
-
-	async def send(self, data):
-		await self.connection.send(data)
-
-
-	async def receive(self):
-		return await self.connection.recv()
