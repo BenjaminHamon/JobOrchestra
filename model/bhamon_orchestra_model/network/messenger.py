@@ -4,8 +4,6 @@ import logging
 import traceback
 import uuid
 
-from typing import Callable, Dict, List, Optional
-
 from bhamon_orchestra_model.network.connection import NetworkConnection
 
 
@@ -18,13 +16,13 @@ class Messenger:
 	def __init__(self, connection: NetworkConnection) -> None:
 		self.connection = connection
 
-		self.identifier: str = None
-		self.request_handler: Optional[Callable[[dict],dict]] = None
-		self.update_handler: Optional[Callable[[dict],dict]] = None
-		self.messages_to_send: List[dict] = []
-		self.messages_to_wait: List[dict] = []
-		self.messages_to_handle: List[dict] = []
-		self._messages_events: Dict[str,asyncio.Event] = {}
+		self.identifier = None
+		self.request_handler = None
+		self.update_handler = None
+		self.messages_to_send = []
+		self.messages_to_wait = []
+		self.messages_to_handle = []
+		self._messages_events = {}
 		self.is_disposed = False
 
 
