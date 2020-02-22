@@ -137,11 +137,11 @@ def stop_worker(supervisor, worker_identifier):
 	return "succeeded" if was_stopped else "failed"
 
 
-def cancel_run(job_scheduler, run_identifier):
-	was_cancelled = job_scheduler.cancel_run(run_identifier)
+def cancel_run(job_scheduler, project_identifier, run_identifier):
+	was_cancelled = job_scheduler.cancel_run(project_identifier, run_identifier)
 	return "succeeded" if was_cancelled else "failed"
 
 
-def abort_run(job_scheduler, run_identifier):
-	was_aborted = job_scheduler.abort_run(run_identifier)
+def abort_run(job_scheduler, project_identifier, run_identifier):
+	was_aborted = job_scheduler.abort_run(project_identifier, run_identifier)
 	return "succeeded" if was_aborted else "failed"

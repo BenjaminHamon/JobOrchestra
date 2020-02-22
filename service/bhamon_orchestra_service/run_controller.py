@@ -66,6 +66,7 @@ def get_results(project_identifier, run_identifier):
 
 def get_tasks(project_identifier, run_identifier):
 	query_parameters = {
+		"project": project_identifier,
 		"run": run_identifier,
 		"status": flask.request.args.get("status", default = None),
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
@@ -77,13 +78,13 @@ def get_tasks(project_identifier, run_identifier):
 
 
 def cancel(project_identifier, run_identifier):
-	task = flask.current_app.task_provider.create("cancel_run", { "run_identifier": run_identifier })
-	return flask.jsonify({ "run_identifier": run_identifier, "task_identifier": task["identifier"] })
+	task = flask.current_app.task_provider.create("cancel_run", { "project_identifier": project_identifier, "run_identifier": run_identifier })
+	return flask.jsonify({ "project_identifier": project_identifier, "run_identifier": run_identifier, "task_identifier": task["identifier"] })
 
 
 def abort(project_identifier, run_identifier):
-	task = flask.current_app.task_provider.create("abort_run", { "run_identifier": run_identifier })
-	return flask.jsonify({ "run_identifier": run_identifier, "task_identifier": task["identifier"] })
+	task = flask.current_app.task_provider.create("abort_run", { "project_identifier": project_identifier, "run_identifier": run_identifier })
+	return flask.jsonify({ "project_identifier": project_identifier, "run_identifier": run_identifier, "task_identifier": task["identifier"] })
 
 
 def download_archive(project_identifier, run_identifier):

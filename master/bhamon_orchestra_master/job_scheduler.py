@@ -100,7 +100,7 @@ class JobScheduler:
 		return True
 
 
-	def cancel_run(self, run_identifier):
+	def cancel_run(self, project_identifier, run_identifier):
 		run = self._run_provider.get(run_identifier)
 		if run["status"] != "pending":
 			return False
@@ -108,7 +108,7 @@ class JobScheduler:
 		return True
 
 
-	def abort_run(self, run_identifier):
+	def abort_run(self, project_identifier, run_identifier):
 		run = self._run_provider.get(run_identifier)
 		if run["status"] != "running":
 			return False

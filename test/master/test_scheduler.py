@@ -24,7 +24,7 @@ def test_cancel_run_pending():
 
 	assert run["status"] == "pending"
 
-	operation_result = job_scheduler_instance.cancel_run(run["identifier"])
+	operation_result = job_scheduler_instance.cancel_run(run["project"], run["identifier"])
 
 	assert operation_result is True
 	assert run["status"] == "cancelled"
@@ -44,7 +44,7 @@ def test_cancel_run_running():
 
 	assert run["status"] == "running"
 
-	operation_result = job_scheduler_instance.cancel_run(run["identifier"])
+	operation_result = job_scheduler_instance.cancel_run(run["project"], run["identifier"])
 
 	assert operation_result is False
 	assert run["status"] == "running"
@@ -64,7 +64,7 @@ def test_cancel_run_completed():
 
 	assert run["status"] == "succeeded"
 
-	operation_result = job_scheduler_instance.cancel_run(run["identifier"])
+	operation_result = job_scheduler_instance.cancel_run(run["project"], run["identifier"])
 
 	assert operation_result is False
 	assert run["status"] == "succeeded"
@@ -85,7 +85,7 @@ def test_abort_run_pending():
 	assert run["status"] == "pending"
 	assert len(supervisor_instance._active_workers) == 0
 
-	operation_result = job_scheduler_instance.abort_run(run["identifier"])
+	operation_result = job_scheduler_instance.abort_run(run["project"], run["identifier"])
 
 	assert operation_result is False
 	assert run["status"] == "pending"
@@ -113,7 +113,7 @@ def test_abort_run_running_connected():
 	assert len(supervisor_instance._active_workers) == 1
 	assert len(worker_instance.executors) == 1
 
-	operation_result = job_scheduler_instance.abort_run(run["identifier"])
+	operation_result = job_scheduler_instance.abort_run(run["project"], run["identifier"])
 
 	assert operation_result is True
 	assert run["status"] == "running"
@@ -140,7 +140,7 @@ def test_abort_run_running_disconnected():
 	assert len(supervisor_instance._active_workers) == 0
 	assert len(worker_instance.executors) == 1
 
-	operation_result = job_scheduler_instance.abort_run(run["identifier"])
+	operation_result = job_scheduler_instance.abort_run(run["project"], run["identifier"])
 
 	assert operation_result is False
 	assert run["status"] == "running"
@@ -163,7 +163,7 @@ def test_abort_run_completed():
 	assert run["status"] == "succeeded"
 	assert len(supervisor_instance._active_workers) == 0
 
-	operation_result = job_scheduler_instance.abort_run(run["identifier"])
+	operation_result = job_scheduler_instance.abort_run(run["project"], run["identifier"])
 
 	assert operation_result is False
 	assert run["status"] == "succeeded"
