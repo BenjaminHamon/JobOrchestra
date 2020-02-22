@@ -79,6 +79,8 @@ class Synchronization:
 
 	def _send_log_updates(self, messenger):
 		status = worker_storage.load_status(self.job_identifier, self.run_identifier)
+		if "steps" not in status:
+			return
 
 		for step in self.run_steps:
 			step_status = status["steps"][step["index"]]["status"]
