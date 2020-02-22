@@ -163,7 +163,7 @@ class RunProvider:
 		if run is None:
 			return None
 
-		file_name = "{job}_{identifier}".format(**run) + ".zip"
+		file_name = run_identifier + ".zip"
 		now = time.gmtime()
 
 		with io.BytesIO() as file_object:
