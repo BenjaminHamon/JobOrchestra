@@ -31,7 +31,7 @@ def test_schedule(tmpdir, database_type):
 
 		time.sleep(5)
 
-		schedule = context_instance.schedule_provider.get(schedule["identifier"])
+		schedule = context_instance.schedule_provider.get(schedule["project"], schedule["identifier"])
 		run = context_instance.run_provider.get(schedule["last_run"])
 
 	master_expected_messages = [

@@ -32,20 +32,20 @@ class ScheduleProvider:
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
-	def get(self, schedule_identifier: str) -> Optional[dict]:
-		return self.database_client.find_one(self.table, { "identifier": schedule_identifier })
+	def get(self, project: str, schedule_identifier: str) -> Optional[dict]:
+		return self.database_client.find_one(self.table, { "project": project, "identifier": schedule_identifier })
 
 
 	def create_or_update(self, # pylint: disable = too-many-arguments
-			schedule_identifier: str, project_identifier: str, job_identifier: str, parameters: dict, expression: str) -> dict:
+			schedule_identifier: str, project: str, job: str, parameters: dict, expression: str) -> dict:
 		now = self.date_time_provider.now()
-		schedule = self.get(schedule_identifier)
+		schedule = self.get(project, schedule_identifier)
 
 		if schedule is None:
 			schedule = {
+				"project": project,
 				"identifier": schedule_identifier,
-				"project": project_identifier,
-				"job": job_identifier,
+				"job": job,
 				"parameters": parameters,
 				"expression": expression,
 				"is_enabled": False,
@@ -58,15 +58,14 @@ class ScheduleProvider:
 
 		else:
 			update_data = {
-				"project": project_identifier,
-				"job": job_identifier,
+				"job": job,
 				"parameters": parameters,
 				"expression": expression,
 				"update_date": self.date_time_provider.serialize(now),
 			}
 
 			schedule.update(update_data)
-			self.database_client.update_one(self.table, { "identifier": schedule_identifier }, update_data)
+			self.database_client.update_one(self.table, { "project": project, "identifier": schedule_identifier }, update_data)
 
 		return schedule
 
@@ -83,8 +82,8 @@ class ScheduleProvider:
 		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		schedule.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": schedule["identifier"] }, update_data)
+		self.database_client.update_one(self.table, { "project": schedule["project"], "identifier": schedule["identifier"] }, update_data)
 
 
-	def delete(self, schedule_identifier: str) -> None:
-		self.database_client.delete_one(self.table, { "identifier": schedule_identifier })
+	def delete(self, project: str, schedule_identifier: str) -> None:
+		self.database_client.delete_one(self.table, { "project": project, "identifier": schedule_identifier })

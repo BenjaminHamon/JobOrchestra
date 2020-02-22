@@ -87,7 +87,7 @@ class JobScheduler:
 
 
 	def _trigger_run(self, run):
-		job = self._job_provider.get(run["job"])
+		job = self._job_provider.get(run["project"], run["job"])
 		if not job["is_enabled"]:
 			return False
 

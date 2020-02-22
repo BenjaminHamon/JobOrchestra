@@ -30,19 +30,19 @@ class JobProvider:
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
-	def get(self, job_identifier: str) -> Optional[dict]:
-		return self.database_client.find_one(self.table, { "identifier": job_identifier })
+	def get(self, project: str, job_identifier: str) -> Optional[dict]:
+		return self.database_client.find_one(self.table, { "project": project, "identifier": job_identifier })
 
 
 	def create_or_update(self, # pylint: disable = too-many-arguments
 			job_identifier: str, project: str, workspace: str, steps: list, parameters: list, properties: dict, description: str) -> dict:
 		now = self.date_time_provider.now()
-		job = self.get(job_identifier)
+		job = self.get(project, job_identifier)
 
 		if job is None:
 			job = {
-				"identifier": job_identifier,
 				"project": project,
+				"identifier": job_identifier,
 				"workspace": workspace,
 				"steps": steps,
 				"parameters": parameters,
@@ -57,7 +57,6 @@ class JobProvider:
 
 		else:
 			update_data = {
-				"project": project,
 				"workspace": workspace,
 				"steps": steps,
 				"parameters": parameters,
@@ -67,7 +66,7 @@ class JobProvider:
 			}
 
 			job.update(update_data)
-			self.database_client.update_one(self.table, { "identifier": job_identifier }, update_data)
+			self.database_client.update_one(self.table, { "project": project, "identifier": job_identifier }, update_data)
 
 		return job
 
@@ -83,8 +82,8 @@ class JobProvider:
 		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		job.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": job["identifier"] }, update_data)
+		self.database_client.update_one(self.table, { "project": job["project"], "identifier": job["identifier"] }, update_data)
 
 
-	def delete(self, job_identifier: str) -> None:
-		self.database_client.delete_one(self.table, { "identifier": job_identifier })
+	def delete(self, project: str, job_identifier: str) -> None:
+		self.database_client.delete_one(self.table, { "project": project, "identifier": job_identifier })

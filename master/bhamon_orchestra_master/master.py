@@ -106,7 +106,7 @@ class Master:
 		for existing_job in all_existing_jobs:
 			if existing_job["identifier"] not in [ job["identifier"] for job in configuration["jobs"] ]:
 				logger.info("Removing job %s", existing_job["identifier"])
-				self._job_provider.delete(existing_job["identifier"])
+				self._job_provider.delete(existing_job["project"], existing_job["identifier"])
 
 		for job in configuration["jobs"]:
 			logger.info("Adding/Updating job %s", job["identifier"])
@@ -116,7 +116,7 @@ class Master:
 		for existing_schedule in all_existing_schedules:
 			if existing_schedule["identifier"] not in [ schedule["identifier"] for schedule in configuration["schedules"] ]:
 				logger.info("Removing schedule %s", existing_schedule["identifier"])
-				self._schedule_provider.delete(existing_schedule["identifier"])
+				self._schedule_provider.delete(existing_schedule["project"], existing_schedule["identifier"])
 
 		for schedule in configuration["schedules"]:
 			logger.info("Adding/Updating schedule %s", schedule["identifier"])

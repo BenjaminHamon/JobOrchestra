@@ -26,11 +26,12 @@ def get_collection(project_identifier):
 
 
 def get(project_identifier, job_identifier):
-	return flask.jsonify(flask.current_app.job_provider.get(job_identifier))
+	return flask.jsonify(flask.current_app.job_provider.get(project_identifier, job_identifier))
 
 
 def get_runs(project_identifier, job_identifier):
 	query_parameters = {
+		"project": project_identifier,
 		"job": job_identifier,
 		"status": flask.request.args.get("status", default = None),
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
@@ -43,16 +44,16 @@ def get_runs(project_identifier, job_identifier):
 
 def trigger(project_identifier, job_identifier):
 	parameters = flask.request.get_json()
-	job = flask.current_app.job_provider.get(job_identifier)
+	job = flask.current_app.job_provider.get(project_identifier, job_identifier)
 	run = flask.current_app.run_provider.create(job["project"], job_identifier, parameters)
 	return flask.jsonify({ "project_identifier": project_identifier, "job_identifier": job_identifier, "run_identifier": run["identifier"] })
 
 
 def enable(project_identifier, job_identifier):
-	flask.current_app.job_provider.update_status({ "identifier": job_identifier }, is_enabled = True)
+	flask.current_app.job_provider.update_status({ "project": project_identifier, "identifier": job_identifier }, is_enabled = True)
 	return flask.jsonify({})
 
 
 def disable(project_identifier, job_identifier):
-	flask.current_app.job_provider.update_status({ "identifier": job_identifier }, is_enabled = False)
+	flask.current_app.job_provider.update_status({ "project": project_identifier, "identifier": job_identifier }, is_enabled = False)
 	return flask.jsonify({})
