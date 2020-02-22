@@ -37,8 +37,8 @@ def test_schedule(tmpdir, database_type):
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "JobScheduler", "message": "Triggering run for schedule '%s'" % schedule["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s %s" % (job_identifier, run["identifier"]) },
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s %s with status succeeded" % (job_identifier, run["identifier"]) },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status succeeded" % run["identifier"] },
 		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 

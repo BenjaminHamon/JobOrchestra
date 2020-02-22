@@ -1,6 +1,3 @@
-# pylint: disable = no-self-use, unused-argument
-
-
 class MockMessenger: # pylint: disable = too-few-public-methods
 	""" Mock a messenger for a WorkerRemoteMock """
 
@@ -55,24 +52,21 @@ class MockWorkerRemote:
 	def _list_runs(self):
 		all_runs = []
 		for executor in self.executors:
-			all_runs.append({ "job_identifier": executor["job_identifier"], "run_identifier": executor["run_identifier"] })
+			all_runs.append({ "run_identifier": executor["run_identifier"] })
 		return all_runs
 
 
-	def _execute(self, job_identifier, run_identifier, job, parameters):
+	def _execute(self, run_identifier, job, parameters):
 		executor = {
-			"job_identifier": job_identifier,
 			"run_identifier": run_identifier,
 
 			"request": {
-				"job_identifier": job_identifier,
 				"run_identifier": run_identifier,
 				"job": job,
 				"parameters": parameters,
 			},
 
 			"status": {
-				"job_identifier": job_identifier,
 				"run_identifier": run_identifier,
 				"status": "pending",
 				"steps": [
@@ -86,26 +80,26 @@ class MockWorkerRemote:
 		self.executors.append(executor)
 
 
-	def _clean(self, job_identifier, run_identifier):
+	def _clean(self, run_identifier):
 		executor = self.find_executor(run_identifier)
 		if executor["status"]["status"] == "running":
 			raise RuntimeError("Executor is still running for run %s" % run_identifier)
 		self.executors.remove(executor)
 
 
-	def _abort(self, job_identifier, run_identifier):
+	def _abort(self, run_identifier):
 		executor = self.find_executor(run_identifier)
 		executor["status"]["status"] = "aborted"
 
 
-	def _retrieve_request(self, job_identifier, run_identifier):
+	def _retrieve_request(self, run_identifier):
 		executor = self.find_executor(run_identifier)
 		return executor["request"]
 
 
-	def _resynchronize(self, job_identifier, run_identifier, reset):
+	def _resynchronize(self, run_identifier, reset): # pylint: disable = no-self-use, unused-argument
 		pass
 
 
-	def _request_shutdown(self):
+	def _request_shutdown(self): # pylint: disable = no-self-use
 		pass

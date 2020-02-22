@@ -51,10 +51,11 @@ def test_executor(tmpdir):
 	""" Test if the executor starts successfully """
 
 	with context.Context(tmpdir, None) as context_instance:
-		executor_process = context_instance.invoke_executor("worker", "job", "00000000-0000-0000-0000-000000000000")
+		run_identifier = "00000000-0000-0000-0000-000000000000"
+		executor_process = context_instance.invoke_executor("worker", run_identifier)
 
 	executor_expected_messages = [
-		{ "level": "Info", "logger": "Executor", "message": "(00000000-0000-0000-0000-000000000000) Executing job" },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Starting executor" % run_identifier },
 	]
 
 	assert_extensions.assert_multi_process([

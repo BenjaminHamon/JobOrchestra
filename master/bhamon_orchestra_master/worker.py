@@ -49,7 +49,7 @@ class Worker:
 				except asyncio.CancelledError: # pylint: disable = try-except-raise
 					raise
 				except Exception: # pylint: disable = broad-except
-					logger.error("(%s) Unhandled exception while executing run %s %s", self.identifier, executor["run"]["job"], executor["run"]["identifier"], exc_info = True)
+					logger.error("(%s) Unhandled exception while executing run %s", self.identifier, executor["run"]["identifier"], exc_info = True)
 					executor["local_status"] = "exception"
 
 				if executor["local_status"] in [ "done", "exception" ]:
@@ -104,29 +104,29 @@ class Worker:
 			executor["local_status"] = "done"
 
 
-	async def _recover_execution(self, job_identifier, run_identifier):
-		logger.info("(%s) Recovering run %s %s", self.identifier, job_identifier, run_identifier)
-		run_request = await self._retrieve_request(job_identifier, run_identifier)
+	async def _recover_execution(self, run_identifier):
+		logger.info("(%s) Recovering run %s", self.identifier, run_identifier)
+		run_request = await self._retrieve_request(run_identifier)
 		run = self._run_provider.get(run_identifier)
 		return { "job": run_request["job"], "run": run, "local_status": "running", "synchronization": "unknown", "should_abort": False }
 
 
 	async def _start_execution(self, run, job):
-		logger.info("(%s) Starting run %s %s", self.identifier, run["job"], run["identifier"])
-		execute_request = { "job_identifier": run["job"], "run_identifier": run["identifier"], "job": job, "parameters": run["parameters"] }
+		logger.info("(%s) Starting run %s", self.identifier, run["identifier"])
+		execute_request = { "run_identifier": run["identifier"], "job": job, "parameters": run["parameters"] }
 		await self._execute_remote_command("execute", execute_request)
 
 
 	async def _abort_execution(self, run):
-		logger.info("(%s) Aborting run %s %s", self.identifier, run["job"], run["identifier"])
-		abort_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
+		logger.info("(%s) Aborting run %s", self.identifier, run["identifier"])
+		abort_request = { "run_identifier": run["identifier"] }
 		await self._execute_remote_command("abort", abort_request)
 
 
 	async def _finish_execution(self, run):
-		clean_request = { "job_identifier": run["job"], "run_identifier": run["identifier"] }
+		clean_request = { "run_identifier": run["identifier"] }
 		await self._execute_remote_command("clean", clean_request)
-		logger.info("(%s) Completed run %s %s with status %s", self.identifier, run["job"], run["identifier"], run["status"])
+		logger.info("(%s) Completed run %s with status %s", self.identifier, run["identifier"], run["status"])
 
 
 	async def _resynchronize(self, run):
@@ -137,12 +137,12 @@ class Worker:
 				log_size = self._run_provider.get_step_log_size(run["identifier"], step["index"])
 				reset["steps"].append({ "index": step["index"], "log_file_cursor": log_size })
 
-		resynchronization_request = { "job_identifier": run["job"], "run_identifier": run["identifier"], "reset": reset }
+		resynchronization_request = { "run_identifier": run["identifier"], "reset": reset }
 		await self._execute_remote_command("resynchronize", resynchronization_request)
 
 
-	async def _retrieve_request(self, job_identifier, run_identifier):
-		parameters = { "job_identifier": job_identifier, "run_identifier": run_identifier }
+	async def _retrieve_request(self, run_identifier):
+		parameters = { "run_identifier": run_identifier }
 		return await self._execute_remote_command("request", parameters)
 
 
