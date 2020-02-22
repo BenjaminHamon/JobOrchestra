@@ -55,7 +55,7 @@
 {% endif %}
 
 <section>
-	<h2><a href="{{ url_for('run_controller.show_collection', job = job['identifier']) }}" title="View all runs">Runs</a></h2>
+	<h2><a href="{{ url_for('run_controller.show_collection', project_identifier = job['project'], job = job['identifier']) }}" title="View all runs">Runs</a></h2>
 	{{ run_macros.run_table(job_runs) }}
 </section>
 {% endblock %}

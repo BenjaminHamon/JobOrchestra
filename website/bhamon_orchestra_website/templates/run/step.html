@@ -1,18 +1,18 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Run {{ run_identifier }} > Step {{ current['index'] }} {{ current['name'] }}</h1>
+<h1>Project {{ project['identifier'] }} / Run {{ run['identifier'] }} / Step {{ current['index'] }} {{ current['name'] }}</h1>
 
 <section>
 	<div class="page-navigation">
 		{% if previous %}
-		<a href="{{ url_for('run_controller.show_step', run_identifier = run_identifier, step_index = previous['index']) }}" title="Previous step"> < </a>
+		<a href="{{ url_for('run_controller.show_step', project_identifier = run['project'], run_identifier = run['identifier'], step_index = previous['index']) }}" title="Previous step"> < </a>
 		{% else %}
 		<a title="Previous step" class="disabled"> < </a>
 		{% endif %}
-		<a href="{{ url_for('run_controller.show', run_identifier = run_identifier) }}">Index</a>
+		<a href="{{ url_for('run_controller.show', project_identifier = run['project'], run_identifier = run['identifier']) }}">Index</a>
 		{% if next %}
-		<a href="{{ url_for('run_controller.show_step', run_identifier = run_identifier, step_index = next['index']) }}" title="Next step"> > </a>
+		<a href="{{ url_for('run_controller.show_step', project_identifier = run['project'], run_identifier = run['identifier'], step_index = next['index']) }}" title="Next step"> > </a>
 		{% else %}
 		<a title="Next step" class="disabled"> > </a>
 		{% endif %}
@@ -30,7 +30,7 @@
 </section>
 
 <section>
-	<h2><a href="{{ url_for('run_controller.show_step_log', run_identifier = run_identifier, step_index = current['index']) }}">Log</a></h2>
+	<h2><a href="{{ url_for('run_controller.show_step_log', project_identifier = run['project'], run_identifier = run['identifier'], step_index = current['index']) }}">Log</a></h2>
 	<pre id="log-text">{{ log_text }}</pre>
 </section>
 
@@ -39,7 +39,8 @@
 {% block scripts %}
 <script type="module">
 	window.viewData = {
-		runIdentifier: "{{ run_identifier }}",
+		projectIdentifier: "{{ run['project'] }}",
+		runIdentifier: "{{ run['identifier'] }}",
 		stepIndex: parseInt("{{ current['index'] }}"),
 		stepStatus: "{{ current['status'] }}",
 		logCursor: "{{ log_cursor }}",

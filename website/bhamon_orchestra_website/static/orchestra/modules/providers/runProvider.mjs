@@ -4,8 +4,8 @@ export class RunProvider {
 		this.serviceUrl = serviceUrl;
 	}
 
-	async getStep(runIdentifier, stepIndex) {
-		var url = new URL(this.serviceUrl + "/run/" + runIdentifier + "/step/" + stepIndex);
+	async getStep(projectIdentifier, runIdentifier, stepIndex) {
+		var url = new URL(this.serviceUrl + "/project/" + projectIdentifier + "/run/" + runIdentifier + "/step/" + stepIndex);
 
 		var response = await fetch(url);
 		if (response.ok == false) {
@@ -15,8 +15,8 @@ export class RunProvider {
 		return await response.json();
 	}
 
-	async getLogChunk(runIdentifier, stepIndex, cursor = 0, limit = null) {
-		var url = new URL(this.serviceUrl + "/run/" + runIdentifier + "/step/" + stepIndex + "/log_chunk");
+	async getLogChunk(projectIdentifier, runIdentifier, stepIndex, cursor = 0, limit = null) {
+		var url = new URL(this.serviceUrl + "/project/" + projectIdentifier + "/run/" + runIdentifier + "/step/" + stepIndex + "/log_chunk");
 		if (limit != null)
 			url.searchParams.set("limit", limit);
 

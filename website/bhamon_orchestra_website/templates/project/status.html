@@ -41,7 +41,7 @@
 						{% for run in revision['runs_by_filter'][run_filter['identifier']] %}
 						<div class="status-group">
 							<div class="status-indicator {{ run['status'] }}" title="{{ run['status'] }}"></div>
-							<a href="{{ url_for('run_controller.show', run_identifier = run['identifier']) }}">{{ run['identifier'][:18] }}</a>
+							<a href="{{ url_for('run_controller.show', project_identifier = run['project'], run_identifier = run['identifier']) }}">{{ run['identifier'][:18] }}</a>
 						</div>
 						{% endfor %}
 					</td>

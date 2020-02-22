@@ -12,7 +12,7 @@
 </section>
 
 <section>
-	<h2><a href="{{ url_for('run_controller.show_collection', project = project['identifier']) }}" title="View all runs">Runs</a></h2>
+	<h2><a href="{{ url_for('run_controller.show_collection', project_identifier = project['identifier']) }}" title="View all runs">Runs</a></h2>
 	{{ run_macros.run_table(run_collection) }}
 </section>
 

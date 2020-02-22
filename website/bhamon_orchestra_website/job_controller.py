@@ -29,12 +29,10 @@ def show_collection(project_identifier):
 
 
 def show(project_identifier, job_identifier): # pylint: disable = unused-argument
-	run_query_parameters = { "limit": 10, "order_by": [ "update_date descending" ] }
-
 	view_data = {
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
 		"job": service_client.get("/project/{project_identifier}/job/{job_identifier}".format(**locals())),
-		"job_runs": service_client.get("/project/{project_identifier}/job/{job_identifier}/runs".format(**locals()), run_query_parameters),
+		"job_runs": service_client.get("/project/{project_identifier}/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
 	return flask.render_template("job/index.html", title = "Job " + job_identifier, **view_data)

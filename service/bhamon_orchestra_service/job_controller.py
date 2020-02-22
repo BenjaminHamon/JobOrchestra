@@ -45,7 +45,7 @@ def trigger(project_identifier, job_identifier):
 	parameters = flask.request.get_json()
 	job = flask.current_app.job_provider.get(job_identifier)
 	run = flask.current_app.run_provider.create(job["project"], job_identifier, parameters)
-	return flask.jsonify({ "job_identifier": job_identifier, "run_identifier": run["identifier"] })
+	return flask.jsonify({ "project_identifier": project_identifier, "job_identifier": job_identifier, "run_identifier": run["identifier"] })
 
 
 def enable(project_identifier, job_identifier):

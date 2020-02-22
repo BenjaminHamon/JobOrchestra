@@ -17,7 +17,7 @@
 		{% for run in run_collection %}
 		<tr>
 			<td><a href="{{ url_for('job_controller.show', project_identifier = run.get('project', '__missing__'), job_identifier = run['job']) }}">{{ run['job'] }}</a></td>
-			<td><a href="{{ url_for('run_controller.show', run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a></td>
+			<td><a href="{{ url_for('run_controller.show', project_identifier = run.get('project', '__missing__'), run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a></td>
 			<td>
 				<div class="status-group">
 					<div class="status-indicator {{ run['status'] }}"></div>
@@ -28,9 +28,9 @@
 			<td>
 				<form class="action-group" method="post">
 					{% if run['status'] == 'pending' %}
-					<button formaction="{{ url_for('run_controller.cancel', run_identifier = run['identifier']) }}">Cancel</button>
+					<button formaction="{{ url_for('run_controller.cancel', project_identifier = run['project'], run_identifier = run['identifier']) }}">Cancel</button>
 					{% elif run['status'] == 'running' %}
-					<button formaction="{{ url_for('run_controller.abort', run_identifier = run['identifier']) }}">Abort</button>
+					<button formaction="{{ url_for('run_controller.abort', project_identifier = run['project'], run_identifier = run['identifier']) }}">Abort</button>
 					{% endif %}
 				</form>
 			</td>
