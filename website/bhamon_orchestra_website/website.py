@@ -36,7 +36,6 @@ def configure(application, title = None, copyright = None, version = None, date 
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True
 	application.jinja_env.filters["describe_cron_expression"] = helpers.describe_cron_expression
-	application.jinja_env.filters["strip_pagination_arguments"] = helpers.strip_pagination_arguments
 	application.jinja_env.globals["authorize_view"] = authorize_view
 	application.permanent_session_lifetime = datetime.timedelta(days = 7)
 

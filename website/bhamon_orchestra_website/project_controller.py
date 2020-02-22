@@ -11,7 +11,7 @@ logger = logging.getLogger("ProjectController")
 
 def show_collection():
 	item_total = service_client.get("/project_count")
-	pagination = helpers.get_pagination(item_total)
+	pagination = helpers.get_pagination(item_total, {})
 
 	query_parameters = {
 		"skip": (pagination["page_number"] - 1) * pagination["item_count"],

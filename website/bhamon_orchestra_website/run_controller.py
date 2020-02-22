@@ -18,7 +18,7 @@ def show_collection():
 	}
 
 	item_total = service_client.get("/run_count", query_parameters)
-	pagination = helpers.get_pagination(item_total)
+	pagination = helpers.get_pagination(item_total, dict(query_parameters))
 
 	query_parameters.update({
 		"skip": (pagination["page_number"] - 1) * pagination["item_count"],
