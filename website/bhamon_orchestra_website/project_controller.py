@@ -28,6 +28,7 @@ def show(project_identifier):
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
 		"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 		"run_collection": service_client.get("/project/{project_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"schedule_collection": service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
 	return flask.render_template("project/index.html", title = "Project " + project_identifier, **view_data)

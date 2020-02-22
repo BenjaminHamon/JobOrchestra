@@ -14,7 +14,7 @@
 	<tbody>
 		{% for schedule in schedule_collection %}
 		<tr>
-			<td><a href="{{ url_for('schedule_controller.show', schedule_identifier = schedule['identifier']) }}">{{ schedule['identifier'] }}</a></td>
+			<td><a href="{{ url_for('schedule_controller.show', project_identifier = schedule['project'], schedule_identifier = schedule['identifier']) }}">{{ schedule['identifier'] }}</a></td>
 			<td>
 				{% if schedule['is_enabled'] %}
 				<div class="status-group">
@@ -33,9 +33,9 @@
 			<td>
 				<form class="action-group" method="post">
 					{% if schedule['is_enabled'] %}
-					<button formaction="{{ url_for('schedule_controller.disable', schedule_identifier = schedule['identifier']) }}">Disable</button>
+					<button formaction="{{ url_for('schedule_controller.disable', project_identifier = schedule['project'], schedule_identifier = schedule['identifier']) }}">Disable</button>
 					{% else %}
-					<button formaction="{{ url_for('schedule_controller.enable', schedule_identifier = schedule['identifier']) }}">Enable</button>
+					<button formaction="{{ url_for('schedule_controller.enable', project_identifier = schedule['project'], schedule_identifier = schedule['identifier']) }}">Enable</button>
 					{% endif %}
 				</form>
 			</td>

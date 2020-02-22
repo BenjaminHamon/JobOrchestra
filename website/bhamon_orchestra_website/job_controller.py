@@ -10,8 +10,6 @@ logger = logging.getLogger("JobController")
 
 
 def show_collection(project_identifier):
-	project = service_client.get("/project/{project_identifier}".format(**locals()))
-
 	item_total = service_client.get("/project/{project_identifier}/job_count".format(**locals()))
 	pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier })
 
@@ -21,11 +19,9 @@ def show_collection(project_identifier):
 		"order_by": [ "identifier ascending" ],
 	}
 
-	job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), query_parameters)
-
 	view_data = {
-		"project": project,
-		"job_collection": job_collection,
+		"project": service_client.get("/project/{project_identifier}".format(**locals())),
+		"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), query_parameters),
 		"pagination": pagination,
 	}
 

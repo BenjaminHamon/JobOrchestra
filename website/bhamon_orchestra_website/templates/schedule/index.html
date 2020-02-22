@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Schedule {{ schedule['identifier'] }}</h1>
+<h1>Project {{ project['identifier'] }} / Schedule {{ schedule['identifier'] }}</h1>
 
 <section>
 	<h2>Status</h2>
@@ -13,7 +13,7 @@
 		</div>
 			{% if authorize_view("schedule-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('schedule_controller.disable', schedule_identifier = schedule['identifier']) }}">Disable</button>
+			<button formaction="{{ url_for('schedule_controller.disable', project_identifier = schedule['project'], schedule_identifier = schedule['identifier']) }}">Disable</button>
 		</form>
 			{% endif %}
 		{% else %}
@@ -23,7 +23,7 @@
 		</div>
 			{% if authorize_view("schedule-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('schedule_controller.enable', schedule_identifier = schedule['identifier']) }}">Enable</button>
+			<button formaction="{{ url_for('schedule_controller.enable', project_identifier = schedule['project'], schedule_identifier = schedule['identifier']) }}">Enable</button>
 		</form>
 			{% endif %}
 		{% endif %}

@@ -98,10 +98,10 @@ class AuthorizationProvider:
 			if "Auditor" in user_roles and method == "GET":
 				return True
 
-		if method == "GET" and domain in [ "project", "run", "schedule", "task", "worker" ]:
+		if method == "GET" and domain in [ "project", "run", "task", "worker" ]:
 			if "Viewer" in user_roles:
 				return True
-		if method == "POST" and domain in [ "run", "schedule", "task", "worker" ]:
+		if method == "POST" and domain in [ "run", "task", "worker" ]:
 			if "Operator" in user_roles:
 				return True
 

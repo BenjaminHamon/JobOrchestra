@@ -3,21 +3,10 @@
 {% import 'macros.html' as shared_macros %}
 
 {% block content %}
-<h1>Schedules</h1>
+<h1>Project {{ project['identifier'] }} / Schedules</h1>
 <section>
 	<div class="table-container">
-		<form method="get" action="{{ url_for('schedule_controller.show_collection') }}">
-			<label for="input-project">Project</label>
-			<select id="input-project" name="project">
-				<option></option>
-				{% for project in project_collection %}
-					{% if request.args.get('project') == project['identifier'] %}
-				<option selected>{{ project['identifier'] }}</option>
-					{% else %}
-				<option>{{ project['identifier'] }}</option>
-					{% endif %}
-				{% endfor %}
-			</select>
+		<form method="get" action="{{ url_for('schedule_controller.show_collection', project_identifier = project['identifier']) }}">
 			<label for="input-job">Job</label>
 			<select id="input-job" name="job">
 				<option></option>
