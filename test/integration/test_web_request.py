@@ -138,6 +138,7 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 		task = context_instance.task_provider.create("nothing", {})
 		worker = context_instance.worker_provider.create("worker", None)
+		context_instance.run_provider.update_status(run, worker = worker["identifier"])
 		user = context_instance.user_provider.create("user", "user")
 
 		service_process = context_instance.invoke_service()

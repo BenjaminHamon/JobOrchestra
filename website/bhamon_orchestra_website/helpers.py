@@ -28,6 +28,10 @@ def get_pagination(item_total, url_arguments):
 	}
 
 
+def get_status_collection(): # pylint: disable = no-self-use
+	return [ "pending", "running", "succeeded", "failed", "exception", "aborted", "cancelled" ]
+
+
 def describe_cron_expression(expression):
 	return cron_descriptor.get_description(expression, cron_descriptor_options)
 
