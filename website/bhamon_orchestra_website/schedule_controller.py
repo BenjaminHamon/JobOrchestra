@@ -26,7 +26,7 @@ def show_collection():
 
 	view_data = {
 		"project_collection": service_client.get("/project_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
-		"job_collection": service_client.get("/job_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
+		"job_collection": [], # FIXME: service_client.get("/job_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 		"schedule_collection": service_client.get("/schedule_collection", query_parameters),
 		"pagination": pagination,
 	}

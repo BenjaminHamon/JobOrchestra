@@ -21,9 +21,10 @@ class Controller:
 		self.wait_delay_seconds = 10
 
 
-	def trigger_run(self, result_file_path, job_identifier, parameters):
+	def trigger_run(self, result_file_path, project_identifier, job_identifier, parameters):
 		message = "Triggering run for job %s" % job_identifier
-		response = self._try_request(message, lambda: self._service_post("/job/" + job_identifier + "/trigger", data = parameters))
+		route = "/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals())
+		response = self._try_request(message, lambda: self._service_post(route, data = parameters))
 		logger.info("Run: %s", response["run_identifier"])
 
 		results = workspace.load_results(result_file_path)

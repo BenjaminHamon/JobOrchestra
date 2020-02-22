@@ -2,7 +2,7 @@
 {% import 'run/macros.html' as run_macros %}
 
 {% block content %}
-<h1>Job {{ job['identifier'] }}</h1>
+<h1>Project {{ project['identifier'] }} / Job {{ job['identifier'] }}</h1>
 
 <section>
 	<h2>Description</h2>
@@ -19,7 +19,7 @@
 		</div>
 			{% if authorize_view("job-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('job_controller.disable', job_identifier = job['identifier']) }}">Disable</button>
+			<button formaction="{{ url_for('job_controller.disable', project_identifier = job['project'], job_identifier = job['identifier']) }}">Disable</button>
 		</form>
 			{% endif %}
 		{% else %}
@@ -29,7 +29,7 @@
 		</div>
 			{% if authorize_view("job-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('job_controller.enable', job_identifier = job['identifier']) }}">Enable</button>
+			<button formaction="{{ url_for('job_controller.enable', project_identifier = job['project'], job_identifier = job['identifier']) }}">Enable</button>
 		</form>
 			{% endif %}
 		{% endif %}
@@ -44,7 +44,7 @@
 {% if authorize_view("job-actions") %}
 <section>
 	<h2>Trigger</h2>
-	<form class="generic-form" method="post" action="{{ url_for('job_controller.trigger', job_identifier = job['identifier']) }}">
+	<form class="generic-form" method="post" action="{{ url_for('job_controller.trigger', project_identifier = job['project'], job_identifier = job['identifier']) }}">
 		{% for parameter in job['parameters'] %}
 		<label for="trigger-parameter-{{parameter['key']}}">{{ parameter['key'] }}</label>
 		<input type="text" class="text-input" id="trigger-parameter-{{parameter['key']}}" name="parameter-{{ parameter['key'] }}"/>

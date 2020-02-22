@@ -112,8 +112,8 @@ def controller_success():
 		"parameters": [],
 
 		"steps": [
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples_success" ] },
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples_success" ] },
+			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "examples_success" ] },
+			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "examples_success" ] },
 			{ "name": "wait", "command": controller_script + [ "wait" ] },
 		],
 	}
@@ -138,8 +138,8 @@ def controller_failure():
 		"parameters": [],
 
 		"steps": [
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples_success" ] },
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples_failure" ] },
+			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "examples_success" ] },
+			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "examples_failure" ] },
 			{ "name": "wait", "command": controller_script + [ "wait" ] },
 		],
 	}
