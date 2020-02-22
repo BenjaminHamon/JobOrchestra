@@ -113,9 +113,8 @@ class RunProvider:
 
 
 	def _get_step_log_path(self, project: str, run_identifier: str, step_index: int) -> str:
-		run = self.get(project, run_identifier)
 		run_step = self.get_step(project, run_identifier, step_index)
-		return os.path.join("logs", "{job}_{identifier}".format(**run), "step_{index}_{name}.log".format(**run_step))
+		return os.path.join("projects", project, "runs", run_identifier, "step_{index}_{name}.log".format(**run_step))
 
 
 	def has_step_log(self, project: str, run_identifier: str, step_index: int) -> bool:
