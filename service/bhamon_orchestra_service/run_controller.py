@@ -32,24 +32,25 @@ def get_collection(project_identifier):
 
 
 def get(project_identifier, run_identifier):
-	return flask.jsonify(flask.current_app.run_provider.get(run_identifier))
+	return flask.jsonify(flask.current_app.run_provider.get(project_identifier, run_identifier))
 
 
 def get_step_collection(project_identifier, run_identifier):
-	return flask.jsonify(flask.current_app.run_provider.get_all_steps(run_identifier))
+	return flask.jsonify(flask.current_app.run_provider.get_all_steps(project_identifier, run_identifier))
 
 
 def get_step(project_identifier, run_identifier, step_index):
-	return flask.jsonify(flask.current_app.run_provider.get_step(run_identifier, step_index))
+	return flask.jsonify(flask.current_app.run_provider.get_step(project_identifier, run_identifier, step_index))
 
 
 def get_step_log(project_identifier, run_identifier, step_index):
-	log_text, log_cursor = flask.current_app.run_provider.get_step_log(run_identifier, step_index)
+	log_text, log_cursor = flask.current_app.run_provider.get_step_log(project_identifier, run_identifier, step_index)
 	return flask.Response(log_text, mimetype = "text/plain", headers = { "X-Orchestra-FileCursor": log_cursor })
 
 
 def get_step_log_chunk(project_identifier, run_identifier, step_index):
 	query_parameters = {
+		"project": project_identifier,
 		"run_identifier": run_identifier,
 		"step_index": step_index,
 		"skip": max(flask.request.headers.get("X-Orchestra-FileCursor", default = 0, type = int), 0),
@@ -61,7 +62,7 @@ def get_step_log_chunk(project_identifier, run_identifier, step_index):
 
 
 def get_results(project_identifier, run_identifier):
-	return flask.jsonify(flask.current_app.run_provider.get_results(run_identifier))
+	return flask.jsonify(flask.current_app.run_provider.get_results(project_identifier, run_identifier))
 
 
 def get_tasks(project_identifier, run_identifier):
@@ -88,6 +89,6 @@ def abort(project_identifier, run_identifier):
 
 
 def download_archive(project_identifier, run_identifier):
-	archive = flask.current_app.run_provider.get_archive(run_identifier)
+	archive = flask.current_app.run_provider.get_archive(project_identifier, run_identifier)
 	headers = { "Content-Disposition": "attachment;filename=" + '"' + archive["file_name"] + '"' }
 	return flask.Response(archive["data"], headers = headers, mimetype = "application/" + archive["type"])

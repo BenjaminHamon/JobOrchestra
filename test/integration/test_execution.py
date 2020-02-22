@@ -26,7 +26,7 @@ def test_job_success(tmpdir, database_type):
 
 		time.sleep(5)
 
-		run = context_instance.run_provider.get(run["identifier"])
+		run = context_instance.run_provider.get(run["project"], run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -71,7 +71,7 @@ def test_job_failure(tmpdir, database_type):
 
 		time.sleep(5)
 
-		run = context_instance.run_provider.get(run["identifier"])
+		run = context_instance.run_provider.get(run["project"], run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -116,7 +116,7 @@ def test_job_exception(tmpdir, database_type):
 
 		time.sleep(5)
 
-		run = context_instance.run_provider.get(run["identifier"])
+		run = context_instance.run_provider.get(run["project"], run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -165,7 +165,7 @@ def test_job_controller_success(tmpdir, database_type):
 
 		time.sleep(10)
 
-		run = context_instance.run_provider.get(run["identifier"])
+		run = context_instance.run_provider.get(run["project"], run["identifier"])
 		all_runs = context_instance.run_provider.get_list()
 
 	master_expected_messages = [
@@ -218,7 +218,7 @@ def test_job_controller_failure(tmpdir, database_type):
 
 		time.sleep(10)
 
-		run = context_instance.run_provider.get(run["identifier"])
+		run = context_instance.run_provider.get(run["project"], run["identifier"])
 		all_runs = context_instance.run_provider.get_list()
 
 	master_expected_messages = [

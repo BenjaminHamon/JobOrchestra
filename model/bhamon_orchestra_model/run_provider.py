@@ -49,18 +49,18 @@ class RunProvider:
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
-	def get(self, run_identifier: str) -> Optional[dict]:
-		run = self.database_client.find_one(self.table, { "identifier": run_identifier })
+	def get(self, project: str, run_identifier: str) -> Optional[dict]:
+		run = self.database_client.find_one(self.table, { "project": project, "identifier": run_identifier })
 		return self.convert_to_public(run) if run is not None else None
 
 
-	def create(self, project_identifier: str, job_identifier: str, parameters: dict) -> dict:
+	def create(self, project: str, job: str, parameters: dict) -> dict:
 		now = self.date_time_provider.now()
 
 		run = {
 			"identifier": str(uuid.uuid4()),
-			"project": project_identifier,
-			"job": job_identifier,
+			"project": project,
+			"job": job,
 			"parameters": parameters,
 			"status": "pending",
 			"worker": None,
@@ -89,15 +89,15 @@ class RunProvider:
 		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		run.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": run["identifier"] }, update_data)
+		self.database_client.update_one(self.table, { "project": run["project"], "identifier": run["identifier"] }, update_data)
 
 
-	def get_all_steps(self, run_identifier: str) -> List[dict]:
-		return self.database_client.find_one(self.table, { "identifier": run_identifier }).get("steps", [])
+	def get_all_steps(self, project: str, run_identifier: str) -> List[dict]:
+		return self.database_client.find_one(self.table, { "project": project, "identifier": run_identifier }).get("steps", [])
 
 
-	def get_step(self, run_identifier: str, step_index: int) -> dict:
-		return self.database_client.find_one(self.table, { "identifier": run_identifier })["steps"][step_index]
+	def get_step(self, project: str, run_identifier: str, step_index: int) -> dict:
+		return self.database_client.find_one(self.table, { "project": project, "identifier": run_identifier })["steps"][step_index]
 
 
 	def update_steps(self, run: dict, step_collection: List[dict]) -> None:
@@ -109,41 +109,42 @@ class RunProvider:
 		}
 
 		run.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": run["identifier"] }, update_data)
+		self.database_client.update_one(self.table, { "project": run["project"], "identifier": run["identifier"] }, update_data)
 
 
-	def _get_step_log_path(self, run_identifier: str, step_index: int) -> str:
-		run = self.get(run_identifier)
-		run_step = self.get_step(run_identifier, step_index)
+	def _get_step_log_path(self, project: str, run_identifier: str, step_index: int) -> str:
+		run = self.get(project, run_identifier)
+		run_step = self.get_step(project, run_identifier, step_index)
 		return os.path.join("logs", "{job}_{identifier}".format(**run), "step_{index}_{name}.log".format(**run_step))
 
 
-	def has_step_log(self, run_identifier: str, step_index: int) -> bool:
-		return self.file_storage.exists(self._get_step_log_path(run_identifier, step_index))
+	def has_step_log(self, project: str, run_identifier: str, step_index: int) -> bool:
+		return self.file_storage.exists(self._get_step_log_path(project, run_identifier, step_index))
 
 
-	def get_step_log(self, run_identifier: str, step_index: int) -> Tuple[str,int]:
-		return self.file_storage.load_chunk_or_default(self._get_step_log_path(run_identifier, step_index), "", skip = 0, limit = None)
+	def get_step_log(self, project: str, run_identifier: str, step_index: int) -> Tuple[str,int]:
+		return self.file_storage.load_chunk_or_default(self._get_step_log_path(project, run_identifier, step_index), "", skip = 0, limit = None)
 
 
-	def get_step_log_chunk(self, run_identifier: str, step_index: int, skip: int = 0, limit: Optional[int] = None) -> Tuple[str,int]:
-		return self.file_storage.load_chunk_or_default(self._get_step_log_path(run_identifier, step_index), "", skip = skip, limit = limit)
+	def get_step_log_chunk(self, # pylint: disable = too-many-arguments
+			project: str, run_identifier: str, step_index: int, skip: int = 0, limit: Optional[int] = None) -> Tuple[str,int]:
+		return self.file_storage.load_chunk_or_default(self._get_step_log_path(project, run_identifier, step_index), "", skip = skip, limit = limit)
 
 
-	def get_step_log_size(self, run_identifier: str, step_index: int) -> int:
-		return self.file_storage.get_universal_size(self._get_step_log_path(run_identifier, step_index))
+	def get_step_log_size(self, project: str, run_identifier: str, step_index: int) -> int:
+		return self.file_storage.get_universal_size(self._get_step_log_path(project, run_identifier, step_index))
 
 
-	def append_step_log(self, run_identifier: str, step_index: int, log_text: str) -> None:
-		self.file_storage.append_unsafe(self._get_step_log_path(run_identifier, step_index), log_text)
+	def append_step_log(self, project: str, run_identifier: str, step_index: int, log_text: str) -> None:
+		self.file_storage.append_unsafe(self._get_step_log_path(project, run_identifier, step_index), log_text)
 
 
-	def delete_step_log(self, run_identifier: str, step_index: int) -> None:
-		self.file_storage.delete(self._get_step_log_path(run_identifier, step_index))
+	def delete_step_log(self, project: str, run_identifier: str, step_index: int) -> None:
+		self.file_storage.delete(self._get_step_log_path(project, run_identifier, step_index))
 
 
-	def get_results(self, run_identifier: str) -> dict:
-		return self.database_client.find_one(self.table, { "identifier": run_identifier }).get("results", {})
+	def get_results(self, project: str, run_identifier: str) -> dict:
+		return self.database_client.find_one(self.table, { "project": project, "identifier": run_identifier }).get("results", {})
 
 
 	def set_results(self, run: dict, results: dict) -> None:
@@ -155,11 +156,11 @@ class RunProvider:
 		}
 
 		run.update(update_data)
-		self.database_client.update_one(self.table, { "identifier": run["identifier"] }, update_data)
+		self.database_client.update_one(self.table, { "project": run["project"], "identifier": run["identifier"] }, update_data)
 
 
-	def get_archive(self, run_identifier: str) -> dict:
-		run = self.database_client.find_one(self.table, { "identifier": run_identifier })
+	def get_archive(self, project: str, run_identifier: str) -> dict:
+		run = self.database_client.find_one(self.table, { "project": project, "identifier": run_identifier })
 		if run is None:
 			return None
 
@@ -172,7 +173,7 @@ class RunProvider:
 				entry_info.external_attr = 0o644 << 16
 				archive.writestr(entry_info, json.dumps(run, indent = 4))
 				for step in run.get("steps", []):
-					log_path = self._get_step_log_path(run_identifier, step["index"])
+					log_path = self._get_step_log_path(project, run_identifier, step["index"])
 					entry_info = zipfile.ZipInfo(os.path.basename(log_path), now[0:6])
 					entry_info.external_attr = 0o644 << 16
 					archive.writestr(entry_info, self.file_storage.load_or_default(log_path, ""))

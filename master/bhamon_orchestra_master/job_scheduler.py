@@ -72,7 +72,7 @@ class JobScheduler:
 		if schedule["last_run"] is None:
 			return True
 
-		last_run = self._run_provider.get(schedule["last_run"])
+		last_run = self._run_provider.get(schedule["project"], schedule["last_run"])
 		if last_run is None:
 			return True
 
@@ -101,7 +101,7 @@ class JobScheduler:
 
 
 	def cancel_run(self, project_identifier, run_identifier):
-		run = self._run_provider.get(run_identifier)
+		run = self._run_provider.get(project_identifier, run_identifier)
 		if run["status"] != "pending":
 			return False
 		self._run_provider.update_status(run, status = "cancelled")
@@ -109,7 +109,7 @@ class JobScheduler:
 
 
 	def abort_run(self, project_identifier, run_identifier):
-		run = self._run_provider.get(run_identifier)
+		run = self._run_provider.get(project_identifier, run_identifier)
 		if run["status"] != "running":
 			return False
 

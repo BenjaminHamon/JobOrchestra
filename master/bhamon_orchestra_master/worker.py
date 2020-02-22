@@ -107,7 +107,7 @@ class Worker:
 	async def _recover_execution(self, run_identifier):
 		logger.info("(%s) Recovering run %s", self.identifier, run_identifier)
 		run_request = await self._retrieve_request(run_identifier)
-		run = self._run_provider.get(run_identifier)
+		run = self._run_provider.get(run_request["job"]["project"], run_identifier)
 		return { "job": run_request["job"], "run": run, "local_status": "running", "synchronization": "unknown", "should_abort": False }
 
 
@@ -132,9 +132,9 @@ class Worker:
 	async def _resynchronize(self, run):
 		reset = { "steps": [] }
 
-		for step in self._run_provider.get_all_steps(run["identifier"]):
-			if self._run_provider.has_step_log(run["identifier"], step["index"]):
-				log_size = self._run_provider.get_step_log_size(run["identifier"], step["index"])
+		for step in self._run_provider.get_all_steps(run["project"], run["identifier"]):
+			if self._run_provider.has_step_log(run["project"], run["identifier"], step["index"]):
+				log_size = self._run_provider.get_step_log_size(run["project"], run["identifier"], step["index"])
 				reset["steps"].append({ "index": step["index"], "log_file_cursor": log_size })
 
 		resynchronization_request = { "run_identifier": run["identifier"], "reset": reset }
@@ -180,7 +180,7 @@ class Worker:
 
 
 	def _update_log_file(self, run, step_index, log_chunk):
-		self._run_provider.append_step_log(run["identifier"], step_index, log_chunk)
+		self._run_provider.append_step_log(run["project"], run["identifier"], step_index, log_chunk)
 
 
 	def _handle_event(self, executor, event): # pylint: disable = no-self-use
