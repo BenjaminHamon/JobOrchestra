@@ -56,6 +56,8 @@ class Executor: # pylint: disable = too-few-public-methods
 		run_request = worker_storage.load_request(self.run_identifier)
 
 		self._run_status = {
+			"project_identifier": run_request["job"]["project"],
+			"job_identifier": run_request["job"]["identifier"],
 			"run_identifier": run_request["run_identifier"],
 			"workspace": os.path.join("workspaces", run_request["job"]["workspace"]),
 			"environment": environment,
@@ -81,7 +83,7 @@ class Executor: # pylint: disable = too-few-public-methods
 
 
 	def _run_internal(self):
-		logger.info("(%s) Run is starting", self.run_identifier)
+		logger.info("(%s) Run is starting for project '%s' and job '%s'", self.run_identifier, self._run_status["project_identifier"], self._run_status["job_identifier"])
 
 		try:
 			self._run_status["start_date"] = self._date_time_provider.serialize(self._date_time_provider.now())
