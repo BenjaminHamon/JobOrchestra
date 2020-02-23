@@ -1,6 +1,8 @@
 import datetime
 import logging
 
+from typing import Any, List, Optional
+
 import requests
 
 
@@ -14,15 +16,15 @@ api_url = "https://api.github.com"
 class GitHubClient:
 
 
-	def __init__(self, access_token = None):
+	def __init__(self, access_token: Optional[str] = None) -> None:
 		self.access_token = access_token
 
 
-	def get_service_status(self):
+	def get_service_status(self) -> dict:
 		return self.get_api_status()
 
 
-	def get_api_status(self):
+	def get_api_status(self) -> dict:
 		result = {
 			"service": "GitHub",
 			"website_url": website_url,
@@ -42,7 +44,7 @@ class GitHubClient:
 		return result
 
 
-	def get_api_rate_limit(self):
+	def get_api_rate_limit(self) -> dict:
 		rate_limit_raw = self.send_get_request("/rate_limit")
 
 		rate_limit = {
@@ -63,7 +65,7 @@ class GitHubClient:
 		return rate_limit
 
 
-	def get_repository(self, repository): # pylint: disable = unused-argument
+	def get_repository(self, repository: str) -> dict: # pylint: disable = unused-argument
 		route = "/repos/{repository}".format(**locals())
 		response = self.send_get_request(route)
 
@@ -77,13 +79,13 @@ class GitHubClient:
 		}
 
 
-	def get_branch_list(self, repository): # pylint: disable = unused-argument
+	def get_branch_list(self, repository: str) -> dict: # pylint: disable = unused-argument
 		route = "/repos/{repository}/branches".format(**locals())
 		response = self.send_get_request(route)
 		return [ item["name"] for item in response ]
 
 
-	def get_revision_list(self, repository, branch = None, limit = None): # pylint: disable = unused-argument
+	def get_revision_list(self, repository: str, branch: Optional[str] = None, limit: Optional[int] = None) -> List[dict]: # pylint: disable = unused-argument
 		route = "/repos/{repository}/commits".format(**locals())
 		parameters = { "sha": branch, "per_page": limit }
 		parameters = { key: value for key, value in parameters.items() if value is not None }
@@ -103,7 +105,7 @@ class GitHubClient:
 		return revision_list
 
 
-	def get_revision(self, repository, revision): # pylint: disable = unused-argument
+	def get_revision(self, repository: str, revision: str) -> dict: # pylint: disable = unused-argument
 		route = "/repos/{repository}/commits/{revision}".format(**locals())
 		response = self.send_get_request(route)
 
@@ -117,11 +119,11 @@ class GitHubClient:
 		}
 
 
-	def get_revision_url(self, repository, revision): # pylint: disable = no-self-use, unused-argument
+	def get_revision_url(self, repository: str, revision: str) -> str: # pylint: disable = no-self-use, unused-argument
 		return website_url + "/{repository}/commit/{revision}".format(**locals())
 
 
-	def send_get_request(self, route, parameters = None):
+	def send_get_request(self, route: str, parameters: Optional[dict] = None) -> Any:
 		headers = { "Content-Type": "application/json" }
 		if self.access_token is not None:
 			headers["Authorization"] = "token %s" % self.access_token

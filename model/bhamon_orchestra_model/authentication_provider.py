@@ -1,8 +1,14 @@
+import datetime
 import hashlib
 import hmac
 import logging
 import secrets
 import uuid
+
+from typing import List, Optional, Tuple
+
+from bhamon_orchestra_model.database.database_client import DatabaseClient
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 
 
 logger = logging.getLogger("AuthenticationProvider")
@@ -11,7 +17,7 @@ logger = logging.getLogger("AuthenticationProvider")
 class AuthenticationProvider:
 
 
-	def __init__(self, database_client, date_time_provider):
+	def __init__(self, database_client: DatabaseClient, date_time_provider: DateTimeProvider) -> None:
 		self.database_client = database_client
 		self.date_time_provider = date_time_provider
 		self.table = "user_authentication"
@@ -25,7 +31,7 @@ class AuthenticationProvider:
 		self.token_hash_function_parameters = {}
 
 
-	def set_password(self, user, password):
+	def set_password(self, user: str, password: str) -> dict:
 		now = self.date_time_provider.now()
 		authentication = self.database_client.find_one(self.table, { "user": user, "type": "password" })
 
@@ -53,11 +59,11 @@ class AuthenticationProvider:
 		return self.convert_to_public(authentication)
 
 
-	def remove_password(self, user):
+	def remove_password(self, user: dict) -> None:
 		self.database_client.delete_one(self.table, { "user": user, "type": "password" })
 
 
-	def authenticate_with_password(self, user_identifier, password):
+	def authenticate_with_password(self, user_identifier: str, password: str) -> bool:
 		authentication = self.database_client.find_one(self.table, { "user": user_identifier, "type": "password" })
 		if authentication is None:
 			return False
@@ -65,7 +71,7 @@ class AuthenticationProvider:
 		return hmac.compare_digest(hashed_password, authentication["secret"])
 
 
-	def authenticate_with_token(self, user_identifier, secret):
+	def authenticate_with_token(self, user_identifier: str, secret: str) -> bool:
 		now = self.date_time_provider.serialize(self.date_time_provider.now())
 		user_tokens = self.database_client.find_many(self.table, { "user": user_identifier, "type": "token" })
 
@@ -78,25 +84,25 @@ class AuthenticationProvider:
 		return False
 
 
-	def count_tokens(self, user = None):
+	def count_tokens(self, user: Optional[str] = None) -> int:
 		filter = { "user": user, "type": "token" } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.count(self.table, filter)
 
 
-	def get_token_list(self, user = None, skip = 0, limit = None, order_by = None):
+	def get_token_list(self, user: Optional[str] = None, skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
 		filter = { "user": user, "type": "token" } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		token_list = self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 		return [ self.convert_to_public(token) for token in token_list ]
 
 
-	def get_token(self, user_identifier, token_identifier):
+	def get_token(self, user_identifier: str, token_identifier: str) -> Optional[dict]:
 		token = self.database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
 		return self.convert_to_public(token) if token is not None else None
 
 
-	def create_token(self, user, description, expiration):
+	def create_token(self, user: str, description: str, expiration: Optional[datetime.timedelta]) -> dict:
 		now = self.date_time_provider.now()
 
 		token = {
@@ -122,7 +128,7 @@ class AuthenticationProvider:
 		return result
 
 
-	def set_token_expiration(self, user_identifier, token_identifier, expiration):
+	def set_token_expiration(self, user_identifier: str, token_identifier: str, expiration: datetime.timedelta) -> None:
 		token = self.database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
 		if "expiration_date" not in token:
 			raise ValueError("Token '%s' does not expire" % token_identifier)
@@ -137,22 +143,22 @@ class AuthenticationProvider:
 		self.database_client.update_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" }, update_data)
 
 
-	def delete_token(self, user_identifier, token_identifier):
+	def delete_token(self, user_identifier: str, token_identifier: str) -> None:
 		self.database_client.delete_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
 
 
-	def hash_password(self, password, salt, function, parameters): # pylint: disable = no-self-use
+	def hash_password(self, password: str, salt: str, function: str, parameters: dict) -> str: # pylint: disable = no-self-use
 		if function == "pbkdf2":
 			return hashlib.pbkdf2_hmac(password = password.encode("utf-8"), salt = bytes.fromhex(salt), **parameters).hex()
 		raise ValueError("Unsupported hash function '%s'" % function)
 
 
-	def hash_token(self, token, function, parameters): # pylint: disable = no-self-use, unused-argument
+	def hash_token(self, token: str, function: str, parameters: dict) -> str: # pylint: disable = no-self-use, unused-argument
 		if function == "sha256":
 			return hashlib.sha256(bytes.fromhex(token)).hexdigest()
 		raise ValueError("Unsupported hash function '%s'" % function)
 
 
-	def convert_to_public(self, authentication): # pylint: disable = no-self-use
+	def convert_to_public(self, authentication: dict) -> dict: # pylint: disable = no-self-use
 		keys_to_return = [ "identifier", "user", "type", "description", "expiration_date", "creation_date", "update_date" ]
 		return { key: value for key, value in authentication.items() if key in keys_to_return }

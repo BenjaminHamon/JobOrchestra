@@ -4,6 +4,8 @@ import logging
 import traceback
 import uuid
 
+from bhamon_orchestra_model.network.connection import NetworkConnection
+
 
 logger = logging.getLogger("Messenger")
 
@@ -11,7 +13,7 @@ logger = logging.getLogger("Messenger")
 class Messenger:
 
 
-	def __init__(self, connection):
+	def __init__(self, connection: NetworkConnection) -> None:
 		self.connection = connection
 
 		self.identifier = None
@@ -24,7 +26,7 @@ class Messenger:
 		self.is_disposed = False
 
 
-	async def run(self):
+	async def run(self) -> None:
 		if self.is_disposed:
 			raise RuntimeError("Messenger is disposed")
 
@@ -41,7 +43,7 @@ class Messenger:
 			outgoing_future.cancel()
 
 
-	def dispose(self):
+	def dispose(self) -> None:
 		for message in self.messages_to_send:
 			logger.warning("Cancelling outgoing %s %s", message["type"], message["identifier"])
 
@@ -60,7 +62,7 @@ class Messenger:
 		self.is_disposed = True
 
 
-	async def send_request(self, data):
+	async def send_request(self, data: dict) -> None:
 		if self.is_disposed:
 			raise RuntimeError("Messenger is disposed")
 
@@ -78,17 +80,17 @@ class Messenger:
 		return message["response"].get("data", None)
 
 
-	def _send_response(self, identifier, data):
+	def _send_response(self, identifier: str, data: dict) -> None:
 		message = { "type": "response", "identifier": identifier, "data": data }
 		self.messages_to_send.append(message)
 
 
-	def _send_response_error(self, identifier, error):
+	def _send_response_error(self, identifier: str, error: dict) -> None:
 		message = { "type": "response", "identifier": identifier, "error": error }
 		self.messages_to_send.append(message)
 
 
-	def send_update(self, data):
+	def send_update(self, data: dict) -> None:
 		if self.is_disposed:
 			raise RuntimeError("Messenger is disposed")
 
@@ -97,14 +99,14 @@ class Messenger:
 		self.messages_to_send.append(message)
 
 
-	async def _push(self):
+	async def _push(self) -> None:
 		while True:
 			while len(self.messages_to_send) > 0:
 				await self._send_next()
 			await asyncio.sleep(0.1)
 
 
-	async def _send_next(self):
+	async def _send_next(self) -> None:
 		if len(self.messages_to_send) == 0:
 			return
 
@@ -117,7 +119,7 @@ class Messenger:
 			self.messages_to_wait.append(message)
 
 
-	async def _pull(self):
+	async def _pull(self) -> None:
 		while True:
 			try:
 				await self._receive_next()
@@ -125,20 +127,20 @@ class Messenger:
 				pass
 
 
-	async def _receive_next(self):
+	async def _receive_next(self) -> None:
 		message = json.loads(await asyncio.wait_for(self.connection.receive(), 1))
 		logger.debug("(%s) < %s %s", self.identifier, message["type"], message["identifier"])
 		self.messages_to_handle.append(message)
 
 
-	async def _handle_incoming(self):
+	async def _handle_incoming(self) -> None:
 		while True:
 			while len(self.messages_to_handle) > 0:
 				await self._handle_next()
 			await asyncio.sleep(0.1)
 
 
-	async def _handle_next(self):
+	async def _handle_next(self) -> None:
 		if len(self.messages_to_handle) == 0:
 			return
 
@@ -152,7 +154,7 @@ class Messenger:
 			logger.error("Unhandled exception in message handler", exc_info = True)
 
 
-	async def _handle_message(self, message):
+	async def _handle_message(self, message: dict) -> bool:
 		if message["type"] == "request":
 			return await self._handle_request(message)
 		if message["type"] == "response":
@@ -162,7 +164,7 @@ class Messenger:
 		raise ValueError("Unsupported message type: '%s'" % message["type"])
 
 
-	async def _handle_request(self, request):
+	async def _handle_request(self, request: dict) -> bool:
 		if self.request_handler is None:
 			return False
 
@@ -179,7 +181,7 @@ class Messenger:
 		return True
 
 
-	async def _handle_response(self, response):
+	async def _handle_response(self, response: dict) -> bool:
 		logger.debug("Handling response '%s'", response["identifier"])
 
 		request = next(r for r in self.messages_to_wait if r["type"] == "request" and r["identifier"] == response["identifier"])
@@ -189,7 +191,7 @@ class Messenger:
 		return True
 
 
-	async def _handle_update(self, update):
+	async def _handle_update(self, update: dict) -> bool:
 		if self.update_handler is None:
 			return False
 

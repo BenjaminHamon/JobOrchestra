@@ -6,6 +6,12 @@ import time
 import uuid
 import zipfile
 
+from typing import List, Optional, Tuple
+
+from bhamon_orchestra_model.database.database_client import DatabaseClient
+from bhamon_orchestra_model.database.file_storage import FileStorage
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+
 
 logger = logging.getLogger("RunProvider")
 
@@ -13,40 +19,42 @@ logger = logging.getLogger("RunProvider")
 class RunProvider:
 
 
-	def __init__(self, database_client, file_storage, date_time_provider):
+	def __init__(self, database_client: DatabaseClient, file_storage: FileStorage, date_time_provider: DateTimeProvider) -> None:
 		self.database_client = database_client
 		self.file_storage = file_storage
 		self.date_time_provider = date_time_provider
 		self.table = "run"
 
 
-	def count(self, project = None, job = None, worker = None, status = None):
+	def count(self, project: Optional[str] = None, job: Optional[str] = None, worker: Optional[str] = None, status: Optional[str] = None) -> int:
 		filter = { "project": project, "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.count(self.table, filter)
 
 
-	def get_list( # pylint: disable = too-many-arguments
-			self, project = None, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
+	def get_list(self, # pylint: disable = too-many-arguments
+			project: Optional[str] = None, job: Optional[str] = None, worker: Optional[str] = None, status: Optional[str] = None,
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
 		filter = { "project": project, "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		run_collection = self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 		return [ self.convert_to_public(run) for run in run_collection ]
 
 
-	def get_list_as_documents( # pylint: disable = too-many-arguments
-			self, project = None, job = None, worker = None, status = None, skip = 0, limit = None, order_by = None):
+	def get_list_as_documents(self, # pylint: disable = too-many-arguments
+			project: Optional[str] = None, job: Optional[str] = None, worker: Optional[str] = None, status: Optional[str] = None,
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
 		filter = { "project": project, "job": job, "worker": worker, "status": status } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
-	def get(self, run_identifier):
+	def get(self, run_identifier: str) -> Optional[dict]:
 		run = self.database_client.find_one(self.table, { "identifier": run_identifier })
 		return self.convert_to_public(run) if run is not None else None
 
 
-	def create(self, project_identifier, job_identifier, parameters):
+	def create(self, project_identifier: str, job_identifier: str, parameters: dict) -> dict:
 		now = self.date_time_provider.now()
 
 		run = {
@@ -64,8 +72,10 @@ class RunProvider:
 		return run
 
 
-	def update_status( # pylint: disable = too-many-arguments
-			self, run, worker = None, status = None, start_date = None, completion_date = None):
+	def update_status(self, # pylint: disable = too-many-arguments
+			run: dict, worker: Optional[str] = None, status: Optional[str] = None,
+			start_date: Optional[str] = None, completion_date: Optional[str] = None) -> None:
+
 		now = self.date_time_provider.now()
 
 		update_data = {
@@ -82,15 +92,15 @@ class RunProvider:
 		self.database_client.update_one(self.table, { "identifier": run["identifier"] }, update_data)
 
 
-	def get_all_steps(self, run_identifier):
+	def get_all_steps(self, run_identifier: str) -> List[dict]:
 		return self.database_client.find_one(self.table, { "identifier": run_identifier }).get("steps", [])
 
 
-	def get_step(self, run_identifier, step_index):
+	def get_step(self, run_identifier: str, step_index: int) -> dict:
 		return self.database_client.find_one(self.table, { "identifier": run_identifier })["steps"][step_index]
 
 
-	def update_steps(self, run, step_collection):
+	def update_steps(self, run: dict, step_collection: List[dict]) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
@@ -102,41 +112,41 @@ class RunProvider:
 		self.database_client.update_one(self.table, { "identifier": run["identifier"] }, update_data)
 
 
-	def _get_step_log_path(self, run_identifier, step_index):
+	def _get_step_log_path(self, run_identifier: str, step_index: int) -> str:
 		run = self.get(run_identifier)
 		run_step = self.get_step(run_identifier, step_index)
 		return os.path.join("logs", "{job}_{identifier}".format(**run), "step_{index}_{name}.log".format(**run_step))
 
 
-	def has_step_log(self, run_identifier, step_index):
+	def has_step_log(self, run_identifier: str, step_index: int) -> bool:
 		return self.file_storage.exists(self._get_step_log_path(run_identifier, step_index))
 
 
-	def get_step_log(self, run_identifier, step_index):
+	def get_step_log(self, run_identifier: str, step_index: int) -> Tuple[str,int]:
 		return self.file_storage.load_chunk_or_default(self._get_step_log_path(run_identifier, step_index), "", skip = 0, limit = None)
 
 
-	def get_step_log_chunk(self, run_identifier, step_index, skip = 0, limit = None):
+	def get_step_log_chunk(self, run_identifier: str, step_index: int, skip: int = 0, limit: Optional[int] = None) -> Tuple[str,int]:
 		return self.file_storage.load_chunk_or_default(self._get_step_log_path(run_identifier, step_index), "", skip = skip, limit = limit)
 
 
-	def get_step_log_size(self, run_identifier, step_index):
+	def get_step_log_size(self, run_identifier: str, step_index: int) -> int:
 		return self.file_storage.get_universal_size(self._get_step_log_path(run_identifier, step_index))
 
 
-	def append_step_log(self, run_identifier, step_index, log_text):
+	def append_step_log(self, run_identifier: str, step_index: int, log_text: str) -> None:
 		self.file_storage.append_unsafe(self._get_step_log_path(run_identifier, step_index), log_text)
 
 
-	def delete_step_log(self, run_identifier, step_index):
+	def delete_step_log(self, run_identifier: str, step_index: int) -> None:
 		self.file_storage.delete(self._get_step_log_path(run_identifier, step_index))
 
 
-	def get_results(self, run_identifier):
+	def get_results(self, run_identifier: str) -> dict:
 		return self.database_client.find_one(self.table, { "identifier": run_identifier }).get("results", {})
 
 
-	def set_results(self, run, results):
+	def set_results(self, run: dict, results: dict) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
@@ -148,7 +158,7 @@ class RunProvider:
 		self.database_client.update_one(self.table, { "identifier": run["identifier"] }, update_data)
 
 
-	def get_archive(self, run_identifier):
+	def get_archive(self, run_identifier: str) -> dict:
 		run = self.database_client.find_one(self.table, { "identifier": run_identifier })
 		if run is None:
 			return None
@@ -170,6 +180,6 @@ class RunProvider:
 			return { "file_name": file_name, "data": file_object.getvalue(), "type": "zip" }
 
 
-	def convert_to_public(self, run): # pylint: disable = no-self-use
+	def convert_to_public(self, run: dict) -> dict: # pylint: disable = no-self-use
 		keys_to_return = [ "identifier", "project", "job", "worker", "parameters", "status", "start_date", "completion_date", "creation_date", "update_date" ]
 		return { key: value for key, value in run.items() if key in keys_to_return }

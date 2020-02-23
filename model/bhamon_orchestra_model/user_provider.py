@@ -1,6 +1,11 @@
 import logging
 import re
 
+from typing import List, Optional, Tuple
+
+from bhamon_orchestra_model.database.database_client import DatabaseClient
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+
 
 logger = logging.getLogger("UserProvider")
 
@@ -8,26 +13,26 @@ logger = logging.getLogger("UserProvider")
 class UserProvider:
 
 
-	def __init__(self, database_client, date_time_provider):
+	def __init__(self, database_client: DatabaseClient, date_time_provider: DateTimeProvider) -> None:
 		self.database_client = database_client
 		self.date_time_provider = date_time_provider
 		self.table = "user"
 		self.user_identifier_regex = re.compile(r"^[a-zA-Z0-9_\-\.]{3,32}$")
 
 
-	def count(self):
+	def count(self) -> int:
 		return self.database_client.count(self.table, {})
 
 
-	def get_list(self, skip = 0, limit = None, order_by = None):
+	def get_list(self, skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
 		return self.database_client.find_many(self.table, {}, skip = skip, limit = limit, order_by = order_by)
 
 
-	def get(self, user_identifier):
+	def get(self, user_identifier: str) -> Optional[dict]:
 		return self.database_client.find_one(self.table, { "identifier": user_identifier })
 
 
-	def create(self, user_identifier, display_name):
+	def create(self, user_identifier: str, display_name: str) -> dict:
 		if self.user_identifier_regex.search(user_identifier) is None:
 			raise ValueError("User identifier is invalid: '%s'" % user_identifier)
 
@@ -46,7 +51,7 @@ class UserProvider:
 		return user
 
 
-	def update_identity(self, user, display_name = None):
+	def update_identity(self, user: dict, display_name: Optional[str] = None) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
@@ -60,7 +65,7 @@ class UserProvider:
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, update_data)
 
 
-	def update_roles(self, user, roles):
+	def update_roles(self, user: dict, roles: List[str]) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
@@ -72,7 +77,7 @@ class UserProvider:
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, update_data)
 
 
-	def update_status(self, user, is_enabled = None):
+	def update_status(self, user: dict, is_enabled: Optional[bool] = None) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
