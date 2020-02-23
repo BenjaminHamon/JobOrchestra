@@ -41,6 +41,7 @@ class Context: # pylint: disable = too-many-instance-attributes
 		self.website_address = environment_instance["website_address"]
 		self.website_port = environment_instance["website_port"]
 		self.database_uri = environment_instance["database_uri"]
+		self.database_authentication = {}
 		self.process_collection = []
 
 		if self.database_uri is not None:
