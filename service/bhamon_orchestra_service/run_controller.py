@@ -62,7 +62,9 @@ def get_step_log_chunk(project_identifier, run_identifier, step_index):
 
 
 def get_results(project_identifier, run_identifier):
-	return flask.jsonify(flask.current_app.run_provider.get_results(project_identifier, run_identifier))
+	run_results = flask.current_app.run_provider.get_results(project_identifier, run_identifier)
+	run_results = flask.current_app.run_result_transformer(project_identifier, run_identifier, run_results)
+	return flask.jsonify(run_results)
 
 
 def get_tasks(project_identifier, run_identifier):

@@ -52,6 +52,8 @@ def create_application(arguments):
 	application.user_provider = UserProvider(database_client_instance, date_time_provider_instance)
 	application.worker_provider = WorkerProvider(database_client_instance, date_time_provider_instance)
 
+	application.run_result_transformer = transform_run_results
+
 	application.external_services = {}
 
 	service.configure(application)
@@ -61,6 +63,10 @@ def create_application(arguments):
 	application.add_url_rule("/me/routes", methods = [ "GET" ], view_func = list_routes)
 
 	return application
+
+
+def transform_run_results(project_identifier, run_identifier, run_results): # pylint: disable = unused-argument
+	return run_results
 
 
 def list_routes():
