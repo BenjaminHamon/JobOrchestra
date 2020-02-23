@@ -76,7 +76,7 @@ async def test_process_success():
 	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 
 	assert run["status"] == "pending"
@@ -146,7 +146,7 @@ async def test_process_abort():
 	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 
 	assert run["status"] == "pending"
@@ -223,7 +223,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 
 	assert run["status"] == "pending"
@@ -314,7 +314,7 @@ async def test_process_recovery_after_execution():
 	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 
 	assert run["status"] == "pending"

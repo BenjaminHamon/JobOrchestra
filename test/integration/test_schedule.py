@@ -14,7 +14,7 @@ def test_schedule(tmpdir, database_type):
 	""" Test executing a job which should succeed """
 
 	project_identifier = "examples"
-	job_identifier = "examples_success"
+	job_identifier = "success"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])

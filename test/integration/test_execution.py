@@ -14,7 +14,7 @@ def test_job_success(tmpdir, database_type):
 	""" Test executing a job which should succeed """
 
 	project_identifier = "examples"
-	job_identifier = "examples_success"
+	job_identifier = "success"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
@@ -59,7 +59,7 @@ def test_job_failure(tmpdir, database_type):
 	""" Test executing a job which should fail """
 
 	project_identifier = "examples"
-	job_identifier = "examples_failure"
+	job_identifier = "failure"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
@@ -104,7 +104,7 @@ def test_job_exception(tmpdir, database_type):
 	""" Test executing a job which should raise an exception """
 
 	project_identifier = "examples"
-	job_identifier = "examples_exception"
+	job_identifier = "exception"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
@@ -150,7 +150,7 @@ def test_job_controller_success(tmpdir, database_type):
 	""" Test executing a controller job which should succeed """
 
 	project_identifier = "examples"
-	job_identifier = "examples_controller_success"
+	job_identifier = "controller_success"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])
@@ -203,7 +203,7 @@ def test_job_controller_failure(tmpdir, database_type):
 	""" Test executing a controller job which should fail """
 
 	project_identifier = "examples"
-	job_identifier = "examples_controller_failure"
+	job_identifier = "controller_failure"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])

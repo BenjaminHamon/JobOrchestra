@@ -19,7 +19,7 @@ def test_cancel_run_pending():
 	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	job_scheduler_instance = JobScheduler(None, date_time_provider_instance, None, run_provider_instance, None, None)
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 
 	assert run["status"] == "pending"
@@ -38,7 +38,7 @@ def test_cancel_run_running():
 	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	job_scheduler_instance = JobScheduler(None, date_time_provider_instance, None, run_provider_instance, None, None)
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 	run_provider_instance.update_status(run, status = "running")
 
@@ -58,7 +58,7 @@ def test_cancel_run_completed():
 	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	job_scheduler_instance = JobScheduler(None, date_time_provider_instance, None, run_provider_instance, None, None)
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 	run_provider_instance.update_status(run, status = "succeeded")
 
@@ -79,7 +79,7 @@ def test_abort_run_pending():
 	supervisor_instance = Supervisor(None, None, None, None, None)
 	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 
 	assert run["status"] == "pending"
@@ -103,7 +103,7 @@ def test_abort_run_running_connected():
 
 	supervisor_instance._active_workers[worker_instance.identifier] = worker_instance
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 	worker_instance.assign_run(job, run)
 	run_provider_instance.update_status(run, status = "running")
@@ -130,7 +130,7 @@ def test_abort_run_running_disconnected():
 	supervisor_instance = Supervisor(None, None, None, None, None)
 	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 	worker_instance.assign_run(job, run)
 	run_provider_instance.update_status(run, status = "running")
@@ -156,7 +156,7 @@ def test_abort_run_completed():
 	supervisor_instance = Supervisor(None, None, None, None, None)
 	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
 
-	job = { "identifier": "examples_empty", "project": "examples" }
+	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {})
 	run_provider_instance.update_status(run, status = "succeeded")
 
