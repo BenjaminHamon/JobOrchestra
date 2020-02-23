@@ -2,8 +2,9 @@
 <table>
 	<thead>
 		<tr>
+			<th>Project</th>
 			<th>Job</th>
-			<th>Identifier</th>
+			<th>Run</th>
 			<th>Status</th>
 			{% if authorize_view("run-actions") %}
 			<th>Actions</th>
@@ -16,6 +17,7 @@
 	<tbody>
 		{% for run in run_collection %}
 		<tr>
+			<td><a href="{{ url_for('project_controller.show', project_identifier = run.get('project', '__missing__')) }}">{{ run.get('project', '__missing__') }}</a></td>
 			<td><a href="{{ url_for('job_controller.show', project_identifier = run.get('project', '__missing__'), job_identifier = run['job']) }}">{{ run['job'] }}</a></td>
 			<td><a href="{{ url_for('run_controller.show', project_identifier = run.get('project', '__missing__'), run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a></td>
 			<td>

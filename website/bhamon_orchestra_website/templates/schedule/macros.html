@@ -2,7 +2,8 @@
 <table>
 	<thead>
 		<tr>
-			<th>Identifier</th>
+			<th>Project</th>
+			<th>Schedule</th>
 			<th>Enabled</th>
 			<th>Expression</th>
 			{% if authorize_view("schedule-actions") %}
@@ -14,6 +15,7 @@
 	<tbody>
 		{% for schedule in schedule_collection %}
 		<tr>
+			<td><a href="{{ url_for('project_controller.show', project_identifier = schedule['project']) }}">{{ schedule['project'] }}</a></td>
 			<td><a href="{{ url_for('schedule_controller.show', project_identifier = schedule['project'], schedule_identifier = schedule['identifier']) }}">{{ schedule['identifier'] }}</a></td>
 			<td>
 				{% if schedule['is_enabled'] %}
