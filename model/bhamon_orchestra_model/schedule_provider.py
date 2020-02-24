@@ -37,7 +37,7 @@ class ScheduleProvider:
 
 
 	def create_or_update(self, # pylint: disable = too-many-arguments
-			schedule_identifier: str, project: str, job: str, parameters: dict, expression: str) -> dict:
+			schedule_identifier: str, project: str, display_name: str, job: str, parameters: dict, expression: str) -> dict:
 		now = self.date_time_provider.now()
 		schedule = self.get(project, schedule_identifier)
 
@@ -45,6 +45,7 @@ class ScheduleProvider:
 			schedule = {
 				"project": project,
 				"identifier": schedule_identifier,
+				"display_name": display_name,
 				"job": job,
 				"parameters": parameters,
 				"expression": expression,
@@ -58,6 +59,7 @@ class ScheduleProvider:
 
 		else:
 			update_data = {
+				"display_name": display_name,
 				"job": job,
 				"parameters": parameters,
 				"expression": expression,

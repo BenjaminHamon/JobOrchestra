@@ -22,7 +22,7 @@ def test_schedule(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		schedule = context_instance.schedule_provider.create_or_update("my_schedule", project_identifier, job_identifier, {}, "* * * * *")
+		schedule = context_instance.schedule_provider.create_or_update("success_continuous", project_identifier, "Success Continuous", job_identifier, {}, "* * * * *")
 		context_instance.schedule_provider.update_status(schedule, is_enabled = True)
 
 		time.sleep(1)

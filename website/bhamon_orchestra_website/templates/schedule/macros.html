@@ -16,7 +16,7 @@
 		{% for schedule in schedule_collection %}
 		<tr>
 			<td><a href="{{ url_for('project_controller.show', project_identifier = schedule['project']) }}">{{ schedule['project'] }}</a></td>
-			<td><a href="{{ url_for('schedule_controller.show', project_identifier = schedule['project'], schedule_identifier = schedule['identifier']) }}">{{ schedule['identifier'] }}</a></td>
+			<td><a href="{{ url_for('schedule_controller.show', project_identifier = schedule['project'], schedule_identifier = schedule['identifier']) }}">{{ schedule['display_name'] }}</a></td>
 			<td>
 				{% if schedule['is_enabled'] %}
 				<div class="status-group">

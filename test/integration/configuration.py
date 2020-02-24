@@ -28,6 +28,7 @@ def configure_schedules():
 	return [
 		{
 			"identifier": "success_nightly",
+			"display_name": "Success Nightly",
 			"job": "success",
 
 			"parameters": [],
