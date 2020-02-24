@@ -31,6 +31,8 @@ def show(project_identifier): # pylint: disable = unused-argument
 		"schedule_collection": service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
+	helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], view_data["run_collection"], view_data["schedule_collection"])
+
 	return flask.render_template("project/index.html", title = "Project " + view_data["project"]["display_name"], **view_data)
 
 

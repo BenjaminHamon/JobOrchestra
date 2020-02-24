@@ -30,6 +30,8 @@ def show_collection(project_identifier):
 		"pagination": pagination,
 	}
 
+	helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], [], view_data["schedule_collection"])
+
 	return flask.render_template("schedule/collection.html", title = "Schedules", **view_data)
 
 

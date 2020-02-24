@@ -14,7 +14,7 @@
 	<tbody>
 		{% for job in job_collection %}
 		<tr>
-			<td><a href="{{ url_for('project_controller.show', project_identifier = job['project']) }}">{{ job['project'] }}</a></td>
+			<td><a href="{{ url_for('project_controller.show', project_identifier = job['project']) }}">{{ job['project_display_name'] }}</a></td>
 			<td><a href="{{ url_for('job_controller.show', project_identifier = job['project'], job_identifier = job['identifier']) }}">{{ job['display_name'] }}</a></td>
 			<td>
 				{% if job['is_enabled'] %}

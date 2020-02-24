@@ -34,6 +34,8 @@ def show_collection(project_identifier):
 		"pagination": pagination,
 	}
 
+	helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], view_data["run_collection"], [])
+
 	return flask.render_template("run/collection.html", title = "Runs", **view_data)
 
 

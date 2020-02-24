@@ -55,11 +55,11 @@
 
 <section>
 	<h2><a href="{{ url_for('worker_controller.show_runs', worker_identifier = worker['identifier']) }}" title="View all runs">Runs</a></h2>
-	{{ run_macros.run_table(worker_runs) }}
+	{{ run_macros.run_table(run_collection) }}
 </section>
 
 <section>
 	<h2><a href="{{ url_for('task_controller.show_collection', worker = worker['identifier']) }}" title="View all tasks">Tasks</a></h2>
-	{{ task_macros.task_table(worker_tasks) }}
+	{{ task_macros.task_table(task_collection) }}
 </section>
 {% endblock %}
