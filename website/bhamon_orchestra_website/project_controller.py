@@ -23,7 +23,7 @@ def show_collection():
 	return flask.render_template("project/collection.html", title = "Projects", project_collection = project_collection, pagination = pagination)
 
 
-def show(project_identifier):
+def show(project_identifier): # pylint: disable = unused-argument
 	view_data = {
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
 		"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
@@ -31,10 +31,10 @@ def show(project_identifier):
 		"schedule_collection": service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
-	return flask.render_template("project/index.html", title = "Project " + project_identifier, **view_data)
+	return flask.render_template("project/index.html", title = "Project " + view_data["project"]["display_name"], **view_data)
 
 
-def show_status(project_identifier):
+def show_status(project_identifier): # pylint: disable = unused-argument
 	branch = flask.request.args.get("branch", default = None)
 	status_limit = max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1)
 
@@ -71,4 +71,4 @@ def show_status(project_identifier):
 		"project_status": status,
 	}
 
-	return flask.render_template("project/status.html", title = "Project " + project_identifier, **view_data)
+	return flask.render_template("project/status.html", title = "Project " + project["display_name"], **view_data)

@@ -4,7 +4,7 @@
 {% import 'schedule/macros.html' as schedule_macros %}
 
 {% block content %}
-<h1>Project {{ project['identifier'] }}</h1>
+<h1>Project {{ project['display_name'] }}</h1>
 
 <section>
 	<h2><a href="{{ url_for('job_controller.show_collection', project_identifier = project['identifier']) }}" title="View all jobs">Jobs</a></h2>

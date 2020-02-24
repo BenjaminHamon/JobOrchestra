@@ -12,9 +12,9 @@
 				<option></option>
 				{% for project in project_collection %}
 					{% if request.args.get('project') == project['identifier'] %}
-				<option selected>{{ project['identifier'] }}</option>
+				<option value="{{ project['identifier'] }}" selected>{{ project['display_name'] }}</option>
 					{% else %}
-				<option>{{ project['identifier'] }}</option>
+				<option value="{{ project['identifier'] }}">{{ project['display_name'] }}</option>
 					{% endif %}
 				{% endfor %}
 			</select>

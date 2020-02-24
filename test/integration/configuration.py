@@ -1,6 +1,7 @@
 def configure():
 	example_project = {
 		"identifier": "examples",
+		"display_name": "Examples",
 		"jobs": configure_jobs(),
 		"schedules": configure_schedules(),
 		"services": {},

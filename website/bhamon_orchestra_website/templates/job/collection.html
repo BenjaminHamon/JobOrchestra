@@ -3,7 +3,7 @@
 {% import 'macros.html' as shared_macros %}
 
 {% block content %}
-<h1>Project {{ project['identifier'] }} / Jobs</h1>
+<h1>Project {{ project['display_name'] }} / Jobs</h1>
 <section>
 	<div class="table-container">
 		{{ shared_macros.page_navigation('job_controller.show_collection', pagination) }}

@@ -30,13 +30,14 @@ class ProjectProvider:
 		return self.database_client.find_one(self.table, { "identifier": project_identifier })
 
 
-	def create_or_update(self, project_identifier: str, services: dict) -> dict:
+	def create_or_update(self, project_identifier: str, display_name: str, services: dict) -> dict:
 		now = self.date_time_provider.now()
 		project = self.get(project_identifier)
 
 		if project is None:
 			project = {
 				"identifier": project_identifier,
+				"display_name": display_name,
 				"services": services,
 				"creation_date": self.date_time_provider.serialize(now),
 				"update_date": self.date_time_provider.serialize(now),
@@ -46,6 +47,7 @@ class ProjectProvider:
 
 		else:
 			update_data = {
+				"display_name": display_name,
 				"services": services,
 				"update_date": self.date_time_provider.serialize(now),
 			}
