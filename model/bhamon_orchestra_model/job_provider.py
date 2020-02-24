@@ -24,7 +24,8 @@ class JobProvider:
 		return self.database_client.count(self.table, filter)
 
 
-	def get_list(self, project: Optional[str] = None, skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+	def get_list(self, project: Optional[str] = None,
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
 		filter = { "project": project } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
@@ -35,7 +36,8 @@ class JobProvider:
 
 
 	def create_or_update(self, # pylint: disable = too-many-arguments
-			job_identifier: str, project: str, workspace: str, steps: list, parameters: list, properties: dict, description: str) -> dict:
+			job_identifier: str, project: str, display_name: str, description: str,
+			workspace: str, steps: list, parameters: list, properties: dict) -> dict:
 		now = self.date_time_provider.now()
 		job = self.get(project, job_identifier)
 
@@ -43,11 +45,12 @@ class JobProvider:
 			job = {
 				"project": project,
 				"identifier": job_identifier,
+				"display_name": display_name,
+				"description": description,
 				"workspace": workspace,
 				"steps": steps,
 				"parameters": parameters,
 				"properties": properties,
-				"description": description,
 				"is_enabled": True,
 				"creation_date": self.date_time_provider.serialize(now),
 				"update_date": self.date_time_provider.serialize(now),
@@ -57,11 +60,12 @@ class JobProvider:
 
 		else:
 			update_data = {
+				"display_name": display_name,
+				"description": description,
 				"workspace": workspace,
 				"steps": steps,
 				"parameters": parameters,
 				"properties": properties,
-				"description": description,
 				"update_date": self.date_time_provider.serialize(now),
 			}
 

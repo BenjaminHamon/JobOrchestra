@@ -12,9 +12,9 @@
 				<option></option>
 				{% for job in job_collection %}
 					{% if request.args.get('job') == job['identifier'] %}
-				<option selected>{{ job['identifier'] }}</option>
+				<option value="{{ job['identifier'] }}" selected>{{ job['display_name'] }}</option>
 					{% else %}
-				<option>{{ job['identifier'] }}</option>
+				<option value="{{ job['identifier'] }}">{{ job['display_name'] }}</option>
 					{% endif %}
 				{% endfor %}
 			</select>

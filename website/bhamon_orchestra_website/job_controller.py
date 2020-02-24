@@ -35,7 +35,7 @@ def show(project_identifier, job_identifier): # pylint: disable = unused-argumen
 		"job_runs": service_client.get("/project/{project_identifier}/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
-	return flask.render_template("job/index.html", title = "Job " + job_identifier, **view_data)
+	return flask.render_template("job/index.html", title = "Job " + view_data["job"]["display_name"], **view_data)
 
 
 def trigger(project_identifier, job_identifier): # pylint: disable = unused-argument

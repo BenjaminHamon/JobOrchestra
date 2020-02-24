@@ -45,7 +45,7 @@ def test_service_routes(tmpdir, database_type):
 		authentication = context_instance.configure_service_authentication()
 
 		project = context_instance.project_provider.create_or_update("examples", "Examples", {})
-		job = context_instance.job_provider.create_or_update("empty", "examples", None, None, None, None, None)
+		job = context_instance.job_provider.create_or_update("empty", "examples", "Empty", None, None, None, None, None)
 		schedule = context_instance.schedule_provider.create_or_update("empty_nightly", "examples", "empty", None, "0 0 * * *")
 		run = context_instance.run_provider.create("examples", "empty", {})
 		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
@@ -134,7 +134,7 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 		authentication = context_instance.configure_website_authentication()
 
 		project = context_instance.project_provider.create_or_update("examples", "Examples", {})
-		job = context_instance.job_provider.create_or_update("empty", "examples", None, None, None, None, None)
+		job = context_instance.job_provider.create_or_update("empty", "examples", "Empty", None, None, None, None, None)
 		schedule = context_instance.schedule_provider.create_or_update("empty_nightly", "examples", "empty", None, "0 0 * * *")
 		run = context_instance.run_provider.create("examples", "empty", {})
 		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
