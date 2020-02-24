@@ -2,7 +2,10 @@
 {% import 'run/macros.html' as run_macros %}
 
 {% block content %}
-<h1>Project {{ project['display_name'] }} / Job {{ job['display_name'] }}</h1>
+<h1>
+	Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a>
+	/ Job <a href="{{ url_for('job_controller.show', project_identifier = project['identifier'], job_identifier = job['identifier']) }}">{{ job['display_name'] }}</a>
+</h1>
 
 <section>
 	<h2>Description</h2>

@@ -2,7 +2,10 @@
 {% import 'task/macros.html' as task_macros %}
 
 {% block content %}
-<h1>Project {{ project['display_name'] }} / Run {{ run['identifier'] }}</h1>
+<h1>
+	Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a>
+	/ Run <a href="{{ url_for('run_controller.show', project_identifier = project['identifier'], run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a>
+</h1>
 
 <section>
 	<div class="link-group">

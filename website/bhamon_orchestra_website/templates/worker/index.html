@@ -3,7 +3,7 @@
 {% import 'task/macros.html' as task_macros %}
 
 {% block content %}
-<h1>Worker {{ worker['identifier'] }}</h1>
+<h1>Worker <a href="{{ url_for('worker_controller.show', worker_identifier = worker['identifier']) }}">{{ worker['identifier'] }}</a></h1>
 
 <section>
 	<h2>Status</h2>

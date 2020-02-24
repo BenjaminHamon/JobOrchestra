@@ -1,7 +1,10 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Project {{ project['display_name'] }} / Schedule {{ schedule['display_name'] }}</h1>
+<h1>
+	Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a>
+	/ Schedule <a href="{{ url_for('schedule_controller.show', project_identifier = project['identifier'], schedule_identifier = schedule['identifier']) }}">{{ schedule['display_name'] }}</a>
+</h1>
 
 <section>
 	<h2>Status</h2>

@@ -3,7 +3,7 @@
 {% import 'macros.html' as shared_macros %}
 
 {% block content %}
-<h1>Project {{ project['display_name'] }} / Runs</h1>
+<h1>Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a> / Runs</h1>
 <section>
 	<div class="table-container">
 		<form method="get" action="{{ url_for('run_controller.show_collection', project_identifier = project['identifier']) }}">
