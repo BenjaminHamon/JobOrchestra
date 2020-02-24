@@ -43,6 +43,7 @@ def create_application(arguments, authentication, executor_script):
 		master_uri = arguments.master_uri,
 		user = authentication["user"],
 		secret = authentication["secret"],
+		display_name = arguments.identifier,
 		properties = properties,
 		executor_script = executor_script,
 	)

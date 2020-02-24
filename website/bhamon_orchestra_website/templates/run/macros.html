@@ -37,7 +37,7 @@
 				</form>
 			</td>
 			{% endif %}
-			<td>{% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker'] }}</a>{% endif %}</td>
+			<td>{% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker_display_name'] }}</a>{% endif %}</td>
 			<td>{{ run['creation_date'] }}</td>
 			<td>{{ run['update_date'] }}</td>
 		</tr>

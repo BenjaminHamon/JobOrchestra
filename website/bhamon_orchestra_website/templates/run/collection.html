@@ -23,9 +23,9 @@
 				<option></option>
 				{% for worker in worker_collection %}
 					{% if request.args.get('worker') == worker['identifier'] %}
-				<option selected>{{ worker['identifier'] }}</option>
+				<option value="{{ worker['identifier'] }}" selected>{{ worker['display_name'] }}</option>
 					{% else %}
-				<option>{{ worker['identifier'] }}</option>
+				<option value="{{ worker['identifier'] }}">{{ worker['display_name'] }}</option>
 					{% endif %}
 				{% endfor %}
 			</select>

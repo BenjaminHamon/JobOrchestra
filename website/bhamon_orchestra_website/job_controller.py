@@ -25,7 +25,7 @@ def show_collection(project_identifier):
 		"pagination": pagination,
 	}
 
-	helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], [], [])
+	helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], [], [], [])
 
 	return flask.render_template("job/collection.html", title = "Jobs", **view_data)
 
@@ -35,9 +35,10 @@ def show(project_identifier, job_identifier): # pylint: disable = unused-argumen
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
 		"job": service_client.get("/project/{project_identifier}/job/{job_identifier}".format(**locals())),
 		"run_collection": service_client.get("/project/{project_identifier}/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"worker_collection": service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 	}
 
-	helpers.add_display_names([ view_data["project"] ], [ view_data["job"] ], view_data["run_collection"], [])
+	helpers.add_display_names([ view_data["project"] ], [ view_data["job"] ], view_data["run_collection"], [], view_data["worker_collection"])
 
 	return flask.render_template("job/index.html", title = "Job " + view_data["job"]["display_name"], **view_data)
 

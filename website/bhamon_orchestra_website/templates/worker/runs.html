@@ -3,7 +3,7 @@
 {% import 'macros.html' as shared_macros %}
 
 {% block content %}
-<h1>Worker <a href="{{ url_for('worker_controller.show', worker_identifier = worker['identifier']) }}">{{ worker['identifier'] }}</a> / Runs</h1>
+<h1>Worker <a href="{{ url_for('worker_controller.show', worker_identifier = worker['identifier']) }}">{{ worker['display_name'] }}</a> / Runs</h1>
 <section>
 	<div class="table-container">
 		<form method="get" action="{{ url_for('worker_controller.show_runs', worker_identifier = worker['identifier']) }}">

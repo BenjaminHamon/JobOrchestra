@@ -36,7 +36,7 @@ def show(worker_identifier):
 		"task_collection": service_client.get("/worker/{worker_identifier}/tasks".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
-	helpers.add_display_names(view_data["project_collection"], view_data["job_collection"], view_data["run_collection"], [])
+	helpers.add_display_names(view_data["project_collection"], view_data["job_collection"], view_data["run_collection"], [], [ view_data["worker"] ])
 
 	return flask.render_template("worker/index.html", title = "Worker " + worker_identifier, **view_data)
 
@@ -66,7 +66,7 @@ def show_runs(worker_identifier):
 		"pagination": pagination,
 	}
 
-	helpers.add_display_names(view_data["project_collection"], view_data["job_collection"], view_data["run_collection"], [])
+	helpers.add_display_names(view_data["project_collection"], view_data["job_collection"], view_data["run_collection"], [], [ view_data["worker"] ])
 
 	return flask.render_template("worker/runs.html", title = "Runs", **view_data)
 

@@ -16,15 +16,16 @@ import bhamon_orchestra_worker.worker_storage as worker_storage
 logger = logging.getLogger("Worker")
 
 
-class Worker:
+class Worker: # pylint: disable = too-many-instance-attributes
 
 
 	def __init__( # pylint: disable = too-many-arguments
-			self, identifier, master_uri, user, secret, properties, executor_script):
+			self, identifier, master_uri, user, secret, display_name, properties, executor_script):
 		self._identifier = identifier
 		self._master_uri = master_uri
 		self._user = user
 		self._secret = secret
+		self._display_name = display_name
 		self._properties = properties
 		self._executor_script = executor_script
 
@@ -133,8 +134,8 @@ class Worker:
 
 
 	async def _execute_command(self, command, parameters): # pylint: disable=too-many-return-statements
-		if command == "properties":
-			return self._get_properties()
+		if command == "describe":
+			return self._describe()
 		if command == "list":
 			return self._list_runs()
 		if command == "execute":
@@ -152,8 +153,8 @@ class Worker:
 		raise ValueError("Unknown command '%s'" % command)
 
 
-	def _get_properties(self):
-		return self._properties
+	def _describe(self):
+		return { "display_name": self._display_name, "properties": self._properties }
 
 
 	def _recover(self):
