@@ -38,6 +38,7 @@ def show(project_identifier, job_identifier): # pylint: disable = unused-argumen
 		"worker_collection": service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 	}
 
+	view_data["job"]["project_display_name"] = view_data["project"]["display_name"]
 	helpers.add_display_names([ view_data["project"] ], [ view_data["job"] ], view_data["run_collection"], [], view_data["worker_collection"])
 
 	return flask.render_template("job/index.html", title = "Job " + view_data["job"]["display_name"], **view_data)

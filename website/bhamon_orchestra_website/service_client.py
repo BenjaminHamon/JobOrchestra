@@ -15,6 +15,17 @@ def proxy(route):
 	return requests.request(method, url, auth = authentication, headers = headers, params = parameters, data = data)
 
 
+def get_or_default(route, parameters = None, default_value = None):
+	try:
+		result = get(route, parameters = parameters)
+		if result is not None:
+			return result
+	except requests.HTTPError as exception:
+		if exception.response.status_code != "404":
+			raise
+	return default_value
+
+
 def get(route, parameters = None):
 	return raw_get(route, headers = { "Content-Type": "application/json" }, parameters = parameters).json()
 

@@ -48,6 +48,17 @@ def show(project_identifier, run_identifier): # pylint: disable = unused-argumen
 		"run_tasks": service_client.get("/project/{project_identifier}/run/{run_identifier}/tasks".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
+	view_data["run"]["project_display_name"] = view_data["project"]["display_name"]
+
+	job_route = "/project/{project_identifier}/job/{job_identifier}".format(project_identifier = project_identifier, job_identifier = view_data["run"]["job"])
+	job = service_client.get_or_default(job_route, default_value = {})
+	view_data["run"]["job_display_name"] = job.get("display_name", view_data["run"]["job"])
+
+	if view_data["run"]["worker"] is not None:
+		worker_route = "/worker/{worker_identifier}".format(worker_identifier = view_data["run"]["worker"])
+		worker = service_client.get_or_default(worker_route, default_value = {})
+		view_data["run"]["worker_display_name"] = worker.get("display_name", view_data["run"]["worker"])
+
 	return flask.render_template("run/index.html", title = "Run " + run_identifier[:18], **view_data)
 
 
