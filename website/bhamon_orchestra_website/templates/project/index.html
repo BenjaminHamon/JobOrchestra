@@ -1,17 +1,23 @@
 {% extends 'layout.html' %}
 {% import 'job/macros.html' as job_macros %}
 {% import 'run/macros.html' as run_macros %}
+{% import 'schedule/macros.html' as schedule_macros %}
 
 {% block content %}
 <h1>Project {{ project['identifier'] }}</h1>
 
 <section>
-	<h2><a href="{{ url_for('job_controller.show_collection', project = project['identifier']) }}" title="View all jobs">Jobs</a></h2>
-	{{ job_macros.job_table(project_jobs) }}
+	<h2><a href="{{ url_for('job_controller.show_collection', project_identifier = project['identifier']) }}" title="View all jobs">Jobs</a></h2>
+	{{ job_macros.job_table(job_collection) }}
 </section>
 
 <section>
-	<h2><a href="{{ url_for('run_controller.show_collection', project = project['identifier']) }}" title="View all runs">Runs</a></h2>
-	{{ run_macros.run_table(project_runs) }}
+	<h2><a href="{{ url_for('run_controller.show_collection', project_identifier = project['identifier']) }}" title="View all runs">Runs</a></h2>
+	{{ run_macros.run_table(run_collection) }}
+</section>
+
+<section>
+	<h2><a href="{{ url_for('schedule_controller.show_collection', project_identifier = project['identifier']) }}" title="View all schedules">Schedules</a></h2>
+	{{ schedule_macros.schedule_table(schedule_collection) }}
 </section>
 {% endblock %}

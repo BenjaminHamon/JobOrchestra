@@ -2,7 +2,8 @@
 <table>
 	<thead>
 		<tr>
-			<th>Identifier</th>
+			<th>Project</th>
+			<th>Job</th>
 			<th>Enabled</th>
 			{% if authorize_view("job-actions") %}
 			<th>Actions</th>
@@ -13,7 +14,8 @@
 	<tbody>
 		{% for job in job_collection %}
 		<tr>
-			<td><a href="{{ url_for('job_controller.show', job_identifier = job['identifier']) }}">{{ job['identifier'] }}</a></td>
+			<td><a href="{{ url_for('project_controller.show', project_identifier = job['project']) }}">{{ job['project'] }}</a></td>
+			<td><a href="{{ url_for('job_controller.show', project_identifier = job['project'], job_identifier = job['identifier']) }}">{{ job['identifier'] }}</a></td>
 			<td>
 				{% if job['is_enabled'] %}
 				<div class="status-group">
@@ -30,11 +32,11 @@
 			{% if authorize_view("job-actions") %}
 			<td>
 				<form class="action-group" method="post">
-					<button formaction="{{ url_for('job_controller.trigger', job_identifier = job['identifier']) }}">Trigger</button>
+					<button formaction="{{ url_for('job_controller.trigger', project_identifier = job['project'], job_identifier = job['identifier']) }}">Trigger</button>
 					{% if job['is_enabled'] %}
-					<button formaction="{{ url_for('job_controller.disable', job_identifier = job['identifier']) }}">Disable</button>
+					<button formaction="{{ url_for('job_controller.disable', project_identifier = job['project'], job_identifier = job['identifier']) }}">Disable</button>
 					{% else %}
-					<button formaction="{{ url_for('job_controller.enable', job_identifier = job['identifier']) }}">Enable</button>
+					<button formaction="{{ url_for('job_controller.enable', project_identifier = job['project'], job_identifier = job['identifier']) }}">Enable</button>
 					{% endif %}
 				</form>
 			</td>

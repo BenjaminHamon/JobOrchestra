@@ -21,8 +21,7 @@ termination_timeout_seconds = 30
 class Executor: # pylint: disable = too-few-public-methods
 
 
-	def __init__(self, job_identifier, run_identifier, date_time_provider):
-		self.job_identifier = job_identifier
+	def __init__(self, run_identifier, date_time_provider):
 		self.run_identifier = run_identifier
 		self._date_time_provider = date_time_provider
 
@@ -37,7 +36,7 @@ class Executor: # pylint: disable = too-few-public-methods
 		signal.signal(signal.SIGINT, lambda signal_number, frame: self._shutdown())
 		signal.signal(signal.SIGTERM, lambda signal_number, frame: self._shutdown())
 
-		logger.info("(%s) Executing %s", self.run_identifier, self.job_identifier)
+		logger.info("(%s) Starting executor", self.run_identifier)
 
 		# Prevent executor pyvenv from overriding a python executable specified in a command
 		if "__PYVENV_LAUNCHER__" in os.environ:
@@ -46,16 +45,19 @@ class Executor: # pylint: disable = too-few-public-methods
 		self._initialize(environment)
 		self._run_internal()
 
+		logger.info("(%s) Exiting executor", self.run_identifier)
+
 
 	def _shutdown(self):
 		self._should_shutdown = True
 
 
 	def _initialize(self, environment):
-		run_request = worker_storage.load_request(self.job_identifier, self.run_identifier)
+		run_request = worker_storage.load_request(self.run_identifier)
 
 		self._run_status = {
-			"job_identifier": run_request["job_identifier"],
+			"project_identifier": run_request["job"]["project"],
+			"job_identifier": run_request["job"]["identifier"],
 			"run_identifier": run_request["run_identifier"],
 			"workspace": os.path.join("workspaces", run_request["job"]["workspace"]),
 			"environment": environment,
@@ -77,15 +79,15 @@ class Executor: # pylint: disable = too-few-public-methods
 			"completion_date": None,
 		}
 
-		worker_storage.save_status(self.job_identifier, self.run_identifier, self._run_status)
+		worker_storage.save_status(self.run_identifier, self._run_status)
 
 
 	def _run_internal(self):
-		logger.info("(%s) Run is starting", self.run_identifier)
+		logger.info("(%s) Run is starting for project '%s' and job '%s'", self.run_identifier, self._run_status["project_identifier"], self._run_status["job_identifier"])
 
 		try:
 			self._run_status["start_date"] = self._date_time_provider.serialize(self._date_time_provider.now())
-			worker_storage.save_status(self.job_identifier, self.run_identifier, self._run_status)
+			worker_storage.save_status(self.run_identifier, self._run_status)
 
 			if not os.path.exists(self._run_status["workspace"]):
 				os.makedirs(self._run_status["workspace"])
@@ -104,13 +106,13 @@ class Executor: # pylint: disable = too-few-public-methods
 
 			self._run_status["status"] = run_final_status
 			self._run_status["completion_date"] = self._date_time_provider.serialize(self._date_time_provider.now())
-			worker_storage.save_status(self.job_identifier, self.run_identifier, self._run_status)
+			worker_storage.save_status(self.run_identifier, self._run_status)
 
 		except: # pylint: disable = bare-except
 			logger.error("(%s) Run raised an exception", self.run_identifier, exc_info = True)
 			self._run_status["status"] = "exception"
 			self._run_status["completion_date"] = self._date_time_provider.serialize(self._date_time_provider.now())
-			worker_storage.save_status(self.job_identifier, self.run_identifier, self._run_status)
+			worker_storage.save_status(self.run_identifier, self._run_status)
 
 		logger.info("(%s) Run completed with status %s", self.run_identifier, self._run_status["status"])
 
@@ -121,9 +123,9 @@ class Executor: # pylint: disable = too-few-public-methods
 
 		try:
 			step["status"] = "running"
-			worker_storage.save_status(self.job_identifier, self.run_identifier, self._run_status)
+			worker_storage.save_status(self.run_identifier, self._run_status)
 
-			log_file_path = worker_storage.get_log_path(self.job_identifier, self.run_identifier, step["index"], step["name"])
+			log_file_path = worker_storage.get_log_path(self.run_identifier, step["index"], step["name"])
 			result_file_path = os.path.join(self._run_status["workspace"], "run_results", self.run_identifier, "results.json")
 
 			if is_skipping:
@@ -137,14 +139,14 @@ class Executor: # pylint: disable = too-few-public-methods
 				if os.path.isfile(result_file_path):
 					with open(result_file_path, "r") as result_file:
 						results = json.load(result_file)
-					worker_storage.save_results(self.job_identifier, self.run_identifier, results)
+					worker_storage.save_results(self.run_identifier, results)
 
-			worker_storage.save_status(self.job_identifier, self.run_identifier, self._run_status)
+			worker_storage.save_status(self.run_identifier, self._run_status)
 
 		except: # pylint: disable = bare-except
 			logger.error("(%s) Step %s raised an exception", self.run_identifier, step["name"], exc_info = True)
 			step["status"] = "exception"
-			worker_storage.save_status(self.job_identifier, self.run_identifier, self._run_status)
+			worker_storage.save_status(self.run_identifier, self._run_status)
 
 		logger.info("(%s) Step %s completed with status %s", self.run_identifier, step["name"], step["status"])
 

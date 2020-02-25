@@ -3,7 +3,7 @@ import { RunProvider } from "/static/orchestra/modules/providers/runProvider.mjs
 window.onload = function() {
 	var runProvider = new RunProvider(window.location.origin + "/service_proxy");
 
-	var view = new RunStepView(runProvider, window.viewData.runIdentifier, window.viewData.stepIndex);
+	var view = new RunStepView(runProvider, window.viewData.projectIdentifier, window.viewData.runIdentifier, window.viewData.stepIndex);
 	view.stepStatus = window.viewData.stepStatus;
 	view.logCursor = window.viewData.logCursor;
 
@@ -18,8 +18,9 @@ window.onload = function() {
 
 export class RunStepView {
 
-	constructor(runProvider, runIdentifier, stepIndex) {
+	constructor(runProvider, projectIdentifier, runIdentifier, stepIndex) {
 		this.runProvider = runProvider;
+		this.projectIdentifier = projectIdentifier;
 		this.runIdentifier = runIdentifier;
 		this.stepIndex = stepIndex;
 	
@@ -70,7 +71,7 @@ export class RunStepView {
 	}
 
 	async refreshStatus() {
-		var step = await this.runProvider.getStep(this.runIdentifier, this.stepIndex);
+		var step = await this.runProvider.getStep(this.projectIdentifier, this.runIdentifier, this.stepIndex);
 
 		if (step.status != this.stepStatus) {
 			var oldStatus = this.stepStatus;
@@ -85,7 +86,7 @@ export class RunStepView {
 		var lastChunkSize = null;
 
 		do {
-			var logChunk = await this.runProvider.getLogChunk(this.runIdentifier, this.stepIndex, this.logCursor, this.logChunkSize);
+			var logChunk = await this.runProvider.getLogChunk(this.projectIdentifier, this.runIdentifier, this.stepIndex, this.logCursor, this.logChunkSize);
 			this.logTextElement.textContent += logChunk.text;
 			this.logCursor = logChunk.cursor;
 			lastChunkSize = logChunk.text.length;

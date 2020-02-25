@@ -107,16 +107,16 @@ class Context: # pylint: disable = too-many-instance-attributes
 		)
 
 
-	def invoke_executor(self, worker_identifier, job_identifier, run_identifier):
+	def invoke_executor(self, worker_identifier, run_identifier):
 		worker_directory = os.path.join(self.temporary_directory, worker_identifier)
-		executor_run_directory = os.path.join(worker_directory, "runs", job_identifier + "_" + run_identifier)
+		executor_run_directory = os.path.join(worker_directory, "runs", run_identifier)
 
 		os.makedirs(executor_run_directory)
 
 		return self.invoke(
 			identifier = worker_identifier + "_" + "executor",
 			script = "executor_main.py",
-			arguments = [ job_identifier, run_identifier ],
+			arguments = [ run_identifier ],
 			workspace = worker_directory,
 		)
 

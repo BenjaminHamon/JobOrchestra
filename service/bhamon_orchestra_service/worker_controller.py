@@ -24,9 +24,20 @@ def get(worker_identifier):
 	return flask.jsonify(flask.current_app.worker_provider.get(worker_identifier))
 
 
-def get_runs(worker_identifier):
+def get_run_count(worker_identifier):
 	query_parameters = {
 		"worker": worker_identifier,
+		"project": flask.request.args.get("project", default = None),
+		"status": flask.request.args.get("status", default = None),
+	}
+
+	return flask.jsonify(flask.current_app.run_provider.count(**query_parameters))
+
+
+def get_run_collection(worker_identifier):
+	query_parameters = {
+		"worker": worker_identifier,
+		"project": flask.request.args.get("project", default = None),
 		"status": flask.request.args.get("status", default = None),
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
 		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),

@@ -1,15 +1,16 @@
 def configure():
-	return {
-		"projects": configure_projects(),
+	example_project = {
+		"identifier": "examples",
 		"jobs": configure_jobs(),
 		"schedules": configure_schedules(),
+		"services": {},
 	}
 
-
-def configure_projects():
-	return [
-		{ "identifier": "examples", "services": {} },
-	]
+	return {
+		"projects": [
+			example_project,
+		],
+	}
 
 
 def configure_jobs():
@@ -25,9 +26,8 @@ def configure_jobs():
 def configure_schedules():
 	return [
 		{
-			"identifier": "example_success_nightly",
-			"project": "examples",
-			"job": "examples_success",
+			"identifier": "success_nightly",
+			"job": "success",
 
 			"parameters": [],
 
@@ -38,9 +38,8 @@ def configure_schedules():
 
 def success():
 	return {
-		"identifier": "examples_success",
+		"identifier": "success",
 		"description": "Test job which succeeds.",
-		"project": "examples",
 		"workspace": "examples",
 
 		"properties": {
@@ -57,9 +56,8 @@ def success():
 
 def failure():
 	return {
-		"identifier": "examples_failure",
+		"identifier": "failure",
 		"description": "Test job with a failing step.",
-		"project": "examples",
 		"workspace": "examples",
 
 		"properties": {
@@ -76,9 +74,8 @@ def failure():
 
 def exception():
 	return {
-		"identifier": "examples_exception",
+		"identifier": "exception",
 		"description": "Test job with mistakes in its definition.",
-		"project": "examples",
 		"workspace": "examples",
 
 		"properties": {
@@ -100,9 +97,8 @@ def controller_success():
 	controller_script += [ "--results", "{result_file_path}" ]
 
 	return {
-		"identifier": "examples_controller_success",
+		"identifier": "controller_success",
 		"description": "Trigger all test jobs.",
-		"project": "examples",
 		"workspace": "examples",
 
 		"properties": {
@@ -112,8 +108,8 @@ def controller_success():
 		"parameters": [],
 
 		"steps": [
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples_success" ] },
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples_success" ] },
+			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "success" ] },
+			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "success" ] },
 			{ "name": "wait", "command": controller_script + [ "wait" ] },
 		],
 	}
@@ -126,9 +122,8 @@ def controller_failure():
 	controller_script += [ "--results", "{result_file_path}" ]
 
 	return {
-		"identifier": "examples_controller_failure",
+		"identifier": "controller_failure",
 		"description": "Trigger all test jobs.",
-		"project": "examples",
 		"workspace": "examples",
 
 		"properties": {
@@ -138,8 +133,8 @@ def controller_failure():
 		"parameters": [],
 
 		"steps": [
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples_success" ] },
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples_failure" ] },
+			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "success" ] },
+			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "failure" ] },
 			{ "name": "wait", "command": controller_script + [ "wait" ] },
 		],
 	}

@@ -1,11 +1,11 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Project status for {{ project_identifier }}</h1>
+<h1>Project {{ project['identifier'] }} / Status</h1>
 
 <section>
 	<div class="table-container">
-		<form method="get" action="{{ url_for('project_controller.show_status', project_identifier = project_identifier) }}">
+		<form method="get" action="{{ url_for('project_controller.show_status', project_identifier = project['identifier']) }}">
 			<label for="input-branch">Branch</label>
 			<select id="input-branch" name="branch">
 				{% for branch in project_branch_collection %}
@@ -23,7 +23,7 @@
 				<tr>
 					<th>Revision</th>
 					{% for run_filter in project_context['filter_collection'] %}
-					<th><a href="{{ url_for('job_controller.show', job_identifier = run_filter['job']) }}">{{ run_filter['identifier'] }}</a></th>
+					<th><a href="{{ url_for('job_controller.show', project_identifier = project['identifier'], job_identifier = run_filter['job']) }}">{{ run_filter['identifier'] }}</a></th>
 					{% endfor %}
 				</tr>
 			</thead>
@@ -41,7 +41,7 @@
 						{% for run in revision['runs_by_filter'][run_filter['identifier']] %}
 						<div class="status-group">
 							<div class="status-indicator {{ run['status'] }}" title="{{ run['status'] }}"></div>
-							<a href="{{ url_for('run_controller.show', run_identifier = run['identifier']) }}">{{ run['identifier'][:18] }}</a>
+							<a href="{{ url_for('run_controller.show', project_identifier = run['project'], run_identifier = run['identifier']) }}">{{ run['identifier'][:18] }}</a>
 						</div>
 						{% endfor %}
 					</td>

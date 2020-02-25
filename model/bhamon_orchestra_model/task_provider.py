@@ -19,16 +19,35 @@ class TaskProvider:
 		self.table = "task"
 
 
-	def count(self, type: Optional[str] = None, status: Optional[str] = None, run: Optional[str] = None, worker: Optional[str] = None) -> int: # pylint: disable = redefined-builtin
-		filter = { "type": type, "status": status, "parameters.run_identifier": run, "parameters.worker_identifier": worker } # pylint: disable = redefined-builtin
+	def count(self, # pylint: disable = too-many-arguments
+			type: Optional[str] = None, status: Optional[str] = None, # pylint: disable = redefined-builtin
+			project: Optional[str] = None, run: Optional[str] = None, worker: Optional[str] = None) -> int:
+
+		filter = { # pylint: disable = redefined-builtin
+			"type": type,
+			"status": status,
+			"parameters.project_identifier": project,
+			"parameters.run_identifier": run,
+			"parameters.worker_identifier": worker,
+		}
+
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.count(self.table, filter)
 
 
 	def get_list(self, # pylint: disable = too-many-arguments
-			type: Optional[str] = None, status: Optional[str] = None, run: Optional[str] = None, worker: Optional[str] = None, # pylint: disable = redefined-builtin
+			type: Optional[str] = None, status: Optional[str] = None, # pylint: disable = redefined-builtin
+			project: Optional[str] = None, run: Optional[str] = None, worker: Optional[str] = None,
 			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
-		filter = { "type": type, "status": status, "parameters.run_identifier": run, "parameters.worker_identifier": worker } # pylint: disable = redefined-builtin
+
+		filter = { # pylint: disable = redefined-builtin
+			"type": type,
+			"status": status,
+			"parameters.project_identifier": project,
+			"parameters.run_identifier": run,
+			"parameters.worker_identifier": worker,
+		}
+
 		filter = { key: value for key, value in filter.items() if value is not None }
 		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 

@@ -12,7 +12,6 @@ class Synchronization:
 
 
 	def __init__(self, run_request):
-		self.job_identifier = run_request["job_identifier"]
 		self.run_identifier = run_request["run_identifier"]
 
 		self.internal_status = "paused"
@@ -54,7 +53,7 @@ class Synchronization:
 				self._send_updates(messenger)
 				self._send_log_updates(messenger)
 			except Exception: # pylint: disable = broad-except
-				logger.warning("%s %s failed to send updates", self.job_identifier, self.run_identifier, exc_info = True)
+				logger.warning("(%s) Failed to send updates", self.run_identifier, exc_info = True)
 
 			if self.run_status in [ "succeeded", "failed", "aborted", "exception" ]:
 				messenger.send_update({ "run": self.run_identifier, "event": "synchronization_completed" })
@@ -62,29 +61,31 @@ class Synchronization:
 
 
 	def _send_updates(self, messenger):
-		status_timestamp = worker_storage.get_status_timestamp(self.job_identifier, self.run_identifier)
-		status = worker_storage.load_status(self.job_identifier, self.run_identifier)
+		status_timestamp = worker_storage.get_status_timestamp(self.run_identifier)
+		status = worker_storage.load_status(self.run_identifier)
 		if status_timestamp != self.status_last_timestamp:
 			if status["status"] != "unknown":
 				messenger.send_update({ "run": self.run_identifier, "status": status })
 			self.run_status = status["status"]
 			self.status_last_timestamp = status_timestamp
 
-		results_timestamp = worker_storage.get_results_timestamp(self.job_identifier, self.run_identifier)
+		results_timestamp = worker_storage.get_results_timestamp(self.run_identifier)
 		if results_timestamp != self.results_last_timestamp:
-			results = worker_storage.load_results(self.job_identifier, self.run_identifier)
+			results = worker_storage.load_results(self.run_identifier)
 			messenger.send_update({ "run": self.run_identifier, "results": results })
 			self.results_last_timestamp = results_timestamp
 
 
 	def _send_log_updates(self, messenger):
-		status = worker_storage.load_status(self.job_identifier, self.run_identifier)
+		status = worker_storage.load_status(self.run_identifier)
+		if "steps" not in status:
+			return
 
 		for step in self.run_steps:
 			step_status = status["steps"][step["index"]]["status"]
 
 			if step["log_status"] == "pending" and step_status not in [ "pending", "skipped" ]:
-				log_file_path = worker_storage.get_log_path(self.job_identifier, self.run_identifier, step["index"], step["name"])
+				log_file_path = worker_storage.get_log_path(self.run_identifier, step["index"], step["name"])
 				if os.path.exists(log_file_path):
 					step["log_file"] = open(log_file_path, mode = "r")
 					step["log_status"] = "running"

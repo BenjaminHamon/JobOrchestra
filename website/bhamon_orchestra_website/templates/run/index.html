@@ -6,7 +6,7 @@
 
 <section>
 	<div class="link-group">
-		<a href="{{ url_for('run_controller.download_archive', run_identifier = run['identifier']) }}">Download as archive</a>
+		<a href="{{ url_for('run_controller.download_archive', project_identifier = run['project'], run_identifier = run['identifier']) }}">Download as archive</a>
 	</div>
 </section>
 
@@ -20,16 +20,16 @@
 		{% if authorize_view("run-actions") %}
 		<form method="post">
 			{% if run['status'] == 'pending' %}
-			<button formaction="{{ url_for('run_controller.cancel', run_identifier = run['identifier']) }}">Cancel</button>
+			<button formaction="{{ url_for('run_controller.cancel', project_identifier = run['project'], run_identifier = run['identifier']) }}">Cancel</button>
 			{% elif run['status'] == 'running' %}
-			<button formaction="{{ url_for('run_controller.abort', run_identifier = run['identifier']) }}">Abort</button>
+			<button formaction="{{ url_for('run_controller.abort', project_identifier = run['project'], run_identifier = run['identifier']) }}">Abort</button>
 			{% endif %}
 		</form>
 		{% endif %}
 	</div>
 	<ul>
 		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}" style="display: inline">{{ run['project'] }}</a></li>
-		<li>Job: <a href="{{ url_for('job_controller.show', job_identifier = run['job']) }}" style="display: inline">{{ run['job'] }}</a></li>
+		<li>Job: <a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}" style="display: inline">{{ run['job'] }}</a></li>
 		<li>Worker: {% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}" style="display: inline">{{ run['worker'] }}</a>{% endif %}</li>
 		<li>Creation date: {{ run['creation_date'] }}</li>
 		<li>Update date: {{ run['update_date'] }}</li>
@@ -70,8 +70,8 @@
 						<div class="status-text">{{ step['status'] }}</div>
 					</div>
 				</td>
-				<td><a href="{{ url_for('run_controller.show_step', run_identifier = run['identifier'], step_index = step['index']) }}">Details</a></td>
-				<td><a href="{{ url_for('run_controller.show_step_log', run_identifier = run['identifier'], step_index = step['index']) }}">Raw log</a></td>
+				<td><a href="{{ url_for('run_controller.show_step', project_identifier = run['project'], run_identifier = run['identifier'], step_index = step['index']) }}">Details</a></td>
+				<td><a href="{{ url_for('run_controller.show_step_log', project_identifier = run['project'], run_identifier = run['identifier'], step_index = step['index']) }}">Raw log</a></td>
 			</tr>
 			{% endfor %}
 		</tbody>
@@ -104,7 +104,7 @@
 			<ul>
 				{% for child_run in run_results['child_runs'] %}
 				<li>
-					<a href="{{ url_for('run_controller.show', run_identifier = child_run['run_identifier']) }}">
+					<a href="{{ url_for('run_controller.show', project_identifier = run['project'], run_identifier = child_run['run_identifier']) }}">
 						{{ child_run['job_identifier'] }} {{ child_run['run_identifier'] }}
 					</a>
 				</li>

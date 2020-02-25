@@ -102,25 +102,25 @@ class Master:
 			logger.info("Adding/Updating project %s", project["identifier"])
 			self._project_provider.create_or_update(project["identifier"], project["services"])
 
-		all_existing_jobs = self._job_provider.get_list()
-		for existing_job in all_existing_jobs:
-			if existing_job["identifier"] not in [ job["identifier"] for job in configuration["jobs"] ]:
-				logger.info("Removing job %s", existing_job["identifier"])
-				self._job_provider.delete(existing_job["identifier"])
+			all_existing_jobs = self._job_provider.get_list(project = project["identifier"])
+			for existing_job in all_existing_jobs:
+				if existing_job["identifier"] not in [ job["identifier"] for job in project["jobs"] ]:
+					logger.info("Removing project %s job %s", project["identifier"], existing_job["identifier"])
+					self._job_provider.delete(project["identifier"], existing_job["identifier"])
 
-		for job in configuration["jobs"]:
-			logger.info("Adding/Updating job %s", job["identifier"])
-			self._job_provider.create_or_update(job["identifier"], job["project"], job["workspace"], job["steps"], job["parameters"], job["properties"], job["description"])
+			for job in project["jobs"]:
+				logger.info("Adding/Updating project %s job %s", project["identifier"], job["identifier"])
+				self._job_provider.create_or_update(job["identifier"], project["identifier"], **{ key: value for key, value in job.items() if key != "identifier" })
 
-		all_existing_schedules = self._schedule_provider.get_list()
-		for existing_schedule in all_existing_schedules:
-			if existing_schedule["identifier"] not in [ schedule["identifier"] for schedule in configuration["schedules"] ]:
-				logger.info("Removing schedule %s", existing_schedule["identifier"])
-				self._schedule_provider.delete(existing_schedule["identifier"])
+			all_existing_schedules = self._schedule_provider.get_list(project = project["identifier"])
+			for existing_schedule in all_existing_schedules:
+				if existing_schedule["identifier"] not in [ schedule["identifier"] for schedule in project["schedules"] ]:
+					logger.info("Removing project %s schedule %s", project["identifier"], existing_schedule["identifier"])
+					self._schedule_provider.delete(project["identifier"], existing_schedule["identifier"])
 
-		for schedule in configuration["schedules"]:
-			logger.info("Adding/Updating schedule %s", schedule["identifier"])
-			self._schedule_provider.create_or_update(schedule["identifier"], schedule["project"], schedule["job"], schedule["parameters"], schedule["expression"])
+			for schedule in project["schedules"]:
+				logger.info("Adding/Updating project %s schedule %s", project["identifier"], schedule["identifier"])
+				self._schedule_provider.create_or_update(schedule["identifier"], project["identifier"], **{ key: value for key, value in schedule.items() if key != "identifier" })
 
 
 	def shutdown(self):
@@ -137,11 +137,11 @@ def stop_worker(supervisor, worker_identifier):
 	return "succeeded" if was_stopped else "failed"
 
 
-def cancel_run(job_scheduler, run_identifier):
-	was_cancelled = job_scheduler.cancel_run(run_identifier)
+def cancel_run(job_scheduler, project_identifier, run_identifier):
+	was_cancelled = job_scheduler.cancel_run(project_identifier, run_identifier)
 	return "succeeded" if was_cancelled else "failed"
 
 
-def abort_run(job_scheduler, run_identifier):
-	was_aborted = job_scheduler.abort_run(run_identifier)
+def abort_run(job_scheduler, project_identifier, run_identifier):
+	was_aborted = job_scheduler.abort_run(project_identifier, run_identifier)
 	return "succeeded" if was_aborted else "failed"

@@ -129,7 +129,7 @@ class Worker:
 			await asyncio.wait(all_futures)
 		for executor in self._active_executors:
 			if executor.is_running():
-				logger.warning("%s %s is still running (Process: %s)", executor.job_identifier, executor.run_identifier, executor.process.pid)
+				logger.warning("Run %s is still active (Process: %s)", executor.run_identifier, executor.process.pid)
 
 
 	async def _execute_command(self, command, parameters): # pylint: disable=too-many-return-statements
@@ -158,43 +158,42 @@ class Worker:
 
 	def _recover(self):
 		all_runs = worker_storage.list_runs()
-		for job_identifier, run_identifier in all_runs:
-			logger.info("Recovering %s %s", job_identifier, run_identifier)
+		for run_identifier in all_runs:
+			logger.info("Recovering run %s", run_identifier)
 			for executor in self._active_executors:
 				if executor.run_identifier == run_identifier:
 					continue
-			executor = ExecutorWatcher(job_identifier, run_identifier)
+			executor = ExecutorWatcher(run_identifier)
 			self._active_executors.append(executor)
 
 
 	def _list_runs(self):
 		all_runs = []
 		for executor in self._active_executors:
-			all_runs.append({ "job_identifier": executor.job_identifier, "run_identifier": executor.run_identifier })
+			all_runs.append({ "run_identifier": executor.run_identifier })
 		return all_runs
 
 
-	async def _execute(self, job_identifier, run_identifier, job, parameters):
-		logger.info("Executing %s %s", job_identifier, run_identifier)
+	async def _execute(self, run_identifier, job, parameters):
+		logger.info("Executing run %s", run_identifier)
 
 		run_request = {
-			"job_identifier": job_identifier,
 			"run_identifier": run_identifier,
 			"job": job,
 			"parameters": parameters,
 		}
 
-		worker_storage.create_run(job_identifier, run_identifier)
-		worker_storage.save_request(job_identifier, run_identifier, run_request)
+		worker_storage.create_run(run_identifier)
+		worker_storage.save_request(run_identifier, run_request)
 
-		executor = ExecutorWatcher(job_identifier, run_identifier)
-		executor_command = [ sys.executable, self._executor_script, job_identifier, run_identifier ]
+		executor = ExecutorWatcher(run_identifier)
+		executor_command = [ sys.executable, self._executor_script, run_identifier ]
 		await executor.start(executor_command)
 		self._active_executors.append(executor)
 
 
-	async def _clean(self, job_identifier, run_identifier):
-		logger.info("Cleaning %s %s", job_identifier, run_identifier)
+	async def _clean(self, run_identifier):
+		logger.info("Cleaning run %s", run_identifier)
 		executor = self._find_executor(run_identifier)
 		if executor.is_running():
 			raise RuntimeError("Executor is still running for run %s" % run_identifier)
@@ -202,11 +201,11 @@ class Worker:
 		if executor.synchronization is not None:
 			executor.synchronization.dispose()
 		self._active_executors.remove(executor)
-		worker_storage.delete_run(job_identifier, run_identifier)
+		worker_storage.delete_run(run_identifier)
 
 
-	def _abort(self, job_identifier, run_identifier):
-		logger.info("Aborting %s %s", job_identifier, run_identifier)
+	def _abort(self, run_identifier):
+		logger.info("Aborting run %s", run_identifier)
 		executor = self._find_executor(run_identifier)
 		if executor.is_running():
 			executor.abort()
@@ -229,13 +228,13 @@ class Worker:
 		self._should_shutdown = True
 
 
-	def _retrieve_request(self, job_identifier, run_identifier): # pylint: disable = no-self-use
-		return worker_storage.load_request(job_identifier, run_identifier)
+	def _retrieve_request(self, run_identifier): # pylint: disable = no-self-use
+		return worker_storage.load_request(run_identifier)
 
 
-	def _resynchronize(self, job_identifier, run_identifier, reset):
+	def _resynchronize(self, run_identifier, reset):
 		executor = self._find_executor(run_identifier)
-		run_request = worker_storage.load_request(job_identifier, run_identifier)
+		run_request = worker_storage.load_request(run_identifier)
 
 		if executor.synchronization is not None:
 			executor.synchronization.dispose()

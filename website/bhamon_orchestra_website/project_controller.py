@@ -11,7 +11,7 @@ logger = logging.getLogger("ProjectController")
 
 def show_collection():
 	item_total = service_client.get("/project_count")
-	pagination = helpers.get_pagination(item_total)
+	pagination = helpers.get_pagination(item_total, {})
 
 	query_parameters = {
 		"skip": (pagination["page_number"] - 1) * pagination["item_count"],
@@ -26,8 +26,9 @@ def show_collection():
 def show(project_identifier):
 	view_data = {
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
-		"project_jobs": service_client.get("/project/{project_identifier}/jobs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
-		"project_runs": service_client.get("/project/{project_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"run_collection": service_client.get("/project/{project_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"schedule_collection": service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
 	return flask.render_template("project/index.html", title = "Project " + project_identifier, **view_data)
@@ -37,9 +38,10 @@ def show_status(project_identifier):
 	branch = flask.request.args.get("branch", default = None)
 	status_limit = max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1)
 
+	project = service_client.get("/project/{project_identifier}".format(**locals()))
 	repository = service_client.get("/project/{project_identifier}/repository".format(**locals()))
 	branch_collection = service_client.get("/project/{project_identifier}/branches".format(**locals()))
-	job_collection = service_client.get("/project/{project_identifier}/jobs".format(**locals()), { "order_by": [ "identifier ascending" ] })
+	job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
 	context = { "filter_collection": [ { "identifier": job["identifier"], "job": job["identifier"] } for job in job_collection ] }
 
 	if branch is None:
@@ -62,7 +64,7 @@ def show_status(project_identifier):
 					revision["runs_by_filter"][run_filter["identifier"]].append(run)
 
 	view_data = {
-		"project_identifier": project_identifier,
+		"project": project,
 		"project_branch": branch,
 		"project_branch_collection": branch_collection,
 		"project_context": context,

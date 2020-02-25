@@ -14,7 +14,7 @@ def test_schedule(tmpdir, database_type):
 	""" Test executing a job which should succeed """
 
 	project_identifier = "examples"
-	job_identifier = "examples_success"
+	job_identifier = "success"
 
 	with context.Context(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
@@ -31,14 +31,14 @@ def test_schedule(tmpdir, database_type):
 
 		time.sleep(5)
 
-		schedule = context_instance.schedule_provider.get(schedule["identifier"])
-		run = context_instance.run_provider.get(schedule["last_run"])
+		schedule = context_instance.schedule_provider.get(schedule["project"], schedule["identifier"])
+		run = context_instance.run_provider.get(schedule["project"], schedule["last_run"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "JobScheduler", "message": "Triggering run for schedule '%s'" % schedule["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s %s" % (job_identifier, run["identifier"]) },
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s %s with status succeeded" % (job_identifier, run["identifier"]) },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status succeeded" % run["identifier"] },
 		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 

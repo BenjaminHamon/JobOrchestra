@@ -9,52 +9,49 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("JobController")
 
 
-def show_collection():
+def show_collection(project_identifier):
+	item_total = service_client.get("/project/{project_identifier}/job_count".format(**locals()))
+	pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier })
+
 	query_parameters = {
-		"project": helpers.none_if_empty(flask.request.args.get("project", default = None)),
-	}
-
-	item_total = service_client.get("/job_count", query_parameters)
-	pagination = helpers.get_pagination(item_total)
-
-	query_parameters.update({
 		"skip": (pagination["page_number"] - 1) * pagination["item_count"],
 		"limit": pagination["item_count"],
 		"order_by": [ "identifier ascending" ],
-	})
+	}
 
 	view_data = {
-		"project_collection": service_client.get("/project_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
-		"job_collection": service_client.get("/job_collection", query_parameters),
+		"project": service_client.get("/project/{project_identifier}".format(**locals())),
+		"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), query_parameters),
 		"pagination": pagination,
 	}
 
 	return flask.render_template("job/collection.html", title = "Jobs", **view_data)
 
 
-def show(job_identifier):
+def show(project_identifier, job_identifier): # pylint: disable = unused-argument
 	view_data = {
-		"job": service_client.get("/job/{job_identifier}".format(**locals())),
-		"job_runs": service_client.get("/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"project": service_client.get("/project/{project_identifier}".format(**locals())),
+		"job": service_client.get("/project/{project_identifier}/job/{job_identifier}".format(**locals())),
+		"job_runs": service_client.get("/project/{project_identifier}/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
 	return flask.render_template("job/index.html", title = "Job " + job_identifier, **view_data)
 
 
-def trigger(job_identifier): # pylint: disable = unused-argument
+def trigger(project_identifier, job_identifier): # pylint: disable = unused-argument
 	parameters = {}
 	for key, value in flask.request.form.items():
 		if key.startswith("parameter-"):
 			parameters[key[len("parameter-"):]] = value
-	service_client.post("/job/{job_identifier}/trigger".format(**locals()), parameters)
-	return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection"))
+	service_client.post("/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals()), parameters)
+	return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection", project_identifier = project_identifier))
 
 
-def enable(job_identifier): # pylint: disable = unused-argument
-	service_client.post("/job/{job_identifier}/enable".format(**locals()))
-	return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection"))
+def enable(project_identifier, job_identifier): # pylint: disable = unused-argument
+	service_client.post("/project/{project_identifier}/job/{job_identifier}/enable".format(**locals()))
+	return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection", project_identifier = project_identifier))
 
 
-def disable(job_identifier): # pylint: disable = unused-argument
-	service_client.post("/job/{job_identifier}/disable".format(**locals()))
-	return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection"))
+def disable(project_identifier, job_identifier): # pylint: disable = unused-argument
+	service_client.post("/project/{project_identifier}/job/{job_identifier}/disable".format(**locals()))
+	return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection", project_identifier = project_identifier))

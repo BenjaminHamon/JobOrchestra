@@ -17,8 +17,7 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 class ExecutorWatcher:
 
 
-	def __init__(self, job_identifier, run_identifier):
-		self.job_identifier = job_identifier
+	def __init__(self, run_identifier):
 		self.run_identifier = run_identifier
 		self.process = None
 		self.synchronization = None
@@ -32,19 +31,19 @@ class ExecutorWatcher:
 
 	async def terminate(self, timeout_seconds):
 		if self.is_running():
-			logger.info("Aborting %s %s", self.job_identifier, self.run_identifier)
+			logger.info("(%s) Aborting", self.run_identifier)
 			os.kill(self.process.pid, shutdown_signal)
 
 			try:
 				await asyncio.wait_for(self.process.wait(), timeout_seconds)
 			except asyncio.TimeoutError:
-				logger.warning("Forcing termination for %s %s", self.job_identifier, self.run_identifier)
+				logger.warning("(%s) Forcing termination", self.run_identifier)
 				self.process.kill()
 
 			try:
 				await self.wait_futures()
 			except asyncio.TimeoutError:
-				logger.warning("Timeout on futures for %s %s", self.job_identifier, self.run_identifier)
+				logger.warning("(%s) Timeout on futures", self.run_identifier)
 
 
 	def abort(self):
@@ -89,8 +88,8 @@ class ExecutorWatcher:
 		if self.is_running():
 			return
 
-		status = worker_storage.load_status(self.job_identifier, self.run_identifier)
+		status = worker_storage.load_status(self.run_identifier)
 		if status["status"] in [ "unknown", "running" ]:
 			logger.error("Run '%s' terminated before completion", self.run_identifier)
 			status["status"] = "exception"
-			worker_storage.save_status(self.job_identifier, self.run_identifier, status)
+			worker_storage.save_status(self.run_identifier, status)

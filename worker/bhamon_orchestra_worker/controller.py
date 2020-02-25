@@ -21,9 +21,10 @@ class Controller:
 		self.wait_delay_seconds = 10
 
 
-	def trigger_run(self, result_file_path, job_identifier, parameters):
+	def trigger_run(self, result_file_path, project_identifier, job_identifier, parameters): # pylint: disable = unused-argument
 		message = "Triggering run for job %s" % job_identifier
-		response = self._try_request(message, lambda: self._service_post("/job/" + job_identifier + "/trigger", data = parameters))
+		route = "/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals())
+		response = self._try_request(message, lambda: self._service_post(route, data = parameters))
 		logger.info("Run: %s", response["run_identifier"])
 
 		results = workspace.load_results(result_file_path)
@@ -43,7 +44,8 @@ class Controller:
 
 			for run in results["child_runs"]:
 				if run["run_status"] in [ "unknown", "pending", "running" ]:
-					response = self._try_request(None, lambda: self._service_get("/run/" + run["run_identifier"]))
+					route = "/project/{project_identifier}/run/{run_identifier}".format(**run)
+					response = self._try_request(None, lambda: self._service_get(route)) # pylint: disable = cell-var-from-loop
 					if run["run_status"] in [ "unknown", "pending" ] and response["status"] == "running":
 						logger.info("run %s is running", response["identifier"])
 					run["run_status"] = response["status"]
