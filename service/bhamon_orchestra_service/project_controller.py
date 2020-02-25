@@ -88,10 +88,10 @@ def get_status(project_identifier):
 		revision["runs"] = []
 
 	for run in run_collection:
-		revision_identifier = run.get("results", {}).get("revision_control", {}).get("revision")
+		revision_identifier = run.get("results", {}).get("revision_control", {}).get("revision", None)
 		if revision_identifier is None and run["status"] in [ "pending", "running" ]:
 			try:
-				revision_identifier = revision_control_client.get_revision(repository, run["parameters"]["revision"])
+				revision_identifier = revision_control_client.get_revision(repository, run["parameters"]["revision"])["identifier"]
 			except requests.HTTPError:
 				logger.warning("Failed to resolve project '%s' revision '%s'", project_identifier, run["parameters"]["revision"], exc_info = True)
 
