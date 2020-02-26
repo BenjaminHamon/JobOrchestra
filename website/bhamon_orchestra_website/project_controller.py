@@ -45,7 +45,7 @@ def show_status(project_identifier): # pylint: disable = unused-argument
 	repository = service_client.get("/project/{project_identifier}/repository".format(**locals()))
 	branch_collection = service_client.get("/project/{project_identifier}/branches".format(**locals()))
 	job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
-	context = { "filter_collection": [ { "identifier": job["identifier"], "job": job["identifier"] } for job in job_collection ] }
+	context = { "filter_collection": [ { "identifier": job["identifier"], "display_name": job["display_name"], "job": job["identifier"] } for job in job_collection ] }
 
 	if branch is None:
 		branch = repository["default_branch"]

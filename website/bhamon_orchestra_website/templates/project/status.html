@@ -23,7 +23,7 @@
 				<tr>
 					<th>Revision</th>
 					{% for run_filter in project_context['filter_collection'] %}
-					<th><a href="{{ url_for('job_controller.show', project_identifier = project['identifier'], job_identifier = run_filter['job']) }}">{{ run_filter['identifier'] }}</a></th>
+					<th><a href="{{ url_for('job_controller.show', project_identifier = project['identifier'], job_identifier = run_filter['job']) }}">{{ run_filter['display_name'] }}</a></th>
 					{% endfor %}
 				</tr>
 			</thead>
