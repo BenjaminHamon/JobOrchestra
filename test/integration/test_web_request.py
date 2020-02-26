@@ -67,9 +67,7 @@ def test_service_routes(tmpdir, database_type):
 				continue
 			if route == "/project/<project_identifier>/repository":
 				continue
-			if route == "/project/<project_identifier>/branches":
-				continue
-			if route == "/project/<project_identifier>/revisions":
+			if route.startswith("/project/<project_identifier>/repository/"):
 				continue
 			if route == "/project/<project_identifier>/status":
 				continue
