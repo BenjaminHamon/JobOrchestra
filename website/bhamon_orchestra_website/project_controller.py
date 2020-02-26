@@ -57,7 +57,7 @@ def show_status(project_identifier): # pylint: disable = unused-argument
 	}
 
 	status = service_client.get("/project/{project_identifier}/status".format(**locals()), status_parameters)
-	status = [ revision for revision in status if len(revision["runs"]) > 0 ][ : status_limit ]
+	status = [ revision for index, revision in enumerate(status) if index == 0 or len(revision["runs"]) > 0 ][ : status_limit ]
 
 	for revision in status:
 		revision["runs_by_filter"] = { f["identifier"]: [] for f in context["filter_collection"] }
