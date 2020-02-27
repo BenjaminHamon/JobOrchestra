@@ -146,6 +146,36 @@ def test_job_exception(tmpdir, database_type):
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_run_cancel(tmpdir, database_type):
+	""" Test cancelling a run """
+
+	project_identifier = "examples"
+	job_identifier = "success"
+
+	with context.Context(tmpdir, database_type) as context_instance:
+		master_process = context_instance.invoke_master()
+
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		context_instance.run_provider.update_status(run, should_cancel = True)
+
+		time.sleep(1)
+
+		run = context_instance.run_provider.get(run["project"], run["identifier"])
+
+	master_expected_messages = [
+		{ "level": "Info", "logger": "Master", "message": "Starting master" },
+		{ "level": "Info", "logger": "JobScheduler", "message": "Cancelling run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
+	]
+
+	assert_extensions.assert_multi_process([
+		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+	])
+
+	assert run["status"] == "cancelled"
+
+
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
 def test_run_abort(tmpdir, database_type):
 	""" Test aborting a run """
 
