@@ -17,6 +17,7 @@ def configure():
 def configure_jobs():
 	return [
 		success(),
+		sleep(),
 		failure(),
 		exception(),
 		controller_success(),
@@ -53,6 +54,25 @@ def success():
 
 		"steps": [
 			{ "name": "hello", "command": [ "{environment[python3_executable]}", "-c", "pass" ] },
+		],
+	}
+
+
+def sleep():
+	return {
+		"identifier": "sleep",
+		"display_name": "Sleep",
+		"description": "Test job which succeeds after several seconds.",
+		"workspace": "examples",
+
+		"properties": {
+			"is_controller": False,
+		},
+
+		"parameters": [],
+
+		"steps": [
+			{ "name": "hello", "command": [ "{environment[python3_executable]}", "-c", "import time; time.sleep(5)" ] },
 		],
 	}
 
