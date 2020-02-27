@@ -67,19 +67,6 @@ def get_results(project_identifier, run_identifier):
 	return flask.jsonify(run_results)
 
 
-def get_tasks(project_identifier, run_identifier):
-	query_parameters = {
-		"project": project_identifier,
-		"run": run_identifier,
-		"status": flask.request.args.get("status", default = None),
-		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
-		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),
-		"order_by": [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ],
-	}
-
-	return flask.jsonify(flask.current_app.task_provider.get_list(**query_parameters))
-
-
 def cancel(project_identifier, run_identifier):
 	flask.current_app.run_provider.update_status({ "project": project_identifier, "identifier": run_identifier }, should_cancel = True)
 	return flask.jsonify({})
