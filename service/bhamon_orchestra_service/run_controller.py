@@ -81,13 +81,13 @@ def get_tasks(project_identifier, run_identifier):
 
 
 def cancel(project_identifier, run_identifier):
-	task = flask.current_app.task_provider.create("cancel_run", { "project_identifier": project_identifier, "run_identifier": run_identifier })
-	return flask.jsonify({ "project_identifier": project_identifier, "run_identifier": run_identifier, "task_identifier": task["identifier"] })
+	flask.current_app.run_provider.update_status({ "project": project_identifier, "identifier": run_identifier }, should_cancel = True)
+	return flask.jsonify({})
 
 
 def abort(project_identifier, run_identifier):
-	task = flask.current_app.task_provider.create("abort_run", { "project_identifier": project_identifier, "run_identifier": run_identifier })
-	return flask.jsonify({ "project_identifier": project_identifier, "run_identifier": run_identifier, "task_identifier": task["identifier"] })
+	flask.current_app.run_provider.update_status({ "project": project_identifier, "identifier": run_identifier }, should_abort = True)
+	return flask.jsonify({})
 
 
 def download_archive(project_identifier, run_identifier):

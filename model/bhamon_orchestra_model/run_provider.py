@@ -74,7 +74,8 @@ class RunProvider:
 
 	def update_status(self, # pylint: disable = too-many-arguments
 			run: dict, worker: Optional[str] = None, status: Optional[str] = None,
-			start_date: Optional[str] = None, completion_date: Optional[str] = None) -> None:
+			start_date: Optional[str] = None, completion_date: Optional[str] = None,
+			should_cancel: Optional[bool] = None, should_abort: Optional[bool] = None) -> None:
 
 		now = self.date_time_provider.now()
 
@@ -83,6 +84,8 @@ class RunProvider:
 			"status": status,
 			"start_date": start_date,
 			"completion_date": completion_date,
+			"should_cancel": should_cancel,
+			"should_abort": should_abort,
 			"update_date": self.date_time_provider.serialize(now),
 		}
 
@@ -181,5 +184,9 @@ class RunProvider:
 
 
 	def convert_to_public(self, run: dict) -> dict: # pylint: disable = no-self-use
-		keys_to_return = [ "identifier", "project", "job", "worker", "parameters", "status", "start_date", "completion_date", "creation_date", "update_date" ]
+		keys_to_return = [
+			"identifier", "project", "job", "worker", "parameters", "status",
+			"start_date", "completion_date", "should_cancel", "should_abort", "creation_date", "update_date",
+		]
+
 		return { key: value for key, value in run.items() if key in keys_to_return }
