@@ -15,7 +15,11 @@
 		</div>
 			{% if authorize_view("worker-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('worker_controller.stop', worker_identifier = worker['identifier']) }}">Stop</button>
+				{% if worker.get('should_disconnect', false) %}
+			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}" disabled>Disconnecting</button>
+				{% else %}
+			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}">Disconnect</button>
+				{% endif %}
 		</form>
 			{% endif %}
 		{% else %}
@@ -25,7 +29,7 @@
 		</div>
 			{% if authorize_view("worker-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('worker_controller.stop', worker_identifier = worker['identifier']) }}" disabled>Stop</button>
+			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}" disabled>Disconnect</button>
 		</form>
 			{% endif %}
 		{% endif %}

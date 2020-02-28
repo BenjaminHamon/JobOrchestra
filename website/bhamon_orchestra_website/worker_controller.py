@@ -72,9 +72,9 @@ def show_runs(worker_identifier):
 
 
 
-def stop(worker_identifier): # pylint: disable = unused-argument
+def disconnect(worker_identifier): # pylint: disable = unused-argument
 	parameters = flask.request.form
-	service_client.post("/worker/{worker_identifier}/stop".format(**locals()), parameters)
+	service_client.post("/worker/{worker_identifier}/disconnect".format(**locals()), parameters)
 	return flask.redirect(flask.request.referrer or flask.url_for("worker_controller.show_collection"))
 
 

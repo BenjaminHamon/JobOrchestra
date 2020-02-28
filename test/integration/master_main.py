@@ -104,6 +104,7 @@ def create_application(arguments): # pylint: disable = too-many-locals
 
 	# Rapid updates to reduce delays in tests
 	job_scheduler_instance.update_interval_seconds = 1
+	supervisor_instance.update_interval_seconds = 1
 	task_processor_instance.update_interval_seconds = 1
 
 	master_instance.register_default_tasks()

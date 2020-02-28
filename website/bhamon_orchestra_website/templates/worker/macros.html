@@ -45,9 +45,13 @@
 			<td>
 				<form class="action-group" method="post">
 					{% if worker['is_active'] %}
-					<button formaction="{{ url_for('worker_controller.stop', worker_identifier = worker['identifier']) }}">Stop</button>
+						{% if worker.get('should_disconnect', false) %}
+					<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}" disabled>Disconnecting</button>
+						{% else %}
+					<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}">Disconnect</button>
+						{% endif %}
 					{% else %}
-					<button formaction="{{ url_for('worker_controller.stop', worker_identifier = worker['identifier']) }}" disabled>Stop</button>
+					<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}" disabled>Disconnect</button>
 					{% endif %}
 					{% if worker['is_enabled'] %}
 					<button formaction="{{ url_for('worker_controller.disable', worker_identifier = worker['identifier']) }}">Disable</button>

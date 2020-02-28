@@ -17,7 +17,7 @@ class Worker:
 		self._messenger = messenger
 		self._run_provider = run_provider
 
-		self.should_shutdown = False
+		self.should_disconnect = False
 		self.executors = []
 
 
@@ -41,7 +41,7 @@ class Worker:
 		except Exception: # pylint: disable = broad-except
 			logger.error("(%s) Unhandled exception while recovering runs", self.identifier, exc_info = True)
 
-		while not self.should_shutdown or len(self.executors) > 0:
+		while not self.should_disconnect:
 			all_executors = list(self.executors)
 			for executor in all_executors:
 				try:
@@ -56,9 +56,6 @@ class Worker:
 					self.executors.remove(executor)
 
 			await asyncio.sleep(0.1)
-
-		if self.should_shutdown and len(self.executors) == 0:
-			await self._execute_remote_command("shutdown")
 
 
 	async def _execute_remote_command(self, command, parameters = None):
