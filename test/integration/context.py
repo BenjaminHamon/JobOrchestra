@@ -73,12 +73,15 @@ class Context: # pylint: disable = too-many-instance-attributes
 			database_client = pymongo.MongoClient(self.database_uri)
 			database_client.drop_database(database_client.get_database())
 			database_client.close()
+
 		for process in self.process_collection:
-			os.kill(process.pid, shutdown_signal)
-			try:
-				process.wait(5)
-			except subprocess.TimeoutExpired:
-				process.kill()
+			if process.poll() is None:
+				os.kill(process.pid, shutdown_signal)
+				try:
+					process.wait(5)
+				except subprocess.TimeoutExpired:
+					process.kill()
+
 		self.process_collection.clear()
 
 

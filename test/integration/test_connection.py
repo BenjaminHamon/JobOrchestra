@@ -22,7 +22,6 @@ def test_worker_disconnection(tmpdir, database_type):
 
 		os.kill(worker_process["process"].pid, context.shutdown_signal)
 		time.sleep(1) # Wait for disconnection
-		os.kill(master_process["process"].pid, context.shutdown_signal)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -58,7 +57,6 @@ def test_master_disconnection(tmpdir, database_type):
 
 		os.kill(master_process["process"].pid, context.shutdown_signal)
 		time.sleep(1) # Wait for disconnection
-		os.kill(worker_process["process"].pid, context.shutdown_signal)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
