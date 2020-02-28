@@ -2,7 +2,10 @@
 {% import 'task/macros.html' as task_macros %}
 
 {% block content %}
-<h1>Run {{ run['identifier'] }}</h1>
+<h1>
+	Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a>
+	/ Run <a href="{{ url_for('run_controller.show', project_identifier = project['identifier'], run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a>
+</h1>
 
 <section>
 	<div class="link-group">
@@ -28,9 +31,9 @@
 		{% endif %}
 	</div>
 	<ul>
-		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}" style="display: inline">{{ run['project'] }}</a></li>
-		<li>Job: <a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}" style="display: inline">{{ run['job'] }}</a></li>
-		<li>Worker: {% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}" style="display: inline">{{ run['worker'] }}</a>{% endif %}</li>
+		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}" style="display: inline">{{ run['project_display_name'] }}</a></li>
+		<li>Job: <a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}" style="display: inline">{{ run['job_display_name'] }}</a></li>
+		<li>Worker: {% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}" style="display: inline">{{ run['worker_display_name'] }}</a>{% endif %}</li>
 		<li>Creation date: {{ run['creation_date'] }}</li>
 		<li>Update date: {{ run['update_date'] }}</li>
 		<li>Start date: {% if 'start_date' in run %}{{ run['start_date'] }}{% endif %}</li>

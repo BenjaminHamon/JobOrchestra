@@ -1,6 +1,7 @@
 def configure():
 	example_project = {
 		"identifier": "examples",
+		"display_name": "Examples",
 		"jobs": configure_jobs(),
 		"schedules": configure_schedules(),
 		"services": {},
@@ -27,6 +28,7 @@ def configure_schedules():
 	return [
 		{
 			"identifier": "success_nightly",
+			"display_name": "Success Nightly",
 			"job": "success",
 
 			"parameters": [],
@@ -39,6 +41,7 @@ def configure_schedules():
 def success():
 	return {
 		"identifier": "success",
+		"display_name": "Success",
 		"description": "Test job which succeeds.",
 		"workspace": "examples",
 
@@ -57,6 +60,7 @@ def success():
 def failure():
 	return {
 		"identifier": "failure",
+		"display_name": "Failure",
 		"description": "Test job with a failing step.",
 		"workspace": "examples",
 
@@ -75,6 +79,7 @@ def failure():
 def exception():
 	return {
 		"identifier": "exception",
+		"display_name": "Exception",
 		"description": "Test job with mistakes in its definition.",
 		"workspace": "examples",
 
@@ -98,6 +103,7 @@ def controller_success():
 
 	return {
 		"identifier": "controller_success",
+		"display_name": "Controller Success",
 		"description": "Trigger all test jobs.",
 		"workspace": "examples",
 
@@ -123,6 +129,7 @@ def controller_failure():
 
 	return {
 		"identifier": "controller_failure",
+		"display_name": "Controller Failure",
 		"description": "Trigger all test jobs.",
 		"workspace": "examples",
 

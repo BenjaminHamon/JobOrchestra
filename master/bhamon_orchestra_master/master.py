@@ -100,7 +100,7 @@ class Master:
 
 		for project in configuration["projects"]:
 			logger.info("Adding/Updating project %s", project["identifier"])
-			self._project_provider.create_or_update(project["identifier"], project["services"])
+			self._project_provider.create_or_update(project["identifier"], project["display_name"], project["services"])
 
 			all_existing_jobs = self._job_provider.get_list(project = project["identifier"])
 			for existing_job in all_existing_jobs:

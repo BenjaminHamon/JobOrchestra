@@ -101,8 +101,8 @@ class Supervisor:
 
 	async def _process_connection_internal(self, user, worker_identifier, messenger_instance):
 		logger.info("Registering worker '%s'", worker_identifier)
-		properties = await messenger_instance.send_request({ "command": "properties" })
-		worker_record = self._register_worker(worker_identifier, user, properties)
+		worker_properties = await messenger_instance.send_request({ "command": "describe" })
+		worker_record = self._register_worker(worker_identifier, user, worker_properties["display_name"], worker_properties["properties"])
 		worker_instance = self._instantiate_worker(worker_identifier, messenger_instance)
 
 		self._worker_provider.update_status(worker_record, is_active = True)
@@ -117,17 +117,17 @@ class Supervisor:
 			self._worker_provider.update_status(worker_record, is_active = False)
 
 
-	def _register_worker(self, worker_identifier, owner, properties):
+	def _register_worker(self, worker_identifier, owner, display_name, properties):
 		if worker_identifier in self._active_workers:
 			raise WorkerError("Worker '%s' is already active" % worker_identifier)
 
 		worker_record = self._worker_provider.get(worker_identifier)
 		if worker_record is None:
-			worker_record = self._worker_provider.create(worker_identifier, owner)
+			worker_record = self._worker_provider.create(worker_identifier, owner, display_name)
 		if worker_record["owner"] != owner:
 			raise WorkerError("Worker '%s' is owned by another user (Expected: '%s', Actual: '%s')" % (worker_identifier, worker_record["user"], owner))
 
-		self._worker_provider.update_properties(worker_record, properties)
+		self._worker_provider.update_properties(worker_record, display_name, properties)
 
 		return worker_record
 

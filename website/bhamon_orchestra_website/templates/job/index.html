@@ -2,7 +2,10 @@
 {% import 'run/macros.html' as run_macros %}
 
 {% block content %}
-<h1>Project {{ project['identifier'] }} / Job {{ job['identifier'] }}</h1>
+<h1>
+	Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a>
+	/ Job <a href="{{ url_for('job_controller.show', project_identifier = project['identifier'], job_identifier = job['identifier']) }}">{{ job['display_name'] }}</a>
+</h1>
 
 <section>
 	<h2>Description</h2>
@@ -35,7 +38,7 @@
 		{% endif %}
 	</div>
 	<ul>
-		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = job['project']) }}" style="display: inline">{{ job['project'] }}</a></li>
+		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = job['project']) }}" style="display: inline">{{ job['project_display_name'] }}</a></li>
 		<li>Creation date: {{ job['creation_date'] }}</li>
 		<li>Update date: {{ job['update_date'] }}</li>
 	</ul>
@@ -56,6 +59,6 @@
 
 <section>
 	<h2><a href="{{ url_for('run_controller.show_collection', project_identifier = job['project'], job = job['identifier']) }}" title="View all runs">Runs</a></h2>
-	{{ run_macros.run_table(job_runs) }}
+	{{ run_macros.run_table(run_collection) }}
 </section>
 {% endblock %}

@@ -17,8 +17,8 @@
 	<tbody>
 		{% for run in run_collection %}
 		<tr>
-			<td><a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}">{{ run['project'] }}</a></td>
-			<td><a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}">{{ run['job'] }}</a></td>
+			<td><a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}">{{ run['project_display_name'] }}</a></td>
+			<td><a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}">{{ run['job_display_name'] }}</a></td>
 			<td><a href="{{ url_for('run_controller.show', project_identifier = run['project'], run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a></td>
 			<td>
 				<div class="status-group">
@@ -37,7 +37,7 @@
 				</form>
 			</td>
 			{% endif %}
-			<td>{% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker'] }}</a>{% endif %}</td>
+			<td>{% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker_display_name'] }}</a>{% endif %}</td>
 			<td>{{ run['creation_date'] }}</td>
 			<td>{{ run['update_date'] }}</td>
 		</tr>

@@ -58,3 +58,23 @@ def get_error_message(status_code): # pylint: disable = too-many-return-statemen
 	if 500 <= status_code < 600:
 		return "Server error"
 	return "Unknown error"
+
+
+def add_display_names(project_collection, job_collection, run_collection, schedule_collection, worker_collection):
+	for job in job_collection:
+		project = next((x for x in project_collection if x["identifier"] == job["project"]), {})
+		job["project_display_name"] = project.get("display_name", job["project"])
+
+	for run in run_collection:
+		project = next((x for x in project_collection if x["identifier"] == run["project"]), {})
+		job = next((x for x in job_collection if x["project"] == run["project"] and x["identifier"] == run["job"]), {})
+		worker = next((x for x in worker_collection if x["identifier"] == run["worker"]), {})
+		run["project_display_name"] = project.get("display_name", run["project"])
+		run["job_display_name"] = job.get("display_name", run["job"])
+		run["worker_display_name"] = worker.get("display_name", run["worker"])
+
+	for schedule in schedule_collection:
+		project = next((x for x in project_collection if x["identifier"] == schedule["project"]), {})
+		job = next((x for x in job_collection if x["project"] == schedule["project"] and x["identifier"] == schedule["job"]), {})
+		schedule["project_display_name"] = project.get("display_name", schedule["project"])
+		schedule["job_display_name"] = job.get("display_name", schedule["job"])

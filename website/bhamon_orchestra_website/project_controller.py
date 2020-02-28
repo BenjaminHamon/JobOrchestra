@@ -23,18 +23,21 @@ def show_collection():
 	return flask.render_template("project/collection.html", title = "Projects", project_collection = project_collection, pagination = pagination)
 
 
-def show(project_identifier):
+def show(project_identifier): # pylint: disable = unused-argument
 	view_data = {
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
 		"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 		"run_collection": service_client.get("/project/{project_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 		"schedule_collection": service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"worker_collection": service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 	}
 
-	return flask.render_template("project/index.html", title = "Project " + project_identifier, **view_data)
+	helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], view_data["run_collection"], view_data["schedule_collection"], view_data["worker_collection"])
+
+	return flask.render_template("project/index.html", title = "Project " + view_data["project"]["display_name"], **view_data)
 
 
-def show_status(project_identifier):
+def show_status(project_identifier): # pylint: disable = unused-argument
 	branch = flask.request.args.get("branch", default = None)
 	status_limit = max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1)
 
@@ -42,7 +45,7 @@ def show_status(project_identifier):
 	repository = service_client.get("/project/{project_identifier}/repository".format(**locals()))
 	branch_collection = service_client.get("/project/{project_identifier}/branches".format(**locals()))
 	job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
-	context = { "filter_collection": [ { "identifier": job["identifier"], "job": job["identifier"] } for job in job_collection ] }
+	context = { "filter_collection": [ { "identifier": job["identifier"], "display_name": job["display_name"], "job": job["identifier"] } for job in job_collection ] }
 
 	if branch is None:
 		branch = repository["default_branch"]
@@ -71,4 +74,4 @@ def show_status(project_identifier):
 		"project_status": status,
 	}
 
-	return flask.render_template("project/status.html", title = "Project " + project_identifier, **view_data)
+	return flask.render_template("project/status.html", title = "Project " + project["display_name"], **view_data)

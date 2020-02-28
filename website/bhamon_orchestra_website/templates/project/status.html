@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Project {{ project['identifier'] }} / Status</h1>
+<h1>Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a> / Status</h1>
 
 <section>
 	<div class="table-container">
@@ -23,7 +23,7 @@
 				<tr>
 					<th>Revision</th>
 					{% for run_filter in project_context['filter_collection'] %}
-					<th><a href="{{ url_for('job_controller.show', project_identifier = project['identifier'], job_identifier = run_filter['job']) }}">{{ run_filter['identifier'] }}</a></th>
+					<th><a href="{{ url_for('job_controller.show', project_identifier = project['identifier'], job_identifier = run_filter['job']) }}">{{ run_filter['display_name'] }}</a></th>
 					{% endfor %}
 				</tr>
 			</thead>

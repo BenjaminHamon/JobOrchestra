@@ -3,7 +3,7 @@
 {% import 'macros.html' as shared_macros %}
 
 {% block content %}
-<h1>Project {{ project['identifier'] }} / Jobs</h1>
+<h1>Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a> / Jobs</h1>
 <section>
 	<div class="table-container">
 		{{ shared_macros.page_navigation('job_controller.show_collection', pagination) }}

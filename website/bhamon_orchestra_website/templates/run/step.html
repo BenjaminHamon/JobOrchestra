@@ -1,7 +1,11 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Project {{ project['identifier'] }} / Run {{ run['identifier'] }} / Step {{ current['index'] }} {{ current['name'] }}</h1>
+<h1>
+	Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a>
+	/ Run <a href="{{ url_for('run_controller.show', project_identifier = project['identifier'], run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a>
+	/ Step {{ current['index'] }} {{ current['name'] }}
+</h1>
 
 <section>
 	<div class="page-navigation">

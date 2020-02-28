@@ -14,7 +14,7 @@
 	<tbody>
 		{% for worker in worker_collection %}
 		<tr>
-			<td><a href="{{ url_for('worker_controller.show', worker_identifier = worker['identifier']) }}">{{ worker['identifier'] }}</a></td>
+			<td><a href="{{ url_for('worker_controller.show', worker_identifier = worker['identifier']) }}">{{ worker['display_name'] }}</a></td>
 			<td>
 				{% if worker['is_active'] %}
 				<div class="status-group">
