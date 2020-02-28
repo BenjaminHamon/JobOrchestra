@@ -39,11 +39,6 @@ def index():
 	return flask.render_template("admin/index.html", title = "Administration", **view_data)
 
 
-def reload_service():
-	service_client.post("/admin/reload")
-	return flask.redirect(flask.request.referrer or flask.url_for("admin_controller.index"))
-
-
 def _get_website_information():
 	return {
 		"python_version": platform.python_version() + "+" + platform.python_revision(),

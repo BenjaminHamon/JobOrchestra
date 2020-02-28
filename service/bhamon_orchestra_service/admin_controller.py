@@ -17,11 +17,6 @@ def information():
 	})
 
 
-def reload():
-	task = flask.current_app.task_provider.create("reload_configuration", {})
-	return flask.jsonify({ "task_identifier": task["identifier"] })
-
-
 def get_service_collection():
 	return flask.jsonify(list(flask.current_app.external_services.keys()))
 

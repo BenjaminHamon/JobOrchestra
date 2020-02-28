@@ -1,6 +1,5 @@
 import argparse
 import functools
-import importlib
 import logging
 
 import filelock
@@ -99,7 +98,6 @@ def create_application(arguments): # pylint: disable = too-many-locals
 		job_scheduler = job_scheduler_instance,
 		supervisor = supervisor_instance,
 		task_processor = task_processor_instance,
-		configuration_loader = reload_configuration,
 	)
 
 	# Rapid updates to reduce delays in tests
@@ -107,14 +105,9 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	supervisor_instance.update_interval_seconds = 1
 	task_processor_instance.update_interval_seconds = 1
 
-	master_instance.register_default_tasks()
+	master_instance.apply_configuration(configuration.configure())
 
 	return master_instance
-
-
-def reload_configuration():
-	importlib.reload(configuration)
-	return configuration.configure()
 
 
 if __name__ == "__main__":

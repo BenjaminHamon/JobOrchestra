@@ -42,7 +42,6 @@ def register_routes(application): # pylint: disable = too-many-statements
 	add_url_rule(application, "/", [ "GET" ], home)
 	add_url_rule(application, "/help", [ "GET" ], help)
 	add_url_rule(application, "/admin/information", [ "GET" ], admin_controller.information)
-	add_url_rule(application, "/admin/reload", [ "POST" ], admin_controller.reload)
 	add_url_rule(application, "/admin/service_collection", [ "GET" ], admin_controller.get_service_collection)
 	add_url_rule(application, "/admin/service/<service_identifier>", [ "GET" ], admin_controller.get_service_status)
 	add_url_rule(application, "/me", [ "GET" ], me_controller.get_user)

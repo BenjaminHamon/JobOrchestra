@@ -52,7 +52,6 @@ def register_handlers(application):
 def register_routes(application):
 	add_url_rule(application, "/", [ "GET" ], home)
 	add_url_rule(application, "/admin", [ "GET" ], admin_controller.index)
-	add_url_rule(application, "/admin/reload", [ "POST" ], admin_controller.reload_service)
 	add_url_rule(application, "/me", [ "GET" ], me_controller.show_profile)
 	add_url_rule(application, "/me/login", [ "GET", "POST" ], me_controller.login)
 	add_url_rule(application, "/me/logout", [ "GET", "POST" ], me_controller.logout)

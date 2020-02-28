@@ -11,8 +11,7 @@ class Master:
 
 
 	def __init__(self, # pylint: disable = too-many-arguments
-			project_provider, job_provider, schedule_provider, worker_provider,
-			job_scheduler, supervisor, task_processor, configuration_loader):
+			project_provider, job_provider, schedule_provider, worker_provider, job_scheduler, supervisor, task_processor):
 		self._project_provider = project_provider
 		self._job_provider = job_provider
 		self._schedule_provider = schedule_provider
@@ -20,7 +19,6 @@ class Master:
 		self._job_scheduler = job_scheduler
 		self._supervisor = supervisor
 		self._task_processor = task_processor
-		self._configuration_loader = configuration_loader
 		self._should_shutdown = False
 
 
@@ -31,8 +29,6 @@ class Master:
 			signal.signal(signal.SIGBREAK, lambda signal_number, frame: self.shutdown()) # pylint: disable = no-member
 		signal.signal(signal.SIGINT, lambda signal_number, frame: self.shutdown())
 		signal.signal(signal.SIGTERM, lambda signal_number, frame: self.shutdown())
-
-		self.reload_configuration()
 
 		asyncio_loop = asyncio.get_event_loop()
 		asyncio_loop.run_until_complete(self.run_async())
@@ -83,14 +79,8 @@ class Master:
 			await asyncio.sleep(1)
 
 
-	def register_default_tasks(self):
-		self._task_processor.register_handler("reload_configuration", 20,
-			lambda parameters: reload_configuration(self))
-
-
-	def reload_configuration(self):
-		logger.info("Reloading configuration")
-		configuration = self._configuration_loader()
+	def apply_configuration(self, configuration):
+		logger.info("Applying configuration")
 
 		for project in configuration["projects"]:
 			logger.info("Adding/Updating project %s", project["identifier"])
@@ -119,8 +109,3 @@ class Master:
 
 	def shutdown(self):
 		self._should_shutdown = True
-
-
-def reload_configuration(master):
-	master.reload_configuration()
-	return "succeeded"

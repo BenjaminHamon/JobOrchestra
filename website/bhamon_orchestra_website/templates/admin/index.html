@@ -12,9 +12,6 @@
 		<div class="status-text">{{ service_status['status_message'] }} ({{ service_status['status_code'] }})</div>
 		{% endif %}
 	</div>
-	<form class="action-group" method="post">
-		<button formaction="{{ url_for('admin_controller.reload_service') }}">Reload master configuration</button>
-	</form>
 </section>
 
 {% if website_information %}
