@@ -60,7 +60,7 @@ def show_runs(worker_identifier):
 		"worker": service_client.get("/worker/{worker_identifier}".format(**locals())),
 		"project_collection": service_client.get("/project_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 		"job_collection": service_client.get("/worker/{worker_identifier}/job_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
-		"status_collection": helpers.get_status_collection(),
+		"status_collection": helpers.get_run_status_collection(),
 		"run_collection": service_client.get("/worker/{worker_identifier}/run_collection".format(**locals()), query_parameters),
 		"pagination": pagination,
 	}

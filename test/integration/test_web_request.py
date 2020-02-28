@@ -49,7 +49,6 @@ def test_service_routes(tmpdir, database_type):
 		schedule = context_instance.schedule_provider.create_or_update("empty_nightly", "examples", "Empty Nightly", "empty", None, "0 0 * * *")
 		run = context_instance.run_provider.create("examples", "empty", {})
 		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
-		task = context_instance.task_provider.create("nothing", {})
 		worker = context_instance.worker_provider.create("worker", None, "Worker")
 		user = context_instance.user_provider.create("user", "user")
 
@@ -77,7 +76,6 @@ def test_service_routes(tmpdir, database_type):
 			route = route.replace("<project_identifier>", project["identifier"])
 			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<schedule_identifier>", schedule["identifier"])
-			route = route.replace("<task_identifier>", task["identifier"])
 			route = route.replace("<user_identifier>", user["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])
 
@@ -136,7 +134,6 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 		schedule = context_instance.schedule_provider.create_or_update("empty_nightly", "examples", "Empty Nightly", "empty", None, "0 0 * * *")
 		run = context_instance.run_provider.create("examples", "empty", {})
 		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
-		task = context_instance.task_provider.create("nothing", {})
 		worker = context_instance.worker_provider.create("worker", None, "Worker")
 		context_instance.run_provider.update_status(run, worker = worker["identifier"])
 		user = context_instance.user_provider.create("user", "user")
@@ -163,7 +160,6 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 			route = route.replace("<project_identifier>", project["identifier"])
 			route = route.replace("<run_identifier>", run["identifier"])
 			route = route.replace("<schedule_identifier>", schedule["identifier"])
-			route = route.replace("<task_identifier>", task["identifier"])
 			route = route.replace("<user_identifier>", user["identifier"])
 			route = route.replace("<worker_identifier>", worker["identifier"])
 			route = route.replace("<path:route>", "help")

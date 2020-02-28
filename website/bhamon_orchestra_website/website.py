@@ -17,7 +17,6 @@ import bhamon_orchestra_website.me_controller as me_controller
 import bhamon_orchestra_website.project_controller as project_controller
 import bhamon_orchestra_website.run_controller as run_controller
 import bhamon_orchestra_website.schedule_controller as schedule_controller
-import bhamon_orchestra_website.task_controller as task_controller
 import bhamon_orchestra_website.user_controller as user_controller
 import bhamon_orchestra_website.worker_controller as worker_controller
 
@@ -77,8 +76,6 @@ def register_routes(application):
 	add_url_rule(application, "/project/<project_identifier>/schedule/<schedule_identifier>", [ "GET" ], schedule_controller.show)
 	add_url_rule(application, "/project/<project_identifier>/schedule/<schedule_identifier>/enable", [ "POST" ], schedule_controller.enable)
 	add_url_rule(application, "/project/<project_identifier>/schedule/<schedule_identifier>/disable", [ "POST" ], schedule_controller.disable)
-	add_url_rule(application, "/task_collection", [ "GET" ], task_controller.show_collection)
-	add_url_rule(application, "/task/<task_identifier>/cancel", [ "POST" ], task_controller.cancel)
 	add_url_rule(application, "/user_collection", [ "GET" ], user_controller.show_collection)
 	add_url_rule(application, "/user_create", [ "GET", "POST" ], user_controller.create)
 	add_url_rule(application, "/user/<user_identifier>", [ "GET" ], user_controller.show)

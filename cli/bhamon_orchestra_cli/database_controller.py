@@ -60,10 +60,6 @@ def initialize_mongo_database(database_uri, database_authentication, simulate):
 	if not simulate:
 		database["schedule"].create_index([ ("project", pymongo.ASCENDING), ("identifier", pymongo.ASCENDING) ], name = "identifier_unique", unique = True)
 
-	logger.info("Creating task index")
-	if not simulate:
-		database["task"].create_index("identifier", name = "identifier_unique", unique = True)
-
 	logger.info("Creating user index")
 	if not simulate:
 		database["user"].create_index("identifier", name = "identifier_unique", unique = True)

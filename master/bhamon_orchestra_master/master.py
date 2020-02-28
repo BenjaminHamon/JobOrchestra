@@ -11,14 +11,13 @@ class Master:
 
 
 	def __init__(self, # pylint: disable = too-many-arguments
-			project_provider, job_provider, schedule_provider, worker_provider, job_scheduler, supervisor, task_processor):
+			project_provider, job_provider, schedule_provider, worker_provider, job_scheduler, supervisor):
 		self._project_provider = project_provider
 		self._job_provider = job_provider
 		self._schedule_provider = schedule_provider
 		self._worker_provider = worker_provider
 		self._job_scheduler = job_scheduler
 		self._supervisor = supervisor
-		self._task_processor = task_processor
 		self._should_shutdown = False
 
 
@@ -41,16 +40,14 @@ class Master:
 		shutdown_future = asyncio.ensure_future(self._watch_shutdown())
 		job_scheduler_future = asyncio.ensure_future(self._job_scheduler.run())
 		supervisor_future = asyncio.ensure_future(self._supervisor.run_server())
-		task_processor_future = asyncio.ensure_future(self._task_processor.run())
 
 		try:
-			await asyncio.wait([ shutdown_future, job_scheduler_future, supervisor_future, task_processor_future ], return_when = asyncio.FIRST_COMPLETED)
+			await asyncio.wait([ shutdown_future, job_scheduler_future, supervisor_future ], return_when = asyncio.FIRST_COMPLETED)
 
 		finally:
 			shutdown_future.cancel()
 			job_scheduler_future.cancel()
 			supervisor_future.cancel()
-			task_processor_future.cancel()
 
 			try:
 				await job_scheduler_future
@@ -65,13 +62,6 @@ class Master:
 				pass
 			except Exception: # pylint: disable = broad-except
 				logger.error("Unhandled exception from supervisor", exc_info = True)
-
-			try:
-				await task_processor_future
-			except asyncio.CancelledError:
-				pass
-			except Exception: # pylint: disable = broad-except
-				logger.error("Unhandled exception from task processor", exc_info = True)
 
 
 	async def _watch_shutdown(self):

@@ -8,7 +8,6 @@ from bhamon_orchestra_master.job_scheduler import JobScheduler
 from bhamon_orchestra_master.master import Master
 from bhamon_orchestra_master.protocol import WebSocketServerProtocol
 from bhamon_orchestra_master.supervisor import Supervisor
-from bhamon_orchestra_master.task_processor import TaskProcessor
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.database.file_storage import FileStorage
@@ -17,7 +16,6 @@ from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.project_provider import ProjectProvider
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.schedule_provider import ScheduleProvider
-from bhamon_orchestra_model.task_provider import TaskProvider
 from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
@@ -54,13 +52,8 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	project_provider_instance = ProjectProvider(database_client_instance, date_time_provider_instance)
 	run_provider_instance = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
 	schedule_provider_instance = ScheduleProvider(database_client_instance, date_time_provider_instance)
-	task_provider_instance = TaskProvider(database_client_instance, date_time_provider_instance)
 	user_provider_instance = UserProvider(database_client_instance, date_time_provider_instance)
 	worker_provider_instance = WorkerProvider(database_client_instance, date_time_provider_instance)
-
-	task_processor_instance = TaskProcessor(
-		task_provider = task_provider_instance,
-	)
 
 	worker_selector_instance = configuration_extensions.WorkerSelector(
 		worker_provider = worker_provider_instance,
@@ -97,13 +90,11 @@ def create_application(arguments): # pylint: disable = too-many-locals
 		worker_provider = worker_provider_instance,
 		job_scheduler = job_scheduler_instance,
 		supervisor = supervisor_instance,
-		task_processor = task_processor_instance,
 	)
 
 	# Rapid updates to reduce delays in tests
 	job_scheduler_instance.update_interval_seconds = 1
 	supervisor_instance.update_interval_seconds = 1
-	task_processor_instance.update_interval_seconds = 1
 
 	master_instance.apply_configuration(configuration.configure())
 

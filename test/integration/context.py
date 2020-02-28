@@ -16,7 +16,6 @@ from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.project_provider import ProjectProvider
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.schedule_provider import ScheduleProvider
-from bhamon_orchestra_model.task_provider import TaskProvider
 from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
@@ -55,7 +54,6 @@ class Context: # pylint: disable = too-many-instance-attributes
 			self.project_provider = ProjectProvider(database_client_instance, date_time_provider_instance)
 			self.run_provider = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
 			self.schedule_provider = ScheduleProvider(database_client_instance, date_time_provider_instance)
-			self.task_provider = TaskProvider(database_client_instance, date_time_provider_instance)
 			self.user_provider = UserProvider(database_client_instance, date_time_provider_instance)
 			self.worker_provider = WorkerProvider(database_client_instance, date_time_provider_instance)
 

@@ -13,7 +13,6 @@ import bhamon_orchestra_service.me_controller as me_controller
 import bhamon_orchestra_service.project_controller as project_controller
 import bhamon_orchestra_service.run_controller as run_controller
 import bhamon_orchestra_service.schedule_controller as schedule_controller
-import bhamon_orchestra_service.task_controller as task_controller
 import bhamon_orchestra_service.user_controller as user_controller
 import bhamon_orchestra_service.worker_controller as worker_controller
 
@@ -84,10 +83,6 @@ def register_routes(application): # pylint: disable = too-many-statements
 	add_url_rule(application, "/project/<project_identifier>/repository/revision/<revision_reference>", [ "GET" ], project_controller.get_revision)
 	add_url_rule(application, "/project/<project_identifier>/repository/revision/<revision_reference>/status", [ "GET" ], project_controller.get_revision_status)
 	add_url_rule(application, "/project/<project_identifier>/status", [ "GET" ], project_controller.get_project_status)
-	add_url_rule(application, "/task_count", [ "GET" ], task_controller.get_count)
-	add_url_rule(application, "/task_collection", [ "GET" ], task_controller.get_collection)
-	add_url_rule(application, "/task/<task_identifier>", [ "GET" ], task_controller.get)
-	add_url_rule(application, "/task/<task_identifier>/cancel", [ "POST" ], task_controller.cancel)
 	add_url_rule(application, "/user_count", [ "GET" ], user_controller.get_count)
 	add_url_rule(application, "/user_collection", [ "GET" ], user_controller.get_collection)
 	add_url_rule(application, "/user/<user_identifier>", [ "GET" ], user_controller.get)

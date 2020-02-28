@@ -12,11 +12,11 @@ The project is open source software. See [About](about.md) for more information.
 ## Architecture
 
 A job orchestra setup includes several components:
-* The database, which stores information about workers, jobs, runs, tasks.
-* The master, which executes tasks, distributes runs to workers and retrieves results to be saved in the database.
-* The service, which exposes a web api to retrieve information from the database and to create tasks for the master.
+* The database, which stores information about jobs, runs, workers, etc.
+* The master, which supervises workers, distributes runs and saves results to the database.
+* The service, which exposes a web api to retrieve information from the database and to interact with the master.
 * The website, a web interface on top of the service for it to be usable by end users.
-* The workers, which executes runs assigned to them by the masters and send back results.
+* The workers, which executes runs assigned to them by the master and send back results.
 
 The project is structured with a python package for each component as each one has its own process and can run separately from the others. The model package includes common code, in particular providers for the database.
 

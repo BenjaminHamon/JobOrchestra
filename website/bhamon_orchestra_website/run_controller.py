@@ -29,7 +29,7 @@ def show_collection(project_identifier):
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
 		"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 		"worker_collection": service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
-		"status_collection": helpers.get_status_collection(),
+		"status_collection": helpers.get_run_status_collection(),
 		"run_collection": service_client.get("/project/{project_identifier}/run_collection".format(**locals()), query_parameters),
 		"pagination": pagination,
 	}
