@@ -109,7 +109,6 @@ def register_routes(application): # pylint: disable = too-many-statements
 	add_url_rule(application, "/worker/<worker_identifier>/job_collection", [ "GET" ], worker_controller.get_job_collection)
 	add_url_rule(application, "/worker/<worker_identifier>/run_count", [ "GET" ], worker_controller.get_run_count)
 	add_url_rule(application, "/worker/<worker_identifier>/run_collection", [ "GET" ], worker_controller.get_run_collection)
-	add_url_rule(application, "/worker/<worker_identifier>/tasks", [ "GET" ], worker_controller.get_tasks)
 	add_url_rule(application, "/worker/<worker_identifier>/disconnect", [ "POST" ], worker_controller.disconnect)
 	add_url_rule(application, "/worker/<worker_identifier>/enable", [ "POST" ], worker_controller.enable)
 	add_url_rule(application, "/worker/<worker_identifier>/disable", [ "POST" ], worker_controller.disable)

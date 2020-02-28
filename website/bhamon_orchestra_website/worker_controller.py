@@ -33,7 +33,6 @@ def show(worker_identifier):
 		"project_collection": service_client.get("/project_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 		"job_collection": service_client.get("/worker/{worker_identifier}/job_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 		"run_collection": service_client.get("/worker/{worker_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
-		"task_collection": service_client.get("/worker/{worker_identifier}/tasks".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
 	helpers.add_display_names(view_data["project_collection"], view_data["job_collection"], view_data["run_collection"], [], [ view_data["worker"] ])

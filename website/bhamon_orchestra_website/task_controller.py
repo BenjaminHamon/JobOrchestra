@@ -13,7 +13,6 @@ def show_collection():
 	query_parameters = {
 		"type": helpers.none_if_empty(flask.request.args.get("type", default = None)),
 		"status": helpers.none_if_empty(flask.request.args.get("status", default = None)),
-		"worker": helpers.none_if_empty(flask.request.args.get("worker", default = None)),
 	}
 
 	item_total = service_client.get("/task_count", query_parameters)
