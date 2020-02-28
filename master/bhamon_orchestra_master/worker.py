@@ -172,7 +172,10 @@ class Worker:
 	def _update_status(self, run, status):
 		properties_to_update = [ "status", "start_date", "completion_date" ]
 		self._run_provider.update_status(run, ** { key: value for key, value in status.items() if key in properties_to_update })
-		self._run_provider.update_steps(run, status.get("steps", []))
+
+		step_properties_to_update = [ "name", "index", "status" ]
+		step_collection = [ { key: value for key, value in step.items() if key in step_properties_to_update } for step in status.get("steps", []) ]
+		self._run_provider.update_steps(run, step_collection)
 
 
 	def _update_results(self, run, results):
