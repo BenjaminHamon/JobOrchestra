@@ -17,14 +17,19 @@ def login():
 		return flask.render_template("me/login.html", title = "Log In")
 
 	if flask.request.method == "POST":
+		now = flask.current_app.date_time_provider.now()
 		parameters = { "user": flask.request.form["user"], "password": flask.request.form["password"] }
 
 		try:
 			flask.session["token"] = service_client.post("/me/login", data = parameters)
+			flask.session["user"] = service_client.get("/me")
+			flask.session["last_refresh"] = flask.current_app.date_time_provider.serialize(now)
 			flask.session.permanent = True
 			flask.flash("Login succeeded.", "success")
 			return flask.redirect(flask.url_for("website.home"))
 		except requests.HTTPError as exception:
+			if exception.response.status_code == 403:
+				flask.session.clear()
 			flask.flash("Login failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
 			return flask.render_template("me/login.html", title = "Log In")
 

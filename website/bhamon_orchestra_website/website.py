@@ -37,12 +37,13 @@ def configure(application, title = None, copyright = None, version = None, date 
 	application.jinja_env.filters["describe_cron_expression"] = helpers.describe_cron_expression
 	application.jinja_env.globals["authorize_view"] = authorize_view
 	application.permanent_session_lifetime = datetime.timedelta(days = 7)
+	application.session_refresh_interval = datetime.timedelta(days = 1)
 
 
 def register_handlers(application):
 	application.log_exception = lambda exc_info: None
 	application.before_request(log_request)
-	application.before_request(update_session)
+	application.before_request(refresh_session)
 	application.before_request(authorize_request)
 	for exception in werkzeug.exceptions.default_exceptions:
 		application.register_error_handler(exception, handle_error)
@@ -118,19 +119,23 @@ def log_request():
 	request_logger.info("(%s) %s %s", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url)
 
 
-def update_session():
-	flask.request.user = None
-
+def refresh_session():
 	if "token" in flask.session:
-		try:
-			service_client.post("/me/refresh_session", { "token_identifier": flask.session["token"]["token_identifier"] })
-			flask.request.user = service_client.get("/me")
-			flask.session["user"] = flask.request.user
-		except requests.HTTPError as exception:
-			if exception.response.status_code == 403:
-				flask.session.clear()
-			elif 500 <= exception.response.status_code < 600:
-				flask.request.user = flask.session["user"]
+		now = flask.current_app.date_time_provider.now()
+		last_refresh = flask.session.get("last_refresh", None)
+		if last_refresh is not None:
+			last_refresh = flask.current_app.date_time_provider.deserialize(last_refresh)
+
+		if last_refresh is None or now > last_refresh + flask.current_app.session_refresh_interval:
+			try:
+				service_client.post("/me/refresh_session", { "token_identifier": flask.session["token"]["token_identifier"] })
+				flask.session["user"] = service_client.get("/me")
+				flask.session["last_refresh"] = flask.current_app.date_time_provider.serialize(now)
+			except requests.HTTPError as exception:
+				if exception.response.status_code == 403:
+					flask.session.clear()
+
+	flask.request.user = flask.session.get("user", None)
 
 
 def authorize_request():
