@@ -31,12 +31,13 @@ class WorkerProvider:
 		return self.database_client.find_one(self.table, { "identifier": worker_identifier })
 
 
-	def create(self, worker_identifier: str, owner: str, display_name: str) -> dict:
+	def create(self, worker_identifier: str, owner: str, version: str, display_name: str) -> dict:
 		now = self.date_time_provider.now()
 
 		worker = {
 			"identifier": worker_identifier,
 			"owner": owner,
+			"version": version,
 			"display_name": display_name,
 			"properties": {},
 			"is_enabled": True,
@@ -65,10 +66,11 @@ class WorkerProvider:
 		self.database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)
 
 
-	def update_properties(self, worker: dict, display_name: str, properties: dict) -> None:
+	def update_properties(self, worker: dict, version: str, display_name: str, properties: dict) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
+			"version": version,
 			"display_name": display_name,
 			"properties": properties,
 			"update_date": self.date_time_provider.serialize(now),

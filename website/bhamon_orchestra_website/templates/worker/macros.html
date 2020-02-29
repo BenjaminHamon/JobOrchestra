@@ -8,6 +8,7 @@
 			{% if authorize_view("worker-actions") %}
 			<th>Actions</th>
 			{% endif %}
+			<th>Version</th>
 			<th>Update date</th>
 		</tr>
 	</thead>
@@ -61,6 +62,7 @@
 				</form>
 			</td>
 			{% endif %}
+			<td>{{ worker['version'] }}</td>
 			<td>{{ worker['update_date'] }}</td>
 		</tr>
 		{% endfor %}

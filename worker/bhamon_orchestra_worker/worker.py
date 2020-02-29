@@ -12,6 +12,8 @@ from bhamon_orchestra_worker.synchronization import Synchronization
 import bhamon_orchestra_worker.worker_logging as worker_logging
 import bhamon_orchestra_worker.worker_storage as worker_storage
 
+import bhamon_orchestra_worker
+
 
 logger = logging.getLogger("Worker")
 
@@ -96,7 +98,13 @@ class Worker: # pylint: disable = too-many-instance-attributes
 	async def _run_messenger(self):
 		websocket_client_instance = WebSocketClient("master", self._master_uri)
 		authentication_data = base64.b64encode(b"%s:%s" % (self._user.encode(), self._secret.encode())).decode()
-		headers = { "Authorization": "Basic" + " " + authentication_data, "X-Orchestra-Worker": self._identifier }
+
+		headers = {
+			"Authorization": "Basic" + " " + authentication_data,
+		 	"X-Orchestra-Worker": self._identifier,
+			"X-Orchestra-Version": bhamon_orchestra_worker.__version__,
+		}
+
 		await websocket_client_instance.run_forever(self._process_connection, extra_headers = headers)
 
 
@@ -152,7 +160,11 @@ class Worker: # pylint: disable = too-many-instance-attributes
 
 
 	def _describe(self):
-		return { "display_name": self._display_name, "properties": self._properties }
+		return {
+			"version": bhamon_orchestra_worker.__version__,
+			"display_name": self._display_name,
+			"properties": self._properties,
+		}
 
 
 	def _recover(self):
