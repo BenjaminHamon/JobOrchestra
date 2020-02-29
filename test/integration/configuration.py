@@ -116,10 +116,12 @@ def exception():
 
 
 def controller_success():
-	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
-	controller_script += [ "--service-url", "{environment[orchestra_service_url]}", ]
-	controller_script += [ "--authentication", "{environment[orchestra_worker_authentication]}" ]
-	controller_script += [ "--results", "{result_file_path}" ]
+	controller_entry_point = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
+	controller_entry_point += [ "--service-url", "{environment[orchestra_service_url]}", ]
+	controller_entry_point += [ "--authentication", "{environment[orchestra_worker_authentication]}" ]
+	controller_entry_point += [ "--results", "{result_file_path}" ]
+
+	trigger_source_parameters = [ "--source-project", "{project_identifier}", "--source-run", "{run_identifier}" ]
 
 	return {
 		"identifier": "controller_success",
@@ -134,18 +136,20 @@ def controller_success():
 		"parameters": [],
 
 		"steps": [
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "success" ] },
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "success" ] },
-			{ "name": "wait", "command": controller_script + [ "wait" ] },
+			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters },
+			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters },
+			{ "name": "wait", "command": controller_entry_point + [ "wait" ] },
 		],
 	}
 
 
 def controller_failure():
-	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
-	controller_script += [ "--service-url", "{environment[orchestra_service_url]}", ]
-	controller_script += [ "--authentication", "{environment[orchestra_worker_authentication]}" ]
-	controller_script += [ "--results", "{result_file_path}" ]
+	controller_entry_point = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
+	controller_entry_point += [ "--service-url", "{environment[orchestra_service_url]}", ]
+	controller_entry_point += [ "--authentication", "{environment[orchestra_worker_authentication]}" ]
+	controller_entry_point += [ "--results", "{result_file_path}" ]
+
+	trigger_source_parameters = [ "--source-project", "{project_identifier}", "--source-run", "{run_identifier}" ]
 
 	return {
 		"identifier": "controller_failure",
@@ -160,8 +164,8 @@ def controller_failure():
 		"parameters": [],
 
 		"steps": [
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "success" ] },
-			{ "name": "trigger", "command": controller_script + [ "trigger", "examples", "failure" ] },
-			{ "name": "wait", "command": controller_script + [ "wait" ] },
+			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters },
+			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "failure" ] + trigger_source_parameters },
+			{ "name": "wait", "command": controller_entry_point + [ "wait" ] },
 		],
 	}

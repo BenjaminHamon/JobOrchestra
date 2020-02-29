@@ -45,11 +45,11 @@ def show(project_identifier, job_identifier): # pylint: disable = unused-argumen
 
 
 def trigger(project_identifier, job_identifier): # pylint: disable = unused-argument
-	parameters = {}
+	trigger_data = { "parameters": {}, "source": { "type": "user", "identifier": flask.session["user"]["identifier"] } }
 	for key, value in flask.request.form.items():
 		if key.startswith("parameter-"):
-			parameters[key[len("parameter-"):]] = value
-	service_client.post("/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals()), parameters)
+			trigger_data["parameters"][key[len("parameter-"):]] = value
+	service_client.post("/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals()), trigger_data)
 	return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection", project_identifier = project_identifier))
 
 

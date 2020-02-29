@@ -39,8 +39,10 @@ def parse_arguments():
 	subparsers.required = True
 
 	command_parser = subparsers.add_parser("trigger", help = "trigger a run")
-	command_parser.add_argument("project_identifier", help = "set the project to trigger a run for")
-	command_parser.add_argument("job_identifier", help = "set the job to trigger a run for")
+	command_parser.add_argument("--project", required = True, help = "set the project to trigger a run for")
+	command_parser.add_argument("--job", required = True, help = "set the job to trigger a run for")
+	command_parser.add_argument("--source-project", required = True, help = "set the project serving as the trigger source")
+	command_parser.add_argument("--source-run", required = True, help = "set the run serving as the trigger source")
 	command_parser.add_argument("--parameters", nargs = "*", type = parse_key_value_parameter, default = [],
 		metavar = "<key=value>", help = "set parameters for the job")
 	command_parser.set_defaults(func = trigger_run)
@@ -56,7 +58,7 @@ def parse_arguments():
 
 
 def trigger_run(controller_instance, arguments):
-	controller_instance.trigger_run(arguments.results, arguments.project_identifier, arguments.job_identifier, arguments.parameters)
+	controller_instance.trigger_run(arguments.results, arguments.project, arguments.job, arguments.parameters, arguments.source_project, arguments.source_run)
 
 
 def wait_run(controller_instance, arguments):

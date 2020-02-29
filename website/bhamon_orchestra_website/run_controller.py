@@ -40,23 +40,33 @@ def show_collection(project_identifier):
 
 
 def show(project_identifier, run_identifier): # pylint: disable = unused-argument
-	view_data = {
-		"project": service_client.get("/project/{project_identifier}".format(**locals())),
-		"run": service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals())),
-		"run_steps": service_client.get("/project/{project_identifier}/run/{run_identifier}/step_collection".format(**locals())),
-		"run_results": service_client.get("/project/{project_identifier}/run/{run_identifier}/results".format(**locals())),
-	}
+	project = service_client.get("/project/{project_identifier}".format(**locals()))
+	run = service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals()))
+	run_steps = service_client.get("/project/{project_identifier}/run/{run_identifier}/step_collection".format(**locals()))
+	run_results = service_client.get("/project/{project_identifier}/run/{run_identifier}/results".format(**locals()))
 
-	view_data["run"]["project_display_name"] = view_data["project"]["display_name"]
+	run["project_display_name"] = project["display_name"]
 
-	job_route = "/project/{project_identifier}/job/{job_identifier}".format(project_identifier = project_identifier, job_identifier = view_data["run"]["job"])
+	job_route = "/project/{project}/job/{job}".format(project = project_identifier, job = run["job"])
 	job = service_client.get_or_default(job_route, default_value = {})
-	view_data["run"]["job_display_name"] = job.get("display_name", view_data["run"]["job"])
+	run["job_display_name"] = job.get("display_name", run["job"])
 
-	if view_data["run"]["worker"] is not None:
-		worker_route = "/worker/{worker_identifier}".format(worker_identifier = view_data["run"]["worker"])
+	if run.get("source", None) is not None:
+		if run["source"]["type"] == "schedule":
+			schedule_route = "/project/{project}/schedule/{schedule}".format(project = project_identifier, schedule = run["source"]["identifier"])
+			schedule = service_client.get_or_default(schedule_route, default_value = {})
+			run["source"]["display_name"] = schedule.get("display_name", run["source"]["identifier"])
+		if run["source"]["type"] == "user":
+			user_route = "/user/{user}".format(user = run["source"]["identifier"])
+			user = service_client.get_or_default(user_route, default_value = {})
+			run["source"]["display_name"] = user.get("display_name", run["source"]["identifier"])
+
+	if run["worker"] is not None:
+		worker_route = "/worker/{worker}".format(worker = run["worker"])
 		worker = service_client.get_or_default(worker_route, default_value = {})
-		view_data["run"]["worker_display_name"] = worker.get("display_name", view_data["run"]["worker"])
+		run["worker_display_name"] = worker.get("display_name", run["worker"])
+
+	view_data = { "project": project, "run": run, "run_steps": run_steps, "run_results": run_results }
 
 	return flask.render_template("run/index.html", title = "Run " + run_identifier[:18], **view_data)
 

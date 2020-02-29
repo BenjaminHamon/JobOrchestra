@@ -21,10 +21,12 @@ class Controller:
 		self.wait_delay_seconds = 10
 
 
-	def trigger_run(self, result_file_path, project_identifier, job_identifier, parameters): # pylint: disable = unused-argument
+	def trigger_run(self, # pylint: disable = too-many-arguments
+			result_file_path, project_identifier, job_identifier, parameters, source_project_identifier, source_run_identifier): # pylint: disable = unused-argument
 		message = "Triggering run for job %s" % job_identifier
 		route = "/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals())
-		response = self._try_request(message, lambda: self._service_post(route, data = parameters))
+		trigger_data = { "parameters": parameters, "source": { "type": "run", "project": source_project_identifier, "identifier": source_run_identifier } }
+		response = self._try_request(message, lambda: self._service_post(route, data = trigger_data))
 		logger.info("Run: %s", response["run_identifier"])
 
 		results = workspace.load_results(result_file_path)

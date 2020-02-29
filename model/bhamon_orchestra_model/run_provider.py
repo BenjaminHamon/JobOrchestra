@@ -54,7 +54,7 @@ class RunProvider:
 		return self.convert_to_public(run) if run is not None else None
 
 
-	def create(self, project: str, job: str, parameters: dict) -> dict:
+	def create(self, project: str, job: str, parameters: dict, source: dict) -> dict:
 		now = self.date_time_provider.now()
 
 		run = {
@@ -62,6 +62,7 @@ class RunProvider:
 			"project": project,
 			"job": job,
 			"parameters": parameters,
+			"source": source,
 			"status": "pending",
 			"worker": None,
 			"creation_date": self.date_time_provider.serialize(now),
@@ -185,7 +186,7 @@ class RunProvider:
 
 	def convert_to_public(self, run: dict) -> dict: # pylint: disable = no-self-use
 		keys_to_return = [
-			"identifier", "project", "job", "worker", "parameters", "status",
+			"identifier", "project", "job", "worker", "parameters", "source", "status",
 			"start_date", "completion_date", "should_cancel", "should_abort", "creation_date", "update_date",
 		]
 

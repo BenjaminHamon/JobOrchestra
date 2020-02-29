@@ -42,7 +42,8 @@ class JobScheduler:
 		for schedule in all_active_schedules:
 			if self._should_schedule_trigger(schedule, now):
 				logger.info("Triggering run for schedule '%s'", schedule["identifier"])
-				run = self._run_provider.create(schedule["project"], schedule["job"], schedule["parameters"])
+				source = { "type": "schedule", "identifier": schedule["identifier"] }
+				run = self._run_provider.create(schedule["project"], schedule["job"], schedule["parameters"], source)
 				self._schedule_provider.update_status(schedule, last_run = run["identifier"])
 
 		all_pending_runs = self._list_pending_runs()

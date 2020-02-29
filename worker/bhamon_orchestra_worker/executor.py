@@ -158,6 +158,9 @@ class Executor: # pylint: disable = too-few-public-methods
 				results = json.load(result_file)
 
 		format_parameters = {
+			"project_identifier": self._run_status["project_identifier"],
+			"job_identifier": self._run_status["job_identifier"],
+			"run_identifier": self._run_status["run_identifier"],
 			"environment": self._run_status["environment"],
 			"parameters": self._run_status["parameters"],
 			"results": results,

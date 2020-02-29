@@ -27,6 +27,15 @@
 	<ul>
 		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}">{{ run['project_display_name'] }}</a></li>
 		<li>Job: <a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}">{{ run['job_display_name'] }}</a></li>
+		{% if 'source' in run %}
+			{% if run['source']['type'] == 'run' %}
+		<li>Source: run <a href="{{ url_for('run_controller.show', project_identifier = run['source']['project'], run_identifier = run['source']['identifier']) }}">{{ run['source']['identifier'] }}</a></li>
+			{% elif run['source']['type'] == 'schedule' %}
+		<li>Source: schedule <a href="{{ url_for('schedule_controller.show', project_identifier = run['project'], schedule_identifier = run['source']['identifier']) }}">{{ run['source']['display_name'] }}</a></li>
+			{% elif run['source']['type'] == 'user' %}
+		<li>Source: user <a href="{{ url_for('user_controller.show', user_identifier = run['source']['identifier']) }}">{{ run['source']['display_name'] }}</a></li>
+			{% endif %}
+		{% endif %}
 		<li>Worker: {% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker_display_name'] }}</a>{% endif %}</li>
 		<li>Creation date: {{ run['creation_date'] }}</li>
 		<li>Update date: {{ run['update_date'] }}</li>
@@ -101,8 +110,8 @@
 			<ul>
 				{% for child_run in run_results['child_runs'] %}
 				<li>
-					<a href="{{ url_for('run_controller.show', project_identifier = run['project'], run_identifier = child_run['run_identifier']) }}">
-						{{ child_run['job_identifier'] }} {{ child_run['run_identifier'] }}
+					<a href="{{ url_for('run_controller.show', project_identifier = child_run['project_identifier'], run_identifier = child_run['run_identifier']) }}">
+						{{ child_run['run_identifier'] }}
 					</a>
 				</li>
 				{% endfor %}

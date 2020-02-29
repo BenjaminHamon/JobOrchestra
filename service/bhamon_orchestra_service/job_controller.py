@@ -43,9 +43,9 @@ def get_runs(project_identifier, job_identifier):
 
 
 def trigger(project_identifier, job_identifier):
-	parameters = flask.request.get_json()
+	trigger_data = flask.request.get_json()
 	job = flask.current_app.job_provider.get(project_identifier, job_identifier)
-	run = flask.current_app.run_provider.create(job["project"], job_identifier, parameters)
+	run = flask.current_app.run_provider.create(job["project"], job_identifier, **trigger_data)
 	return flask.jsonify({ "project_identifier": project_identifier, "job_identifier": job_identifier, "run_identifier": run["identifier"] })
 
 

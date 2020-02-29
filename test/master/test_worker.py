@@ -77,7 +77,7 @@ async def test_process_success():
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "project": "examples", "identifier": "empty" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {})
+	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -147,7 +147,7 @@ async def test_process_abort():
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "project": "examples", "identifier": "empty" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {})
+	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -224,7 +224,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "project": "examples", "identifier": "empty" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {})
+	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -315,7 +315,7 @@ async def test_process_recovery_after_execution():
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
 
 	job = { "project": "examples", "identifier": "empty" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {})
+	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0

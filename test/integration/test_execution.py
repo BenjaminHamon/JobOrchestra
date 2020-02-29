@@ -22,7 +22,7 @@ def test_job_success(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
 
 		time.sleep(5)
 
@@ -67,7 +67,7 @@ def test_job_failure(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
 
 		time.sleep(5)
 
@@ -112,7 +112,7 @@ def test_job_exception(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
 
 		time.sleep(5)
 
@@ -155,7 +155,7 @@ def test_run_cancel(tmpdir, database_type):
 	with context.Context(tmpdir, database_type) as context_instance:
 		master_process = context_instance.invoke_master()
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
 		context_instance.run_provider.update_status(run, should_cancel = True)
 
 		time.sleep(1)
@@ -188,7 +188,7 @@ def test_run_abort(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
 		context_instance.run_provider.update_status(run, should_abort = True)
 
 		time.sleep(5)
@@ -238,7 +238,7 @@ def test_job_controller_success(tmpdir, database_type):
 		worker_01_process = context_instance.invoke_worker("worker_01")
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
 
 		time.sleep(10)
 
@@ -291,7 +291,7 @@ def test_job_controller_failure(tmpdir, database_type):
 		worker_01_process = context_instance.invoke_worker("worker_01")
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {})
+		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
 
 		time.sleep(10)
 
