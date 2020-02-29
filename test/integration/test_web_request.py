@@ -50,7 +50,7 @@ def test_service_routes(tmpdir, database_type):
 		run = context_instance.run_provider.create("examples", "empty", {})
 		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 		worker = context_instance.worker_provider.create("worker", None, "Worker")
-		user = context_instance.user_provider.create("user", "user")
+		user = context_instance.user_provider.create("guest", "Guest")
 
 		service_process = context_instance.invoke_service()
 
@@ -136,7 +136,7 @@ def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-loca
 		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 		worker = context_instance.worker_provider.create("worker", None, "Worker")
 		context_instance.run_provider.update_status(run, worker = worker["identifier"])
-		user = context_instance.user_provider.create("user", "user")
+		user = context_instance.user_provider.create("guest", "Guest")
 
 		service_process = context_instance.invoke_service()
 		website_process = context_instance.invoke_website()

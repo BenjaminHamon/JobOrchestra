@@ -30,17 +30,20 @@ def show_collection():
 
 def show(user_identifier): # pylint: disable = unused-argument
 	user = service_client.get("/user/{user_identifier}".format(**locals()))
-	user_tokens = service_client.get("/user/{user_identifier}/token_collection".format(**locals()), { "order_by": [ "update_date descending" ] })
-	user_tokens.sort(key = lambda token: "expiration_date" in token)
-
-	now = flask.current_app.date_time_provider.serialize(flask.current_app.date_time_provider.now())
-	for token in user_tokens:
-		token["is_active"] = token["expiration_date"] > now if "expiration_date" in token else True
 
 	view_data = {
 		"user": user,
-		"user_tokens": user_tokens,
 	}
+
+	if flask.current_app.authorization_provider.authorize_view(flask.request.user, "user-security"):
+		user_tokens = service_client.get("/user/{user_identifier}/token_collection".format(**locals()), { "order_by": [ "update_date descending" ] })
+		user_tokens.sort(key = lambda token: "expiration_date" in token)
+
+		now = flask.current_app.date_time_provider.serialize(flask.current_app.date_time_provider.now())
+		for token in user_tokens:
+			token["is_active"] = token["expiration_date"] > now if "expiration_date" in token else True
+
+		view_data["user_tokens"] = user_tokens
 
 	return flask.render_template("user/index.html", title = "User " + user["display_name"], **view_data)
 

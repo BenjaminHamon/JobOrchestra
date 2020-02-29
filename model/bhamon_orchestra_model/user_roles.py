@@ -112,6 +112,8 @@ class Viewer:
 				return True
 			if route.startswith("/project/"):
 				return True
+			if route in [ "/user_collection", "/user_count", "/user/<user_identifier>" ]:
+				return True
 			if route in [ "/worker_collection", "/worker_count" ]:
 				return True
 			if route.startswith("/worker/"):

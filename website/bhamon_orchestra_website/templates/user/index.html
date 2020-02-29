@@ -7,11 +7,13 @@
 
 {{ shared_macros.flash_messages() }}
 
+{% if authorize_view("user-actions") %}
 <section>
 	<div class="link-group">
 		<a href="{{ url_for('user_controller.edit', user_identifier = user['identifier']) }}">Edit</a>
 	</div>
 </section>
+{% endif %}
 
 <section>
 	<h2>Identity</h2>
@@ -32,23 +34,27 @@
 
 <section>
 	<h2>Status</h2>
-	<div class=status-grid>
+	<div class="status-grid {{ '' if authorize_view('user-actions') else 'readonly' }}">
 		{% if user['is_enabled'] %}
 		<div class="status-group">
 			<div class="status-indicator enabled"></div>
 			<div class="status-text">Enabled</div>
 		</div>
+			{% if authorize_view("user-actions") %}
 		<form method="post">
 			<button formaction="{{ url_for('user_controller.disable', user_identifier = user['identifier']) }}">Disable</button>
 		</form>
+			{% endif %}
 		{% else %}
 		<div class="status-group">
 			<div class="status-indicator disabled"></div>
 			<div class="status-text">Disabled</div>
 		</div>
+			{% if authorize_view("user-actions") %}
 		<form method="post">
 			<button formaction="{{ url_for('user_controller.enable', user_identifier = user['identifier']) }}">Enable</button>
 		</form>
+			{% endif %}
 		{% endif %}
 	</div>
 	<ul>
@@ -57,12 +63,16 @@
 	</ul>
 </section>
 
+{% if authorize_view("user-security") %}
 <section>
 	<h2>Security</h2>
+	{% if authorize_view("user-actions") %}
 	<div class="link-group">
 		<a href="{{ url_for('user_controller.reset_password', user_identifier = user['identifier']) }}">Reset password</a>
 		<a href="{{ url_for('user_controller.create_token', user_identifier = user['identifier']) }}">Create token</a>
 	</div>
+	{% endif %}
 	{{ user_macros.user_token_table(user_tokens) }}
 </section>
+{% endif %}
 {% endblock %}
