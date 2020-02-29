@@ -1,6 +1,5 @@
 {% extends 'layout.html' %}
 {% import 'run/macros.html' as run_macros %}
-{% import 'task/macros.html' as task_macros %}
 
 {% block content %}
 <h1>Worker <a href="{{ url_for('worker_controller.show', worker_identifier = worker['identifier']) }}">{{ worker['display_name'] }}</a></h1>
@@ -15,7 +14,11 @@
 		</div>
 			{% if authorize_view("worker-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('worker_controller.stop', worker_identifier = worker['identifier']) }}">Stop</button>
+				{% if worker.get('should_disconnect', false) %}
+			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}" disabled>Disconnecting</button>
+				{% else %}
+			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}">Disconnect</button>
+				{% endif %}
 		</form>
 			{% endif %}
 		{% else %}
@@ -25,7 +28,7 @@
 		</div>
 			{% if authorize_view("worker-actions") %}
 		<form method="post">
-			<button formaction="{{ url_for('worker_controller.stop', worker_identifier = worker['identifier']) }}" disabled>Stop</button>
+			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}" disabled>Disconnect</button>
 		</form>
 			{% endif %}
 		{% endif %}
@@ -56,10 +59,5 @@
 <section>
 	<h2><a href="{{ url_for('worker_controller.show_runs', worker_identifier = worker['identifier']) }}" title="View all runs">Runs</a></h2>
 	{{ run_macros.run_table(run_collection) }}
-</section>
-
-<section>
-	<h2><a href="{{ url_for('task_controller.show_collection', worker = worker['identifier']) }}" title="View all tasks">Tasks</a></h2>
-	{{ task_macros.task_table(task_collection) }}
 </section>
 {% endblock %}

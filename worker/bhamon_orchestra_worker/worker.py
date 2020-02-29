@@ -148,8 +148,6 @@ class Worker: # pylint: disable = too-many-instance-attributes
 			return self._retrieve_request(**parameters)
 		if command == "resynchronize":
 			return self._resynchronize(**parameters)
-		if command == "shutdown":
-			return self._request_shutdown()
 		raise ValueError("Unknown command '%s'" % command)
 
 
@@ -217,12 +215,6 @@ class Worker: # pylint: disable = too-many-instance-attributes
 			if executor.run_identifier == run_identifier:
 				return executor
 		raise KeyError("Executor not found for %s" % run_identifier)
-
-
-	def _request_shutdown(self):
-		if len(self._active_executors) > 0:
-			raise RuntimeError("Executors are still running")
-		self._shutdown()
 
 
 	def _shutdown(self):

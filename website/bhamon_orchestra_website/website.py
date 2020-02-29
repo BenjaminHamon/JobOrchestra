@@ -94,7 +94,7 @@ def register_routes(application):
 	add_url_rule(application, "/worker_collection", [ "GET" ], worker_controller.show_collection)
 	add_url_rule(application, "/worker/<worker_identifier>", [ "GET" ], worker_controller.show)
 	add_url_rule(application, "/worker/<worker_identifier>/runs", [ "GET" ], worker_controller.show_runs)
-	add_url_rule(application, "/worker/<worker_identifier>/stop", [ "POST" ], worker_controller.stop)
+	add_url_rule(application, "/worker/<worker_identifier>/disconnect", [ "POST" ], worker_controller.disconnect)
 	add_url_rule(application, "/worker/<worker_identifier>/enable", [ "POST" ], worker_controller.enable)
 	add_url_rule(application, "/worker/<worker_identifier>/disable", [ "POST" ], worker_controller.disable)
 	add_url_rule(application, "/service_proxy", [ "GET", "POST" ], proxy_to_service, defaults = { "route": "" })

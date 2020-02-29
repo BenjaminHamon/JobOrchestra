@@ -49,12 +49,13 @@ class WorkerProvider:
 		return worker
 
 
-	def update_status(self, worker: dict, is_active: Optional[bool] = None, is_enabled: Optional[bool] = None) -> None:
+	def update_status(self, worker: dict, is_active: Optional[bool] = None, is_enabled: Optional[bool] = None, should_disconnect: Optional[bool] = None) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
 			"is_active": is_active,
 			"is_enabled": is_enabled,
+			"should_disconnect": should_disconnect,
 			"update_date": self.date_time_provider.serialize(now),
 		}
 

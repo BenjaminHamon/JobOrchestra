@@ -23,17 +23,24 @@ class Supervisor:
 		self._protocol_factory = protocol_factory
 
 		self._active_workers = {}
+		self.update_interval_seconds = 10
 
 
 	async def run_server(self):
 		for worker_record in self._worker_provider.get_list():
 			if worker_record["is_active"]:
-				self._worker_provider.update_status(worker_record, is_active = False)
+				self._worker_provider.update_status(worker_record, is_active = False, should_disconnect = False)
 
 		logger.info("Listening for workers on '%s:%s'", self._host, self._port)
 		async with websockets.serve(self._process_connection, self._host, self._port, create_protocol = self._protocol_factory, max_size = 2 ** 30):
 			while True:
-				await asyncio.sleep(1)
+				try:
+					await asyncio.gather(self.update(), asyncio.sleep(self.update_interval_seconds))
+				except asyncio.CancelledError: # pylint: disable = try-except-raise
+					raise
+				except Exception: # pylint: disable = broad-except
+					logger.error("Unhandled exception", exc_info = True)
+					await asyncio.sleep(self.update_interval_seconds)
 
 
 	def get_worker(self, worker_identifier):
@@ -45,17 +52,22 @@ class Supervisor:
 			return False
 
 		worker_record = self._worker_provider.get(worker_identifier)
-		worker_instance = self._active_workers[worker_identifier]
-
-		return worker_record["is_enabled"] and not worker_instance.should_shutdown
+		return worker_record["is_enabled"] and not worker_record.get("should_disconnect", False)
 
 
-	def stop_worker(self, worker_identifier):
-		if not worker_identifier in self._active_workers:
-			return False
-		logger.info("Flagging worker %s for shutdown", worker_identifier)
-		self._active_workers[worker_identifier].should_shutdown = True
-		return True
+	async def update(self):
+		all_worker_records = self._list_workers()
+
+		for worker_record in all_worker_records:
+			worker_instance = self._active_workers[worker_record["identifier"]]
+			if worker_record.get("should_disconnect", False):
+				worker_instance.should_disconnect = True
+
+
+	def _list_workers(self):
+		all_workers = self._worker_provider.get_list()
+		all_workers = [ worker for worker in all_workers if worker["identifier"] in self._active_workers ]
+		return all_workers
 
 
 	async def _process_connection(self, connection, path): # pylint: disable = unused-argument
@@ -105,7 +117,7 @@ class Supervisor:
 		worker_record = self._register_worker(worker_identifier, user, worker_properties["display_name"], worker_properties["properties"])
 		worker_instance = self._instantiate_worker(worker_identifier, messenger_instance)
 
-		self._worker_provider.update_status(worker_record, is_active = True)
+		self._worker_provider.update_status(worker_record, is_active = True, should_disconnect = False)
 		self._active_workers[worker_identifier] = worker_instance
 
 		try:
@@ -114,7 +126,7 @@ class Supervisor:
 
 		finally:
 			del self._active_workers[worker_identifier]
-			self._worker_provider.update_status(worker_record, is_active = False)
+			self._worker_provider.update_status(worker_record, is_active = False, should_disconnect = False)
 
 
 	def _register_worker(self, worker_identifier, owner, display_name, properties):

@@ -17,7 +17,7 @@ class Worker:
 		self._messenger = messenger
 		self._run_provider = run_provider
 
-		self.should_shutdown = False
+		self.should_disconnect = False
 		self.executors = []
 
 
@@ -41,7 +41,7 @@ class Worker:
 		except Exception: # pylint: disable = broad-except
 			logger.error("(%s) Unhandled exception while recovering runs", self.identifier, exc_info = True)
 
-		while not self.should_shutdown or len(self.executors) > 0:
+		while not self.should_disconnect:
 			all_executors = list(self.executors)
 			for executor in all_executors:
 				try:
@@ -56,9 +56,6 @@ class Worker:
 					self.executors.remove(executor)
 
 			await asyncio.sleep(0.1)
-
-		if self.should_shutdown and len(self.executors) == 0:
-			await self._execute_remote_command("shutdown")
 
 
 	async def _execute_remote_command(self, command, parameters = None):
@@ -172,7 +169,10 @@ class Worker:
 	def _update_status(self, run, status):
 		properties_to_update = [ "status", "start_date", "completion_date" ]
 		self._run_provider.update_status(run, ** { key: value for key, value in status.items() if key in properties_to_update })
-		self._run_provider.update_steps(run, status.get("steps", []))
+
+		step_properties_to_update = [ "name", "index", "status" ]
+		step_collection = [ { key: value for key, value in step.items() if key in step_properties_to_update } for step in status.get("steps", []) ]
+		self._run_provider.update_steps(run, step_collection)
 
 
 	def _update_results(self, run, results):

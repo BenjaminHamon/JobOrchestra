@@ -86,8 +86,6 @@ class Master:
 	def register_default_tasks(self):
 		self._task_processor.register_handler("reload_configuration", 20,
 			lambda parameters: reload_configuration(self))
-		self._task_processor.register_handler("stop_worker", 50,
-			lambda parameters: stop_worker(self._supervisor, **parameters))
 
 
 	def reload_configuration(self):
@@ -126,8 +124,3 @@ class Master:
 def reload_configuration(master):
 	master.reload_configuration()
 	return "succeeded"
-
-
-def stop_worker(supervisor, worker_identifier):
-	was_stopped = supervisor.stop_worker(worker_identifier)
-	return "succeeded" if was_stopped else "failed"
