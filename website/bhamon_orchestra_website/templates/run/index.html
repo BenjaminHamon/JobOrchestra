@@ -25,9 +25,9 @@
 		{% endif %}
 	</div>
 	<ul>
-		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}" style="display: inline">{{ run['project_display_name'] }}</a></li>
-		<li>Job: <a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}" style="display: inline">{{ run['job_display_name'] }}</a></li>
-		<li>Worker: {% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}" style="display: inline">{{ run['worker_display_name'] }}</a>{% endif %}</li>
+		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}">{{ run['project_display_name'] }}</a></li>
+		<li>Job: <a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}">{{ run['job_display_name'] }}</a></li>
+		<li>Worker: {% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker_display_name'] }}</a>{% endif %}</li>
 		<li>Creation date: {{ run['creation_date'] }}</li>
 		<li>Update date: {{ run['update_date'] }}</li>
 		<li>Start date: {% if 'start_date' in run %}{{ run['start_date'] }}{% endif %}</li>
@@ -84,7 +84,7 @@
 			<ul>
 				<li>
 					<span>
-						<a href="{{ run_results['revision_control']['url'] }}" style="display: inline">
+						<a href="{{ run_results['revision_control']['url'] }}">
 							{{ run_results['revision_control']['revision'] }}
 						</a>
 					</span>
