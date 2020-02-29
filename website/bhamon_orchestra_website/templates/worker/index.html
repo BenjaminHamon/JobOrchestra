@@ -54,6 +54,11 @@
 			{% endif %}
 		{% endif %}
 	</div>
+	<ul>
+		<li>Owner: <a href="{{ url_for('user_controller.show', user_identifier = worker['owner']) }}">{{ worker['owner_display_name'] }}</a></li>
+		<li>Creation date: {{ worker['creation_date'] }}</li>
+		<li>Update date: {{ worker['update_date'] }}</li>
+	</ul>
 </section>
 
 <section>

@@ -35,6 +35,9 @@ def show(worker_identifier):
 		"run_collection": service_client.get("/worker/{worker_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
+	owner = service_client.get("/user/{user_identifier}".format(user_identifier = view_data["worker"]["owner"]))
+	view_data["worker"]["owner_display_name"] = owner["display_name"]
+
 	helpers.add_display_names(view_data["project_collection"], view_data["job_collection"], view_data["run_collection"], [], [ view_data["worker"] ])
 
 	return flask.render_template("worker/index.html", title = "Worker " + worker_identifier, **view_data)
