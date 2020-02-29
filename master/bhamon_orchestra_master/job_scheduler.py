@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 
 import pycron
@@ -19,6 +20,7 @@ class JobScheduler:
 		self._schedule_provider = schedule_provider
 		self._worker_selector = worker_selector
 		self.update_interval_seconds = 10
+		self.run_expiration = datetime.timedelta(days = 1)
 
 
 	async def run(self):
@@ -33,7 +35,7 @@ class JobScheduler:
 
 
 	async def update(self):
-		now = self._date_time_provider.now().replace(second = 0)
+		now = self._date_time_provider.now()
 
 		all_active_schedules = self._list_active_schedules()
 
@@ -46,7 +48,8 @@ class JobScheduler:
 		all_pending_runs = self._list_pending_runs()
 
 		for run in all_pending_runs:
-			if run.get("should_cancel", False):
+			creation_date = self._date_time_provider.deserialize(run["creation_date"])
+			if run.get("should_cancel", False) or now > creation_date + self.run_expiration:
 				logger.info("Cancelling run '%s'", run["identifier"])
 				self._run_provider.update_status(run, status = "cancelled")
 				continue
@@ -81,6 +84,7 @@ class JobScheduler:
 
 
 	def _should_schedule_trigger(self, schedule, now):
+		now = now.replace(second = 0)
 		if not pycron.is_now(schedule["expression"], now):
 			return False
 
