@@ -26,11 +26,15 @@ def show_collection():
 def show(project_identifier): # pylint: disable = unused-argument
 	view_data = {
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
-		"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 10, "order_by": [ "identifier ascending" ] }),
 		"run_collection": service_client.get("/project/{project_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
-		"schedule_collection": service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+		"schedule_collection": service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), { "limit": 10, "order_by": [ "identifier ascending" ] }),
 		"worker_collection": service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 	}
+
+	if "revision_control" in view_data["project"]["services"]:
+		repository = service_client.get("/project/{project_identifier}/repository".format(**locals())) # pylint: disable = possibly-unused-variable
+		view_data["revision_collection"] = [ service_client.get("/project/{project_identifier}/repository/revision/{repository[default_branch]}/status".format(**locals())) ]
 
 	helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], view_data["run_collection"], view_data["schedule_collection"], view_data["worker_collection"])
 
@@ -43,7 +47,7 @@ def show_status(project_identifier): # pylint: disable = unused-argument
 
 	project = service_client.get("/project/{project_identifier}".format(**locals()))
 	repository = service_client.get("/project/{project_identifier}/repository".format(**locals()))
-	branch_collection = service_client.get("/project/{project_identifier}/branches".format(**locals()))
+	branch_collection = service_client.get("/project/{project_identifier}/repository/branch_collection".format(**locals()))
 	job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
 	context = { "filter_collection": [ { "identifier": job["identifier"], "display_name": job["display_name"], "job": job["identifier"] } for job in job_collection ] }
 
@@ -57,7 +61,7 @@ def show_status(project_identifier): # pylint: disable = unused-argument
 	}
 
 	status = service_client.get("/project/{project_identifier}/status".format(**locals()), status_parameters)
-	status = [ revision for revision in status if len(revision["runs"]) > 0 ][ : status_limit ]
+	status = [ revision for index, revision in enumerate(status) if index == 0 or len(revision["runs"]) > 0 ][ : status_limit ]
 
 	for revision in status:
 		revision["runs_by_filter"] = { f["identifier"]: [] for f in context["filter_collection"] }

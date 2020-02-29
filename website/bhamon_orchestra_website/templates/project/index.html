@@ -6,6 +6,35 @@
 {% block content %}
 <h1>Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a></h1>
 
+{% if 'revision_control' in project['services'] %}
+<section>
+	<h2><a href="{{ url_for('project_controller.show_status', project_identifier = project['identifier']) }}" title="View project status">Status</a></h2>
+	<table>
+		<thead>
+			<tr>
+				<th>Branch</th>
+				<th>Revision</th>
+				<th>Status</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for revision in revision_collection %}
+			<tr>
+				<td><a href="{{ url_for('project_controller.show_status', project_identifier = project['identifier'], branch = revision['reference']) }}">{{ revision['reference'] }}</td>
+				<td>{{ revision['identifier_short'] }}</td>
+				<td>
+					<div class="status-group">
+						<div class="status-indicator {{ revision['status'] }}"></div>
+						<div class="status-text">{{ revision['status'] }}</div>
+					</div>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</section>
+{% endif %}
+
 <section>
 	<h2><a href="{{ url_for('job_controller.show_collection', project_identifier = project['identifier']) }}" title="View all jobs">Jobs</a></h2>
 	{{ job_macros.job_table(job_collection) }}
