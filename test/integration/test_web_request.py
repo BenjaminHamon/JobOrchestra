@@ -8,6 +8,14 @@ from . import context
 from . import environment
 
 
+def get_all_user_parameters():
+	return [
+		pytest.param("auditor", [ "Auditor" ], id = "auditor"),
+		pytest.param("viewer", [ "Viewer" ], id = "viewer"),
+		pytest.param("guest", [], id = "guest"),
+	]
+
+
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
 def test_service_response(tmpdir, database_type):
 	""" Test if service responds successfully to a simple request """
@@ -23,11 +31,12 @@ def test_service_response(tmpdir, database_type):
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
-def test_service_response_with_authorization(tmpdir, database_type):
+@pytest.mark.parametrize("user_identifier, user_roles", get_all_user_parameters())
+def test_service_response_with_authorization(tmpdir, database_type, user_identifier, user_roles):
 	""" Test if service responds successfully to a simple request with authorization """
 
 	with context.Context(tmpdir, database_type) as context_instance:
-		authentication = context_instance.configure_service_authentication()
+		authentication = context_instance.configure_service_authentication(user_identifier, user_roles)
 		service_process = context_instance.invoke_service()
 		response = requests.get(context_instance.get_service_uri() + "/me", auth = authentication, timeout = 10)
 		response.raise_for_status()
@@ -38,11 +47,12 @@ def test_service_response_with_authorization(tmpdir, database_type):
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
-def test_service_routes(tmpdir, database_type):
+@pytest.mark.parametrize("user_identifier, user_roles", get_all_user_parameters())
+def test_service_routes(tmpdir, database_type, user_identifier, user_roles): # pylint: disable = too-many-locals
 	""" Test if service responds successfully for accessible routes """
 
 	with context.Context(tmpdir, database_type) as context_instance:
-		authentication = context_instance.configure_service_authentication()
+		authentication = context_instance.configure_service_authentication(user_identifier, user_roles)
 
 		project = context_instance.project_provider.create_or_update("examples", "Examples", {})
 		job = context_instance.job_provider.create_or_update("empty", "examples", "Empty", None, None, None, [], None)
@@ -101,11 +111,12 @@ def test_website_response(tmpdir):
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
-def test_website_response_with_authorization(tmpdir, database_type):
+@pytest.mark.parametrize("user_identifier, user_roles", get_all_user_parameters())
+def test_website_response_with_authorization(tmpdir, database_type, user_identifier, user_roles):
 	""" Test if website responds successfully to a simple request with authorization """
 
 	with context.Context(tmpdir, database_type) as context_instance:
-		authentication = context_instance.configure_website_authentication()
+		authentication = context_instance.configure_website_authentication(user_identifier, user_roles)
 
 		service_process = context_instance.invoke_service()
 		website_process = context_instance.invoke_website()
@@ -123,11 +134,12 @@ def test_website_response_with_authorization(tmpdir, database_type):
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
-def test_website_pages(tmpdir, database_type): # pylint: disable = too-many-locals
+@pytest.mark.parametrize("user_identifier, user_roles", get_all_user_parameters())
+def test_website_pages(tmpdir, database_type, user_identifier, user_roles): # pylint: disable = too-many-locals
 	""" Test if website responds successfully for accessible pages """
 
 	with context.Context(tmpdir, database_type) as context_instance:
-		authentication = context_instance.configure_website_authentication()
+		authentication = context_instance.configure_website_authentication(user_identifier, user_roles)
 
 		project = context_instance.project_provider.create_or_update("examples", "Examples", {})
 		job = context_instance.job_provider.create_or_update("empty", "examples", "Empty", None, None, None, [], None)
