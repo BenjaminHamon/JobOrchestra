@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% import 'task/macros.html' as task_macros %}
+{% import 'run/macros.html' as run_macros %}
 
 {% block content %}
 <h1>
@@ -21,13 +21,7 @@
 			<div class="status-text">{{ run['status'] }}</div>
 		</div>
 		{% if authorize_view("run-actions") %}
-		<form method="post">
-			{% if run['status'] == 'pending' %}
-			<button formaction="{{ url_for('run_controller.cancel', project_identifier = run['project'], run_identifier = run['identifier']) }}">Cancel</button>
-			{% elif run['status'] == 'running' %}
-			<button formaction="{{ url_for('run_controller.abort', project_identifier = run['project'], run_identifier = run['identifier']) }}">Abort</button>
-			{% endif %}
-		</form>
+		{{ run_macros.run_actions(run) }}
 		{% endif %}
 	</div>
 	<ul>
@@ -163,10 +157,5 @@
 		</li>
 		{% endif %}
 	</ul>
-</section>
-
-<section>
-	<h2><a href="{{ url_for('task_controller.show_collection', run = run['identifier']) }}" title="View all tasks">Tasks</a></h2>
-	{{ task_macros.task_table(run_tasks) }}
 </section>
 {% endblock %}

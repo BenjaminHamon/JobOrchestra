@@ -45,7 +45,6 @@ def show(project_identifier, run_identifier): # pylint: disable = unused-argumen
 		"run": service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals())),
 		"run_steps": service_client.get("/project/{project_identifier}/run/{run_identifier}/step_collection".format(**locals())),
 		"run_results": service_client.get("/project/{project_identifier}/run/{run_identifier}/results".format(**locals())),
-		"run_tasks": service_client.get("/project/{project_identifier}/run/{run_identifier}/tasks".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 	}
 
 	view_data["run"]["project_display_name"] = view_data["project"]["display_name"]

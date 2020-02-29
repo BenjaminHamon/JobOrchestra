@@ -35,22 +35,33 @@ class JobScheduler:
 	async def update(self):
 		now = self._date_time_provider.now().replace(second = 0)
 
-		all_schedules = self._list_active_schedules()
+		all_active_schedules = self._list_active_schedules()
 
-		for schedule in all_schedules:
+		for schedule in all_active_schedules:
 			if self._should_schedule_trigger(schedule, now):
 				logger.info("Triggering run for schedule '%s'", schedule["identifier"])
 				run = self._run_provider.create(schedule["project"], schedule["job"], schedule["parameters"])
 				self._schedule_provider.update_status(schedule, last_run = run["identifier"])
 
-		all_runs = self._list_pending_runs()
+		all_pending_runs = self._list_pending_runs()
 
-		for run in all_runs:
+		for run in all_pending_runs:
+			if run.get("should_cancel", False):
+				logger.info("Cancelling run '%s'", run["identifier"])
+				self._run_provider.update_status(run, status = "cancelled")
+				continue
+
 			try:
-				self._trigger_run(run)
+				self.trigger_run(run)
 			except Exception: # pylint: disable = broad-except
 				logger.error("Run trigger '%s' raised an exception", run["identifier"], exc_info = True)
 				self._run_provider.update_status(run, status = "exception")
+
+		all_running_runs = self._list_running_runs()
+
+		for run in all_running_runs:
+			if run.get("should_abort", False):
+				self.abort_run(run)
 
 
 	def _list_active_schedules(self):
@@ -63,6 +74,10 @@ class JobScheduler:
 		all_runs = self._run_provider.get_list(status = "pending")
 		all_runs = [ run for run in all_runs if run["worker"] is None ]
 		return all_runs
+
+
+	def _list_running_runs(self):
+		return self._run_provider.get_list(status = "running")
 
 
 	def _should_schedule_trigger(self, schedule, now):
@@ -86,7 +101,10 @@ class JobScheduler:
 		return True
 
 
-	def _trigger_run(self, run):
+	def trigger_run(self, run):
+		if run["status"] != "pending":
+			raise ValueError("Run '%s' cannot be triggered (Status: '%s')" % (run["identifier"], run["status"]))
+
 		job = self._job_provider.get(run["project"], run["job"])
 		if not job["is_enabled"]:
 			return False
@@ -95,28 +113,19 @@ class JobScheduler:
 		if selected_worker is None:
 			return False
 
-		logger.info("Assigning run '%s' '%s' to worker '%s'", run["job"], run["identifier"], selected_worker)
+		logger.info("Assigning run '%s' to worker '%s'", run["identifier"], selected_worker)
 		self._supervisor.get_worker(selected_worker).assign_run(job, run)
 		return True
 
 
-	def cancel_run(self, project_identifier, run_identifier):
-		run = self._run_provider.get(project_identifier, run_identifier)
-		if run["status"] != "pending":
-			return False
-		self._run_provider.update_status(run, status = "cancelled")
-		return True
-
-
-	def abort_run(self, project_identifier, run_identifier):
-		run = self._run_provider.get(project_identifier, run_identifier)
+	def abort_run(self, run):
 		if run["status"] != "running":
-			return False
+			raise ValueError("Run '%s' cannot be aborted (Status: '%s')" % (run["identifier"], run["status"]))
 
 		try:
 			worker_instance = self._supervisor.get_worker(run["worker"])
 		except KeyError:
 			return False
 
-		worker_instance.abort_run(run_identifier)
+		worker_instance.abort_run(run["identifier"])
 		return True
