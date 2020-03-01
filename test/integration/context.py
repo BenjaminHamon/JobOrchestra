@@ -43,12 +43,10 @@ class Context: # pylint: disable = too-many-instance-attributes
 		self.process_collection = []
 
 		if self.database_uri is not None:
-			database_administration_instance = environment.create_database_administration(self.database_uri)
 			database_client_instance = environment.create_database_client(self.database_uri)
 			file_storage_instance = FileStorage(os.path.join(self.temporary_directory, "master"))
 			date_time_provider_instance = DateTimeProvider()
 
-			self.database_administration = database_administration_instance
 			self.authentication_provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 			self.authorization_provider = AuthorizationProvider()
 			self.job_provider = JobProvider(database_client_instance, date_time_provider_instance)
@@ -64,6 +62,11 @@ class Context: # pylint: disable = too-many-instance-attributes
 			database_client = pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000)
 			database_client.drop_database(database_client.get_database())
 			database_client.close()
+
+		if self.database_uri is not None:
+			database_administration = environment.create_database_administration(self.database_uri)
+			database_administration.initialize(simulate = False)
+
 		return self
 
 
