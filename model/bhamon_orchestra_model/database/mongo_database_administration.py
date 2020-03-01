@@ -1,5 +1,7 @@
 import logging
 
+from typing import List, Tuple
+
 import pymongo
 
 
@@ -19,23 +21,23 @@ class MongoDatabaseAdministration:
 
 		logger.info("Creating run index")
 		if not simulate:
-			self.mongo_client.get_database()["run"].create_index([ ("project", pymongo.ASCENDING), ("identifier", pymongo.ASCENDING) ], name = "identifier_unique", unique = True)
+			self.create_index("run", "identifier_unique", [ ("project", "ascending"), ("identifier", "ascending") ], is_unique = True)
 
 		logger.info("Creating job index")
 		if not simulate:
-			self.mongo_client.get_database()["job"].create_index([ ("project", pymongo.ASCENDING), ("identifier", pymongo.ASCENDING) ], name = "identifier_unique", unique = True)
+			self.create_index("job", "identifier_unique", [ ("project", "ascending"), ("identifier", "ascending") ], is_unique = True)
 
 		logger.info("Creating schedule index")
 		if not simulate:
-			self.mongo_client.get_database()["schedule"].create_index([ ("project", pymongo.ASCENDING), ("identifier", pymongo.ASCENDING) ], name = "identifier_unique", unique = True)
+			self.create_index("schedule", "identifier_unique", [ ("project", "ascending"), ("identifier", "ascending") ], is_unique = True)
 
 		logger.info("Creating user index")
 		if not simulate:
-			self.mongo_client.get_database()["user"].create_index("identifier", name = "identifier_unique", unique = True)
+			self.create_index("user", "identifier_unique", [ ("identifier", "ascending") ], is_unique = True)
 
 		logger.info("Creating worker index")
 		if not simulate:
-			self.mongo_client.get_database()["worker"].create_index("identifier", name = "identifier_unique", unique = True)
+			self.create_index("worker", "identifier_unique", [ ("identifier", "ascending") ], is_unique = True)
 
 
 	def upgrade(self, simulate: bool = False) -> None:
@@ -57,3 +59,14 @@ class MongoDatabaseAdministration:
 				logger.info("Run %s: Job %s => Project %s, Job %s", run["identifier"], run["job"], project, job)
 				if not simulate:
 					self.mongo_client.get_database()["run"].update_one({ "identifier": run["identifier"] }, { "$set": { "project": project, "job": job } })
+
+
+	def create_index(self, table: str, identifier: str, field_collection: List[Tuple[str,str]], is_unique: bool = False) -> None:
+		mongo_field_collection = []
+		for field, direction in field_collection:
+			if direction in [ "asc", "ascending" ]:
+				mongo_field_collection.append((field, pymongo.ASCENDING))
+			elif direction in [ "desc", "descending" ]:
+				mongo_field_collection.append((field, pymongo.DESCENDING))
+
+		self.mongo_client.get_database()[table].create_index(mongo_field_collection, name = identifier, unique = is_unique)
