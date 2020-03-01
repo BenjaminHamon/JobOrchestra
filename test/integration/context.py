@@ -40,14 +40,15 @@ class Context: # pylint: disable = too-many-instance-attributes
 		self.website_address = environment_instance["website_address"]
 		self.website_port = environment_instance["website_port"]
 		self.database_uri = environment_instance["database_uri"]
-		self.database_authentication = {}
 		self.process_collection = []
 
 		if self.database_uri is not None:
+			database_administration_instance = environment.create_database_administration(self.database_uri)
 			database_client_instance = environment.create_database_client(self.database_uri)
 			file_storage_instance = FileStorage(os.path.join(self.temporary_directory, "master"))
 			date_time_provider_instance = DateTimeProvider()
 
+			self.database_administration = database_administration_instance
 			self.authentication_provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 			self.authorization_provider = AuthorizationProvider()
 			self.job_provider = JobProvider(database_client_instance, date_time_provider_instance)

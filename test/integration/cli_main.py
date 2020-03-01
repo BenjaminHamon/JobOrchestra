@@ -43,11 +43,13 @@ def parse_arguments():
 
 
 def create_application(arguments):
+	database_administration_instance = environment.create_database_administration(arguments.database)
 	database_client_instance = environment.create_database_client(arguments.database)
 	file_storage_instance = FileStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 
 	application = types.SimpleNamespace()
+	application.database_administration = database_administration_instance
 	application.authentication_provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 	application.authorization_provider = AuthorizationProvider()
 	application.job_provider = JobProvider(database_client_instance, date_time_provider_instance)

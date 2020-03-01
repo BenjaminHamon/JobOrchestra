@@ -5,7 +5,9 @@ import sys
 
 import pymongo
 
+from bhamon_orchestra_model.database.json_database_administration import JsonDatabaseAdministration
 from bhamon_orchestra_model.database.json_database_client import JsonDatabaseClient
+from bhamon_orchestra_model.database.mongo_database_administration import MongoDatabaseAdministration
 from bhamon_orchestra_model.database.mongo_database_client import MongoDatabaseClient
 
 
@@ -25,6 +27,14 @@ def configure_logging(log_level):
 	logging.getLogger("urllib3").setLevel(logging.INFO)
 	logging.getLogger("websockets.protocol").setLevel(logging.INFO)
 	logging.getLogger("werkzeug").setLevel(logging.WARNING)
+
+
+def create_database_administration(database_uri):
+	if database_uri.startswith("json://"):
+		return JsonDatabaseAdministration(re.sub("^json://", "", database_uri))
+	if database_uri.startswith("mongodb://"):
+		return MongoDatabaseAdministration(pymongo.MongoClient(database_uri))
+	raise ValueError("Unsupported database uri '%s'" % database_uri)
 
 
 def create_database_client(database_uri):

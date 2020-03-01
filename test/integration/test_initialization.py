@@ -1,11 +1,8 @@
 """ Integration tests for initialization """
 
 import time
-import types
 
 import pytest
-
-from bhamon_orchestra_cli.database_controller import initialize_database
 
 from .. import assert_extensions
 from . import context
@@ -94,4 +91,4 @@ def test_database(tmpdir, database_type):
 	""" Test if the database initializes successfully """
 
 	with context.Context(tmpdir, database_type) as context_instance:
-		initialize_database(context_instance, types.SimpleNamespace(simulate = False))
+		context_instance.database_administration.initialize(simulate = False)
