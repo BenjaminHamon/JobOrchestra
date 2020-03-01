@@ -26,6 +26,36 @@ shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else
 subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 
+
+class DatabaseContext:
+
+
+	def __init__(self, temporary_directory, database_type):
+		environment_instance = environment.load_test_context_environment(str(temporary_directory), database_type)
+
+		self.temporary_directory = str(temporary_directory)
+		self.database_uri = environment_instance["database_uri"]
+		self.database_client = environment.create_database_client(self.database_uri)
+		self.database_administration = environment.create_database_administration(self.database_uri)
+
+
+	def __enter__(self):
+		if self.database_uri.startswith("mongodb://"):
+			database_client = pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000)
+			database_client.drop_database(database_client.get_database())
+			database_client.close()
+
+		return self
+
+
+	def __exit__(self, exception_type, exception_value, traceback):
+		if self.database_uri.startswith("mongodb://"):
+			database_client = pymongo.MongoClient(self.database_uri)
+			database_client.drop_database(database_client.get_database())
+			database_client.close()
+
+
+
 class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 
