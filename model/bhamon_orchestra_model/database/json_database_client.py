@@ -78,6 +78,10 @@ class JsonDatabaseClient(DatabaseClient):
 			self._save(table, all_rows)
 
 
+	def close(self) -> None:
+		pass
+
+
 	def _load(self, table: str) -> List[dict]:
 		""" Load all items from a table """
 

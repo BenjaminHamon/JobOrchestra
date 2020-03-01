@@ -57,6 +57,10 @@ class MongoDatabaseClient(DatabaseClient):
 		self.mongo_client.get_database()[table].delete_one(filter)
 
 
+	def close(self) -> None:
+		self.mongo_client.close()
+
+
 	def _convert_order_by_expression(self, expression: Optional[List[Tuple[str,str]]]) -> Optional[List[Tuple[str,int]]]:
 		""" Convert a order-by expression to its pymongo representation """
 

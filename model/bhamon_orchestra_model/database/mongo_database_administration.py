@@ -70,3 +70,7 @@ class MongoDatabaseAdministration:
 				mongo_field_collection.append((field, pymongo.DESCENDING))
 
 		self.mongo_client.get_database()[table].create_index(mongo_field_collection, name = identifier, unique = is_unique)
+
+
+	def close(self) -> None:
+		self.mongo_client.close()

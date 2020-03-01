@@ -65,6 +65,10 @@ class JsonDatabaseAdministration:
 		self._save(administration_data)
 
 
+	def close(self) -> None:
+		pass
+
+
 	def _load(self) -> dict:
 		file_path = os.path.join(self._data_directory, "admin.json")
 		if not os.path.exists(file_path):
