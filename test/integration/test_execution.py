@@ -16,7 +16,7 @@ def test_job_success(tmpdir, database_type):
 	project_identifier = "examples"
 	job_identifier = "success"
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
 
 		master_process = context_instance.invoke_master()
@@ -61,7 +61,7 @@ def test_job_failure(tmpdir, database_type):
 	project_identifier = "examples"
 	job_identifier = "failure"
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
 
 		master_process = context_instance.invoke_master()
@@ -106,7 +106,7 @@ def test_job_exception(tmpdir, database_type):
 	project_identifier = "examples"
 	job_identifier = "exception"
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
 
 		master_process = context_instance.invoke_master()
@@ -152,7 +152,7 @@ def test_run_cancel(tmpdir, database_type):
 	project_identifier = "examples"
 	job_identifier = "success"
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		master_process = context_instance.invoke_master()
 
 		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
@@ -182,7 +182,7 @@ def test_run_abort(tmpdir, database_type):
 	project_identifier = "examples"
 	job_identifier = "sleep"
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
 
 		master_process = context_instance.invoke_master()
@@ -229,7 +229,7 @@ def test_job_controller_success(tmpdir, database_type):
 	project_identifier = "examples"
 	job_identifier = "controller_success"
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])
 
 		master_process = context_instance.invoke_master()
@@ -282,7 +282,7 @@ def test_job_controller_failure(tmpdir, database_type):
 	project_identifier = "examples"
 	job_identifier = "controller_failure"
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])
 
 		master_process = context_instance.invoke_master()

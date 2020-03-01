@@ -26,7 +26,7 @@ shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else
 subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 
-class Context: # pylint: disable = too-many-instance-attributes
+class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 
 	def __init__(self, temporary_directory, database_type):

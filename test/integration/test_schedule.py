@@ -16,7 +16,7 @@ def test_schedule(tmpdir, database_type):
 	project_identifier = "examples"
 	job_identifier = "success"
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
 
 		master_process = context_instance.invoke_master()

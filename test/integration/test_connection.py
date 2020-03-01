@@ -14,7 +14,7 @@ from . import environment
 def test_worker_disconnection(tmpdir, database_type):
 	""" Test a disconnection initiated by the worker """
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
 
 		master_process = context_instance.invoke_master()
@@ -49,7 +49,7 @@ def test_worker_disconnection(tmpdir, database_type):
 def test_master_disconnection(tmpdir, database_type):
 	""" Test a disconnection initiated by the master """
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker_01" ])
 
 		master_process = context_instance.invoke_master()
