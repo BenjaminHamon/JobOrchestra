@@ -31,7 +31,7 @@ def create_database_client(database_uri):
 	if database_uri.startswith("json://"):
 		return JsonDatabaseClient(re.sub("^json://", "", database_uri))
 	if database_uri.startswith("mongodb://"):
-		return MongoDatabaseClient(pymongo.MongoClient(database_uri).get_database())
+		return MongoDatabaseClient(pymongo.MongoClient(database_uri))
 	raise ValueError("Unsupported database uri '%s'" % database_uri)
 
 
