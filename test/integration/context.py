@@ -26,7 +26,38 @@ shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else
 subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 
-class Context: # pylint: disable = too-many-instance-attributes
+
+class DatabaseContext:
+
+
+	def __init__(self, temporary_directory, database_type):
+		environment_instance = environment.load_test_context_environment(str(temporary_directory), database_type)
+
+		self.temporary_directory = str(temporary_directory)
+		self.database_uri = environment_instance["database_uri"]
+		self.database_client = environment.create_database_client(self.database_uri)
+		self.database_administration = environment.create_database_administration(self.database_uri)
+
+
+	def __enter__(self):
+		if self.database_uri.startswith("mongodb://"):
+			with pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000) as mongo_client:
+				mongo_client.drop_database(mongo_client.get_database())
+
+		return self
+
+
+	def __exit__(self, exception_type, exception_value, traceback):
+		self.database_administration.close()
+		self.database_client.close()
+
+		if self.database_uri.startswith("mongodb://"):
+			with pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000) as mongo_client:
+				mongo_client.drop_database(mongo_client.get_database())
+
+
+
+class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 
 	def __init__(self, temporary_directory, database_type):
@@ -40,38 +71,38 @@ class Context: # pylint: disable = too-many-instance-attributes
 		self.website_address = environment_instance["website_address"]
 		self.website_port = environment_instance["website_port"]
 		self.database_uri = environment_instance["database_uri"]
-		self.database_authentication = {}
 		self.process_collection = []
 
 		if self.database_uri is not None:
-			database_client_instance = environment.create_database_client(self.database_uri)
-			file_storage_instance = FileStorage(os.path.join(self.temporary_directory, "master"))
 			date_time_provider_instance = DateTimeProvider()
 
-			self.authentication_provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+			self.database_client = environment.create_database_client(self.database_uri)
+			self.file_storage = FileStorage(os.path.join(self.temporary_directory, "master"))
+
+			self.authentication_provider = AuthenticationProvider(self.database_client, date_time_provider_instance)
 			self.authorization_provider = AuthorizationProvider()
-			self.job_provider = JobProvider(database_client_instance, date_time_provider_instance)
-			self.project_provider = ProjectProvider(database_client_instance, date_time_provider_instance)
-			self.run_provider = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
-			self.schedule_provider = ScheduleProvider(database_client_instance, date_time_provider_instance)
-			self.user_provider = UserProvider(database_client_instance, date_time_provider_instance)
-			self.worker_provider = WorkerProvider(database_client_instance, date_time_provider_instance)
+			self.job_provider = JobProvider(self.database_client, date_time_provider_instance)
+			self.project_provider = ProjectProvider(self.database_client, date_time_provider_instance)
+			self.run_provider = RunProvider(self.database_client, self.file_storage, date_time_provider_instance)
+			self.schedule_provider = ScheduleProvider(self.database_client, date_time_provider_instance)
+			self.user_provider = UserProvider(self.database_client, date_time_provider_instance)
+			self.worker_provider = WorkerProvider(self.database_client, date_time_provider_instance)
 
 
 	def __enter__(self):
 		if self.database_uri is not None and self.database_uri.startswith("mongodb://"):
-			database_client = pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000)
-			database_client.drop_database(database_client.get_database())
-			database_client.close()
+			with pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000) as mongo_client:
+				mongo_client.drop_database(mongo_client.get_database())
+
+		if self.database_uri is not None:
+			database_administration = environment.create_database_administration(self.database_uri)
+			database_administration.initialize(simulate = False)
+			database_administration.close()
+
 		return self
 
 
 	def __exit__(self, exception_type, exception_value, traceback):
-		if self.database_uri is not None and self.database_uri.startswith("mongodb://"):
-			database_client = pymongo.MongoClient(self.database_uri)
-			database_client.drop_database(database_client.get_database())
-			database_client.close()
-
 		for process in self.process_collection:
 			if process.poll() is None:
 				os.kill(process.pid, shutdown_signal)
@@ -81,6 +112,13 @@ class Context: # pylint: disable = too-many-instance-attributes
 					process.kill()
 
 		self.process_collection.clear()
+
+		if self.database_uri is not None:
+			self.database_client.close()
+
+		if self.database_uri is not None and self.database_uri.startswith("mongodb://"):
+			with pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000) as mongo_client:
+				mongo_client.drop_database(mongo_client.get_database())
 
 
 	def get_service_uri(self):

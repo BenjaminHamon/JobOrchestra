@@ -44,7 +44,16 @@ class JsonDatabaseClient(DatabaseClient):
 	def insert_one(self, table: str, data: dict) -> dict:
 		""" Insert a new item into a table """
 
+		all_indexes = self._load_indexes(table)
 		all_rows = self._load(table)
+
+		for index in [ x for x in all_indexes if x["is_unique"] ]:
+			index_filter = { key: data[key] for key in index["field_collection"] }
+			matched_row = next(( row for row in all_rows if self._match_filter(row, index_filter) ), None)
+
+			if matched_row is not None:
+				raise ValueError("Duplicate key '%s' in table '%s' for index '%s'" % (index_filter, table, index["identifier"]))
+
 		all_rows.append(data)
 		self._save(table, all_rows)
 
@@ -69,6 +78,10 @@ class JsonDatabaseClient(DatabaseClient):
 			self._save(table, all_rows)
 
 
+	def close(self) -> None:
+		pass
+
+
 	def _load(self, table: str) -> List[dict]:
 		""" Load all items from a table """
 
@@ -88,6 +101,18 @@ class JsonDatabaseClient(DatabaseClient):
 		with open(file_path + ".tmp", "w") as table_data_file:
 			json.dump(table_data, table_data_file, indent = 4)
 		os.replace(file_path + ".tmp", file_path)
+
+
+	def _load_indexes(self, table: str) -> List[dict]:
+		""" Load all indexes for a table """
+
+		file_path = os.path.join(self._data_directory, "admin.json")
+		if not os.path.exists(file_path):
+			return []
+		with open(file_path) as administration_data_file:
+			administration_data = json.load(administration_data_file)
+
+		return [ index for index in administration_data["indexes"] if index["table"] == table ]
 
 
 	def _match_filter(self, row: dict, filter: dict) -> bool: # pylint: disable = no-self-use, redefined-builtin

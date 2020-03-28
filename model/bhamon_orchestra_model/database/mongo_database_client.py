@@ -3,7 +3,6 @@ import logging
 from typing import List, Optional, Tuple
 
 import pymongo
-import pymongo.database
 
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 
@@ -15,13 +14,13 @@ class MongoDatabaseClient(DatabaseClient):
 	""" Client for a MongoDB database. """
 
 
-	def __init__(self, mongo_database: pymongo.database.Database) -> None:
-		self.mongo_database = mongo_database
+	def __init__(self, mongo_client: pymongo.MongoClient) -> None:
+		self.mongo_client = mongo_client
 
 
 	def count(self, table: str, filter: dict) -> int: # pylint: disable = redefined-builtin
 		""" Return how many items are in a table, after applying a filter """
-		return self.mongo_database[table].count_documents(filter)
+		return self.mongo_client.get_database()[table].count_documents(filter)
 
 
 	def find_many(self, # pylint: disable = too-many-arguments
@@ -34,28 +33,32 @@ class MongoDatabaseClient(DatabaseClient):
 
 		limit = limit if limit is not None else 0
 		order_by = self._convert_order_by_expression(order_by)
-		return list(self.mongo_database[table].find(filter, { "_id": False }, skip = skip, limit = limit, sort = order_by))
+		return list(self.mongo_client.get_database()[table].find(filter, { "_id": False }, skip = skip, limit = limit, sort = order_by))
 
 
 	def find_one(self, table: str, filter: dict) -> Optional[dict]: # pylint: disable = redefined-builtin
 		""" Return a single item (or nothing) from a table, after applying a filter """
-		return self.mongo_database[table].find_one(filter, { "_id": False })
+		return self.mongo_client.get_database()[table].find_one(filter, { "_id": False })
 
 
 	def insert_one(self, table: str, data: dict) -> dict:
 		""" Insert a new item into a table """
-		self.mongo_database[table].insert_one(data)
+		self.mongo_client.get_database()[table].insert_one(data)
 		del data["_id"]
 
 
 	def update_one(self, table: str, filter: dict, data: dict) -> None: # pylint: disable = redefined-builtin
 		""" Update a single item (or nothing) from a table, after applying a filter """
-		self.mongo_database[table].update_one(filter, { "$set": data })
+		self.mongo_client.get_database()[table].update_one(filter, { "$set": data })
 
 
 	def delete_one(self, table: str, filter: dict) -> None: # pylint: disable = redefined-builtin
 		""" Delete a single item (or nothing) from a table, after applying a filter """
-		self.mongo_database[table].delete_one(filter)
+		self.mongo_client.get_database()[table].delete_one(filter)
+
+
+	def close(self) -> None:
+		self.mongo_client.close()
 
 
 	def _convert_order_by_expression(self, expression: Optional[List[Tuple[str,str]]]) -> Optional[List[Tuple[str,int]]]:

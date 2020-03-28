@@ -1,11 +1,8 @@
 """ Integration tests for initialization """
 
 import time
-import types
 
 import pytest
-
-from bhamon_orchestra_cli.database_controller import initialize_database
 
 from .. import assert_extensions
 from . import context
@@ -16,7 +13,7 @@ from . import environment
 def test_master(tmpdir, database_type):
 	""" Test if the master starts successfully """
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		master_process = context_instance.invoke_master()
 
 	master_expected_messages = [
@@ -33,7 +30,7 @@ def test_master(tmpdir, database_type):
 def test_worker(tmpdir, database_type):
 	""" Test if the worker starts successfully """
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker" ])
 		worker_process = context_instance.invoke_worker("worker")
 
@@ -53,7 +50,7 @@ def test_worker(tmpdir, database_type):
 def test_executor(tmpdir):
 	""" Test if the executor starts successfully """
 
-	with context.Context(tmpdir, None) as context_instance:
+	with context.OrchestraContext(tmpdir, None) as context_instance:
 		run_identifier = "00000000-0000-0000-0000-000000000000"
 		executor_process = context_instance.invoke_executor("worker", run_identifier)
 
@@ -70,7 +67,7 @@ def test_executor(tmpdir):
 def test_service(tmpdir, database_type):
 	""" Test if the service starts successfully """
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		service_process = context_instance.invoke_service()
 
 	assert_extensions.assert_multi_process([
@@ -81,17 +78,9 @@ def test_service(tmpdir, database_type):
 def test_website(tmpdir):
 	""" Test if the website starts successfully """
 
-	with context.Context(tmpdir, None) as context_instance:
+	with context.OrchestraContext(tmpdir, None) as context_instance:
 		website_process = context_instance.invoke_website()
 
 	assert_extensions.assert_multi_process([
 		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
 	])
-
-
-@pytest.mark.parametrize("database_type", environment.get_all_database_types())
-def test_database(tmpdir, database_type):
-	""" Test if the database initializes successfully """
-
-	with context.Context(tmpdir, database_type) as context_instance:
-		initialize_database(context_instance, types.SimpleNamespace(simulate = False))
