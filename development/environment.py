@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import platform
 import sys
 
 
@@ -37,6 +38,7 @@ def create_default_environment():
 	return {
 		"git_executable": "git",
 		"python3_executable": sys.executable,
+		"python3_system_executable": find_system_python(),
 		"scp_executable": "scp",
 		"ssh_executable": "ssh",
 	}
@@ -54,3 +56,28 @@ def _load_environment_transform(transform_file_path):
 		return {}
 	with open(transform_file_path) as transform_file:
 		return json.load(transform_file)
+
+
+def find_system_python():
+	if platform.system() == "Linux":
+		return "/usr/bin/python3"
+
+	if platform.system() == "Windows":
+		possible_paths = [
+			os.path.join(os.environ["SystemDrive"] + "\\", "Python38", "python.exe"),
+			os.path.join(os.environ["ProgramFiles"], "Python38", "python.exe"),
+			os.path.join(os.environ["SystemDrive"] + "\\", "Python37", "python.exe"),
+			os.path.join(os.environ["ProgramFiles"], "Python37", "python.exe"),
+			os.path.join(os.environ["SystemDrive"] + "\\", "Python36", "python.exe"),
+			os.path.join(os.environ["ProgramFiles"], "Python36", "python.exe"),
+			os.path.join(os.environ["SystemDrive"] + "\\", "Python35", "python.exe"),
+			os.path.join(os.environ["ProgramFiles"], "Python35", "python.exe"),
+		]
+
+		for path in possible_paths:
+			if os.path.exists(path):
+				return path
+
+		return None
+
+	raise ValueError("Unsupported platform: '%s'" % platform.system())
