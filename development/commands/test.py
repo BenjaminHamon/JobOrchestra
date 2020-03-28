@@ -10,8 +10,8 @@ logger = logging.getLogger("Main")
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
 	parser = subparsers.add_parser("test", help = "run the test suite")
-	parser.add_argument("--identifier", default = str(uuid.uuid4()), help = "specify a identifier for the run (default to a GUID)")
-	parser.add_argument("--filter", help = "specify a string expression to select tests to run")
+	parser.add_argument("--identifier", default = str(uuid.uuid4()), metavar = "<identifier>", help = "specify a identifier for the run (default to a GUID)")
+	parser.add_argument("--filter", metavar = "<expression>", help = "specify a string expression to select tests to run")
 	parser.set_defaults(func = run)
 
 

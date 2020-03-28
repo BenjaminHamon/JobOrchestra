@@ -35,7 +35,7 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 	parser.add_argument("artifact", choices = configuration["artifacts"].keys(),
 		metavar = "<artifact>", help = "set an artifact definition to use for the commands")
 	parser.add_argument("--installation-directory",
-		help = "set the installation directory")
+		metavar = "<path>", help = "set the installation directory")
 	parser.add_argument("--parameters", nargs = "*", type = parse_key_value_parameter, default = [],
 		metavar = "<key=value>", help = "set parameters for the artifact")
 	parser.add_argument("--overwrite", action = "store_true",
