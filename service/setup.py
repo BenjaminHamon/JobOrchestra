@@ -19,7 +19,7 @@ parameters.update({
 	"description": "Web service component for Job Orchestra, exposing a web interface to interact with the master",
 	"packages": [ "bhamon_orchestra_service" ],
 	"python_requires": "~= 3.5",
-	"install_requires": [ "flask ~= 1.0" ],
+	"install_requires": [ "flask ~= 1.1" ],
 })
 
 setuptools.setup(**parameters)
