@@ -21,14 +21,16 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	session_success = True
+	result_directory = "test_results"
 
 	if not arguments.simulate:
-		if os.path.exists(os.path.join("test_results", arguments.identifier)):
-			shutil.rmtree(os.path.join("test_results", arguments.identifier))
-		os.makedirs(os.path.join("test_results", arguments.identifier))
+		if os.path.exists(os.path.join(result_directory, arguments.identifier)):
+			shutil.rmtree(os.path.join(result_directory, arguments.identifier))
+		os.makedirs(os.path.join(result_directory, arguments.identifier))
 
 	for component in configuration["components"]:
-		pylint_results = python_lint.run_pylint(environment["python3_executable"], "test_results", arguments.identifier, component["name"].replace("-", "_"), simulate = arguments.simulate)
+		pylint_results = python_lint.run_pylint(environment["python3_executable"], result_directory, arguments.identifier,
+				component["name"].replace("-", "_"), simulate = arguments.simulate)
 		if not pylint_results["success"]:
 			session_success = False
 
@@ -44,14 +46,14 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 
 			print("")
 
-	pylint_results = python_lint.run_pylint(environment["python3_executable"], "test_results", arguments.identifier, "./test", simulate = arguments.simulate)
+	pylint_results = python_lint.run_pylint(environment["python3_executable"], result_directory, arguments.identifier, "./test", simulate = arguments.simulate)
 	if not pylint_results["success"]:
 		session_success = False
 
 	print("")
 
 	if arguments.results:
-		save_results(arguments.results, "test_results", arguments.identifier, simulate = arguments.simulate)
+		save_results(arguments.results, result_directory, arguments.identifier, simulate = arguments.simulate)
 
 	if not session_success:
 		raise RuntimeError("Linting failed")

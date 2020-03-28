@@ -16,7 +16,8 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
-	report = python_test.run_pytest(environment["python3_executable"], "test_results", arguments.identifier, "./test",  arguments.filter, simulate = arguments.simulate)
+	report = python_test.run_pytest(environment["python3_executable"], "test_results", arguments.identifier,
+			"./test",  arguments.filter, simulate = arguments.simulate)
 
 	if arguments.results:
 		save_results(arguments.results, report, simulate = arguments.simulate)
