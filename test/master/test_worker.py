@@ -2,6 +2,8 @@
 
 """ Unit tests for Worker """
 
+from unittest.mock import Mock
+
 import pytest
 
 from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
@@ -10,7 +12,6 @@ from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_master.worker import Worker
 
 from ..fakes.fake_date_time_provider import FakeDateTimeProvider
-from ..fakes.fake_run_provider import FakeRunProvider
 from ..fakes.mock_worker_remote import MockMessenger, MockWorkerRemote
 
 
@@ -18,7 +19,7 @@ from ..fakes.mock_worker_remote import MockMessenger, MockWorkerRemote
 async def test_start_execution_success():
 	""" Test _start_execution in normal conditions """
 
-	run_provider_instance = FakeRunProvider()
+	run_provider_instance = Mock(spec = RunProvider)
 	worker_remote_instance = MockWorkerRemote("worker_test")
 	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -32,7 +33,7 @@ async def test_start_execution_success():
 async def test_abort_execution_success():
 	""" Test _abort_execution in normal conditions """
 
-	run_provider_instance = FakeRunProvider()
+	run_provider_instance = Mock(spec = RunProvider)
 	worker_remote_instance = MockWorkerRemote("worker_test")
 	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
@@ -50,7 +51,7 @@ async def test_abort_execution_success():
 async def test_finish_execution_success():
 	""" Test _finish_execution in normal conditions """
 
-	run_provider_instance = FakeRunProvider()
+	run_provider_instance = Mock(spec = RunProvider)
 	worker_remote_instance = MockWorkerRemote("worker_test")
 	worker_messenger = MockMessenger(worker_remote_instance.handle_request)
 	worker_local_instance = Worker("worker_test", worker_messenger, run_provider_instance)
