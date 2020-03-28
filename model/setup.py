@@ -26,7 +26,7 @@ parameters.update({
 	],
 
 	"python_requires": "~= 3.5",
-	"install_requires": [ "python-dateutil ~= 2.8", "python2-secrets ; python_version < '3.6'" ],
+	"install_requires": [ "python-dateutil ~= 2.8", "python2-secrets ~= 1.0 ; python_version < '3.6'" ],
 })
 
 setuptools.setup(**parameters)
