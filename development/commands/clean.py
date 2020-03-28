@@ -25,7 +25,6 @@ def clean(configuration, simulate):
 	for component in configuration["components"]:
 		directories_to_clean += [ os.path.join(component["path"], "build") ]
 		directories_to_clean += [ os.path.join(component["path"], "dist") ]
-		directories_to_clean += [ os.path.join(component["path"], component["name"].replace("-", "_") + ".egg-info") ]
 		directories_to_clean += glob.glob(os.path.join(component["path"], component["name"].replace("-", "_"), "**", "__pycache__"), recursive = True)
 
 	directories_to_clean.sort()
