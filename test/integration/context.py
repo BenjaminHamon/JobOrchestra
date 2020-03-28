@@ -175,15 +175,15 @@ class Context: # pylint: disable = too-many-instance-attributes
 				json.dump(token, authentication_file, indent = 4)
 
 
-	def configure_service_authentication(self):
-		user = self.user_provider.create("auditor", "auditor")
-		self.user_provider.update_roles(user, [ "Auditor" ])
-		token = self.authentication_provider.create_token("auditor", None, None)
-		return ("auditor", token["secret"])
+	def configure_service_authentication(self, user_identifier, user_roles):
+		user = self.user_provider.create(user_identifier, user_identifier)
+		self.user_provider.update_roles(user, user_roles)
+		token = self.authentication_provider.create_token(user_identifier, None, None)
+		return (user_identifier, token["secret"])
 
 
-	def configure_website_authentication(self):
-		user = self.user_provider.create("auditor", "auditor")
-		self.user_provider.update_roles(user, [ "Auditor" ])
-		self.authentication_provider.set_password("auditor", "password")
-		return ("auditor", "password")
+	def configure_website_authentication(self, user_identifier, user_roles):
+		user = self.user_provider.create(user_identifier, user_identifier)
+		self.user_provider.update_roles(user, user_roles)
+		self.authentication_provider.set_password(user_identifier, "password")
+		return (user_identifier, "password")

@@ -202,6 +202,11 @@ a, img
 	display: block;
 }
 
+li > a, li > span > a
+{
+	display: inline;
+}
+
 table
 {
 	border-collapse: collapse;

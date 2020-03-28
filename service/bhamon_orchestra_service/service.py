@@ -122,8 +122,6 @@ def authorize_request():
 
 	if flask.request.url_rule is None:
 		return
-	if flask.current_app.authorization_provider.is_public_route(flask.request.method, flask.request.url_rule.rule):
-		return
 
 	if flask.request.authorization is not None:
 		is_authenticated = flask.current_app.authentication_provider.authenticate_with_token(flask.request.authorization.username, flask.request.authorization.password)

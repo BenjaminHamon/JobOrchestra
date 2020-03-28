@@ -16,8 +16,17 @@
 </section>
 
 <section>
+	<h2>Roles</h2>
+	<ul>
+		{% for role in user['roles'] %}
+		<li>{{ role }}</li>
+		{% endfor %}
+	</ul>
+</section>
+
+<section>
 	<h2>Status</h2>
-	<div class=status-grid>
+	<div class="status-grid">
 		{% if user['is_enabled'] %}
 		<div class="status-group">
 			<div class="status-indicator enabled"></div>

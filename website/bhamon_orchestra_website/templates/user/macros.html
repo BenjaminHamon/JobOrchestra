@@ -5,7 +5,9 @@
 			<th>Identifier</th>
 			<th>Display name</th>
 			<th>Enabled</th>
+			{% if authorize_view("user-actions") %}
 			<th>Actions</th>
+			{% endif %}
 			<th>Update date</th>
 		</tr>
 	</thead>
@@ -27,6 +29,7 @@
 				</div>
 				{% endif %}
 			</td>
+			{% if authorize_view("user-actions") %}
 			<td>
 				<form class="action-group" method="post">
 					{% if user['is_enabled'] %}
@@ -36,6 +39,7 @@
 					{% endif %}
 				</form>
 			</td>
+			{% endif %}
 			<td>{{ user['update_date'] }}</td>
 		</tr>
 		{% endfor %}

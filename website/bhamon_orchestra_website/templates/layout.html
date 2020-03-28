@@ -35,12 +35,12 @@
 			{% if authorize_view('nav-admin') %}
 			<div>
 				<a href="{{ url_for('admin_controller.index') }}">Admin</a>
-				<a href="{{ url_for('user_controller.show_collection') }}">Users</a>
 			</div>
 			{% endif %}
 			{% if authorize_view('nav-main') %}
 			<div>
 				<a href="{{ url_for('project_controller.show_collection') }}">Projects</a>
+				<a href="{{ url_for('user_controller.show_collection') }}">Users</a>
 				<a href="{{ url_for('worker_controller.show_collection') }}">Workers</a>
 			</div>
 			{% endif %}
