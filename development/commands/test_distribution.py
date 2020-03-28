@@ -2,9 +2,8 @@ import logging
 import os
 import uuid
 
-import bhamon_development_toolkit.python.system
-import bhamon_development_toolkit.python.test
-import bhamon_development_toolkit.workspace
+import bhamon_development_toolkit.python.system as python_system
+import bhamon_development_toolkit.python.test as python_test
 
 import development.commands.distribute
 import development.commands.test
@@ -23,7 +22,7 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	logger.info("Setting up python virtual environment")
 	venv_directory = os.path.join("test_results", arguments.identifier + "_" + "venv")
-	bhamon_development_toolkit.python.system.setup_virtual_environment(environment["python3_system_executable"], venv_directory, arguments.simulate)
+	python_system.setup_virtual_environment(environment["python3_system_executable"], venv_directory, arguments.simulate)
 
 	print("")
 
@@ -33,7 +32,11 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 
 	print("")
 
-	try:
-		development.commands.test.test(python_executable, arguments.identifier, arguments.filter, arguments.simulate)
-	finally:
-		development.commands.test.save_results(arguments.identifier, arguments.results, arguments.simulate)
+	report = python_test.run_pytest(python_executable, "test_results", arguments.identifier,
+			"./test",  arguments.filter, simulate = arguments.simulate)
+
+	if arguments.results:
+		development.commands.test.save_results(arguments.results, report, simulate = arguments.simulate)
+
+	if not report["success"]:
+		raise RuntimeError("Test run failed")
