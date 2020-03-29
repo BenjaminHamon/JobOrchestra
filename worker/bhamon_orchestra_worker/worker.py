@@ -131,6 +131,21 @@ class Worker: # pylint: disable = too-many-instance-attributes
 		return await self._execute_command(request["command"], request.get("parameters", {}))
 
 
+	def _recover(self):
+		all_runs = worker_storage.list_runs()
+		for run_identifier in all_runs:
+			logger.info("Recovering run %s", run_identifier)
+			for executor in self._active_executors:
+				if executor.run_identifier == run_identifier:
+					continue
+			executor = self.executor_factory(run_identifier)
+			self._active_executors.append(executor)
+
+
+	def _shutdown(self):
+		self._should_shutdown = True
+
+
 	async def _terminate(self):
 		all_futures = []
 		for executor in self._active_executors:
@@ -160,23 +175,19 @@ class Worker: # pylint: disable = too-many-instance-attributes
 		raise ValueError("Unknown command '%s'" % command)
 
 
+	def _find_executor(self, run_identifier):
+		for executor in self._active_executors:
+			if executor.run_identifier == run_identifier:
+				return executor
+		raise KeyError("Executor not found for %s" % run_identifier)
+
+
 	def _describe(self):
 		return {
 			"version": bhamon_orchestra_worker.__version__,
 			"display_name": self._display_name,
 			"properties": self._properties,
 		}
-
-
-	def _recover(self):
-		all_runs = worker_storage.list_runs()
-		for run_identifier in all_runs:
-			logger.info("Recovering run %s", run_identifier)
-			for executor in self._active_executors:
-				if executor.run_identifier == run_identifier:
-					continue
-			executor = self.executor_factory(run_identifier)
-			self._active_executors.append(executor)
 
 
 	def _list_runs(self):
@@ -221,17 +232,6 @@ class Worker: # pylint: disable = too-many-instance-attributes
 		executor = self._find_executor(run_identifier)
 		if executor.is_running():
 			executor.abort()
-
-
-	def _find_executor(self, run_identifier):
-		for executor in self._active_executors:
-			if executor.run_identifier == run_identifier:
-				return executor
-		raise KeyError("Executor not found for %s" % run_identifier)
-
-
-	def _shutdown(self):
-		self._should_shutdown = True
 
 
 	def _retrieve_request(self, run_identifier): # pylint: disable = no-self-use
