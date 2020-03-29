@@ -35,6 +35,7 @@ class Worker: # pylint: disable = too-many-instance-attributes
 		self._messenger = None
 		self._should_shutdown = False
 
+		self.executor_factory = ExecutorWatcher
 		self.termination_timeout_seconds = 30
 
 
@@ -174,7 +175,7 @@ class Worker: # pylint: disable = too-many-instance-attributes
 			for executor in self._active_executors:
 				if executor.run_identifier == run_identifier:
 					continue
-			executor = ExecutorWatcher(run_identifier)
+			executor = self.executor_factory(run_identifier)
 			self._active_executors.append(executor)
 
 
@@ -197,7 +198,7 @@ class Worker: # pylint: disable = too-many-instance-attributes
 		worker_storage.create_run(run_identifier)
 		worker_storage.save_request(run_identifier, run_request)
 
-		executor = ExecutorWatcher(run_identifier)
+		executor = self.executor_factory(run_identifier)
 		executor_command = [ sys.executable, self._executor_script, run_identifier ]
 		await executor.start(executor_command)
 		self._active_executors.append(executor)
