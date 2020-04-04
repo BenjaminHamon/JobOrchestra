@@ -12,10 +12,10 @@
 		{% if 'user' in request.form %}
 		<input type="text" class="text-input" id="input-user" name="user" value="{{ request.form['user'] }}" required/>
 		{% else %}
-		<input type="text" class="text-input" id="input-user" name="user" required/>
+		<input type="text" class="text-input" id="input-user" name="user" autofocus required/>
 		{% endif %}
 		<label for="input-password">Password</label>
-		<input type="password" class="text-input" id="input-password" name="password" required/>
+		<input type="password" class="text-input" id="input-password" name="password" autofocus required/>
 		<button type="submit">Log in</button>
 	</form>
 </section>
