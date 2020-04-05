@@ -101,3 +101,8 @@ td > .action-group button
 {
 	font-size: 80%;
 }
+
+#log-text
+{
+	align-self: stretch;
+}
