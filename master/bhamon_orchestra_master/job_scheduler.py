@@ -114,7 +114,7 @@ class JobScheduler:
 		if not job["is_enabled"]:
 			return False
 
-		selected_worker = self._worker_selector(job)
+		selected_worker = self._worker_selector(job, run)
 		if selected_worker is None:
 			return False
 
