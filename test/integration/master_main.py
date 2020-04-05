@@ -8,6 +8,7 @@ from bhamon_orchestra_master.job_scheduler import JobScheduler
 from bhamon_orchestra_master.master import Master
 from bhamon_orchestra_master.protocol import WebSocketServerProtocol
 from bhamon_orchestra_master.supervisor import Supervisor
+from bhamon_orchestra_master.worker_selector import WorkerSelector
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.database.file_storage import FileStorage
@@ -20,7 +21,6 @@ from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 import configuration
-import configuration_extensions
 import environment
 
 
@@ -55,7 +55,7 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	user_provider_instance = UserProvider(database_client_instance, date_time_provider_instance)
 	worker_provider_instance = WorkerProvider(database_client_instance, date_time_provider_instance)
 
-	worker_selector_instance = configuration_extensions.WorkerSelector(
+	worker_selector_instance = WorkerSelector(
 		worker_provider = worker_provider_instance,
 	)
 
