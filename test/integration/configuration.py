@@ -32,7 +32,7 @@ def configure_schedules():
 			"display_name": "Success Nightly",
 			"job": "success",
 
-			"parameters": [],
+			"parameters": {},
 
 			"expression": "0 0 * * *",
 		}
