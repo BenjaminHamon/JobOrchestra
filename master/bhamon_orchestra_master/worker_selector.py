@@ -1,3 +1,9 @@
+import logging
+
+
+logger = logging.getLogger("WorkerSelector")
+
+
 class WorkerSelector:
 
 
@@ -17,5 +23,11 @@ class WorkerSelector:
 
 	def are_compatible(self, supervisor, worker, job): # pylint: disable = no-self-use
 		executors = supervisor.get_worker(worker["identifier"]).executors
-		return (job["properties"]["is_controller"] == worker["properties"]["is_controller"]
-			and len(executors) < worker["properties"]["executor_limit"])
+
+		try:
+			return job["properties"]["is_controller"] == worker["properties"]["is_controller"] \
+				and len(executors) < worker["properties"]["executor_limit"]
+
+		except KeyError:
+			logger.warning("Missing property for matching job and worker", exc_info = True)
+			return False
