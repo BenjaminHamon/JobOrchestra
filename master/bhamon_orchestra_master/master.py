@@ -3,25 +3,39 @@ import logging
 import platform
 import signal
 
+from bhamon_orchestra_master.job_scheduler import JobScheduler
+from bhamon_orchestra_master.supervisor import Supervisor
+from bhamon_orchestra_model.job_provider import JobProvider
+from bhamon_orchestra_model.project_provider import ProjectProvider
+from bhamon_orchestra_model.schedule_provider import ScheduleProvider
+from bhamon_orchestra_model.worker_provider import WorkerProvider
+
 
 logger = logging.getLogger("Master")
 
 
 class Master:
+	""" Main class for the master application """
 
 
 	def __init__(self, # pylint: disable = too-many-arguments
-			project_provider, job_provider, schedule_provider, worker_provider, job_scheduler, supervisor):
+			project_provider: ProjectProvider, job_provider: JobProvider,
+			schedule_provider: ScheduleProvider, worker_provider: WorkerProvider,
+			job_scheduler: JobScheduler, supervisor: Supervisor) -> None:
+
 		self._project_provider = project_provider
 		self._job_provider = job_provider
 		self._schedule_provider = schedule_provider
 		self._worker_provider = worker_provider
 		self._job_scheduler = job_scheduler
 		self._supervisor = supervisor
+
 		self._should_shutdown = False
 
 
-	def run(self):
+	def run(self) -> None:
+		""" Run the master application """
+
 		logger.info("Starting master")
 
 		if platform.system() == "Windows":
@@ -36,7 +50,9 @@ class Master:
 		logger.info("Exiting master")
 
 
-	async def run_async(self):
+	async def run_async(self) -> None:
+		""" Run the master application as an asyncio coroutine """
+
 		shutdown_future = asyncio.ensure_future(self._watch_shutdown())
 		job_scheduler_future = asyncio.ensure_future(self._job_scheduler.run())
 		supervisor_future = asyncio.ensure_future(self._supervisor.run_server())
@@ -64,12 +80,14 @@ class Master:
 				logger.error("Unhandled exception from supervisor", exc_info = True)
 
 
-	async def _watch_shutdown(self):
+	async def _watch_shutdown(self) -> None:
 		while not self._should_shutdown:
 			await asyncio.sleep(1)
 
 
-	def apply_configuration(self, configuration):
+	def apply_configuration(self, configuration: dict) -> None:
+		""" Save the provided configuration to the database """
+
 		logger.info("Applying configuration")
 
 		for project in configuration["projects"]:
@@ -97,5 +115,6 @@ class Master:
 				self._schedule_provider.create_or_update(schedule["identifier"], project["identifier"], **{ key: value for key, value in schedule.items() if key != "identifier" })
 
 
-	def shutdown(self):
+	def shutdown(self) -> None:
+		""" Request the master to shutdown """
 		self._should_shutdown = True
