@@ -2,17 +2,29 @@ import base64
 import logging
 import http
 
+from typing import Any, Awaitable, Callable
+
 import websockets
+import websockets.http
+
+from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
+from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
+from bhamon_orchestra_model.user_provider import UserProvider
 
 
 logger = logging.getLogger("WebSocket")
 
 
 class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
+	""" WebSocket server protocol implementation, extended to process connections from workers """
 
 
-	def __init__( # pylint: disable = too-many-arguments
-			self, ws_handler, ws_server, user_provider, authentication_provider, authorization_provider, **kwargs):
+	def __init__(self, # pylint: disable = too-many-arguments
+			ws_handler: Callable[["WebSocketServerProtocol", str], Awaitable[Any]], ws_server: "WebSocketServer",
+			user_provider: UserProvider, authentication_provider: AuthenticationProvider, authorization_provider: AuthorizationProvider, **kwargs) -> None:
+
+		super().__init__(ws_handler, ws_server, **kwargs)
+
 		self._user_provider = user_provider
 		self._authentication_provider = authentication_provider
 		self._authorization_provider = authorization_provider
@@ -20,10 +32,10 @@ class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 		self.user = None
 		self.worker = None
 
-		super().__init__(ws_handler, ws_server, **kwargs)
 
+	async def process_request(self, path: str, request_headers: websockets.http.Headers) -> tuple: # pylint: disable = method-hidden
+		""" Process the incoming HTTP request """
 
-	async def process_request(self, path, request_headers): # pylint: disable = method-hidden
 		try:
 			try:
 				self._authorize_request(request_headers)
@@ -36,7 +48,9 @@ class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 		return await super().process_request(path, request_headers)
 
 
-	def _authorize_request(self, request_headers):
+	def _authorize_request(self, request_headers: websockets.http.Headers) -> None:
+		""" Check if the websocket connection is authorized and can proceed, otherwise raise an HTTP error """
+
 		if "Authorization" not in request_headers or "X-Orchestra-Worker" not in request_headers:
 			raise HttpError(http.HTTPStatus.FORBIDDEN)
 
@@ -47,7 +61,9 @@ class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 		self.user = self._authorize_worker(request_headers["Authorization"])
 
 
-	def _authorize_worker(self, authorization):
+	def _authorize_worker(self, authorization: str) -> str:
+		""" Check if the worker is authorized to connect to the master, otherwise raise an HTTP error """
+
 		authentication_type, authentication_data = authorization.split(" ", 1)
 		if authentication_type != "Basic":
 			raise HttpError(http.HTTPStatus.FORBIDDEN)
@@ -65,7 +81,8 @@ class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 
 
 class HttpError(Exception):
+	""" Exception class for HTTP errors """
 
-	def __init__(self, status):
-		self.status = status
+	def __init__(self, status: http.HTTPStatus):
 		super().__init__()
+		self.status = status

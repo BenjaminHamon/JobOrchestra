@@ -1,11 +1,16 @@
 import asyncio
 import logging
 
+from typing import List, Type
+
 import websockets
 
+from bhamon_orchestra_master.protocol import WebSocketServerProtocol
+from bhamon_orchestra_master.worker import Worker, WorkerError
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.network.websocket import WebSocketConnection
-from bhamon_orchestra_master.worker import Worker, WorkerError
+from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 
 logger = logging.getLogger("Supervisor")
@@ -15,7 +20,10 @@ class Supervisor:
 
 
 	def __init__( # pylint: disable = too-many-arguments
-			self, host, port, run_provider, worker_provider, protocol_factory):
+			self, host: str, port: str,
+			run_provider: RunProvider, worker_provider: WorkerProvider,
+			protocol_factory: Type[WebSocketServerProtocol]) -> None:
+
 		self._host = host
 		self._port = port
 		self._run_provider = run_provider
@@ -26,7 +34,9 @@ class Supervisor:
 		self.update_interval_seconds = 10
 
 
-	async def run_server(self):
+	async def run_server(self) -> None:
+		""" Run the websocket server to handle worker connections """
+
 		for worker_record in self._worker_provider.get_list():
 			if worker_record["is_active"]:
 				self._worker_provider.update_status(worker_record, is_active = False, should_disconnect = False)
@@ -43,11 +53,14 @@ class Supervisor:
 					await asyncio.sleep(self.update_interval_seconds)
 
 
-	def get_worker(self, worker_identifier):
+	def get_worker(self, worker_identifier: str) -> dict:
+		""" Retrieve the instance for an active worker """
 		return self._active_workers[worker_identifier]
 
 
-	def is_worker_available(self, worker_identifier):
+	def is_worker_available(self, worker_identifier: str) -> bool:
+		""" Check if a worker is available to execute runs """
+
 		if worker_identifier not in self._active_workers:
 			return False
 
@@ -55,7 +68,9 @@ class Supervisor:
 		return worker_record["is_enabled"] and not worker_record.get("should_disconnect", False)
 
 
-	async def update(self):
+	async def update(self) -> None:
+		""" Perform a single update """
+
 		all_worker_records = self._list_workers()
 
 		for worker_record in all_worker_records:
@@ -64,13 +79,16 @@ class Supervisor:
 				worker_instance.should_disconnect = True
 
 
-	def _list_workers(self):
+	def _list_workers(self) -> List[dict]:
+		""" Retrieve all worker records from the database """
 		all_workers = self._worker_provider.get_list()
 		all_workers = [ worker for worker in all_workers if worker["identifier"] in self._active_workers ]
 		return all_workers
 
 
-	async def _process_connection(self, connection, path): # pylint: disable = unused-argument
+	async def _process_connection(self, connection: WebSocketServerProtocol, path: str) -> None: # pylint: disable = unused-argument
+		""" Wrapper around the connection processing to initialize objects and to handle cancellation and exceptions """
+
 		try:
 			logger.info("Connection from worker '%s' (User: '%s', RemoteAddress: '%s')", connection.worker, connection.user, connection.remote_address[0])
 			messenger_instance = Messenger(WebSocketConnection(connection))
@@ -111,7 +129,9 @@ class Supervisor:
 			logger.error("Unhandled exception in connection handler", exc_info = True)
 
 
-	async def _process_connection_internal(self, user, worker_identifier, messenger_instance):
+	async def _process_connection_internal(self, user: str, worker_identifier: str, messenger_instance: Messenger) -> None:
+		""" Internal implementation for processing a worker connection """
+
 		logger.info("Registering worker '%s'", worker_identifier)
 		worker_properties = await messenger_instance.send_request({ "command": "describe" })
 		worker_record = self._register_worker(worker_identifier, user, **worker_properties)
@@ -129,7 +149,10 @@ class Supervisor:
 			self._worker_provider.update_status(worker_record, is_active = False, should_disconnect = False)
 
 
-	def _register_worker(self, worker_identifier, owner, version, display_name, properties): # pylint: disable = too-many-arguments
+	def _register_worker(self, # pylint: disable = too-many-arguments
+			worker_identifier: str, owner: str, version: str, display_name: str, properties: dict) -> dict:
+		""" Register the worker by creating or updating its record in the database and checking it is valid """
+
 		if worker_identifier in self._active_workers:
 			raise WorkerError("Worker '%s' is already active" % worker_identifier)
 
@@ -144,7 +167,8 @@ class Supervisor:
 		return worker_record
 
 
-	def _instantiate_worker(self, worker_identifier, messenger_instance):
+	def _instantiate_worker(self, worker_identifier: str, messenger_instance: Messenger) -> Worker:
+		""" Instantiate a new worker object to watch the remote worker process """
 		worker_instance = Worker(worker_identifier, messenger_instance, self._run_provider)
 		messenger_instance.update_handler = worker_instance.handle_update
 		return worker_instance
