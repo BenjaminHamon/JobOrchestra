@@ -4,6 +4,8 @@ import logging
 import traceback
 import uuid
 
+from typing import Optional
+
 from bhamon_orchestra_model.network.connection import NetworkConnection
 
 
@@ -62,7 +64,7 @@ class Messenger:
 		self.is_disposed = True
 
 
-	async def send_request(self, data: dict) -> None:
+	async def send_request(self, data: dict) -> Optional[dict]:
 		if self.is_disposed:
 			raise RuntimeError("Messenger is disposed")
 
