@@ -1,4 +1,5 @@
 import logging
+import random
 
 from typing import Optional
 
@@ -30,7 +31,9 @@ class WorkerSelector:
 		""" Find an available and suitable worker to execute the specified run """
 
 		all_workers = self._worker_provider.get_list()
-		all_available_workers = (worker for worker in all_workers if self._supervisor.is_worker_available(worker["identifier"]))
+		all_available_workers = [ worker for worker in all_workers if self._supervisor.is_worker_available(worker["identifier"]) ]
+		random.shuffle(all_available_workers)
+
 		return next((worker["identifier"] for worker in all_available_workers if self.are_compatible(worker, job, run)), None)
 
 
