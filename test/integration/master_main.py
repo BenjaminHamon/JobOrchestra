@@ -76,12 +76,12 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	)
 
 	job_scheduler_instance = JobScheduler(
-		supervisor = supervisor_instance,
-		date_time_provider = date_time_provider_instance,
 		job_provider = job_provider_instance,
 		run_provider = run_provider_instance,
 		schedule_provider = schedule_provider_instance,
+		supervisor = supervisor_instance,
 		worker_selector = worker_selector_instance,
+		date_time_provider = date_time_provider_instance,
 	)
 
 	master_instance = Master(

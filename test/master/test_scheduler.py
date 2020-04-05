@@ -20,7 +20,7 @@ def test_abort_run_pending():
 	date_time_provider_instance = FakeDateTimeProvider()
 	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
+	job_scheduler_instance = JobScheduler(None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
 
 	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
@@ -42,7 +42,7 @@ def test_abort_run_running_connected():
 	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	worker_instance = Worker("worker_test", None, run_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
+	job_scheduler_instance = JobScheduler(None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
 
 	supervisor_instance._active_workers[worker_instance.identifier] = worker_instance
 
@@ -71,7 +71,7 @@ def test_abort_run_running_disconnected():
 	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	worker_instance = Worker("worker_test", None, run_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
+	job_scheduler_instance = JobScheduler(None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
 
 	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
@@ -97,7 +97,7 @@ def test_abort_run_completed():
 	date_time_provider_instance = FakeDateTimeProvider()
 	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(supervisor_instance, date_time_provider_instance, None, run_provider_instance, None, None)
+	job_scheduler_instance = JobScheduler(None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
 
 	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
