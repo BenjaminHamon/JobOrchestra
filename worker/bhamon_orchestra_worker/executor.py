@@ -15,8 +15,6 @@ logger = logging.getLogger("Executor")
 shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT # pylint: disable = no-member
 subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
-termination_timeout_seconds = 30
-
 
 class Executor: # pylint: disable = too-few-public-methods
 
@@ -26,8 +24,8 @@ class Executor: # pylint: disable = too-few-public-methods
 		self._date_time_provider = date_time_provider
 
 		self._run_status = None
-
 		self._should_shutdown = False
+		self.termination_timeout_seconds = 30
 
 
 	def run(self, environment):
@@ -117,7 +115,6 @@ class Executor: # pylint: disable = too-few-public-methods
 		logger.info("(%s) Run completed with status %s", self.run_identifier, self._run_status["status"])
 
 
-
 	def _execute_step(self, step, is_skipping):
 		logger.info("(%s) Step %s is starting", self.run_identifier, step["name"])
 
@@ -205,7 +202,7 @@ class Executor: # pylint: disable = too-few-public-methods
 				logger.info("(%s) Terminating child process", self.run_identifier)
 				os.kill(child_process.pid, shutdown_signal)
 				try:
-					result = child_process.wait(timeout = termination_timeout_seconds)
+					result = child_process.wait(timeout = self.termination_timeout_seconds)
 				except subprocess.TimeoutExpired:
 					logger.warning("(%s) Terminating child process (force)", self.run_identifier)
 					child_process.kill()
