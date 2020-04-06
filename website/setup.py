@@ -14,7 +14,16 @@ configuration_instance = development.configuration.load_configuration(environmen
 parameters = development.configuration.get_setuptools_parameters(configuration_instance)
 
 
-resource_patterns = [ 'static/**/*.css', 'static/**/*.js', 'templates/**/*.html' ]
+resource_patterns = [
+	"static/**/*.css",
+	"static/**/*.eot",
+	"static/**/*.js",
+	"static/**/*.svg",
+	"static/**/*.ttf",
+	"static/**/*.woff",
+	"static/**/*.woff2",
+	"templates/**/*.html",
+]
 
 parameters.update({
 	"name": "bhamon-orchestra-website",
