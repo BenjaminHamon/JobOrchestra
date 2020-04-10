@@ -52,7 +52,7 @@ class GitClient:
 	def update(self, revision, result_file_path):
 		logger.info("Updating to revision '%s'", revision)
 
-		fetch_command = [ self.git_executable, "fetch", "--verbose" ]
+		fetch_command = [ self.git_executable, "fetch", "--prune", "--verbose" ]
 		logger.info("+ %s", " ".join(fetch_command))
 		subprocess.check_call(fetch_command)
 
