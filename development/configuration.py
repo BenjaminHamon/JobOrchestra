@@ -9,7 +9,7 @@ import sys
 
 def load_configuration(environment):
 	configuration = {
-		"project": "bhamon-orchestra",
+		"project_identifier": "bhamon-orchestra",
 		"project_name": "Job Orchestra",
 		"project_version": load_project_version(environment["git_executable"], "2.0"),
 	}
