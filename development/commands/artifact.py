@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 
 import bhamon_development_toolkit.artifacts.filesets as artifact_filesets
 import bhamon_development_toolkit.workspace
@@ -59,7 +60,7 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 	except KeyError as exception:
 		raise KeyError("Artifact parameter '%s' is required" % exception.args[0]) from exception
 
-	artifact_repository = ArtifactRepository(configuration["artifact_directory"], configuration["project_identifier_for_artifact_server"])
+	artifact_repository = ArtifactRepository(os.path.join(configuration["artifact_directory"], "repository"), configuration["project_identifier_for_artifact_server"])
 	if environment.get("artifact_server_url", None) is not None:
 		artifact_server_url = environment["artifact_server_url"]
 		artifact_server_parameters = environment.get("artifact_server_parameters", {})
