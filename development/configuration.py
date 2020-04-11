@@ -40,9 +40,9 @@ def load_configuration(environment):
 
 
 def load_project_version(git_executable, identifier):
-	branch = subprocess.check_output([ git_executable, "rev-parse", "--abbrev-ref", "HEAD" ]).decode("utf-8").strip()
-	revision = subprocess.check_output([ git_executable, "rev-parse", "--short=10", "HEAD" ]).decode("utf-8").strip()
-	revision_date = int(subprocess.check_output([ git_executable, "show", "--no-patch", "--format=%ct", revision ]).decode("utf-8").strip())
+	branch = subprocess.check_output([ git_executable, "rev-parse", "--abbrev-ref", "HEAD" ], universal_newlines = True).strip()
+	revision = subprocess.check_output([ git_executable, "rev-parse", "--short=10", "HEAD" ], universal_newlines = True).strip()
+	revision_date = int(subprocess.check_output([ git_executable, "show", "--no-patch", "--format=%ct", revision ], universal_newlines = True).strip())
 	revision_date = datetime.datetime.utcfromtimestamp(revision_date).replace(microsecond = 0).isoformat() + "Z"
 
 	return {
