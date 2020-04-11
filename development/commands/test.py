@@ -1,4 +1,5 @@
 import logging
+import os
 import uuid
 
 import bhamon_development_toolkit.python.test as python_test
@@ -16,8 +17,8 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
-	report = python_test.run_pytest(environment["python3_executable"], "test_results", arguments.identifier,
-			"./test",  arguments.filter, simulate = arguments.simulate)
+	result_directory = os.path.join(configuration["artifact_directory"], "test_results")
+	report = python_test.run_pytest(environment["python3_executable"], result_directory, arguments.identifier, "./test",  arguments.filter, simulate = arguments.simulate)
 
 	if arguments.results:
 		save_results(arguments.results, report, simulate = arguments.simulate)

@@ -35,6 +35,9 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 		repository_parameters = environment.get("python_package_repository_parameters", {})
 		repository_client = bhamon_development_toolkit.python.distribution.create_repository_client(repository_url, repository_parameters, environment)
 
+	package_directory = os.path.join(configuration["artifact_directory"], "distributions")
+	verbose = environment["logging_stream_level"] == "debug"
+
 	if "upload" in arguments.distribute_commands and repository_client is None:
 		raise ValueError("Upload command requires a python package repository")
 
@@ -44,11 +47,11 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 		print("")
 	if "package" in arguments.distribute_commands:
 		for component in configuration["components"]:
-			package(environment["python3_executable"], component, configuration["project_version"], arguments.verbosity == "debug", arguments.simulate)
+			package(environment["python3_executable"], component, configuration["project_version"], package_directory, verbose, arguments.simulate)
 			print("")
 	if "upload" in arguments.distribute_commands:
 		for component in configuration["components"]:
-			repository_client.upload(os.path.join(".artifacts", "distributions"), component["name"], configuration["project_version"], "-py3-none-any.whl", arguments.simulate)
+			repository_client.upload(package_directory, component["name"], configuration["project_version"], "-py3-none-any.whl", arguments.simulate)
 			save_upload_results(component, configuration["project_version"], arguments.results, arguments.simulate)
 			print("")
 
@@ -67,7 +70,8 @@ def setup(configuration, component, simulate):
 			metadata_file.writelines(metadata_content)
 
 
-def package(python_executable, component, version, verbose, simulate):
+def package( # pylint: disable = too-many-arguments
+		python_executable, component, version, package_directory, verbose, simulate):
 	logger.info("Creating distribution for '%s'", component["name"])
 
 	if os.sep in os.path.normpath(python_executable):
@@ -83,7 +87,7 @@ def package(python_executable, component, version, verbose, simulate):
 
 	archive_name = component["name"].replace("-", "_") + "-" + version["full"]
 	source_path = os.path.join(component["path"], "dist", archive_name + "-py3-none-any.whl")
-	destination_path = os.path.join(".artifacts", "distributions", component["name"], archive_name + "-py3-none-any.whl")
+	destination_path = os.path.join(package_directory, component["name"], archive_name + "-py3-none-any.whl")
 
 	if not simulate:
 		os.makedirs(os.path.dirname(destination_path), exist_ok = True)
@@ -105,7 +109,7 @@ def save_upload_results(component, version, result_file_path, simulate):
 			bhamon_development_toolkit.workspace.save_results(result_file_path, results)
 
 
-def install_for_test(python_executable, python_package_repository, configuration, simulate):
+def install_for_test(python_executable, python_package_repository, configuration, package_directory, simulate):
 	if len(configuration.get("development_dependencies", [])) > 0:
 		logger.info("Installing development dependencies")
 		bhamon_development_toolkit.python.system.install_packages(python_executable, python_package_repository, configuration.get("development_dependencies", []), simulate)
@@ -121,7 +125,7 @@ def install_for_test(python_executable, python_package_repository, configuration
 	project_packages = []
 	for component in configuration["components"]:
 		archive_name = component["name"].replace("-", "_") + "-" + configuration["project_version"]["full"]
-		archive_path = os.path.join(".artifacts", "distributions", component["name"], archive_name + "-py3-none-any.whl")
+		archive_path = os.path.join(package_directory, component["name"], archive_name + "-py3-none-any.whl")
 		project_packages.append(archive_path)
 
 	bhamon_development_toolkit.python.system.install_packages(python_executable, None, project_packages, simulate)

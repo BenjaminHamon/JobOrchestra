@@ -54,7 +54,7 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 	artifact = configuration["artifacts"][arguments.artifact]
 	artifact_name = artifact["file_name"].format(**parameters)
 
-	artifact_repository = ArtifactRepository(".artifacts", configuration["project_identifier_for_artifact_server"])
+	artifact_repository = ArtifactRepository(configuration["artifact_directory"], configuration["project_identifier_for_artifact_server"])
 	if environment.get("artifact_server_url", None) is not None:
 		artifact_server_url = environment["artifact_server_url"]
 		artifact_server_parameters = environment.get("artifact_server_parameters", {})
