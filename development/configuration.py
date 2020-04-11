@@ -1,3 +1,4 @@
+import copy
 import datetime
 import glob
 import importlib
@@ -69,7 +70,7 @@ def load_filesets(configuration):
 def load_artifacts(configuration):
 	return {
 		"package": {
-			"file_name": "{project}_{version}_package",
+			"file_name": "{project}_{version}+{revision}_package",
 			"installation_directory": ".artifacts/distributions",
 			"path_in_repository": "packages",
 
@@ -135,6 +136,7 @@ def import_command(module_name):
 
 
 def _list_distribution_files(path_in_workspace, parameters):
-	archive_name = "{component}-{version}-py3-none-any.whl"
-	archive_name = archive_name.format(component = parameters["component"].replace("-", "_"), version = parameters["version"])
+	parameters = copy.deepcopy(parameters)
+	parameters["component"] = parameters["component"].replace("-", "_")
+	archive_name = "{component}-{version}+{revision}-py3-none-any.whl".format(**parameters)
 	return [ os.path.join(path_in_workspace, archive_name) ]
