@@ -71,7 +71,7 @@ def load_artifacts(configuration):
 	return {
 		"package": {
 			"file_name": "{project}_{version}+{revision}_package",
-			"installation_directory": ".artifacts/distributions",
+			"installation_directory": os.path.join(configuration["artifact_directory"], "distributions"),
 			"path_in_repository": "packages",
 
 			"filesets": [
