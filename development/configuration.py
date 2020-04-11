@@ -64,6 +64,11 @@ def load_filesets(configuration):
 			"path_in_workspace": os.path.join(configuration["artifact_directory"], "distributions", "{component}"),
 			"file_functions": [ _list_distribution_files ],
 		},
+
+		"test_results": {
+			"path_in_workspace": os.path.join(configuration["artifact_directory"], "test_results"),
+			"file_patterns": [ "**" ],
+		},
 	}
 
 
@@ -86,6 +91,16 @@ def load_artifacts(configuration):
 				for component in configuration["components"]
 			],
 		},
+
+		"test_results": {
+			"file_name": "{project}_{version}+{revision}_test-results_{run}",
+			"installation_directory": os.path.join(configuration["artifact_directory"], "test_results"),
+			"path_in_repository": "test_results",
+
+			"filesets": [
+				{ "identifier": "test_results", "path_in_archive": ".", },
+			],
+		}
 	}
 
 
