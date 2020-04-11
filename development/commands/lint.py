@@ -21,7 +21,7 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	session_success = True
-	result_directory = "test_results"
+	result_directory = os.path.join(configuration["artifact_directory"], "lint_results")
 
 	if not arguments.simulate:
 		if os.path.exists(os.path.join(result_directory, arguments.identifier)):
