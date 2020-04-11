@@ -123,7 +123,7 @@ class Executor: # pylint: disable = too-few-public-methods
 			worker_storage.save_status(self.run_identifier, self._run_status)
 
 			log_file_path = worker_storage.get_log_path(self.run_identifier, step["index"], step["name"])
-			result_file_path = os.path.join(self._run_status["workspace"], "run_results", self.run_identifier, "results.json")
+			result_file_path = os.path.join(self._run_status["workspace"], ".orchestra", "runs", self.run_identifier, "results.json")
 
 			if is_skipping:
 				step["status"] = "skipped"
