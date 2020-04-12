@@ -9,18 +9,6 @@ A common use for it would be in a continuous integration pipeline.
 The project is open source software. See [About](about.md) for more information.
 
 
-## Architecture
-
-A job orchestra setup includes several components:
-* The database, which stores information about jobs, runs, workers, etc.
-* The master, which supervises workers, distributes runs and saves results to the database.
-* The service, which exposes a web api to retrieve information from the database and to interact with the master.
-* The website, a web interface on top of the service for it to be usable by end users.
-* The workers, which executes runs assigned to them by the master and send back results.
-
-The project is structured with a python package for each component as each one has its own process and can run separately from the others. The model package includes common code, in particular providers for the database.
-
-
 ## Development
 
 The project include commands to automate development related tasks. They are exposed by the `development/main.py` script. Check the script help, using the `--help` option, for information about commands. You can also run commands with the `--simulate` option to check their behavior before actually running them.
@@ -31,6 +19,8 @@ To set up a workspace for development, create a `python3` virtual environment, t
 ```
 python3 ./development/main.py develop
 ```
+
+Check out the [Documentation](documentation) for more information.
 
 
 ## Instance Setup
