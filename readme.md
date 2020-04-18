@@ -17,7 +17,7 @@ The project include commands to automate development related tasks. They are exp
 To set up a workspace for development, create a `python3` virtual environment, then run the `develop` command. This will install the project dependencies and packages in your python environment.
 
 ```
-python3 ./development/main.py develop
+python ./development/main.py develop
 ```
 
 Check out the [Documentation](documentation) for more information, notably the [Setup](documentation/setup.md) page for how to setup a local instance.
