@@ -20,15 +20,4 @@ To set up a workspace for development, create a `python3` virtual environment, t
 python3 ./development/main.py develop
 ```
 
-Check out the [Documentation](documentation) for more information.
-
-
-## Instance Setup
-
-A job orchestra instance includes several components, each with its process which could run on its own host, with its own environment. A typical setup includes a master, a service, a website and several workers.
-
-You need to write entry point scripts for all the components, as well as the master configuration. The test suite includes an example used by [integration tests](test/integration).
-
-For the database, the project currently supports MongoDB, as well as a custom JSON database meant for development only. You can implement custom providers if you wish to use another database. To use MongoDB, ensure you have a running and reachable MongoDB instance and configure the master and service entry points to connect to it.
-
-For development, you can set up a local workspace with a python virtual environment in which you install the project packages. Then set up directories for the components you need: a master, a service, a website, one or two workers. Depending on what you are working on, you could run only a subset of them, or you may need more.
+Check out the [Documentation](documentation) for more information, notably the [Setup](documentation/setup.md) page for how to setup a local instance.
