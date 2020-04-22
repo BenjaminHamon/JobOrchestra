@@ -6,7 +6,7 @@ A run is created when a job is triggered by a request to the service or from a s
 
 The worker proxy, meaning the worker object in the master process, implements a state machine to manage executors.
 
-![](executor_state_machine.png)
+![](resources/executor_state_machine.png)
 
 The worker proxy starts the run by sending an `execute` command with the run details (the identifier, the job definition and the parameters) to the remote worker. The worker process saves the run request to its local storage and spawns an executor process which will be responsible for the run itself.
 
@@ -22,6 +22,8 @@ If the worker process terminates with local runs still present, or if the connec
 
 
 ## Run flow
+
+![](resources/run.png)
 
 1. A job is triggered by a request to the service or from a schedule
 2. A run record is created in the database
@@ -55,4 +57,4 @@ If the worker process terminates with local runs still present, or if the connec
 
 ## Status
 
-![](run_status.png)
+![](resources/run_status.png)

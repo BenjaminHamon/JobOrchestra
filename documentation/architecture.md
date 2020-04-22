@@ -9,7 +9,7 @@ The project is divided between several applications:
 
 The project is structured with a python package for each component as each one has its own process and can run separately from the others. The model package includes common code.
 
-![](architecture.png)
+![](resources/architecture.png)
 
 
 ## Database

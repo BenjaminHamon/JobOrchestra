@@ -1,6 +1,6 @@
 # Data Model
 
-![](data_model.png)
+![](resources/data_model.png)
 
 
 ## Project
