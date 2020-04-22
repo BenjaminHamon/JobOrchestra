@@ -18,4 +18,4 @@ To set up a workspace for development, create a `python3` virtual environment, t
 python ./development/main.py develop
 ```
 
-Check out the [Documentation](documentation) for more information, notably the [Setup](documentation/setup.md) page for how to setup a local instance.
+Check out the [Documentation](documentation/home.md) for more information, notably the [Setup](documentation/setup.md) page for how to setup a local instance.

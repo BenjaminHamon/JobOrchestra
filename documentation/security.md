@@ -25,7 +25,6 @@ The standard roles are:
 * Worker: connection access to the master, access to web routes for triggering jobs and viewing runs
 
 
-
 ## Password
 
 A user may have a password. This password is only used with the login on the website and on the service. The login operation returns a new authentication token which is used for all other operations.
