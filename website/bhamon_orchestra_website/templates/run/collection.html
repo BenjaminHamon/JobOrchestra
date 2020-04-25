@@ -1,0 +1,50 @@
+{% extends 'layout.html' %}
+{% import 'run/macros.html' as run_macros %}
+{% import 'macros.html' as shared_macros %}
+
+{% block content %}
+<h1>Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a> / Runs</h1>
+<section>
+	<div class="table-container">
+		<form method="get" action="{{ url_for('run_controller.show_collection', project_identifier = project['identifier']) }}">
+			<label for="input-job">Job</label>
+			<select id="input-job" name="job">
+				<option></option>
+				{% for job in job_collection %}
+					{% if request.args.get('job') == job['identifier'] %}
+				<option value="{{ job['identifier'] }}" selected>{{ job['display_name'] }}</option>
+					{% else %}
+				<option value="{{ job['identifier'] }}">{{ job['display_name'] }}</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+			<label for="input-worker">Worker</label>
+			<select id="input-worker" name="worker">
+				<option></option>
+				{% for worker in worker_collection %}
+					{% if request.args.get('worker') == worker['identifier'] %}
+				<option value="{{ worker['identifier'] }}" selected>{{ worker['display_name'] }}</option>
+					{% else %}
+				<option value="{{ worker['identifier'] }}">{{ worker['display_name'] }}</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+			<label for="input-status">Status</label>
+			<select id="input-status" name="status">
+				<option></option>
+				{% for status in status_collection %}
+					{% if request.args.get('status') == status %}
+				<option selected>{{ status }}</option>
+					{% else %}
+				<option>{{ status }}</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+			<button type="submit">Apply filters</button>
+		</form>
+		{{ shared_macros.page_navigation('run_controller.show_collection', pagination) }}
+		{{ run_macros.run_table(run_collection) }}
+		{{ shared_macros.page_navigation('run_controller.show_collection', pagination) }}
+	</div>
+</section>
+{% endblock %}

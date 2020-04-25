@@ -2,13 +2,9 @@ import argparse
 import json
 import logging
 
-import bhamon_build_worker.controller as controller
+from bhamon_orchestra_worker.controller import Controller
 
 import environment
-
-
-# Rapid requests to reduce delays in tests
-controller.wait_delay_seconds = 1
 
 
 def main():
@@ -18,7 +14,12 @@ def main():
 	with open(arguments.authentication, "r") as authentication_file:
 		authentication = json.load(authentication_file)
 
-	arguments.func(arguments, (authentication["user"], authentication["secret"]))
+	controller_instance = Controller(arguments.service_url, (authentication["user"], authentication["secret"]))
+
+	# Rapid requests to reduce delays in tests
+	controller_instance.wait_delay_seconds = 1
+
+	arguments.func(controller_instance, arguments)
 
 
 def parse_arguments():
@@ -30,21 +31,24 @@ def parse_arguments():
 		return (key_value[0], key_value[1])
 
 	main_parser = argparse.ArgumentParser()
-	main_parser.add_argument("--service-url", required = True, help = "set the build service url to send requests to")
-	main_parser.add_argument("--authentication", required = True, help = "set the file path containing credentials to communicate with the build service")
-	main_parser.add_argument("--results", required = True, help = "set the file path where to store the build results")
+	main_parser.add_argument("--service-url", required = True, help = "set the service url to send requests to")
+	main_parser.add_argument("--authentication", required = True, help = "set the file path containing credentials to communicate with the service")
+	main_parser.add_argument("--results", required = True, help = "set the file path where to store the run results")
 
 	subparsers = main_parser.add_subparsers(title = "commands", metavar = "<command>")
 	subparsers.required = True
 
-	command_parser = subparsers.add_parser("trigger", help = "trigger a build")
-	command_parser.add_argument("job_identifier", help = "set the job to trigger a build for")
+	command_parser = subparsers.add_parser("trigger", help = "trigger a run")
+	command_parser.add_argument("--project", required = True, help = "set the project to trigger a run for")
+	command_parser.add_argument("--job", required = True, help = "set the job to trigger a run for")
+	command_parser.add_argument("--source-project", required = True, help = "set the project serving as the trigger source")
+	command_parser.add_argument("--source-run", required = True, help = "set the run serving as the trigger source")
 	command_parser.add_argument("--parameters", nargs = "*", type = parse_key_value_parameter, default = [],
 		metavar = "<key=value>", help = "set parameters for the job")
-	command_parser.set_defaults(func = trigger_build)
+	command_parser.set_defaults(func = trigger_run)
 
-	command_parser = subparsers.add_parser("wait", help = "wait for triggered builds")
-	command_parser.set_defaults(func = wait_build)
+	command_parser = subparsers.add_parser("wait", help = "wait for triggered runs")
+	command_parser.set_defaults(func = wait_run)
 
 	arguments = main_parser.parse_args()
 	if hasattr(arguments, "parameters"):
@@ -53,12 +57,12 @@ def parse_arguments():
 	return arguments
 
 
-def trigger_build(arguments, authorization):
-	controller.trigger_build(arguments.service_url, arguments.results, arguments.job_identifier, arguments.parameters, authorization)
+def trigger_run(controller_instance, arguments):
+	controller_instance.trigger_run(arguments.results, arguments.project, arguments.job, arguments.parameters, arguments.source_project, arguments.source_run)
 
 
-def wait_build(arguments, authorization):
-	controller.wait_build(arguments.service_url, arguments.results, authorization)
+def wait_run(controller_instance, arguments):
+	controller_instance.wait_run(arguments.results)
 
 
 if __name__ == "__main__":

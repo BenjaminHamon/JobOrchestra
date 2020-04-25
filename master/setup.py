@@ -15,11 +15,11 @@ parameters = development.configuration.get_setuptools_parameters(configuration_i
 
 
 parameters.update({
-	"name": "bhamon-build-master",
-	"description": "Master component for build service, responsible for supervising workers and builds",
-	"packages": [ "bhamon_build_master" ],
+	"name": "bhamon-orchestra-master",
+	"description": "Master component for Job Orchestra, responsible for supervising workers and runs",
+	"packages": [ "bhamon_orchestra_master" ],
 	"python_requires": "~= 3.5",
-	"install_requires": [ "websockets ~= 7.0" ],
+	"install_requires": [ "pycron ~= 3.0", "websockets ~= 7.0" ],
 })
 
 setuptools.setup(**parameters)

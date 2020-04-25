@@ -15,11 +15,18 @@ parameters = development.configuration.get_setuptools_parameters(configuration_i
 
 
 parameters.update({
-	"name": "bhamon-build-model",
-	"description": "Model library for build service",
-	"packages": [ "bhamon_build_model" ],
+	"name": "bhamon-orchestra-model",
+	"description": "Model library for Job Orchestra",
+
+	"packages": [
+		"bhamon_orchestra_model",
+		"bhamon_orchestra_model/database",
+		"bhamon_orchestra_model/network",
+		"bhamon_orchestra_model/revision_control",
+	],
+
 	"python_requires": "~= 3.5",
-	"install_requires": [ "python2-secrets ; python_version < '3.6'" ],
+	"install_requires": [ "python-dateutil ~= 2.8", "python2-secrets ~= 1.0 ; python_version < '3.6'" ],
 })
 
 setuptools.setup(**parameters)

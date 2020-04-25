@@ -15,9 +15,9 @@ parameters = development.configuration.get_setuptools_parameters(configuration_i
 
 
 parameters.update({
-	"name": "bhamon-build-cli",
-	"description": "Command line interpreter component for build service, to interact with the master from a terminal",
-	"packages": [ "bhamon_build_cli" ],
+	"name": "bhamon-orchestra-cli",
+	"description": "Command line interpreter component for Job Orchestra, to interact with the master from a terminal",
+	"packages": [ "bhamon_orchestra_cli" ],
 	"python_requires": "~= 3.5",
 })
 

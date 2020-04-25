@@ -1,28 +1,52 @@
 def configure():
-	workers = configure_workers()
-	jobs = configure_jobs()
+	example_project = {
+		"identifier": "examples",
+		"display_name": "Examples",
+		"jobs": configure_jobs(),
+		"schedules": configure_schedules(),
+		"services": {},
+	}
 
-	return { "jobs": jobs, "workers": workers }
+	return {
+		"projects": [
+			example_project,
+		],
+	}
 
 
 def configure_jobs():
 	return [
-		test_success(),
-		test_failure(),
-		test_exception(),
-		test_controller_success(),
-		test_controller_failure(),
+		success(),
+		sleep(),
+		failure(),
+		exception(),
+		controller_success(),
+		controller_failure(),
 	]
 
 
-def test_success():
+def configure_schedules():
+	return [
+		{
+			"identifier": "success_nightly",
+			"display_name": "Success Nightly",
+			"job": "success",
+
+			"parameters": {},
+
+			"expression": "0 0 * * *",
+		}
+	]
+
+
+def success():
 	return {
-		"identifier": "test_success",
+		"identifier": "success",
+		"display_name": "Success",
 		"description": "Test job which succeeds.",
-		"workspace": "test_project",
+		"workspace": "examples",
 
 		"properties": {
-			"project": "test_project",
 			"is_controller": False,
 		},
 
@@ -34,14 +58,33 @@ def test_success():
 	}
 
 
-def test_failure():
+def sleep():
 	return {
-		"identifier": "test_failure",
-		"description": "Test job with a failing step.",
-		"workspace": "test_project",
+		"identifier": "sleep",
+		"display_name": "Sleep",
+		"description": "Test job which succeeds after several seconds.",
+		"workspace": "examples",
 
 		"properties": {
-			"project": "test_project",
+			"is_controller": False,
+		},
+
+		"parameters": [],
+
+		"steps": [
+			{ "name": "hello", "command": [ "{environment[python3_executable]}", "-c", "import time; time.sleep(5)" ] },
+		],
+	}
+
+
+def failure():
+	return {
+		"identifier": "failure",
+		"display_name": "Failure",
+		"description": "Test job with a failing step.",
+		"workspace": "examples",
+
+		"properties": {
 			"is_controller": False,
 		},
 
@@ -53,14 +96,14 @@ def test_failure():
 	}
 
 
-def test_exception():
+def exception():
 	return {
-		"identifier": "test_exception",
+		"identifier": "exception",
+		"display_name": "Exception",
 		"description": "Test job with mistakes in its definition.",
-		"workspace": "test_project",
+		"workspace": "examples",
 
 		"properties": {
-			"project": "test_project",
 			"is_controller": False,
 		},
 
@@ -72,85 +115,57 @@ def test_exception():
 	}
 
 
-def test_controller_success():
-	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
-	controller_script += [ "--service-url", "{environment[build_service_url]}", ]
-	controller_script += [ "--authentication", "{environment[build_worker_authentication]}" ]
-	controller_script += [ "--results", "{result_file_path}" ]
+def controller_success():
+	controller_entry_point = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
+	controller_entry_point += [ "--service-url", "{environment[orchestra_service_url]}", ]
+	controller_entry_point += [ "--authentication", "{environment[orchestra_worker_authentication]}" ]
+	controller_entry_point += [ "--results", "{result_file_path}" ]
+
+	trigger_source_parameters = [ "--source-project", "{project_identifier}", "--source-run", "{run_identifier}" ]
 
 	return {
-		"identifier": "test_controller_success",
+		"identifier": "controller_success",
+		"display_name": "Controller Success",
 		"description": "Trigger all test jobs.",
-		"workspace": "test_project",
+		"workspace": "examples",
 
 		"properties": {
-			"project": "test_project",
 			"is_controller": True,
 		},
 
 		"parameters": [],
 
 		"steps": [
-			{ "name": "trigger", "command": controller_script + [ "trigger", "test_success" ] },
-			{ "name": "trigger", "command": controller_script + [ "trigger", "test_success" ] },
-			{ "name": "wait", "command": controller_script + [ "wait" ] },
+			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters },
+			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters },
+			{ "name": "wait", "command": controller_entry_point + [ "wait" ] },
 		],
 	}
 
 
-def test_controller_failure():
-	controller_script = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
-	controller_script += [ "--service-url", "{environment[build_service_url]}", ]
-	controller_script += [ "--authentication", "{environment[build_worker_authentication]}" ]
-	controller_script += [ "--results", "{result_file_path}" ]
+def controller_failure():
+	controller_entry_point = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
+	controller_entry_point += [ "--service-url", "{environment[orchestra_service_url]}", ]
+	controller_entry_point += [ "--authentication", "{environment[orchestra_worker_authentication]}" ]
+	controller_entry_point += [ "--results", "{result_file_path}" ]
+
+	trigger_source_parameters = [ "--source-project", "{project_identifier}", "--source-run", "{run_identifier}" ]
 
 	return {
-		"identifier": "test_controller_failure",
+		"identifier": "controller_failure",
+		"display_name": "Controller Failure",
 		"description": "Trigger all test jobs.",
-		"workspace": "test_project",
+		"workspace": "examples",
 
 		"properties": {
-			"project": "test_project",
 			"is_controller": True,
 		},
 
 		"parameters": [],
 
 		"steps": [
-			{ "name": "trigger", "command": controller_script + [ "trigger", "test_success" ] },
-			{ "name": "trigger", "command": controller_script + [ "trigger", "test_failure" ] },
-			{ "name": "wait", "command": controller_script + [ "wait" ] },
+			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters },
+			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "failure" ] + trigger_source_parameters },
+			{ "name": "wait", "command": controller_entry_point + [ "wait" ] },
 		],
 	}
-
-
-def configure_workers():
-	return [
-		{
-			"identifier": "controller",
-			"description": "Test build controller",
-			"properties": {
-				"project": [ "test_project" ],
-				"is_controller": True,
-				"executor_limit": 100,
-			},
-		},
-		{
-			"identifier": "worker_01",
-			"description": "Test build worker",
-			"properties": {
-				"project": [ "test_project" ],
-				"is_controller": False,
-				"executor_limit": 1,
-			},
-		},
-		{
-			"identifier": "worker_02",
-			"description": "Test build worker",
-			"properties": {
-				"project": [ "test_project" ],
-				"is_controller": False,
-				"executor_limit": 1,
-			},
-		},
-	]

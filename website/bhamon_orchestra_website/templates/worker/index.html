@@ -1,0 +1,69 @@
+{% extends 'layout.html' %}
+{% import 'run/macros.html' as run_macros %}
+
+{% block content %}
+<h1>Worker <a href="{{ url_for('worker_controller.show', worker_identifier = worker['identifier']) }}">{{ worker['display_name'] }}</a></h1>
+
+<section>
+	<h2>Status</h2>
+	<div class="status-grid {{ '' if authorize_view('worker-actions') else 'readonly' }}">
+		{% if worker['is_active'] %}
+		<div class="status-group">
+			<div class="status-indicator active"></div>
+			<div class="status-text">Active</div>
+		</div>
+			{% if authorize_view("worker-actions") %}
+		<form method="post">
+				{% if worker.get('should_disconnect', false) %}
+			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}" disabled>Disconnecting</button>
+				{% else %}
+			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}">Disconnect</button>
+				{% endif %}
+		</form>
+			{% endif %}
+		{% else %}
+		<div class="status-group">
+			<div class="status-indicator inactive"></div>
+			<div class="status-text">Inactive</div>
+		</div>
+			{% if authorize_view("worker-actions") %}
+		<form method="post">
+			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}" disabled>Disconnect</button>
+		</form>
+			{% endif %}
+		{% endif %}
+		{% if worker['is_enabled'] %}
+		<div class="status-group">
+			<div class="status-indicator enabled"></div>
+			<div class="status-text">Enabled</div>
+		</div>
+			{% if authorize_view("worker-actions") %}
+		<form method="post">
+			<button formaction="{{ url_for('worker_controller.disable', worker_identifier = worker['identifier']) }}">Disable</button>
+		</form>
+			{% endif %}
+		{% else %}
+		<div class="status-group">
+			<div class="status-indicator disabled"></div>
+			<div class="status-text">Disabled</div>
+		</div>
+			{% if authorize_view("worker-actions") %}
+		<form method="post">
+			<button formaction="{{ url_for('worker_controller.enable', worker_identifier = worker['identifier']) }}">Enable</button>
+		</form>
+			{% endif %}
+		{% endif %}
+	</div>
+	<ul>
+		<li>Owner: <a href="{{ url_for('user_controller.show', user_identifier = worker['owner']) }}">{{ worker['owner_display_name'] }}</a></li>
+		<li>Version: {{ worker['version'] }}</li>
+		<li>Creation date: {{ worker['creation_date'] }}</li>
+		<li>Update date: {{ worker['update_date'] }}</li>
+	</ul>
+</section>
+
+<section>
+	<h2><a href="{{ url_for('worker_controller.show_runs', worker_identifier = worker['identifier']) }}" title="View all runs">Runs</a></h2>
+	{{ run_macros.run_table(run_collection) }}
+</section>
+{% endblock %}

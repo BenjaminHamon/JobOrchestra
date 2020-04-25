@@ -1,0 +1,57 @@
+{% macro run_table(run_collection) %}
+<table>
+	<thead>
+		<tr>
+			<th>Project</th>
+			<th>Job</th>
+			<th>Run</th>
+			<th>Status</th>
+			{% if authorize_view("run-actions") %}
+			<th>Actions</th>
+			{% endif %}
+			<th>Worker</th>
+			<th>Creation date</th>
+			<th>Update date</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for run in run_collection %}
+		<tr>
+			<td><a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}">{{ run['project_display_name'] }}</a></td>
+			<td><a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}">{{ run['job_display_name'] }}</a></td>
+			<td><a href="{{ url_for('run_controller.show', project_identifier = run['project'], run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a></td>
+			<td>
+				<div class="status-group">
+					<div class="status-indicator {{ run['status'] }}"></div>
+					<div class="status-text">{{ run['status'] }}</div>
+				</div>
+			</td>
+			{% if authorize_view("run-actions") %}
+			<td>{{ run_actions(run) }}</td>
+			{% endif %}
+			<td>{% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker_display_name'] }}</a>{% endif %}</td>
+			<td>{{ run['creation_date'] }}</td>
+			<td>{{ run['update_date'] }}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endmacro %}
+
+{% macro run_actions(run) %}
+<form class="action-group" method="post">
+	{% if run['status'] == 'pending' %}
+		{% if run.get('should_cancel', false) %}
+	<button formaction="{{ url_for('run_controller.cancel', project_identifier = run['project'], run_identifier = run['identifier']) }}" disabled>Cancelling</button>
+		{% else %}
+	<button formaction="{{ url_for('run_controller.cancel', project_identifier = run['project'], run_identifier = run['identifier']) }}">Cancel</button>
+		{% endif %}
+	{% elif run['status'] == 'running' %}
+		{% if run.get('should_abort', false) %}
+	<button formaction="{{ url_for('run_controller.abort', project_identifier = run['project'], run_identifier = run['identifier']) }}" disabled>Aborting</button>
+		{% else %}
+	<button formaction="{{ url_for('run_controller.abort', project_identifier = run['project'], run_identifier = run['identifier']) }}">Abort</button>
+		{% endif %}
+	{% endif %}
+</form>
+{% endmacro %}

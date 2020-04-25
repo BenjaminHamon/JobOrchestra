@@ -7,7 +7,8 @@ logger = logging.getLogger("Main")
 
 
 def configure_argument_parser(environment, configuration, subparsers): # pylint: disable = unused-argument
-	return subparsers.add_parser("develop", help = "setup workspace for development")
+	parser = subparsers.add_parser("develop", help = "setup workspace for development")
+	parser.set_defaults(func = run)
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
@@ -53,9 +54,9 @@ def install_packages(python_executable, python_package_repository, package_colle
 def setup_component(configuration, component, simulate):
 	logger.info("Generating metadata for '%s'", component["name"])
 
-	metadata_file_path = os.path.join(component["path"], component["packages"][0], "__metadata__.py")
+	metadata_file_path = os.path.join(component["path"], component["name"].replace("-", "_"), "__metadata__.py")
 	metadata_content = ""
-	metadata_content += "__copyright__ = \"%s\"\n" % configuration["copyright"]
+	metadata_content += "__copyright__ = \"%s\"\n" % configuration["project_copyright"]
 	metadata_content += "__version__ = \"%s\"\n" % configuration["project_version"]["full"]
 	metadata_content += "__date__ = \"%s\"\n" % configuration["project_version"]["date"]
 

@@ -1,6 +1,9 @@
 [BASIC]
 const-naming-style = snake_case
 
+[DESIGN]
+max-attributes = 10
+
 [FORMAT]
 indent-string = '\t'
 max-line-length = 200
@@ -12,5 +15,3 @@ disable =
 	duplicate-code,
 	len-as-condition,
 	missing-docstring,
-	too-many-arguments,
-	too-many-instance-attributes,

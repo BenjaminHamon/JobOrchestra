@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 
 import bhamon_development_toolkit.artifacts.filesets as artifact_filesets
 import bhamon_development_toolkit.workspace
@@ -35,26 +36,31 @@ def configure_argument_parser(environment, configuration, subparsers): # pylint:
 	parser.add_argument("artifact", choices = configuration["artifacts"].keys(),
 		metavar = "<artifact>", help = "set an artifact definition to use for the commands")
 	parser.add_argument("--installation-directory",
-		help = "set the installation directory")
+		metavar = "<path>", help = "set the installation directory")
 	parser.add_argument("--parameters", nargs = "*", type = parse_key_value_parameter, default = [],
 		metavar = "<key=value>", help = "set parameters for the artifact")
 	parser.add_argument("--overwrite", action = "store_true",
 		help = "overwrite existing artifact on upload")
-	return parser
+	parser.set_defaults(func = run)
 
 
 def run(environment, configuration, arguments): # pylint: disable = unused-argument
 	parameters = {
-		"project": configuration["project"],
-		"version": configuration["project_version"]["full"],
+		"project": configuration["project_identifier"],
+		"version": configuration["project_version"]["identifier"],
+		"revision": configuration["project_version"]["revision"],
 	}
 
 	parameters.update(arguments.parameters)
 
 	artifact = configuration["artifacts"][arguments.artifact]
-	artifact_name = artifact["file_name"].format(**parameters)
 
-	artifact_repository = ArtifactRepository(".artifacts", configuration["project_identifier_for_artifact_server"])
+	try:
+		artifact_name = artifact["file_name"].format(**parameters)
+	except KeyError as exception:
+		raise KeyError("Artifact parameter '%s' is required" % exception.args[0]) from exception
+
+	artifact_repository = ArtifactRepository(os.path.join(configuration["artifact_directory"], "repository"), configuration["project_identifier_for_artifact_server"])
 	if environment.get("artifact_server_url", None) is not None:
 		artifact_server_url = environment["artifact_server_url"]
 		artifact_server_parameters = environment.get("artifact_server_parameters", {})

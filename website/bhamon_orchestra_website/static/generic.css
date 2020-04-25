@@ -1,0 +1,402 @@
+﻿html
+{
+	overflow-y: scroll;
+	height: 100%;
+}
+
+h1, p, ul
+{
+	margin: 0;
+}
+
+body
+{
+	display: grid;
+	grid-template-columns: min-content 1fr;
+	grid-template-rows: auto auto 1fr auto;
+	grid-template-areas:
+		"announcement announcement"
+		"header header"
+		"nav main"
+		"footer footer";
+	margin: 0;
+	min-height: 100%;
+	background-color: #dddddd;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+#announcement
+{
+	grid-area: announcement;
+}
+
+header
+{
+	grid-area: header;
+}
+
+nav
+{
+	grid-area: nav;
+}
+
+main
+{
+	grid-area: main;
+}
+
+footer
+{
+	grid-area: footer;
+}
+
+header, nav, main, footer
+{
+	padding: 10px;
+	background-color: white;
+}
+
+header
+{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	white-space: nowrap;
+	margin-bottom: 5px;
+}
+
+header > div
+{
+	margin: 5px;
+}
+
+header .title a
+{
+	font-size: 150%;
+	text-decoration: none;
+}
+
+header .title a, header .title a:visited, header .title a:hover, header .title a:active
+{
+	color: inherit;
+}
+
+header .login
+{
+	display: flex;
+	justify-content: space-between;
+}
+
+header .login span
+{
+	margin-left: 10px;
+}
+
+header .login a
+{
+	display: inline;
+}
+
+#announcement
+{
+	margin-bottom: 5px;
+	padding: 10px;
+	text-align: center;
+}
+
+#announcement.info
+{
+	background-color: #7fdbff;
+}
+
+#announcement.warning
+{
+	background-color: #ff851b;
+}
+
+#announcement.error
+{
+	background-color: #ff4136;
+}
+
+nav
+{
+	display: flex;
+	flex-direction: column;
+	white-space: nowrap;
+	margin-right: 5px;
+	min-width: 100px;
+}
+
+nav > div
+{
+	display: flex;
+	flex-direction: column;
+	margin: 5px 5px 15px 5px;
+}
+
+nav > div > a
+{
+	line-height: 150%;
+}
+
+main
+{
+	display: flex;
+	flex-direction: column;
+}
+
+footer
+{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	margin-top: 5px;
+	text-align: center;
+	font-size: 80%;
+	color: #555;
+}
+
+footer > p
+{
+	margin: 5px;
+}
+
+h1
+{
+	margin: 5px 5px 15px 5px;
+	font-size: 150%;
+}
+
+h1 > a
+{
+	display: inline;
+}
+
+section
+{
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	margin-bottom: 10px;
+}
+
+section > h2
+{
+	margin: 5px;
+	font-size: 120%;
+}
+
+section > div, section > form, section > table, section > ul, section > p, section > pre
+{
+	margin: 5px;
+}
+
+section > ul li
+{
+	margin: 5px 0;
+}
+
+a, img
+{
+	display: block;
+}
+
+li > a, li > span > a
+{
+	display: inline;
+}
+
+table
+{
+	border-collapse: collapse;
+	white-space: nowrap;
+}
+
+thead
+{
+	background-color: #eeeeee;
+}
+
+tbody > tr:hover
+{
+	background-color: #f0f8ff;
+}
+
+th, td
+{
+	padding: 5px 10px;
+	border: 1px solid #888888;
+}
+
+form input
+{
+	padding: 5px;
+	border: 1px solid #888888;
+}
+
+form input:read-only
+{
+	background-color: #eeeeee;
+}
+
+form select
+{
+	padding: 5px;
+	border: 1px solid #888888;
+	min-width: 100px;
+}
+
+form textarea
+{
+	padding: 5px;
+	min-height: 100px;
+	max-height: 300px;
+	resize: vertical;
+	border: 1px solid #888888;
+}
+
+form button
+{
+	white-space: nowrap;
+}
+
+.generic-form
+{
+	display: inline-grid;
+	grid-template-columns: auto auto;
+	grid-column-gap: 10px;
+	grid-row-gap: 10px;
+	align-items: center;
+}
+
+.generic-form > label
+{
+	text-align: right;
+}
+
+.generic-form > textarea
+{
+	grid-column: 1 / span 2;
+}
+
+.generic-form > button
+{
+	grid-column: 2;
+	margin-left: auto;
+	padding: 5px;
+	min-width: 100px;
+}
+
+.flash > p
+{
+	padding: 10px;
+}
+
+.flash .info
+{
+    color: #00529b;
+    background-color: #bde5f8;
+}
+
+.flash .success
+{
+    color: #4f8a10;
+    background-color: #dff2bf;
+}
+
+.flash .error
+{
+    color: #d8000c;
+    background-color: #ffd2d2;
+}
+
+.flash .warning
+{
+    color: #9f6000;
+    background-color: #feefb3;
+}
+
+.link-group
+{
+	display: flex;
+	flex-direction: row;
+}
+
+.link-group > a
+{
+	margin: 0 5px;
+}
+
+.table-container
+{
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.table-container > form
+{
+	display: flex;
+	flex-direction: row;
+	margin-bottom: 20px;
+	align-items: center;
+}
+
+.table-container > form > label
+{
+	margin: 0 10px 0 30px;
+}
+
+.table-container > form > button
+{
+	margin: 0 30px 0 30px;
+	padding: 5px;
+	min-width: 100px;
+}
+
+.table-container > table
+{
+	margin: 10px 0;
+}
+
+.page-navigation
+{
+	display: flex;
+	flex-direction: row;
+	margin: 0 50px;
+}
+
+.page-navigation > p
+{
+	margin: 0 5px;
+}
+
+.page-navigation > a
+{
+	margin: 0 5px;
+	color: blue;
+	text-decoration: none;
+}
+
+.page-navigation > a:visited
+{
+	color: blue;
+}
+
+.page-navigation > .disabled
+{
+	visibility: hidden;
+}
+
+pre
+{
+	padding: 10px;
+	background: #eeeeee;
+	white-space: pre-wrap;
+}
+
+pre:empty
+{
+	display: none;
+}

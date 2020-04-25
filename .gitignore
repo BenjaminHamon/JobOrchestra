@@ -1,22 +1,19 @@
-# Build
-build_results/
-
-# Build artifacts
-.artifacts/
+# Artifacts
+/artifacts/
 
 # Distribution
-cli/build/
-cli/dist/
-master/build/
-master/dist/
-model/build/
-model/dist/
-service/build/
-service/dist/
-website/build/
-website/dist/
-worker/build/
-worker/dist/
+/cli/build/
+/cli/dist/
+/master/build/
+/master/dist/
+/model/build/
+/model/dist/
+/service/build/
+/service/dist/
+/website/build/
+/website/dist/
+/worker/build/
+/worker/dist/
 
 # Environment
 environment.json
@@ -34,9 +31,6 @@ __pycache__/
 
 # Python virtual environment
 .venv/
-
-# Tests
-test_results/
 
 # Visual Studio Code
 .vscode/

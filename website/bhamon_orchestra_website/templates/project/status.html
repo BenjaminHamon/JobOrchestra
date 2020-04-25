@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a> / Status</h1>
+
+<section>
+	<div class="table-container">
+		<form method="get" action="{{ url_for('project_controller.show_status', project_identifier = project['identifier']) }}">
+			<label for="input-branch">Branch</label>
+			<select id="input-branch" name="branch">
+				{% for branch in project_branch_collection %}
+					{% if project_branch == branch %}
+				<option selected>{{ branch }}</option>
+					{% else %}
+				<option>{{ branch }}</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+			<button type="submit">Apply</button>
+		</form>
+		<table class="project-status-table">
+			<thead>
+				<tr>
+					<th>Revision</th>
+					{% for run_filter in project_context['filter_collection'] %}
+					<th><a href="{{ url_for('job_controller.show', project_identifier = project['identifier'], job_identifier = run_filter['job']) }}">{{ run_filter['display_name'] }}</a></th>
+					{% endfor %}
+				</tr>
+			</thead>
+			<tbody>
+				{% for revision in project_status %}
+				<tr>
+					<td>
+						<div class="revision-header">
+							<a href="{{ revision['url'] }}">{{ revision['identifier_short'] }}</a>
+							<p class="date">{{ revision['date'] }}</p>
+						</div>
+					</td>
+					{% for run_filter in project_context['filter_collection'] %}
+					<td>
+						{% for run in revision['runs_by_filter'][run_filter['identifier']] %}
+						<div class="status-group">
+							<div class="status-indicator {{ run['status'] }}" title="{{ run['status'] }}"></div>
+							<a href="{{ url_for('run_controller.show', project_identifier = run['project'], run_identifier = run['identifier']) }}">{{ run['identifier'][:18] }}</a>
+						</div>
+						{% endfor %}
+					</td>
+					{% endfor %}
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</section>
+{% endblock %}

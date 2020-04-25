@@ -14,31 +14,34 @@ from . import environment
 def test_worker_disconnection(tmpdir, database_type):
 	""" Test a disconnection initiated by the worker """
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker_01" ])
+
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		os.kill(worker_process.pid, context.shutdown_signal)
+		os.kill(worker_process["process"].pid, context.shutdown_signal)
 		time.sleep(1) # Wait for disconnection
-		os.kill(master_process.pid, context.shutdown_signal)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Accepted connection from worker worker_01" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker worker_01" },
-		{ "level": "Info", "logger": "Master", "message": "Exiting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Starting master" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Connection from worker 'worker_01' (User: 'worker', RemoteAddress: '127.0.0.1')" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Registering worker 'worker_01'" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' is now active" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker 'worker_01'" },
+		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting build worker" },
-		{ "level": "Info", "logger": "Worker", "message": "Connected to master, waiting for commands" },
-		{ "level": "Info", "logger": "Worker", "message": "Closed connection to master" },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
+		{ "level": "Info", "logger": "WebSocket", "message": "Connected to master" },
+		{ "level": "Info", "logger": "WebSocket", "message": "Closed connection to master" },
+		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "worker_01", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])
 
 
@@ -46,30 +49,33 @@ def test_worker_disconnection(tmpdir, database_type):
 def test_master_disconnection(tmpdir, database_type):
 	""" Test a disconnection initiated by the master """
 
-	with context.Context(tmpdir, database_type) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker_01" ])
+
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		os.kill(master_process.pid, context.shutdown_signal)
+		os.kill(master_process["process"].pid, context.shutdown_signal)
 		time.sleep(1) # Wait for disconnection
-		os.kill(worker_process.pid, context.shutdown_signal)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting build master" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Accepted connection from worker worker_01" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker worker_01" },
-		{ "level": "Info", "logger": "Master", "message": "Exiting build master" },
+		{ "level": "Info", "logger": "Master", "message": "Starting master" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Connection from worker 'worker_01' (User: 'worker', RemoteAddress: '127.0.0.1')" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Registering worker 'worker_01'" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' is now active" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker 'worker_01'" },
+		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting build worker" },
-		{ "level": "Info", "logger": "Worker", "message": "Connected to master, waiting for commands" },
-		{ "level": "Info", "logger": "Worker", "message": "Closed connection to master" },
-		{ "level": "Info", "logger": "Worker", "message": "Retrying connection in 10 seconds" },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting build worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
+		{ "level": "Info", "logger": "WebSocket", "message": "Connected to master" },
+		{ "level": "Info", "logger": "WebSocket", "message": "Closed connection to master" },
+		{ "level": "Info", "logger": "WebSocket", "message": "Retrying connection in 10 seconds" },
+		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "identifier": "master", "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "identifier": "worker_01", "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
 	])

@@ -1,0 +1,89 @@
+{% extends 'layout.html' %}
+{% import 'run/macros.html' as run_macros %}
+
+{% block content %}
+<h1>
+	Project <a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a>
+	/ Run <a href="{{ url_for('run_controller.show', project_identifier = project['identifier'], run_identifier = run['identifier']) }}">{{ run['identifier'] }}</a>
+</h1>
+
+<section>
+	<div class="link-group">
+		<a href="{{ url_for('run_controller.download_archive', project_identifier = run['project'], run_identifier = run['identifier']) }}">Download as archive</a>
+	</div>
+</section>
+
+<section>
+	<h2>Status</h2>
+	<div class="status-grid">
+		<div class="status-group">
+			<div class="status-indicator {{ run['status'] }}"></div>
+			<div class="status-text">{{ run['status'] }}</div>
+		</div>
+		{% if authorize_view("run-actions") %}
+		{{ run_macros.run_actions(run) }}
+		{% endif %}
+	</div>
+	<ul>
+		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}">{{ run['project_display_name'] }}</a></li>
+		<li>Job: <a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}">{{ run['job_display_name'] }}</a></li>
+		{% if 'source' in run %}
+			{% if run['source']['type'] == 'run' %}
+		<li>Source: run <a href="{{ url_for('run_controller.show', project_identifier = run['source']['project'], run_identifier = run['source']['identifier']) }}">{{ run['source']['identifier'] }}</a></li>
+			{% elif run['source']['type'] == 'schedule' %}
+		<li>Source: schedule <a href="{{ url_for('schedule_controller.show', project_identifier = run['project'], schedule_identifier = run['source']['identifier']) }}">{{ run['source']['display_name'] }}</a></li>
+			{% elif run['source']['type'] == 'user' %}
+		<li>Source: user <a href="{{ url_for('user_controller.show', user_identifier = run['source']['identifier']) }}">{{ run['source']['display_name'] }}</a></li>
+			{% endif %}
+		{% endif %}
+		<li>Worker: {% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker_display_name'] }}</a>{% endif %}</li>
+		<li>Creation date: {{ run['creation_date'] }}</li>
+		<li>Update date: {{ run['update_date'] }}</li>
+		<li>Start date: {% if 'start_date' in run %}{{ run['start_date'] }}{% endif %}</li>
+		<li>Completion date: {% if 'completion_date' in run %}{{ run['completion_date'] }}{% endif %}</li>
+	</ul>
+</section>
+
+<section>
+	<h2>Parameters</h2>
+	<ul>
+		{% for key, value in run['parameters'].items() %}
+		<li>{{ key }}: {{ value }}</li>
+		{% endfor %}
+	</ul>
+</section>
+
+<section>
+	<h2>Steps</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>Index</th>
+				<th>Name</th>
+				<th>Status</th>
+				<th>Details</th>
+				<th>Raw log</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for step in run_steps %}
+			<tr>
+				<td>{{ step['index'] }}</td>
+				<td>{{ step['name'] }}</td>
+				<td>
+					<div class="status-group">
+						<div class="status-indicator {{ step['status'] }}"></div>
+						<div class="status-text">{{ step['status'] }}</div>
+					</div>
+				</td>
+				<td><a href="{{ url_for('run_controller.show_step', project_identifier = run['project'], run_identifier = run['identifier'], step_index = step['index']) }}">Details</a></td>
+				<td><a href="{{ url_for('run_controller.show_step_log', project_identifier = run['project'], run_identifier = run['identifier'], step_index = step['index']) }}">Raw log</a></td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</section>
+
+{% include 'run/results.html' %}
+
+{% endblock %}

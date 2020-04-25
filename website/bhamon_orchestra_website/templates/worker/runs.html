@@ -1,0 +1,39 @@
+{% extends 'layout.html' %}
+{% import 'run/macros.html' as run_macros %}
+{% import 'macros.html' as shared_macros %}
+
+{% block content %}
+<h1>Worker <a href="{{ url_for('worker_controller.show', worker_identifier = worker['identifier']) }}">{{ worker['display_name'] }}</a> / Runs</h1>
+<section>
+	<div class="table-container">
+		<form method="get" action="{{ url_for('worker_controller.show_runs', worker_identifier = worker['identifier']) }}">
+			<label for="input-project">Project</label>
+			<select id="input-project" name="project">
+				<option></option>
+				{% for project in project_collection %}
+					{% if request.args.get('project') == project['identifier'] %}
+				<option value="{{ project['identifier'] }}" selected>{{ project['display_name'] }}</option>
+					{% else %}
+				<option value="{{ project['identifier'] }}">{{ project['display_name'] }}</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+			<label for="input-status">Status</label>
+			<select id="input-status" name="status">
+				<option></option>
+				{% for status in status_collection %}
+					{% if request.args.get('status') == status %}
+				<option selected>{{ status }}</option>
+					{% else %}
+				<option>{{ status }}</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+			<button type="submit">Apply filters</button>
+		</form>
+		{{ shared_macros.page_navigation('worker_controller.show_runs', pagination) }}
+		{{ run_macros.run_table(run_collection) }}
+		{{ shared_macros.page_navigation('worker_controller.show_runs', pagination) }}
+	</div>
+</section>
+{% endblock %}

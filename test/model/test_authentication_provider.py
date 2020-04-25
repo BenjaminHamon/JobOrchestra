@@ -3,15 +3,18 @@
 import datetime
 import secrets
 
-import bhamon_build_model.authentication_provider as authentication_provider
-import bhamon_build_model.memory_database_client as memory_database_client
+from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
+from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
+
+from ..fakes.fake_date_time_provider import FakeDateTimeProvider
 
 
 def test_password_success():
 	""" Test password operations succeed in a normal situation """
 
-	database_client_instance = memory_database_client.MemoryDatabaseClient()
-	provider = authentication_provider.AuthenticationProvider(database_client_instance)
+	database_client_instance = MemoryDatabaseClient()
+	date_time_provider_instance = FakeDateTimeProvider()
+	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 
 	user = "user"
 	first_secret = "first"
@@ -41,8 +44,9 @@ def test_password_success():
 def test_token_success():
 	""" Test token operations succeed in a normal situation """
 
-	database_client_instance = memory_database_client.MemoryDatabaseClient()
-	provider = authentication_provider.AuthenticationProvider(database_client_instance)
+	database_client_instance = MemoryDatabaseClient()
+	date_time_provider_instance = FakeDateTimeProvider()
+	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 
 	user = "user"
 	wrong_secret = secrets.token_hex(provider.token_size)
@@ -71,8 +75,9 @@ def test_token_success():
 def test_token_expired():
 	""" Test if token is refused when expired """
 
-	database_client_instance = memory_database_client.MemoryDatabaseClient()
-	provider = authentication_provider.AuthenticationProvider(database_client_instance)
+	database_client_instance = MemoryDatabaseClient()
+	date_time_provider_instance = FakeDateTimeProvider()
+	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 
 	user = "user"
 
@@ -88,8 +93,9 @@ def test_token_expired():
 def test_hash_password_success():
 	""" Test hash_password succeeds in a normal situation """
 
-	database_client_instance = memory_database_client.MemoryDatabaseClient()
-	provider = authentication_provider.AuthenticationProvider(database_client_instance)
+	database_client_instance = MemoryDatabaseClient()
+	date_time_provider_instance = FakeDateTimeProvider()
+	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 
 	secret = "password"
 	salt = secrets.token_hex(provider.password_salt_size)
@@ -99,8 +105,9 @@ def test_hash_password_success():
 def test_hash_password_determinist():
 	""" Test hash_password returns a determinist result """
 
-	database_client_instance = memory_database_client.MemoryDatabaseClient()
-	provider = authentication_provider.AuthenticationProvider(database_client_instance)
+	database_client_instance = MemoryDatabaseClient()
+	date_time_provider_instance = FakeDateTimeProvider()
+	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 
 	secret = "password"
 	salt = secrets.token_hex(provider.password_salt_size)
@@ -113,8 +120,9 @@ def test_hash_password_determinist():
 def test_hash_token_success():
 	""" Test hash_token succeeds in a normal situation """
 
-	database_client_instance = memory_database_client.MemoryDatabaseClient()
-	provider = authentication_provider.AuthenticationProvider(database_client_instance)
+	database_client_instance = MemoryDatabaseClient()
+	date_time_provider_instance = FakeDateTimeProvider()
+	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 
 	secret = secrets.token_hex(provider.token_size)
 	provider.hash_token(secret, provider.token_hash_function, provider.token_hash_function_parameters)
@@ -123,8 +131,9 @@ def test_hash_token_success():
 def test_hash_token_determinist():
 	""" Test hash_token returns a determinist result """
 
-	database_client_instance = memory_database_client.MemoryDatabaseClient()
-	provider = authentication_provider.AuthenticationProvider(database_client_instance)
+	database_client_instance = MemoryDatabaseClient()
+	date_time_provider_instance = FakeDateTimeProvider()
+	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 
 	secret = secrets.token_hex(provider.token_size)
 	first_token_hash = provider.hash_token(secret, provider.token_hash_function, provider.token_hash_function_parameters)

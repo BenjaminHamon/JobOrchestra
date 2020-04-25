@@ -3,15 +3,18 @@ import logging
 
 import flask
 
-import bhamon_build_model.authentication_provider as authentication_provider
-import bhamon_build_model.authorization_provider as authorization_provider
-import bhamon_build_model.build_provider as build_provider
-import bhamon_build_model.file_storage as file_storage
-import bhamon_build_model.job_provider as job_provider
-import bhamon_build_model.task_provider as task_provider
-import bhamon_build_model.user_provider as user_provider
-import bhamon_build_model.worker_provider as worker_provider
-import bhamon_build_service.service as service
+from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
+from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
+from bhamon_orchestra_model.database.file_storage import FileStorage
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.job_provider import JobProvider
+from bhamon_orchestra_model.project_provider import ProjectProvider
+from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_model.schedule_provider import ScheduleProvider
+from bhamon_orchestra_model.user_provider import UserProvider
+from bhamon_orchestra_model.worker_provider import WorkerProvider
+
+import bhamon_orchestra_service.service as service
 
 import environment
 
@@ -20,22 +23,7 @@ def main():
 	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
 
-	database_client_instance = environment.create_database_client(arguments.database)
-	file_storage_instance = file_storage.FileStorage(".")
-
-	application = flask.Flask(__name__)
-	application.authentication_provider = authentication_provider.AuthenticationProvider(database_client_instance)
-	application.authorization_provider = authorization_provider.AuthorizationProvider()
-	application.build_provider = build_provider.BuildProvider(database_client_instance, file_storage_instance)
-	application.job_provider = job_provider.JobProvider(database_client_instance)
-	application.task_provider = task_provider.TaskProvider(database_client_instance)
-	application.user_provider = user_provider.UserProvider(database_client_instance)
-	application.worker_provider = worker_provider.WorkerProvider(database_client_instance)
-
-	service.configure(application)
-	service.register_handlers(application)
-	service.register_routes(application)
-
+	application = create_application(arguments)
 	application.run(host = arguments.address, port = arguments.port)
 
 
@@ -43,8 +31,52 @@ def parse_arguments():
 	argument_parser = argparse.ArgumentParser()
 	argument_parser.add_argument("--address", required = True, help = "Set the address for the server to listen to")
 	argument_parser.add_argument("--port", required = True, type = int, help = "Set the port for the server to listen to")
-	argument_parser.add_argument("--database", required = True, help = "Set the build database uri")
+	argument_parser.add_argument("--database", required = True, help = "Set the database uri")
 	return argument_parser.parse_args()
+
+
+def create_application(arguments):
+	database_client_instance = environment.create_database_client(arguments.database)
+	file_storage_instance = FileStorage(".")
+	date_time_provider_instance = DateTimeProvider()
+
+	application = flask.Flask(__name__)
+	application.authentication_provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+	application.authorization_provider = AuthorizationProvider()
+	application.job_provider = JobProvider(database_client_instance, date_time_provider_instance)
+	application.project_provider = ProjectProvider(database_client_instance, date_time_provider_instance)
+	application.run_provider = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
+	application.schedule_provider = ScheduleProvider(database_client_instance, date_time_provider_instance)
+	application.user_provider = UserProvider(database_client_instance, date_time_provider_instance)
+	application.worker_provider = WorkerProvider(database_client_instance, date_time_provider_instance)
+
+	application.run_result_transformer = transform_run_results
+
+	application.external_services = {}
+
+	service.configure(application)
+	service.register_handlers(application)
+	service.register_routes(application)
+
+	application.add_url_rule("/me/routes", methods = [ "GET" ], view_func = list_routes)
+
+	return application
+
+
+def transform_run_results(project_identifier, run_identifier, run_results): # pylint: disable = unused-argument
+	return run_results
+
+
+def list_routes():
+	route_collection = []
+	for rule in flask.current_app.url_map.iter_rules():
+		if "GET" in rule.methods and not rule.rule.startswith("/static/"):
+			if flask.current_app.authorization_provider.authorize_request(flask.request.user, "GET", rule.rule):
+				route_collection.append(rule.rule)
+
+	route_collection.sort()
+
+	return flask.jsonify(route_collection)
 
 
 if __name__ == "__main__":
