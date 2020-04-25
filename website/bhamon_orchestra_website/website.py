@@ -55,6 +55,7 @@ def register_routes(application):
 	add_url_rule(application, "/me", [ "GET" ], me_controller.show_profile)
 	add_url_rule(application, "/me/login", [ "GET", "POST" ], me_controller.login)
 	add_url_rule(application, "/me/logout", [ "GET", "POST" ], me_controller.logout)
+	add_url_rule(application, "/me/refresh_session", [ "POST" ], me_controller.refresh_session)
 	add_url_rule(application, "/me/change_password", [ "GET", "POST" ], me_controller.change_password)
 	add_url_rule(application, "/me/token_create", [ "GET", "POST" ], me_controller.create_token)
 	add_url_rule(application, "/me/token/<token_identifier>/delete", [ "POST" ], me_controller.delete_token)

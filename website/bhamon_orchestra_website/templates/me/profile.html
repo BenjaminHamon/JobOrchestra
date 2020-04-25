@@ -47,6 +47,9 @@
 
 <section>
 	<h2>Security</h2>
+	<form action="{{ url_for('me_controller.refresh_session') }}" method="post">
+		<button type="submit">Refresh session</button>
+	</form>
 	<div class="link-group">
 		<a href="{{ url_for('me_controller.change_password') }}">Change Password</a>
 		<a href="{{ url_for('me_controller.create_token') }}">Create token</a>

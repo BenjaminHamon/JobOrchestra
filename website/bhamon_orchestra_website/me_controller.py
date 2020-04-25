@@ -58,6 +58,20 @@ def logout():
 	return flask.abort(405)
 
 
+def refresh_session():
+	now = flask.current_app.date_time_provider.now()
+
+	try:
+		service_client.post("/me/refresh_session", { "token_identifier": flask.session["token"]["token_identifier"] })
+		flask.session["user"] = service_client.get("/me")
+		flask.session["last_refresh"] = flask.current_app.date_time_provider.serialize(now)
+	except requests.HTTPError as exception:
+		if exception.response.status_code == 403:
+			flask.session.clear()
+
+	return flask.redirect(flask.url_for("me_controller.show_profile"))
+
+
 def show_profile():
 	user = service_client.get("/me")
 	user_tokens = service_client.get("/me/token_collection", { "order_by": [ "update_date descending" ] })
