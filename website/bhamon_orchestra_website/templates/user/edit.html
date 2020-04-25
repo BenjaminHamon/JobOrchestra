@@ -2,21 +2,15 @@
 {% import 'macros.html' as shared_macros %}
 
 {% block content %}
-<h1>Edit User</h1>
+<h1>User <a href="{{ url_for('user_controller.show', user_identifier = user['identifier']) }}">{{ user['display_name'] }}</a> / Edit</h1>
 
 {{ shared_macros.flash_messages() }}
 
 <section>
-	<div>
-		<a href="{{ url_for('user_controller.show', user_identifier = user_identifier) }}">View</a>
-	</div>
-</section>
-
-<section>
 	<h2>Identity</h2>
-	<form class="generic-form" method="post" action="{{ url_for('user_controller.update_identity', user_identifier = user_identifier) }}">
+	<form class="generic-form" method="post" action="{{ url_for('user_controller.update_identity', user_identifier = user['identifier']) }}">
 		<label for="input-identifier">Identifier</label>
-		<input type="text" class="text-input" id="input-identifier" name="identifier" value="{{ user_identifier }}" readonly>
+		<input type="text" class="text-input" id="input-identifier" name="identifier" value="{{ user['identifier'] }}" readonly>
 		<label for="input-display_name">Display name</label>
 		<input type="text" class="text-input" id="input-display_name" name="display_name" value="{{ request.form['display_name'] }}" required/>
 		<button type="submit">Save</button>
@@ -25,7 +19,7 @@
 
 <section>
 	<h2>Roles</h2>
-	<form class="generic-form" method="post" action="{{ url_for('user_controller.update_roles', user_identifier = user_identifier) }}">
+	<form class="generic-form" method="post" action="{{ url_for('user_controller.update_roles', user_identifier = user['identifier']) }}">
 		<textarea class="textarea-input" name="roles">{{ request.form['roles'] }}</textarea>
 		<button type="submit">Save</button>
 	</form>

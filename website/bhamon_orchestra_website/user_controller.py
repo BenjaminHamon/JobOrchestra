@@ -67,14 +67,16 @@ def create():
 	return flask.abort(405)
 
 
-def edit(user_identifier, local_parameters = None):
+def edit(user_identifier, local_parameters = None): # pylint: disable = unused-argument
 	if local_parameters is None:
 		local_parameters = {}
 
-	flask.request.form = service_client.get("/user/{user_identifier}".format(**locals()))
+	user = service_client.get("/user/{user_identifier}".format(**locals()))
+
+	flask.request.form = user
 	flask.request.form.update(local_parameters)
 	flask.request.form["roles"] = "\n".join(flask.request.form["roles"])
-	return flask.render_template("user/edit.html", title = "Edit User", user_identifier = user_identifier)
+	return flask.render_template("user/edit.html", title = "Edit User", user = user)
 
 
 def update_identity(user_identifier):
@@ -111,7 +113,8 @@ def disable(user_identifier): # pylint: disable = unused-argument
 
 def reset_password(user_identifier):
 	if flask.request.method == "GET":
-		return flask.render_template("user/reset_password.html", title = "Reset User Password", user_identifier = user_identifier)
+		user = service_client.get("/user/{user_identifier}".format(**locals()))
+		return flask.render_template("user/reset_password.html", title = "Reset User Password", user = user)
 
 	if flask.request.method == "POST":
 		parameters = { "password": flask.request.form["password"] }
@@ -122,14 +125,16 @@ def reset_password(user_identifier):
 			return flask.redirect(flask.url_for("user_controller.show", user_identifier = user_identifier))
 		except requests.HTTPError as exception:
 			flask.flash("Password for user '%s' could not be set: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
-			return flask.render_template("user/reset_password.html", title = "Reset User Password", user_identifier = user_identifier)
+			user = service_client.get("/user/{user_identifier}".format(**locals()))
+			return flask.render_template("user/reset_password.html", title = "Reset User Password", user = user)
 
 	return flask.abort(405)
 
 
 def create_token(user_identifier):
 	if flask.request.method == "GET":
-		return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user_identifier = user_identifier)
+		user = service_client.get("/user/{user_identifier}".format(**locals()))
+		return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user = user)
 
 	if flask.request.method == "POST":
 		parameters = { "description": flask.request.form["description"] }
@@ -143,7 +148,8 @@ def create_token(user_identifier):
 			return flask.redirect(flask.url_for("user_controller.show", user_identifier = user_identifier))
 		except requests.HTTPError as exception:
 			flask.flash("Token could not be created: %s." % helpers.get_error_message(exception.response.status_code), "error")
-			return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user_identifier = user_identifier)
+			user = service_client.get("/user/{user_identifier}".format(**locals()))
+			return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user = user)
 
 	return flask.abort(405)
 
