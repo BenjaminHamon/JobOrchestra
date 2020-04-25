@@ -48,13 +48,12 @@ def show_status(project_identifier): # pylint: disable = unused-argument
 	status_limit = max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1)
 
 	project = service_client.get("/project/{project_identifier}".format(**locals()))
-	repository = service_client.get("/project/{project_identifier}/repository".format(**locals()))
 	branch_collection = project["services"]["revision_control"]["branches_for_status"]
 	job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
 	context = { "filter_collection": [ { "identifier": job["identifier"], "display_name": job["display_name"], "job": job["identifier"] } for job in job_collection ] }
 
 	if branch is None:
-		branch = repository["default_branch"]
+		branch = branch_collection[0]
 
 	status_parameters = {
 		"branch": branch,
