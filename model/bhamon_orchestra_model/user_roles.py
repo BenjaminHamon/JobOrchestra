@@ -73,7 +73,9 @@ class Auditor:
 
 
 	def is_view_authorized(self, view: str) -> bool:
-		return True
+		if view in [ "nav-admin", "nav-main", "user-security" ]:
+			return True
+		return False
 
 
 

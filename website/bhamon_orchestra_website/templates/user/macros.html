@@ -96,7 +96,9 @@
 		<tr>
 			<th>Identifier</th>
 			<th>Description</th>
+			{% if authorize_view("user-actions") %}
 			<th>Actions</th>
+			{% endif %}
 			<th>Expiration</th>
 			<th>Creation date</th>
 			<th>Update date</th>
@@ -107,11 +109,13 @@
 		<tr>
 			<td>{{ token['identifier'] }}</td>
 			<td>{{ token['description'] if token['description'] }}</td>
+			{% if authorize_view("user-actions") %}
 			<td>
 				<form class="action-group" method="post">
 					<button formaction="{{ url_for('user_controller.delete_token', user_identifier = token['user'], token_identifier = token['identifier']) }}">Delete</button>
 				</form>
 			</td>
+			{% endif %}
 			<td>
 				{% if token['is_active'] %}
 				<div class="status-group">
