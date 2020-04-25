@@ -33,8 +33,10 @@ def show(project_identifier): # pylint: disable = unused-argument
 	}
 
 	if "revision_control" in view_data["project"]["services"]:
-		repository = service_client.get("/project/{project_identifier}/repository".format(**locals())) # pylint: disable = possibly-unused-variable
-		view_data["revision_collection"] = [ service_client.get("/project/{project_identifier}/repository/revision/{repository[default_branch]}/status".format(**locals())) ]
+		view_data["revision_collection"] = []
+		for branch in view_data["project"]["services"]["revision_control"]["branches_for_status"]: # pylint: disable = possibly-unused-variable
+			branch_status = service_client.get("/project/{project_identifier}/repository/revision/{branch}/status".format(**locals()))
+			view_data["revision_collection"].append(branch_status)
 
 	helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], view_data["run_collection"], view_data["schedule_collection"], view_data["worker_collection"])
 
@@ -47,7 +49,7 @@ def show_status(project_identifier): # pylint: disable = unused-argument
 
 	project = service_client.get("/project/{project_identifier}".format(**locals()))
 	repository = service_client.get("/project/{project_identifier}/repository".format(**locals()))
-	branch_collection = service_client.get("/project/{project_identifier}/repository/branch_collection".format(**locals()))
+	branch_collection = project["services"]["revision_control"]["branches_for_status"]
 	job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
 	context = { "filter_collection": [ { "identifier": job["identifier"], "display_name": job["display_name"], "job": job["identifier"] } for job in job_collection ] }
 
