@@ -11,8 +11,6 @@ The master configuration must define the projects and jobs managed by the orches
 
 The [integration tests](../test/integration) use basic scripts and configuration, which can serve as an example. For a more complex use case, see the project [JobOrchestra-Configuration](https://github.com/BenjaminHamon/JobOrchestra-Configuration).
 
-Users are managed in the service and website. The first administrator should be created using using the CLI directly.
-
 
 ## Database
 
