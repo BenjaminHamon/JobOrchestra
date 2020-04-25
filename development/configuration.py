@@ -17,7 +17,8 @@ def load_configuration(environment):
 	configuration["author"] = "Benjamin Hamon"
 	configuration["author_email"] = "hamon.benjamin@gmail.com"
 	configuration["project_url"] = "https://github.com/BenjaminHamon/JobOrchestra"
-	configuration["copyright"] = "Copyright (c) 2020 Benjamin Hamon"
+	configuration["project_license"] = "MIT License"
+	configuration["project_copyright"] = "Copyright (c) 2020 Benjamin Hamon"
 
 	configuration["development_toolkit"] = "git+https://github.com/BenjaminHamon/DevelopmentToolkit@{revision}#subdirectory=toolkit"
 	configuration["development_toolkit_revision"] = "5e12ab4651373b0399201075ea9e78cb0015b091"
@@ -110,6 +111,7 @@ def get_setuptools_parameters(configuration):
 		"author": configuration["author"],
 		"author_email": configuration["author_email"],
 		"url": configuration["project_url"],
+		"license": configuration["project_license"],
 	}
 
 

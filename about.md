@@ -1,5 +1,5 @@
 Job Orchestra is free and open source software.  
-The source code is available on [GitHub](https://github.com/BenjaminHamon/JobOrchestra), under the [MIT license](https://github.com/BenjaminHamon/JobOrchestra/blob/master/license.txt).
+The source code is available on [GitHub](https://github.com/BenjaminHamon/JobOrchestra), under the [MIT License](https://github.com/BenjaminHamon/JobOrchestra/blob/master/license.txt).
 
 Job Orchestra uses licensed assets and software from:
 
