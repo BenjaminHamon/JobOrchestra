@@ -33,7 +33,7 @@ class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 		self.worker = None
 
 
-	async def process_request(self, path: str, request_headers: websockets.http.Headers) -> tuple: # pylint: disable = method-hidden
+	async def process_request(self, path: str, request_headers: websockets.http.Headers) -> tuple: # pylint: disable = invalid-overridden-method
 		""" Process the incoming HTTP request """
 
 		try:
