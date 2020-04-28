@@ -18,6 +18,7 @@ resource_patterns = [
 	"static/**/*.css",
 	"static/**/*.eot",
 	"static/**/*.js",
+	"static/**/*.mjs",
 	"static/**/*.svg",
 	"static/**/*.ttf",
 	"static/**/*.woff",
