@@ -5,8 +5,8 @@ import setuptools
 
 sys.path.insert(0, os.path.join(sys.path[0], ".."))
 
-import development.configuration # pylint: disable = wrong-import-position
-import development.environment # pylint: disable = wrong-import-position
+import development.configuration # pylint: disable = import-error, wrong-import-position
+import development.environment # pylint: disable = import-error, wrong-import-position
 
 
 environment_instance = development.environment.load_environment()
@@ -18,6 +18,7 @@ resource_patterns = [
 	"static/**/*.css",
 	"static/**/*.eot",
 	"static/**/*.js",
+	"static/**/*.mjs",
 	"static/**/*.svg",
 	"static/**/*.ttf",
 	"static/**/*.woff",

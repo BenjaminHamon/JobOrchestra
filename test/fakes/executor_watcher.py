@@ -26,7 +26,7 @@ class FakeExecutorWatcher:
 		self.status["status"] = "running"
 
 
-	async def terminate(self, timeout_seconds):
+	async def terminate(self, timeout_seconds): # pylint: disable = unused-argument
 		if not self.is_running():
 			raise RuntimeError("Executor is not running")
 		self.status["status"] = "aborted"

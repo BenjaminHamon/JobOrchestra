@@ -15,7 +15,7 @@ logger = logging.getLogger("Main")
 def main():
 	with development.environment.execute_in_workspace(__file__):
 		environment_instance = development.environment.load_environment()
-		configuration_instance = development.configuration.load_configuration(environment_instance)
+		configuration_instance = development.configuration.load_configuration(environment_instance) # pylint: disable = unused-variable
 		development.environment.configure_logging(environment_instance, None)
 
 		global_status = { "success": True }
