@@ -1,5 +1,3 @@
-import json
-
 import flask
 import requests
 
@@ -7,7 +5,12 @@ import requests
 def proxy(route):
 	method = flask.request.method
 	url = flask.current_app.service_url + route
-	headers = { key: value for (key, value) in flask.request.headers if key != 'Host' }
+
+	headers = {}
+	for header_key, header_value in flask.request.headers:
+		if header_key in [ "Accept", "Content-Type" ] or header_key.startswith("X-Orchestra-"):
+			headers[header_key] = header_value
+
 	parameters = flask.request.args
 	data = flask.request.get_data()
 	authentication = _get_authentication()
@@ -27,29 +30,21 @@ def get_or_default(route, parameters = None, default_value = None):
 
 
 def get(route, parameters = None):
-	return raw_get(route, headers = { "Content-Type": "application/json" }, parameters = parameters).json()
+	return send_request("GET", route, headers = { "Accept": "application/json" }, parameters = parameters).json()
 
 
 def post(route, data = None):
-	return raw_post(route, headers = { "Content-Type": "application/json" }, data = data).json()
+	return send_request("POST", route, headers = { "Accept": "application/json" }, data = data).json()
 
 
-def raw_get(route, headers = None, parameters = None):
+def send_request(method, route, headers = None, parameters = None, data = None):
 	authentication = _get_authentication()
 	if parameters is None:
 		parameters = {}
 
-	response = requests.get(flask.current_app.service_url + route, auth = authentication, headers = headers, params = parameters)
-	response.raise_for_status()
-	return response
+	print(headers)
 
-
-def raw_post(route, headers = None, data = None):
-	authentication = _get_authentication()
-	if data is None:
-		data = {}
-
-	response = requests.post(flask.current_app.service_url + route, auth = authentication, headers = headers, data = json.dumps(data))
+	response = requests.request(method, flask.current_app.service_url + route, auth = authentication, headers = headers, params = parameters, json = data)
 	response.raise_for_status()
 	return response
 

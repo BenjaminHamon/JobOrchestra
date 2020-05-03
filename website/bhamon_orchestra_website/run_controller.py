@@ -75,7 +75,7 @@ def show_step(project_identifier, run_identifier, step_index): # pylint: disable
 	project = service_client.get("/project/{project_identifier}".format(**locals()))
 	run = service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals()))
 	step_collection = service_client.get("/project/{project_identifier}/run/{run_identifier}/step_collection".format(**locals()))
-	log_response = service_client.raw_get("/project/{project_identifier}/run/{run_identifier}/step/{step_index}/log".format(**locals()))
+	log_response = service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/step/{step_index}/log".format(**locals()))
 
 	view_data = {
 		"project": project,
@@ -91,7 +91,7 @@ def show_step(project_identifier, run_identifier, step_index): # pylint: disable
 
 
 def show_step_log(project_identifier, run_identifier, step_index): # pylint: disable = unused-argument
-	log_text = service_client.raw_get("/project/{project_identifier}/run/{run_identifier}/step/{step_index}/log".format(**locals())).text
+	log_text = service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/step/{step_index}/log".format(**locals())).text
 	return flask.Response(log_text, mimetype = "text/plain")
 
 
@@ -108,7 +108,7 @@ def abort(project_identifier, run_identifier): # pylint: disable = unused-argume
 
 
 def download_archive(project_identifier, run_identifier): # pylint: disable = unused-argument
-	archive_response = service_client.raw_get("/project/{project_identifier}/run/{run_identifier}/download".format(**locals()))
+	archive_response = service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/download".format(**locals()))
 	return flask.Response(archive_response.content,
 		headers = { "Content-Disposition": archive_response.headers["Content-Disposition"] },
 		mimetype = archive_response.headers["Content-Type"])
