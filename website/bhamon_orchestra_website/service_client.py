@@ -7,7 +7,12 @@ import requests
 def proxy(route):
 	method = flask.request.method
 	url = flask.current_app.service_url + route
-	headers = { key: value for (key, value) in flask.request.headers if key != 'Host' }
+
+	headers = {}
+	for header_key, header_value in flask.request.headers:
+		if header_key in [ "Accept", "Content-Type" ] or header_key.startswith("X-Orchestra-"):
+			headers[header_key] = header_value
+
 	parameters = flask.request.args
 	data = flask.request.get_data()
 	authentication = _get_authentication()

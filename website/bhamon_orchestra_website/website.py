@@ -182,5 +182,11 @@ def home():
 
 
 def proxy_to_service(route):
-	response = service_client.proxy("/" + route)
-	return flask.Response(response.content, response.status_code, response.headers.items())
+	service_response = service_client.proxy("/" + route)
+
+	response = flask.Response(service_response.content, service_response.status_code)
+	for header_key in service_response.headers:
+		if header_key in [ "Content-Type" ] or header_key.startswith("X-Orchestra-"):
+			response.headers[header_key] = service_response.headers[header_key]
+
+	return response
