@@ -1,5 +1,3 @@
-import json
-
 import flask
 import requests
 
@@ -32,11 +30,11 @@ def get_or_default(route, parameters = None, default_value = None):
 
 
 def get(route, parameters = None):
-	return raw_get(route, headers = { "Content-Type": "application/json" }, parameters = parameters).json()
+	return raw_get(route, headers = { "Accept": "application/json" }, parameters = parameters).json()
 
 
 def post(route, data = None):
-	return raw_post(route, headers = { "Content-Type": "application/json" }, data = data).json()
+	return raw_post(route, headers = { "Accept": "application/json" }, data = data).json()
 
 
 def raw_get(route, headers = None, parameters = None):
@@ -54,7 +52,7 @@ def raw_post(route, headers = None, data = None):
 	if data is None:
 		data = {}
 
-	response = requests.post(flask.current_app.service_url + route, auth = authentication, headers = headers, data = json.dumps(data))
+	response = requests.post(flask.current_app.service_url + route, auth = authentication, headers = headers, json = data)
 	response.raise_for_status()
 	return response
 

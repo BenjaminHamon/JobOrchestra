@@ -7,7 +7,11 @@ export class RunProvider {
 	async getStep(projectIdentifier, runIdentifier, stepIndex) {
 		var url = new URL(this.serviceUrl + "/project/" + projectIdentifier + "/run/" + runIdentifier + "/step/" + stepIndex);
 
-		var response = await fetch(url);
+		var headers = {
+			"Accept": "application/json",
+		};
+
+		var response = await fetch(url, { headers: headers });
 		if (response.ok == false) {
 			throw new Error("HttpError: " + response.statusText + " " + "(" + response.status + ")");
 		}
@@ -20,7 +24,10 @@ export class RunProvider {
 		if (limit != null)
 			url.searchParams.set("limit", limit);
 
-		var headers = { "X-Orchestra-FileCursor": cursor };
+		var headers = {
+			"Accept": "text/plain",
+			"X-Orchestra-FileCursor": cursor,
+		};
 
 		var response = await fetch(url, { headers: headers });
 		if (response.ok == false) {
