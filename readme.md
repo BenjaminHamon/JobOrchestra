@@ -7,6 +7,8 @@ Job Orchestra is a toolkit for building a service which manages distributed job 
 
 The project is open source software. See [About](about.md) for more information.
 
+![](documentation/resources/screenshot.png)
+
 
 ## Development
 
