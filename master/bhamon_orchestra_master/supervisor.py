@@ -108,6 +108,8 @@ class Supervisor:
 					await worker_future
 				except asyncio.CancelledError:
 					pass
+				except WorkerError as exception:
+					logger.error("Worker error: %s", exception)
 				except Exception: # pylint: disable = broad-except
 					logger.error("Unhandled exception from worker '%s'", connection.worker, exc_info = True)
 
@@ -123,8 +125,6 @@ class Supervisor:
 
 				logger.info("Terminating connection with worker '%s'", connection.worker)
 
-		except WorkerError as exception:
-			logger.error("Worker error: %s", exception)
 		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception in connection handler", exc_info = True)
 
@@ -160,7 +160,7 @@ class Supervisor:
 		if worker_record is None:
 			worker_record = self._worker_provider.create(worker_identifier, owner, version, display_name)
 		if worker_record["owner"] != owner:
-			raise WorkerError("Worker '%s' is owned by another user (Expected: '%s', Actual: '%s')" % (worker_identifier, worker_record["user"], owner))
+			raise WorkerError("Worker '%s' is owned by another user (Expected: '%s', Actual: '%s')" % (worker_identifier, worker_record["owner"], owner))
 
 		self._worker_provider.update_properties(worker_record, version, display_name, properties)
 
