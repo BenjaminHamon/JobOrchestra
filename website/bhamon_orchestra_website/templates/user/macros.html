@@ -2,8 +2,7 @@
 <table>
 	<thead>
 		<tr>
-			<th>Identifier</th>
-			<th>Display name</th>
+			<th>User</th>
 			<th>Enabled</th>
 			{% if authorize_view("user-actions") %}
 			<th>Actions</th>
@@ -14,8 +13,7 @@
 	<tbody>
 		{% for user in user_collection %}
 		<tr>
-			<td><a href="{{ url_for('user_controller.show', user_identifier = user['identifier']) }}">{{ user['identifier'] }}</a></td>
-			<td>{{ user['display_name'] }}</td>
+			<td><a href="{{ url_for('user_controller.show', user_identifier = user['identifier']) }}">{{ user['display_name'] }}</a></td>
 			<td>
 				{% if user['is_enabled'] %}
 				<div class="status-group">
