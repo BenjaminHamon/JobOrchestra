@@ -3,13 +3,19 @@
 
 	<head>
 		<title>{{ title }} - {{ config['WEBSITE_TITLE'] }}</title>
-		<link rel="stylesheet" href="{{ url_for('static', filename = 'font_awesome/css/fontawesome.css') }}">
-		<link rel="stylesheet" href="{{ url_for('static', filename = 'font_awesome/css/solid.css') }}">
-		<link rel="stylesheet" href="{{ url_for('static', filename = 'generic.css') }}">
-		<link rel="stylesheet" href="{{ url_for('static', filename = 'orchestra.css') }}">
+		<link rel="stylesheet" href="{{ url_for('static', filename = 'font_awesome/css/fontawesome.css') }}"/>
+		<link rel="stylesheet" href="{{ url_for('static', filename = 'font_awesome/css/solid.css') }}"/>
+		<link rel="stylesheet" href="{{ url_for('static', filename = 'generic.css') }}"/>
+		<link rel="stylesheet" href="{{ url_for('static', filename = 'orchestra.css') }}"/>
 	</head>
 
 	<body>
+
+		{% if 'WEBSITE_ANNOUNCEMENT' in config %}
+		<div id="announcement" class="{{ config['WEBSITE_ANNOUNCEMENT_TYPE'] }}">
+			<p>{{ config['WEBSITE_ANNOUNCEMENT'] }}</p>
+		</div>
+		{% endif %}
 
 		<header>
 			<div class="title">
@@ -24,12 +30,6 @@
 				{% endif %}
 			</div>
 		</header>
-
-		{% if 'WEBSITE_ANNOUNCEMENT' in config %}
-		<div id="announcement" class="{{ config['WEBSITE_ANNOUNCEMENT_TYPE'] }}">
-			<p>{{ config['WEBSITE_ANNOUNCEMENT'] }}</p>
-		</div>
-		{% endif %}
 
 		<nav>
 			{% if authorize_view('nav-admin') %}
