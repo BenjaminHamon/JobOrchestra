@@ -18,7 +18,7 @@ def information():
 
 
 def get_service_collection():
-	return flask.jsonify(list(flask.current_app.external_services.keys()))
+	return flask.jsonify(list(sorted(flask.current_app.external_services.keys())))
 
 
 def get_service_status(service_identifier):
