@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 
 logger = logging.getLogger("UserProvider")
@@ -92,7 +93,15 @@ class UserProvider:
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, update_data)
 
 
-	def delete(self, user_identifier: str, authentication_provider: AuthenticationProvider) -> None:
+	def delete(self, user_identifier: str, authentication_provider: AuthenticationProvider, worker_provider: WorkerProvider) -> None:
+		user_record = self.get(user_identifier)
+		if user_record is None:
+			raise ValueError("User '%s' does not exist" % user_identifier)
+		if user_record["is_enabled"]:
+			raise ValueError("User '%s' is enabled" % user_identifier)
+		if worker_provider.count(owner = user_identifier) > 0:
+			raise ValueError("User '%s' owns workers" % user_identifier)
+
 		authentication_provider.remove_password(user_identifier)
 		for token in authentication_provider.get_token_list(user_identifier):
 			authentication_provider.delete_token(user_identifier, token["identifier"])

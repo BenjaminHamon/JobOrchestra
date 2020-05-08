@@ -24,7 +24,7 @@ def create_authentication_token(application, arguments): # pylint: disable = unu
 
 def delete_user(application, arguments): # pylint: disable = unused-argument
 	user = input("User: ")
-	application.user_provider.delete(user, application.authentication_provider)
+	application.user_provider.delete(user, application.authentication_provider, application.worker_provider)
 
 
 def delete_worker(application, arguments): # pylint: disable = unused-argument

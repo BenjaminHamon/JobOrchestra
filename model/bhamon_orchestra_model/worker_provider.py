@@ -19,12 +19,16 @@ class WorkerProvider:
 		self.table = "worker"
 
 
-	def count(self) -> int:
-		return self.database_client.count(self.table, {})
+	def count(self, owner: Optional[str] = None) -> int:
+		filter = { "owner": owner } # pylint: disable = redefined-builtin
+		filter = { key: value for key, value in filter.items() if value is not None }
+		return self.database_client.count(self.table, filter)
 
 
-	def get_list(self, skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
-		return self.database_client.find_many(self.table, {}, skip = skip, limit = limit, order_by = order_by)
+	def get_list(self, owner: Optional[str] = None, skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+		filter = { "owner": owner } # pylint: disable = redefined-builtin
+		filter = { key: value for key, value in filter.items() if value is not None }
+		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
 	def get(self, worker_identifier: str) -> Optional[dict]:
