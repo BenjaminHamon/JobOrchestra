@@ -3,6 +3,7 @@ import re
 
 from typing import List, Optional, Tuple
 
+from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 
@@ -89,3 +90,10 @@ class UserProvider:
 
 		user.update(update_data)
 		self.database_client.update_one(self.table, { "identifier": user["identifier"] }, update_data)
+
+
+	def delete(self, user_identifier: str, authentication_provider: AuthenticationProvider) -> None:
+		authentication_provider.remove_password(user_identifier)
+		for token in authentication_provider.get_token_list(user_identifier):
+			authentication_provider.delete_token(user_identifier, token["identifier"])
+		self.database_client.delete_one(self.table, { "identifier": user_identifier })

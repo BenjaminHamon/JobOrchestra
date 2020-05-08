@@ -59,7 +59,7 @@ class AuthenticationProvider:
 		return self.convert_to_public(authentication)
 
 
-	def remove_password(self, user: dict) -> None:
+	def remove_password(self, user: str) -> None:
 		self.database_client.delete_one(self.table, { "user": user, "type": "password" })
 
 
