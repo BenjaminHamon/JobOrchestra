@@ -1,9 +1,11 @@
 import asyncio
 import base64
+import datetime
 import logging
 import platform
 import signal
 import sys
+import tracemalloc
 
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.network.websocket import WebSocketClient
@@ -40,6 +42,8 @@ class Worker: # pylint: disable = too-many-instance-attributes
 
 
 	def run(self):
+		tracemalloc.start()
+
 		logger.info("Starting worker")
 
 		if platform.system() == "Windows":
@@ -58,19 +62,23 @@ class Worker: # pylint: disable = too-many-instance-attributes
 
 		logger.info("Exiting worker")
 
+		tracemalloc.stop()
+
 
 	async def run_async(self):
 		self._recover()
 
 		executors_future = asyncio.ensure_future(self._run_executors())
 		messenger_future = asyncio.ensure_future(self._run_messenger())
+		monitoring_future = asyncio.ensure_future(self._run_monitoring())
 
 		try:
-			await asyncio.wait([ executors_future, messenger_future ], return_when = asyncio.FIRST_COMPLETED)
+			await asyncio.wait([ executors_future, messenger_future, monitoring_future ], return_when = asyncio.FIRST_COMPLETED)
 
 		finally:
 			executors_future.cancel()
 			messenger_future.cancel()
+			monitoring_future.cancel()
 
 			try:
 				await executors_future
@@ -86,7 +94,56 @@ class Worker: # pylint: disable = too-many-instance-attributes
 			except Exception: # pylint: disable = broad-except
 				logger.error("Unhandled exception from messenger", exc_info = True)
 
+			try:
+				await monitoring_future
+			except asyncio.CancelledError:
+				pass
+			except Exception: # pylint: disable = broad-except
+				logger.error("Unhandled exception from monitoring", exc_info = True)
+
 			await self._terminate()
+
+
+	async def _run_monitoring(self):
+		filters = [ tracemalloc.Filter(False, tracemalloc.__file__) ]
+
+		last_snapshot = tracemalloc.take_snapshot().filter_traces(filters)
+		await asyncio.sleep(10)
+
+		with open("monitoring.log", mode = "w", encoding = "utf-8") as output_file:
+			while not self._should_shutdown:
+				output_file.write("=== MONITORING %s ===\n" % datetime.datetime.now())
+				output_file.write("\n")
+
+				output_file.write("=== Asyncio Tasks ===\n")
+				output_file.write("\n")
+				all_tasks = asyncio.Task.all_tasks()
+				for task in all_tasks:
+					output_file.write(str(task) + "\n")
+				output_file.write(str(len(all_tasks)) + "\n")
+				output_file.write("\n")
+
+				output_file.write("=== Trace Malloc ===\n")
+				snapshot = tracemalloc.take_snapshot().filter_traces(filters)
+				output_file.write("\n")
+
+				top_stats = snapshot.statistics('lineno')
+				output_file.write("Snapshot:\n")
+				for stat in top_stats[:20]:
+					output_file.write(str(stat) + "\n")
+				output_file.write("\n")
+
+				top_stats = snapshot.compare_to(last_snapshot, 'lineno')
+				output_file.write("Compared to last snapshot:\n")
+				for stat in top_stats[:20]:
+					output_file.write(str(stat) + "\n")
+
+				output_file.write("\n\n\n")
+				output_file.flush()
+
+				last_snapshot = snapshot
+
+				await asyncio.sleep(10)
 
 
 	async def _run_executors(self):
