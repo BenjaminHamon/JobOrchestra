@@ -60,11 +60,7 @@ class ExecutorWatcher:
 		raw_logger = logging.getLogger("raw")
 
 		while True:
-			try:
-				line = await asyncio.wait_for(self.process.stdout.readline(), 1)
-			except asyncio.TimeoutError:
-				continue
-
+			line = await self.process.stdout.readline()
 			if not line:
 				break
 
