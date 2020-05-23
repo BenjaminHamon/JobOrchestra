@@ -130,14 +130,11 @@ class Messenger:
 
 	async def _pull(self) -> None:
 		while True:
-			try:
-				await self._receive_next()
-			except asyncio.TimeoutError:
-				pass
+			await self._receive_next()
 
 
 	async def _receive_next(self) -> None:
-		message = json.loads(await asyncio.wait_for(self.connection.receive(), 1))
+		message = json.loads(await self.connection.receive())
 		logger.debug("(%s) < %s %s", self.identifier, message["type"], message["identifier"])
 		self.messages_to_handle.append(message)
 
