@@ -42,8 +42,6 @@ def send_request(method, route, headers = None, parameters = None, data = None):
 	if parameters is None:
 		parameters = {}
 
-	print(headers)
-
 	response = requests.request(method, flask.current_app.service_url + route, auth = authentication, headers = headers, params = parameters, json = data)
 	response.raise_for_status()
 	return response
