@@ -158,7 +158,7 @@ def test_run_cancel(tmpdir, database_type):
 		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
 		context_instance.run_provider.update_status(run, should_cancel = True)
 
-		time.sleep(1)
+		time.sleep(2)
 
 		run = context_instance.run_provider.get(run["project"], run["identifier"])
 
