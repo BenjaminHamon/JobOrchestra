@@ -42,7 +42,7 @@ class Supervisor:
 				self._worker_provider.update_status(worker_record, is_active = False, should_disconnect = False)
 
 		logger.info("Listening for workers on '%s:%s'", self._host, self._port)
-		async with websockets.serve(self._process_connection, self._host, self._port, create_protocol = self._protocol_factory, max_size = 2 ** 30):
+		async with websockets.serve(self._process_connection, self._host, self._port, create_protocol = self._protocol_factory):
 			while True:
 				try:
 					await asyncio.gather(self.update(), asyncio.sleep(self.update_interval_seconds))
