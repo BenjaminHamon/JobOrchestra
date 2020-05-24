@@ -4,16 +4,18 @@ window.onload = function() {
 	var runProvider = new RunProvider(window.location.origin + "/service_proxy");
 
 	var view = new RunStepView(runProvider, window.viewData.projectIdentifier, window.viewData.runIdentifier, window.viewData.stepIndex);
-	view.stepStatus = window.viewData.stepStatus;
-	view.logCursor = window.viewData.logCursor;
 
 	view.statusIndicatorElement = document.getElementsByClassName("status-indicator")[0];
 	view.statusTextElement = document.getElementsByClassName("status-text")[0];
 	view.logTextElement = document.getElementById("log-text");
 
-	if (view.isStepCompleted(view.stepStatus) == false) {
-		view.resumeAutoRefresh();
-	};
+	view.refresh().then(
+		_ => {
+			if (view.isStepCompleted(view.stepStatus) == false) {
+				view.resumeAutoRefresh();
+			};
+		}
+	)
 };
 
 export class RunStepView {
@@ -25,8 +27,10 @@ export class RunStepView {
 		this.stepIndex = stepIndex;
 	
 		this.stepStatus = null;
+		this.logText = null;
 		this.logCursor = null;
 		this.logChunkSize = 1024 * 1024;
+		this.logLengthLimit = 1000 * 1000;
 		this.refreshInterval = null;
 		this.isRefreshing = false;
 
@@ -83,15 +87,34 @@ export class RunStepView {
 	}
 
 	async refreshLog() {
+		if (this.logText == null)
+			this.logText = "";
+
+		if (this.logText.length > this.logLengthLimit)
+			return;
+
+		if (this.logText == "")
+			this.logTextElement.textContent = "[...] (Loading)";
+
 		var lastChunkSize = null;
 
 		do {
 			var logChunk = await this.runProvider.getLogChunk(this.projectIdentifier, this.runIdentifier, this.stepIndex, this.logCursor, this.logChunkSize);
-			this.logTextElement.textContent += logChunk.text;
+
+			this.logText += logChunk.text;
 			this.logCursor = logChunk.cursor;
+
+			var logTextToDisplay = this.logText.substring(0, this.logLengthLimit);
+			if (this.logText.length > this.logLengthLimit) {
+				logTextToDisplay = (this.logText.substring(0, logTextToDisplay.lastIndexOf("\n")) + "\n\n[...] (Truncated)").trim();
+			} else if (logChunk.text.length == this.logChunkSize) {
+				logTextToDisplay = (this.logText.substring(0, logTextToDisplay.lastIndexOf("\n")) + "\n\n[...] (Loading)").trim();
+			}
+
+			this.logTextElement.textContent = logTextToDisplay;
 			lastChunkSize = logChunk.text.length;
 
-		} while (lastChunkSize == this.logChunkSize);
+		} while ((this.logText.length <= this.logLengthLimit) && (lastChunkSize == this.logChunkSize));
 	}
 
 	isStepCompleted(status) {
