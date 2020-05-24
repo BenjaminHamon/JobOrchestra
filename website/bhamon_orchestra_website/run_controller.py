@@ -91,8 +91,10 @@ def show_step(project_identifier, run_identifier, step_index): # pylint: disable
 
 
 def show_step_log(project_identifier, run_identifier, step_index): # pylint: disable = unused-argument
+	step = service_client.get("/project/{project_identifier}/run/{run_identifier}/step/{step_index}".format(**locals()))
 	log_text = service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/step/{step_index}/log".format(**locals())).text
-	return flask.Response(log_text, mimetype = "text/plain")
+	content_disposition = "inline; filename=\"step_{index}_{name}.log\"".format(**step)
+	return flask.Response(log_text, headers = { "Content-Disposition": content_disposition }, mimetype = "text/plain")
 
 
 def cancel(project_identifier, run_identifier): # pylint: disable = unused-argument
