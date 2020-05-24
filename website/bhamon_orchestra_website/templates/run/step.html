@@ -35,7 +35,7 @@
 
 <section>
 	<h2><a href="{{ url_for('run_controller.show_step_log', project_identifier = run['project'], run_identifier = run['identifier'], step_index = current['index']) }}">Log</a></h2>
-	<pre id="log-text">{{ log_text }}</pre>
+	<pre id="log-text"></pre>
 </section>
 
 {% endblock %}
@@ -46,8 +46,6 @@
 		projectIdentifier: "{{ run['project'] }}",
 		runIdentifier: "{{ run['identifier'] }}",
 		stepIndex: parseInt("{{ current['index'] }}"),
-		stepStatus: "{{ current['status'] }}",
-		logCursor: "{{ log_cursor }}",
 	};
 </script>
 

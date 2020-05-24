@@ -75,7 +75,6 @@ def show_step(project_identifier, run_identifier, step_index): # pylint: disable
 	project = service_client.get("/project/{project_identifier}".format(**locals()))
 	run = service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals()))
 	step_collection = service_client.get("/project/{project_identifier}/run/{run_identifier}/step_collection".format(**locals()))
-	log_response = service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/step/{step_index}/log".format(**locals()))
 
 	view_data = {
 		"project": project,
@@ -83,8 +82,6 @@ def show_step(project_identifier, run_identifier, step_index): # pylint: disable
 		"current": step_collection[step_index],
 		"previous": step_collection[step_index - 1] if step_index > 0 else None,
 		"next": step_collection[step_index + 1] if step_index < (len(step_collection) - 1) else None,
-		"log_text": log_response.text,
-		"log_cursor": log_response.headers["X-Orchestra-FileCursor"],
 	}
 
 	return flask.render_template("run/step.html", title = "Run " + run_identifier[:18], **view_data)
