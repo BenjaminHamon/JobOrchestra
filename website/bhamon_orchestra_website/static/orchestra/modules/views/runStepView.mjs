@@ -30,7 +30,7 @@ export class RunStepView {
 		this.logText = null;
 		this.logCursor = null;
 		this.logChunkSize = 1024 * 1024;
-		this.logLengthLimit = 1024 * 1024;
+		this.logLengthLimit = 1000 * 1000;
 		this.refreshInterval = null;
 		this.isRefreshing = false;
 
@@ -90,27 +90,31 @@ export class RunStepView {
 		if (this.logText == null)
 			this.logText = "";
 
-		if (this.logText.length >= this.logLengthLimit)
+		if (this.logText.length > this.logLengthLimit)
 			return;
+
+		if (this.logText == "")
+			this.logTextElement.textContent = "[...] (Loading)";
 
 		var lastChunkSize = null;
 
 		do {
-			var logChunkSize = Math.min(this.logChunkSize, this.logLengthLimit - this.logText.length);
-			var logChunk = await this.runProvider.getLogChunk(this.projectIdentifier, this.runIdentifier, this.stepIndex, this.logCursor, logChunkSize);
+			var logChunk = await this.runProvider.getLogChunk(this.projectIdentifier, this.runIdentifier, this.stepIndex, this.logCursor, this.logChunkSize);
 
 			this.logText += logChunk.text;
 			this.logCursor = logChunk.cursor;
 
-			if (this.logText.length < this.logLengthLimit) {
-				this.logTextElement.textContent = this.logText;
-			} else {
-				this.logTextElement.textContent = this.logText.substring(0, this.logText.lastIndexOf("\n"));
+			var logTextToDisplay = this.logText.substring(0, this.logLengthLimit);
+			if (this.logText.length > this.logLengthLimit) {
+				logTextToDisplay = (this.logText.substring(0, logTextToDisplay.lastIndexOf("\n")) + "\n\n[...] (Truncated)").trim();
+			} else if (logChunk.text.length == this.logChunkSize) {
+				logTextToDisplay = (this.logText.substring(0, logTextToDisplay.lastIndexOf("\n")) + "\n\n[...] (Loading)").trim();
 			}
 
+			this.logTextElement.textContent = logTextToDisplay;
 			lastChunkSize = logChunk.text.length;
 
-		} while ((this.logText.length < this.logLengthLimit) && (lastChunkSize == this.logChunkSize));
+		} while ((this.logText.length <= this.logLengthLimit) && (lastChunkSize == this.logChunkSize));
 	}
 
 	isStepCompleted(status) {
