@@ -211,7 +211,12 @@ class Worker: # pylint: disable = too-many-instance-attributes
 
 		executor = self.executor_factory(run_identifier)
 		executor_command = [ sys.executable, self._executor_script, run_identifier ]
-		await executor.start(executor_command)
+
+		try:
+			await executor.start(executor_command)
+		except OSError:
+			logger.error("Failed to start run %s", run_identifier, exc_info = True)
+
 		self._active_executors.append(executor)
 
 
