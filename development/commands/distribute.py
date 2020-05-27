@@ -66,7 +66,7 @@ def setup(configuration, component, simulate):
 	metadata_content += "__date__ = \"%s\"\n" % configuration["project_version"]["date"]
 
 	if not simulate:
-		with open(metadata_file_path, "w", encoding = "utf-8") as metadata_file:
+		with open(metadata_file_path, mode = "w", encoding = "utf-8") as metadata_file:
 			metadata_file.writelines(metadata_content)
 
 

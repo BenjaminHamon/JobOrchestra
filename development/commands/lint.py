@@ -69,7 +69,7 @@ def validate_html_templates(template_directory, simulate):
 
 	for template_path in glob.glob(os.path.join(template_directory, "**", "*.html"), recursive = True):
 		try:
-			with open(template_path, mode = "r") as template_file:
+			with open(template_path, mode = "r", encoding = "utf-8") as template_file:
 				if not simulate:
 					jinja_environment.parse(template_file.read())
 		except jinja2.TemplateSyntaxError as exception:
