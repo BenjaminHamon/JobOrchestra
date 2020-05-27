@@ -42,5 +42,5 @@ class FakeExecutorWatcher:
 		return self.status["status"] == "running"
 
 
-	async def wait_futures(self):
+	async def complete(self):
 		pass

@@ -21,12 +21,12 @@ class ExecutorWatcher:
 		self.run_identifier = run_identifier
 		self.process = None
 		self.synchronization = None
-		self.futures = []
+		self.stdout_future = None
 
 
 	async def start(self, command):
 		self.process = await asyncio.create_subprocess_exec(*command, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
-		self.futures.append(asyncio.ensure_future(self.watch_stdout()))
+		self.stdout_future = asyncio.ensure_future(self.watch_stdout())
 
 
 	async def terminate(self, timeout_seconds):
@@ -40,10 +40,11 @@ class ExecutorWatcher:
 				logger.warning("(%s) Forcing termination", self.run_identifier)
 				self.process.kill()
 
+		if self.stdout_future is not None:
 			try:
-				await self.wait_futures()
+				await asyncio.wait_for(self.stdout_future, timeout = 1)
 			except asyncio.TimeoutError:
-				logger.warning("(%s) Timeout on futures", self.run_identifier)
+				logger.warning("(%s) Timeout on stdout future", self.run_identifier)
 
 
 	def abort(self):
@@ -68,16 +69,22 @@ class ExecutorWatcher:
 			raw_logger.info(line)
 
 
-	async def wait_futures(self):
-		if len(self.futures) > 0:
-			await asyncio.wait(self.futures, timeout = 1)
-
-
 	def update(self, messenger):
 		self._check_termination()
 
 		if self.synchronization is not None:
 			self.synchronization.update(messenger)
+
+
+	async def complete(self):
+		if self.is_running():
+			raise RuntimeError("Run '%s' is still active" % self.run_identifier)
+
+		if self.stdout_future is not None:
+			try:
+				await asyncio.wait_for(self.stdout_future, 1)
+			except asyncio.TimeoutError:
+				logger.warning("(%s) Timeout on stdout future", self.run_identifier)
 
 
 	def _check_termination(self):
@@ -86,6 +93,6 @@ class ExecutorWatcher:
 
 		status = worker_storage.load_status(self.run_identifier)
 		if status["status"] in [ "unknown", "running" ]:
-			logger.error("Run '%s' terminated before completion", self.run_identifier)
+			logger.error("(%s) Run terminated before completion", self.run_identifier)
 			status["status"] = "exception"
 			worker_storage.save_status(self.run_identifier, status)

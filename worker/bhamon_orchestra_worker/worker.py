@@ -149,9 +149,17 @@ class Worker: # pylint: disable = too-many-instance-attributes
 	async def _terminate(self):
 		all_futures = []
 		for executor in self._active_executors:
-			all_futures.append(executor.terminate(self.termination_timeout_seconds))
+			all_futures.append(asyncio.ensure_future(executor.terminate(self.termination_timeout_seconds)))
+
 		if len(all_futures) > 0:
-			await asyncio.wait(all_futures)
+			await asyncio.wait(all_futures, return_when = asyncio.ALL_COMPLETED)
+
+		for future in all_futures:
+			try:
+				await future
+			except Exception: # pylint: disable = broad-except
+				logger.error("Unhandled exception from executor termination", exc_info = True)
+
 		for executor in self._active_executors:
 			if executor.is_running():
 				logger.warning("Run %s is still active (Process: %s)", executor.run_identifier, executor.process.pid)
@@ -223,11 +231,12 @@ class Worker: # pylint: disable = too-many-instance-attributes
 	async def _clean(self, run_identifier):
 		logger.info("Cleaning run %s", run_identifier)
 		executor = self._find_executor(run_identifier)
-		if executor.is_running():
-			raise RuntimeError("Executor is still running for run %s" % run_identifier)
-		await executor.wait_futures()
+		await executor.complete()
+
 		if executor.synchronization is not None:
 			executor.synchronization.dispose()
+			executor.synchronization = None
+
 		self._active_executors.remove(executor)
 		worker_storage.delete_run(run_identifier)
 
