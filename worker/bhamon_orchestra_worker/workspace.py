@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 
 
 def load_results(result_file_path):
@@ -16,4 +15,4 @@ def save_results(result_file_path, results):
 		json.dump(results, result_file, indent = 4)
 	if os.path.isfile(result_file_path):
 		os.remove(result_file_path)
-	shutil.move(result_file_path + ".tmp", result_file_path)
+	os.replace(result_file_path + ".tmp", result_file_path)

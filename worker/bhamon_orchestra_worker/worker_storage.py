@@ -119,4 +119,4 @@ def _save_data(file_path, data):
 		json.dump(data, data_file, indent = 4)
 	if os.path.isfile(file_path):
 		os.remove(file_path)
-	shutil.move(file_path + ".tmp", file_path)
+	os.replace(file_path + ".tmp", file_path)
