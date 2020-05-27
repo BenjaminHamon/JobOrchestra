@@ -18,9 +18,9 @@ def assert_multi_process(process_information_collection):
 	for process_information in process_information_collection:
 		process_information["result_code"] = process_information["process"]["process"].poll()
 
-		with open(process_information["process"]["stdout_file_path"], mode = "r") as stdout_file:
+		with open(process_information["process"]["stdout_file_path"], mode = "r", encoding = "utf-8") as stdout_file:
 			process_information["stdout"] = stdout_file.read().strip()
-		with open(process_information["process"]["stderr_file_path"], mode = "r") as stderr_file:
+		with open(process_information["process"]["stderr_file_path"], mode = "r", encoding = "utf-8") as stderr_file:
 			process_information["stderr"] = stderr_file.read().strip()
 
 		if process_information["stdout"]:

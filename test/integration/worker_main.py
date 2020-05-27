@@ -16,7 +16,7 @@ def main():
 	executor_script = os.path.join(os.path.dirname(__file__), "executor_main.py")
 
 	authentication_file_path = os.path.join(os.getcwd(), "authentication.json")
-	with open(authentication_file_path, "r") as authentication_file:
+	with open(authentication_file_path, mode = "r", encoding = "utf-8") as authentication_file:
 		authentication = json.load(authentication_file)
 
 	with filelock.FileLock("worker.lock", 5):

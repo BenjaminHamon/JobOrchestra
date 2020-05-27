@@ -17,7 +17,7 @@ def list_runs():
 		run_directory = os.path.join("runs", child_directory)
 		if os.path.isdir(run_directory):
 			request_file_path = os.path.join(run_directory, "request.json")
-			with open(request_file_path, "r") as request_file:
+			with open(request_file_path, mode = "r", encoding = "utf-8") as request_file:
 				run_request = json.load(request_file)
 				all_runs.append(run_request["run_identifier"])
 	return all_runs
@@ -105,17 +105,17 @@ def load_log(run_identifier, step_index, step_name):
 	log_fith_path = get_log_path(run_identifier, step_index, step_name)
 	if not os.path.isfile(log_fith_path):
 		return ""
-	with open(log_fith_path) as log_file:
+	with open(log_fith_path, mode = "r", encoding = "utf-8") as log_file:
 		return log_file.read()
 
 
 def _load_data(file_path):
-	with open(file_path, "r") as data_file:
+	with open(file_path, mode = "r", encoding = "utf-8") as data_file:
 		return json.load(data_file)
 
 
 def _save_data(file_path, data):
-	with open(file_path + ".tmp", "w") as data_file:
+	with open(file_path + ".tmp", mode = "w", encoding = "utf-8") as data_file:
 		json.dump(data, data_file, indent = 4)
 	if os.path.isfile(file_path):
 		os.remove(file_path)

@@ -134,7 +134,7 @@ class Executor: # pylint: disable = too-few-public-methods
 				step["status"] = self._execute_command(step_command, log_file_path)
 
 				if os.path.isfile(result_file_path):
-					with open(result_file_path, "r") as result_file:
+					with open(result_file_path, mode = "r", encoding = "utf-8") as result_file:
 						results = json.load(result_file)
 					worker_storage.save_results(self.run_identifier, results)
 
@@ -151,7 +151,7 @@ class Executor: # pylint: disable = too-few-public-methods
 	def _format_command(self, command, result_file_path, log_file_path):
 		results = {}
 		if os.path.isfile(result_file_path):
-			with open(result_file_path, "r") as result_file:
+			with open(result_file_path, mode = "r", encoding = "utf-8") as result_file:
 				results = json.load(result_file)
 
 		format_parameters = {
@@ -167,7 +167,7 @@ class Executor: # pylint: disable = too-few-public-methods
 		try:
 			return [ argument.format(**format_parameters) for argument in command ]
 		except KeyError:
-			with open(log_file_path, "w") as log_file:
+			with open(log_file_path, mode = "w", encoding = "utf-8") as log_file:
 				log_file.write("# Workspace: %s\n" % os.path.abspath(self._run_status["workspace"]))
 				log_file.write("# Command: %s\n" % " ".join(command))
 				log_file.write("\n")
@@ -178,7 +178,7 @@ class Executor: # pylint: disable = too-few-public-methods
 
 
 	def _execute_command(self, command, log_file_path):
-		with open(log_file_path, "w") as log_file:
+		with open(log_file_path, mode = "w", encoding = "utf-8") as log_file:
 			log_file.write("# Workspace: %s\n" % os.path.abspath(self._run_status["workspace"]))
 			log_file.write("# Command: %s\n" % " ".join(command))
 			log_file.write("\n")

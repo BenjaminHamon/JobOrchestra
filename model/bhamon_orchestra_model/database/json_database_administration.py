@@ -73,7 +73,7 @@ class JsonDatabaseAdministration:
 		file_path = os.path.join(self._data_directory, "admin.json")
 		if not os.path.exists(file_path):
 			return { "indexes": [] }
-		with open(file_path) as data_file:
+		with open(file_path, mode = "r", encoding = "utf-8") as data_file:
 			return json.load(data_file)
 
 
@@ -81,6 +81,6 @@ class JsonDatabaseAdministration:
 		file_path = os.path.join(self._data_directory, "admin.json")
 		if not os.path.exists(os.path.dirname(file_path)):
 			os.makedirs(os.path.dirname(file_path))
-		with open(file_path + ".tmp", "w") as administration_data_file:
+		with open(file_path + ".tmp", mode = "w", encoding = "utf-8") as administration_data_file:
 			json.dump(administration_data, administration_data_file, indent = 4)
 		os.replace(file_path + ".tmp", file_path)

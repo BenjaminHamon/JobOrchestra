@@ -88,7 +88,7 @@ class JsonDatabaseClient(DatabaseClient):
 		file_path = os.path.join(self._data_directory, table + ".json")
 		if not os.path.exists(file_path):
 			return []
-		with open(file_path) as data_file:
+		with open(file_path, mode = "r", encoding = "utf-8") as data_file:
 			return json.load(data_file)
 
 
@@ -98,7 +98,7 @@ class JsonDatabaseClient(DatabaseClient):
 		file_path = os.path.join(self._data_directory, table + ".json")
 		if not os.path.exists(os.path.dirname(file_path)):
 			os.makedirs(os.path.dirname(file_path))
-		with open(file_path + ".tmp", "w") as table_data_file:
+		with open(file_path + ".tmp", mode = "w", encoding = "utf-8") as table_data_file:
 			json.dump(table_data, table_data_file, indent = 4)
 		os.replace(file_path + ".tmp", file_path)
 
@@ -109,7 +109,7 @@ class JsonDatabaseClient(DatabaseClient):
 		file_path = os.path.join(self._data_directory, "admin.json")
 		if not os.path.exists(file_path):
 			return []
-		with open(file_path) as administration_data_file:
+		with open(file_path, mode = "r", encoding = "utf-8") as administration_data_file:
 			administration_data = json.load(administration_data_file)
 
 		return [ index for index in administration_data["indexes"] if index["table"] == table ]

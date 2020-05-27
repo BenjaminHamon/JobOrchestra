@@ -87,7 +87,7 @@ class Synchronization:
 			if step["log_status"] == "pending" and step_status not in [ "pending", "skipped" ]:
 				log_file_path = worker_storage.get_log_path(self.run_identifier, step["index"], step["name"])
 				if os.path.exists(log_file_path):
-					step["log_file"] = open(log_file_path, mode = "r")
+					step["log_file"] = open(log_file_path, mode = "r", encoding = "utf-8")
 					step["log_status"] = "running"
 
 			while step["log_status"] == "running":

@@ -11,7 +11,7 @@ def main():
 	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
 
-	with open(arguments.authentication, "r") as authentication_file:
+	with open(arguments.authentication, mode = "r", encoding = "utf-8") as authentication_file:
 		authentication = json.load(authentication_file)
 
 	controller_instance = Controller(arguments.service_url, (authentication["user"], authentication["secret"]))

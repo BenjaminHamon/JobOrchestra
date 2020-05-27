@@ -32,7 +32,7 @@ class FileStorage:
 
 	def load(self, file_path: str) -> str:
 		file_path = os.path.join(self._data_directory, file_path)
-		with open(file_path, mode = "r") as data_file:
+		with open(file_path, mode = "r", encoding = "utf-8") as data_file:
 			return data_file.read()
 
 
@@ -45,7 +45,7 @@ class FileStorage:
 
 	def load_chunk(self, file_path: str, skip: int = 0, limit: Optional[int] = None) -> Tuple[str, int]:
 		file_path = os.path.join(self._data_directory, file_path)
-		with open(file_path, mode = "r") as data_file:
+		with open(file_path, mode = "r", encoding = "utf-8") as data_file:
 			data_file.seek(skip)
 			return data_file.read(limit), data_file.tell()
 
@@ -54,7 +54,7 @@ class FileStorage:
 		file_path = os.path.join(self._data_directory, file_path)
 		if not os.path.exists(os.path.dirname(file_path)):
 			os.makedirs(os.path.dirname(file_path))
-		with open(file_path + ".tmp", mode = "w") as data_file:
+		with open(file_path + ".tmp", mode = "w", encoding = "utf-8") as data_file:
 			data_file.write(data)
 		os.replace(file_path + ".tmp", file_path)
 
@@ -63,7 +63,7 @@ class FileStorage:
 		file_path = os.path.join(self._data_directory, file_path)
 		if not os.path.exists(os.path.dirname(file_path)):
 			os.makedirs(os.path.dirname(file_path))
-		with open(file_path, mode = "a") as data_file:
+		with open(file_path, mode = "a", encoding = "utf-8") as data_file:
 			data_file.write(data)
 
 
