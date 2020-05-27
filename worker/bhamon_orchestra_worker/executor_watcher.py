@@ -25,7 +25,11 @@ class ExecutorWatcher:
 
 
 	async def start(self, command):
-		self.process = await asyncio.create_subprocess_exec(*command, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
+		process_environment = os.environ.copy()
+		process_environment["PYTHONIOENCODING"] = "utf-8" # Force executor to use utf-8 instead of the default stdout encoding
+
+		self.process = await asyncio.create_subprocess_exec(*command,
+				stdout = subprocess.PIPE, stderr = subprocess.STDOUT, env = process_environment, creationflags = subprocess_flags)
 		self.stdout_future = asyncio.ensure_future(self.watch_stdout())
 
 
