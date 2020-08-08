@@ -50,6 +50,7 @@ def create_application(arguments):
 
 	application = types.SimpleNamespace()
 	application.database_administration = database_administration_instance
+	application.database_client = database_client_instance
 	application.authentication_provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
 	application.authorization_provider = AuthorizationProvider()
 	application.job_provider = JobProvider(database_client_instance, date_time_provider_instance)
