@@ -47,6 +47,13 @@ class MongoDatabaseClient(DatabaseClient):
 		del data["_id"]
 
 
+	def insert_many(self, table: str, dataset: List[dict]) -> None:
+		""" Insert a list of items into a table """
+		self.mongo_client.get_database()[table].insert_many(dataset)
+		for data in dataset:
+			del data["_id"]
+
+
 	def update_one(self, table: str, filter: dict, data: dict) -> None: # pylint: disable = redefined-builtin
 		""" Update a single item (or nothing) from a table, after applying a filter """
 		self.mongo_client.get_database()[table].update_one(filter, { "$set": data })

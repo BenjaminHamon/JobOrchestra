@@ -31,9 +31,7 @@ def test_many():
 
 	assert client.count(table, {}) == 0
 
-	client.insert_one(table, first_record)
-	client.insert_one(table, second_record)
-	client.insert_one(table, third_record)
+	client.insert_many(table, [ first_record, second_record, third_record ])
 	assert client.find_many(table, {}) == [ first_record, second_record, third_record ]
 	assert client.count(table, {}) == 3
 

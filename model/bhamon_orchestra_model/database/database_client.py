@@ -30,6 +30,11 @@ class DatabaseClient(abc.ABC):
 
 
 	@abc.abstractmethod
+	def insert_many(self, table: str, dataset: List[dict]) -> None:
+		""" Insert a list of items into a table """
+
+
+	@abc.abstractmethod
 	def update_one(self, table: str, filter: dict, data: dict) -> None: # pylint: disable = redefined-builtin
 		""" Update a single item (or nothing) from a table, after applying a filter """
 

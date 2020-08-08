@@ -47,6 +47,14 @@ class MemoryDatabaseClient(DatabaseClient):
 		self.database[table].append(data)
 
 
+	def insert_many(self, table: str, dataset: List[dict]) -> None:
+		""" Insert a list of items into a table """
+
+		if table not in self.database:
+			self.database[table] = []
+		self.database[table].extend(dataset)
+
+
 	def update_one(self, table: str, filter: dict, data: dict) -> None: # pylint: disable = redefined-builtin
 		""" Update a single item (or nothing) from a table, after applying a filter """
 

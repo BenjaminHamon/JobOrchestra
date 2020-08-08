@@ -35,9 +35,7 @@ def test_many(tmpdir, database_type):
 	with context.DatabaseContext(tmpdir, database_type) as context_instance:
 		assert context_instance.database_client.count(table, {}) == 0
 
-		context_instance.database_client.insert_one(table, first_record)
-		context_instance.database_client.insert_one(table, second_record)
-		context_instance.database_client.insert_one(table, third_record)
+		context_instance.database_client.insert_many(table, [ first_record, second_record, third_record ])
 		assert context_instance.database_client.find_many(table, {}) == [ first_record, second_record, third_record ]
 		assert context_instance.database_client.count(table, {}) == 3
 
@@ -51,16 +49,22 @@ def test_index(tmpdir, database_type):
 	""" Test database operations on a table with an index """
 
 	table = "record"
-	record = { "id": 1, "key": "first" }
+	first_record = { "id": 1, "key": "first" }
+	second_record = { "id": 2, "key": "second" }
+	third_record = { "id": 3, "key": "third" }
 
 	with context.DatabaseContext(tmpdir, database_type) as context_instance:
 		context_instance.database_administration.create_index(table, "id_unique", [ ("id", "ascending") ], is_unique = True)
 
 		assert context_instance.database_client.count(table, {}) == 0
 
-		context_instance.database_client.insert_one(table, record)
+		context_instance.database_client.insert_one(table, first_record)
 		assert context_instance.database_client.count(table, {}) == 1
 
 		with pytest.raises(Exception):
-			context_instance.database_client.insert_one(table, record)
+			context_instance.database_client.insert_one(table, first_record)
+		assert context_instance.database_client.count(table, {}) == 1
+
+		with pytest.raises(Exception):
+			context_instance.database_client.insert_many(table, [ first_record, second_record, third_record ])
 		assert context_instance.database_client.count(table, {}) == 1
