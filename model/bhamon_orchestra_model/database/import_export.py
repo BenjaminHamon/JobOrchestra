@@ -46,7 +46,8 @@ def import_table(database_client: DatabaseClient, table: str, source_directory: 
 		dataset = json.load(source_file)
 
 	if not simulate:
-		database_client.insert_many(table, dataset)
+		if len(dataset) > 0:
+			database_client.insert_many(table, dataset)
 
 
 def export_database(database_client: DatabaseClient, output_directory: str, simulate: bool = False) -> None:
