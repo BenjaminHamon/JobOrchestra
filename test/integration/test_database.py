@@ -1,6 +1,10 @@
 """ Integration tests for database clients """
 
+import os
+
 import pytest
+
+import bhamon_orchestra_model.database.import_export as database_import_export
 
 from . import context
 from . import environment
@@ -68,3 +72,28 @@ def test_index(tmpdir, database_type):
 		with pytest.raises(Exception):
 			context_instance.database_client.insert_many(table, [ first_record, second_record, third_record ])
 		assert context_instance.database_client.count(table, {}) == 1
+
+
+@pytest.mark.parametrize("database_type_source", environment.get_all_database_types())
+@pytest.mark.parametrize("database_type_target", environment.get_all_database_types())
+def test_import_export(tmpdir, database_type_source, database_type_target):
+	""" Test exporting and re-importing a database """
+
+	intermediate_directory = os.path.join(str(tmpdir), "export")
+
+	with context.OrchestraContext(tmpdir, database_type_source, "source") as context_instance:
+		context_instance.project_provider.create_or_update("my-project", None, None)
+		context_instance.job_provider.create_or_update("my-job", "my-project", None, None, None, None, None, None)
+		run = context_instance.run_provider.create("my-project", "my-job", None, None)
+
+		database_import_export.export_database(context_instance.database_client, intermediate_directory)
+
+	with context.OrchestraContext(tmpdir, database_type_target, "target") as context_instance:
+		database_import_export.import_database(context_instance.database_client, intermediate_directory)
+
+		assert len(context_instance.project_provider.get_list()) == 1
+		assert context_instance.project_provider.get_list()[0]["identifier"] == "my-project"
+		assert len(context_instance.job_provider.get_list()) == 1
+		assert context_instance.job_provider.get_list()[0]["identifier"] == "my-job"
+		assert len(context_instance.run_provider.get_list()) == 1
+		assert context_instance.run_provider.get_list()[0]["identifier"] == run["identifier"]
