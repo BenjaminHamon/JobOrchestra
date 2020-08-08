@@ -39,7 +39,7 @@ class MemoryDatabaseClient(DatabaseClient):
 		return next(( row for row in self.database.get(table, []) if self._match_filter(row, filter) ), None)
 
 
-	def insert_one(self, table: str, data: dict) -> dict:
+	def insert_one(self, table: str, data: dict) -> None:
 		""" Insert a new item into a table """
 
 		if table not in self.database:

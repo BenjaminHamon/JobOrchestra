@@ -41,7 +41,7 @@ class MongoDatabaseClient(DatabaseClient):
 		return self.mongo_client.get_database()[table].find_one(filter, { "_id": False })
 
 
-	def insert_one(self, table: str, data: dict) -> dict:
+	def insert_one(self, table: str, data: dict) -> None:
 		""" Insert a new item into a table """
 		self.mongo_client.get_database()[table].insert_one(data)
 		del data["_id"]

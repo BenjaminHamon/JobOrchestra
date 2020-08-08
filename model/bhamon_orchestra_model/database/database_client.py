@@ -25,7 +25,7 @@ class DatabaseClient(abc.ABC):
 
 
 	@abc.abstractmethod
-	def insert_one(self, table: str, data: dict) -> dict:
+	def insert_one(self, table: str, data: dict) -> None:
 		""" Insert a new item into a table """
 
 

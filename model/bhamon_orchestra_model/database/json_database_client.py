@@ -41,7 +41,7 @@ class JsonDatabaseClient(DatabaseClient):
 		return next(( row for row in self._load(table) if self._match_filter(row, filter) ), None)
 
 
-	def insert_one(self, table: str, data: dict) -> dict:
+	def insert_one(self, table: str, data: dict) -> None:
 		""" Insert a new item into a table """
 
 		all_indexes = self._load_indexes(table)
