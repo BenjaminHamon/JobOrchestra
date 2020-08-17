@@ -39,12 +39,20 @@ class MemoryDatabaseClient(DatabaseClient):
 		return next(( row for row in self.database.get(table, []) if self._match_filter(row, filter) ), None)
 
 
-	def insert_one(self, table: str, data: dict) -> dict:
+	def insert_one(self, table: str, data: dict) -> None:
 		""" Insert a new item into a table """
 
 		if table not in self.database:
 			self.database[table] = []
 		self.database[table].append(data)
+
+
+	def insert_many(self, table: str, dataset: List[dict]) -> None:
+		""" Insert a list of items into a table """
+
+		if table not in self.database:
+			self.database[table] = []
+		self.database[table].extend(dataset)
 
 
 	def update_one(self, table: str, filter: dict, data: dict) -> None: # pylint: disable = redefined-builtin

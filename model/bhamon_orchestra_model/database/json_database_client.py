@@ -41,7 +41,7 @@ class JsonDatabaseClient(DatabaseClient):
 		return next(( row for row in self._load(table) if self._match_filter(row, filter) ), None)
 
 
-	def insert_one(self, table: str, data: dict) -> dict:
+	def insert_one(self, table: str, data: dict) -> None:
 		""" Insert a new item into a table """
 
 		all_indexes = self._load_indexes(table)
@@ -55,6 +55,24 @@ class JsonDatabaseClient(DatabaseClient):
 				raise ValueError("Duplicate key '%s' in table '%s' for index '%s'" % (index_filter, table, index["identifier"]))
 
 		all_rows.append(data)
+		self._save(table, all_rows)
+
+
+	def insert_many(self, table: str, dataset: List[dict]) -> None:
+		""" Insert a list of items into a table """
+
+		all_indexes = self._load_indexes(table)
+		all_rows = self._load(table)
+
+		for data in dataset:
+			for index in [ x for x in all_indexes if x["is_unique"] ]:
+				index_filter = { key: data[key] for key in index["field_collection"] }
+				matched_row = next(( row for row in all_rows if self._match_filter(row, index_filter) ), None)
+
+				if matched_row is not None:
+					raise ValueError("Duplicate key '%s' in table '%s' for index '%s'" % (index_filter, table, index["identifier"]))
+
+		all_rows.extend(dataset)
 		self._save(table, all_rows)
 
 

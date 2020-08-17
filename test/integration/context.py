@@ -30,11 +30,11 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 class DatabaseContext:
 
 
-	def __init__(self, temporary_directory, database_type):
+	def __init__(self, temporary_directory, database_type, database_suffix = None):
 		environment_instance = environment.load_test_context_environment(str(temporary_directory), database_type)
 
 		self.temporary_directory = str(temporary_directory)
-		self.database_uri = environment_instance["database_uri"]
+		self.database_uri = environment_instance["database_uri"] + (("_" + database_suffix) if database_suffix else "")
 		self.database_client = environment.create_database_client(self.database_uri)
 		self.database_administration = environment.create_database_administration(self.database_uri)
 
@@ -60,7 +60,7 @@ class DatabaseContext:
 class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 
-	def __init__(self, temporary_directory, database_type):
+	def __init__(self, temporary_directory, database_type, database_suffix = None):
 		environment_instance = environment.load_test_context_environment(str(temporary_directory), database_type)
 
 		self.temporary_directory = str(temporary_directory)
@@ -74,6 +74,8 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 		self.process_collection = []
 
 		if self.database_uri is not None:
+			self.database_uri += ("_" + database_suffix) if database_suffix else ""
+
 			date_time_provider_instance = DateTimeProvider()
 
 			self.database_client = environment.create_database_client(self.database_uri)
