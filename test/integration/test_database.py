@@ -18,13 +18,15 @@ def test_single(tmpdir, database_type):
 	record = { "id": 1, "key": "value" }
 
 	with context.DatabaseContext(tmpdir, database_type) as context_instance:
-		assert context_instance.database_client.count(table, {}) == 0
+		with context_instance.database_client_factory() as database_client:
 
-		context_instance.database_client.insert_one(table, record)
-		assert context_instance.database_client.count(table, {}) == 1
+			assert database_client.count(table, {}) == 0
 
-		context_instance.database_client.delete_one(table, record)
-		assert context_instance.database_client.count(table, {}) == 0
+			database_client.insert_one(table, record)
+			assert database_client.count(table, {}) == 1
+
+			database_client.delete_one(table, record)
+			assert database_client.count(table, {}) == 0
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
@@ -37,15 +39,17 @@ def test_many(tmpdir, database_type):
 	third_record = { "id": 3, "key": "third" }
 
 	with context.DatabaseContext(tmpdir, database_type) as context_instance:
-		assert context_instance.database_client.count(table, {}) == 0
+		with context_instance.database_client_factory() as database_client:
 
-		context_instance.database_client.insert_many(table, [ first_record, second_record, third_record ])
-		assert context_instance.database_client.find_many(table, {}) == [ first_record, second_record, third_record ]
-		assert context_instance.database_client.count(table, {}) == 3
+			assert database_client.count(table, {}) == 0
 
-		context_instance.database_client.delete_one(table, third_record)
-		assert context_instance.database_client.find_many(table, {}) == [ first_record, second_record ]
-		assert context_instance.database_client.count(table, {}) == 2
+			database_client.insert_many(table, [ first_record, second_record, third_record ])
+			assert database_client.find_many(table, {}) == [ first_record, second_record, third_record ]
+			assert database_client.count(table, {}) == 3
+
+			database_client.delete_one(table, third_record)
+			assert database_client.find_many(table, {}) == [ first_record, second_record ]
+			assert database_client.count(table, {}) == 2
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
@@ -58,20 +62,23 @@ def test_index(tmpdir, database_type):
 	third_record = { "id": 3, "key": "third" }
 
 	with context.DatabaseContext(tmpdir, database_type) as context_instance:
-		context_instance.database_administration.create_index(table, "id_unique", [ ("id", "ascending") ], is_unique = True)
+		with context_instance.database_administration_factory() as database_administration:
+			database_administration.create_index(table, "id_unique", [ ("id", "ascending") ], is_unique = True)
 
-		assert context_instance.database_client.count(table, {}) == 0
+		with context_instance.database_client_factory() as database_client:
 
-		context_instance.database_client.insert_one(table, first_record)
-		assert context_instance.database_client.count(table, {}) == 1
+			assert database_client.count(table, {}) == 0
 
-		with pytest.raises(Exception):
-			context_instance.database_client.insert_one(table, first_record)
-		assert context_instance.database_client.count(table, {}) == 1
+			database_client.insert_one(table, first_record)
+			assert database_client.count(table, {}) == 1
 
-		with pytest.raises(Exception):
-			context_instance.database_client.insert_many(table, [ first_record, second_record, third_record ])
-		assert context_instance.database_client.count(table, {}) == 1
+			with pytest.raises(Exception):
+				database_client.insert_one(table, first_record)
+			assert database_client.count(table, {}) == 1
+
+			with pytest.raises(Exception):
+				database_client.insert_many(table, [ first_record, second_record, third_record ])
+			assert database_client.count(table, {}) == 1
 
 
 @pytest.mark.parametrize("database_type_source", environment.get_all_database_types())

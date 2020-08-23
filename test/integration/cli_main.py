@@ -43,8 +43,8 @@ def parse_arguments():
 
 
 def create_application(arguments):
-	database_administration_instance = environment.create_database_administration(arguments.database)
-	database_client_instance = environment.create_database_client(arguments.database)
+	database_administration_instance = environment.create_database_administration_factory(arguments.database)()
+	database_client_instance = environment.create_database_client_factory(arguments.database)()
 	file_storage_instance = FileStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 

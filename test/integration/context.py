@@ -35,8 +35,8 @@ class DatabaseContext:
 
 		self.temporary_directory = str(temporary_directory)
 		self.database_uri = environment_instance["database_uri"] + (("_" + database_suffix) if database_suffix else "")
-		self.database_client = environment.create_database_client(self.database_uri)
-		self.database_administration = environment.create_database_administration(self.database_uri)
+		self.database_administration_factory = environment.create_database_administration_factory(self.database_uri)
+		self.database_client_factory = environment.create_database_client_factory(self.database_uri)
 
 
 	def __enter__(self):
@@ -48,9 +48,6 @@ class DatabaseContext:
 
 
 	def __exit__(self, exception_type, exception_value, traceback):
-		self.database_administration.close()
-		self.database_client.close()
-
 		if self.database_uri.startswith("mongodb://"):
 			with pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000) as mongo_client:
 				mongo_client.drop_database(mongo_client.get_database())
@@ -78,7 +75,9 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 			date_time_provider_instance = DateTimeProvider()
 
-			self.database_client = environment.create_database_client(self.database_uri)
+			self.database_administration_factory = environment.create_database_administration_factory(self.database_uri)
+			self.database_client_factory = environment.create_database_client_factory(self.database_uri)
+			self.database_client = self.database_client_factory()
 			self.file_storage = FileStorage(os.path.join(self.temporary_directory, "master"))
 
 			self.authentication_provider = AuthenticationProvider(self.database_client, date_time_provider_instance)
@@ -97,9 +96,8 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 				mongo_client.drop_database(mongo_client.get_database())
 
 		if self.database_uri is not None:
-			database_administration = environment.create_database_administration(self.database_uri)
-			database_administration.initialize(simulate = False)
-			database_administration.close()
+			with self.database_administration_factory() as database_administration:
+				database_administration.initialize(simulate = False)
 
 		return self
 

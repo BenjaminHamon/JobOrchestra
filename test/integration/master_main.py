@@ -42,7 +42,7 @@ def parse_arguments():
 
 
 def create_application(arguments): # pylint: disable = too-many-locals
-	database_client_instance = environment.create_database_client(arguments.database)
+	database_client_instance = environment.create_database_client_factory(arguments.database)()
 	file_storage_instance = FileStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 
