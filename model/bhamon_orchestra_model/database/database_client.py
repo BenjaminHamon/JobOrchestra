@@ -7,6 +7,14 @@ class DatabaseClient(abc.ABC):
 	""" Base class for a database client """
 
 
+	def __enter__(self):
+		return self
+
+
+	def __exit__(self, exception_type, exception_value, traceback):
+		self.close()
+
+
 	@abc.abstractmethod
 	def count(self, table: str, filter: dict) -> int: # pylint: disable = redefined-builtin
 		""" Return how many items are in a table, after applying a filter """
@@ -42,6 +50,11 @@ class DatabaseClient(abc.ABC):
 	@abc.abstractmethod
 	def delete_one(self, table: str, filter: dict) -> None: # pylint: disable = redefined-builtin
 		""" Delete a single item (or nothing) from a table, after applying a filter """
+
+
+	@abc.abstractmethod
+	def close(self) -> None:
+		""" Close the database connection """
 
 
 	def _normalize_order_by_expression(self, expression: Optional[List[Tuple[str,str]]]) -> Optional[List[Tuple[str,str]]]: # pylint: disable = no-self-use

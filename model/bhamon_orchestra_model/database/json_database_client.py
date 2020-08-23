@@ -97,7 +97,7 @@ class JsonDatabaseClient(DatabaseClient):
 
 
 	def close(self) -> None:
-		pass
+		""" Close the database connection """
 
 
 	def _load(self, table: str) -> List[dict]:

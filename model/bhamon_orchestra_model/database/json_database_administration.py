@@ -16,6 +16,14 @@ class JsonDatabaseAdministration:
 		self._data_directory = data_directory
 
 
+	def __enter__(self):
+		return self
+
+
+	def __exit__(self, exception_type, exception_value, traceback):
+		self.close()
+
+
 	def initialize(self, simulate: bool = False) -> None:
 		logger.info("Initializing (Path: '%s')" + (" (simulation)" if simulate else ""), self._data_directory) # pylint: disable = logging-not-lazy
 

@@ -73,6 +73,10 @@ class MemoryDatabaseClient(DatabaseClient):
 			all_rows.remove(matched_row)
 
 
+	def close(self) -> None:
+		""" Close the database connection """
+
+
 	def _match_filter(self, row: dict, filter: dict) -> bool: # pylint: disable = no-self-use, redefined-builtin
 		""" Check if an item matches a filter """
 
