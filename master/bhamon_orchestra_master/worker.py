@@ -1,8 +1,9 @@
 import asyncio
 import logging
 
-from typing import List, Optional
+from typing import Callable, List, Optional
 
+from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.run_provider import RunProvider
 
@@ -18,9 +19,12 @@ class Worker:
 	""" Watcher for a remote worker process """
 
 
-	def __init__(self, identifier: str, messenger: Messenger, run_provider: RunProvider) -> None:
+	def __init__(self, identifier: str, messenger: Messenger,
+			database_client_factory: Callable[[], DatabaseClient], run_provider: RunProvider) -> None:
+
 		self.identifier = identifier
 		self._messenger = messenger
+		self._database_client_factory = database_client_factory
 		self._run_provider = run_provider
 
 		self.should_disconnect = False
@@ -29,7 +33,9 @@ class Worker:
 
 	def assign_run(self, job: dict, run: dict) -> None:
 		""" Assign a pending run to the worker """
-		self._run_provider.update_status(run, worker = self.identifier)
+
+		with self._database_client_factory() as database_client:
+			self._run_provider.update_status(database_client, run, worker = self.identifier)
 		executor = { "job": job, "run": run, "local_status": "pending", "synchronization": "unknown", "should_abort": False }
 		self.executors.append(executor)
 
@@ -45,7 +51,8 @@ class Worker:
 		""" Perform updates until cancelled """
 
 		try:
-			self.executors += await self._recover_executors()
+			with self._database_client_factory() as database_client:
+				self.executors += await self._recover_executors(database_client)
 		except asyncio.CancelledError: # pylint: disable = try-except-raise
 			raise
 		except Exception: # pylint: disable = broad-except
@@ -55,7 +62,8 @@ class Worker:
 			all_executors = list(self.executors)
 			for executor in all_executors:
 				try:
-					await self._process_executor(executor)
+					with self._database_client_factory() as database_client:
+						await self._process_executor(database_client, executor)
 				except asyncio.CancelledError: # pylint: disable = try-except-raise
 					raise
 				except Exception: # pylint: disable = broad-except
@@ -73,18 +81,18 @@ class Worker:
 		return await self._messenger.send_request({ "command": command, "parameters": parameters if parameters is not None else {} })
 
 
-	async def _recover_executors(self) -> List[dict]:
+	async def _recover_executors(self, database_client: DatabaseClient) -> List[dict]:
 		""" Retrieve the executor list from the remote worker """
 
 		recovered_executors = []
 		runs_to_recover = await self._execute_remote_command("list")
 		for run_information in runs_to_recover:
-			executor = await self._recover_execution(**run_information)
+			executor = await self._recover_execution(database_client, **run_information)
 			recovered_executors.append(executor)
 		return recovered_executors
 
 
-	async def _process_executor(self, executor: dict) -> None:
+	async def _process_executor(self, database_client: DatabaseClient, executor: dict) -> None:
 		""" Perform a update for a single executor """
 
 		if executor["local_status"] == "pending":
@@ -100,7 +108,7 @@ class Worker:
 				executor["local_status"] = "aborting"
 
 			if executor["synchronization"] == "unknown":
-				await self._resynchronize(executor["run"])
+				await self._resynchronize(database_client, executor["run"])
 				executor["synchronization"] = "running"
 
 		elif executor["local_status"] == "aborting":
@@ -116,12 +124,12 @@ class Worker:
 			executor["local_status"] = "done"
 
 
-	async def _recover_execution(self, run_identifier: str) -> dict:
+	async def _recover_execution(self, database_client: DatabaseClient, run_identifier: str) -> dict:
 		""" Recover the state for an executor from the remote worker """
 
 		logger.info("(%s) Recovering run %s", self.identifier, run_identifier)
 		run_request = await self._retrieve_request(run_identifier)
-		run = self._run_provider.get(run_request["job"]["project"], run_identifier)
+		run = self._run_provider.get(database_client, run_request["job"]["project"], run_identifier)
 		return { "job": run_request["job"], "run": run, "local_status": "running", "synchronization": "unknown", "should_abort": False }
 
 
@@ -149,14 +157,14 @@ class Worker:
 		logger.info("(%s) Completed run %s with status %s", self.identifier, run["identifier"], run["status"])
 
 
-	async def _resynchronize(self, run: dict) -> None:
+	async def _resynchronize(self, database_client: DatabaseClient, run: dict) -> None:
 		""" Resumes data synchronization with the remote worker for the specified run """
 
 		reset = { "steps": [] }
 
-		for step in self._run_provider.get_all_steps(run["project"], run["identifier"]):
-			if self._run_provider.has_step_log(run["project"], run["identifier"], step["index"]):
-				log_size = self._run_provider.get_step_log_size(run["project"], run["identifier"], step["index"])
+		for step in self._run_provider.get_all_steps(database_client, run["project"], run["identifier"]):
+			if self._run_provider.has_step_log(database_client, run["project"], run["identifier"], step["index"]):
+				log_size = self._run_provider.get_step_log_size(database_client, run["project"], run["identifier"], step["index"])
 				reset["steps"].append({ "index": step["index"], "log_file_cursor": log_size })
 
 		resynchronization_request = { "run_identifier": run["identifier"], "reset": reset }
@@ -177,14 +185,15 @@ class Worker:
 		if executor["local_status"] == "finishing":
 			raise RuntimeError("Update received after completion and verification")
 
-		if "status" in update:
-			self._update_status(executor["run"], update["status"])
-		if "results" in update:
-			self._update_results(executor["run"], update["results"])
-		if "log_chunk" in update:
-			self._update_log_file(executor["run"], update["step_index"], update["log_chunk"])
-		if "event" in update:
-			self._handle_event(executor, update["event"])
+		with self._database_client_factory() as database_client:
+			if "status" in update:
+				self._update_status(database_client, executor["run"], update["status"])
+			if "results" in update:
+				self._update_results(database_client, executor["run"], update["results"])
+			if "log_chunk" in update:
+				self._update_log_file(database_client, executor["run"], update["step_index"], update["log_chunk"])
+			if "event" in update:
+				self._handle_event(executor, update["event"])
 
 
 	def _find_executor(self, run_identifier: str) -> dict:
@@ -197,25 +206,25 @@ class Worker:
 		raise KeyError("Executor not found for %s" % run_identifier)
 
 
-	def _update_status(self, run: dict, status: dict) -> None:
+	def _update_status(self, database_client: DatabaseClient, run: dict, status: dict) -> None:
 		""" Process an update for the run status """
 
 		properties_to_update = [ "status", "start_date", "completion_date" ]
-		self._run_provider.update_status(run, ** { key: value for key, value in status.items() if key in properties_to_update })
+		self._run_provider.update_status(database_client, run, ** { key: value for key, value in status.items() if key in properties_to_update })
 
 		step_properties_to_update = [ "name", "index", "status" ]
 		step_collection = [ { key: value for key, value in step.items() if key in step_properties_to_update } for step in status.get("steps", []) ]
-		self._run_provider.update_steps(run, step_collection)
+		self._run_provider.update_steps(database_client, run, step_collection)
 
 
-	def _update_results(self, run: dict, results: dict) -> None:
+	def _update_results(self, database_client: DatabaseClient, run: dict, results: dict) -> None:
 		""" Process an update for the run results """
-		self._run_provider.set_results(run, results)
+		self._run_provider.set_results(database_client, run, results)
 
 
-	def _update_log_file(self, run: str, step_index: int, log_chunk: str) -> None:
+	def _update_log_file(self, database_client: DatabaseClient, run: str, step_index: int, log_chunk: str) -> None:
 		""" Process an update for the run log files """
-		self._run_provider.append_step_log(run["project"], run["identifier"], step_index, log_chunk)
+		self._run_provider.append_step_log(database_client, run["project"], run["identifier"], step_index, log_chunk)
 
 
 	def _handle_event(self, executor: dict, event: str) -> None: # pylint: disable = no-self-use

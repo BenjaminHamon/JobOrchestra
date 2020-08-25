@@ -19,17 +19,23 @@ def register_commands(subparsers):
 def create_authentication_token(application, arguments): # pylint: disable = unused-argument
 	user = input("User: ")
 	description = input("Description: ")
-	return application.authentication_provider.create_token(user, description, None)
+
+	with application.database_client_factory() as database_client:
+		return application.authentication_provider.create_token(database_client, user, description, None)
 
 
 def delete_user(application, arguments): # pylint: disable = unused-argument
 	user = input("User: ")
-	application.user_provider.delete(user, application.authentication_provider, application.worker_provider)
+
+	with application.database_client_factory() as database_client:
+		application.user_provider.delete(database_client, user, application.authentication_provider, application.worker_provider)
 
 
 def delete_worker(application, arguments): # pylint: disable = unused-argument
 	worker = input("Worker: ")
-	application.worker_provider.delete(worker, application.run_provider)
+
+	with application.database_client_factory() as database_client:
+		application.worker_provider.delete(database_client, worker, application.run_provider)
 
 
 def reset_administrator(application, arguments): # pylint: disable = unused-argument
@@ -37,14 +43,15 @@ def reset_administrator(application, arguments): # pylint: disable = unused-argu
 	display_name = input("Display name: ")
 	password = getpass.getpass("Password: ")
 
-	user = application.user_provider.get(identifier)
-	roles = application.authorization_provider.get_administrator_roles()
+	with application.database_client_factory() as database_client:
+		user = application.user_provider.get(database_client, identifier)
+		roles = application.authorization_provider.get_administrator_roles()
 
-	if user is None:
-		user = application.user_provider.create(identifier, display_name)
-	application.user_provider.update_identity(user, display_name)
-	application.user_provider.update_roles(user, roles)
-	application.user_provider.update_status(user, is_enabled = True)
-	application.authentication_provider.set_password(identifier, password)
+		if user is None:
+			user = application.user_provider.create(database_client, identifier, display_name)
+		application.user_provider.update_identity(database_client, user, display_name)
+		application.user_provider.update_roles(database_client, user, roles)
+		application.user_provider.update_status(database_client, user, is_enabled = True)
+		application.authentication_provider.set_password(database_client, identifier, password)
 
 	return user

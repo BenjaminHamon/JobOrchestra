@@ -17,8 +17,7 @@ logger = logging.getLogger("AuthenticationProvider")
 class AuthenticationProvider:
 
 
-	def __init__(self, database_client: DatabaseClient, date_time_provider: DateTimeProvider) -> None:
-		self.database_client = database_client
+	def __init__(self, date_time_provider: DateTimeProvider) -> None:
 		self.date_time_provider = date_time_provider
 		self.table = "user_authentication"
 
@@ -31,9 +30,9 @@ class AuthenticationProvider:
 		self.token_hash_function_parameters = {}
 
 
-	def set_password(self, user: str, password: str) -> dict:
+	def set_password(self, database_client: DatabaseClient, user: str, password: str) -> dict:
 		now = self.date_time_provider.now()
-		authentication = self.database_client.find_one(self.table, { "user": user, "type": "password" })
+		authentication = database_client.find_one(self.table, { "user": user, "type": "password" })
 
 		if authentication is None:
 			authentication = {
@@ -44,7 +43,7 @@ class AuthenticationProvider:
 				"update_date": self.date_time_provider.serialize(now),
 			}
 
-			self.database_client.insert_one(self.table, authentication)
+			database_client.insert_one(self.table, authentication)
 
 		authentication.update({
 			"hash_function": self.password_hash_function,
@@ -55,25 +54,25 @@ class AuthenticationProvider:
 
 		authentication["secret"] = self.hash_password(password, authentication["hash_function_salt"], authentication["hash_function"], authentication["hash_function_parameters"])
 
-		self.database_client.update_one(self.table, { "identifier": authentication["identifier"] }, authentication)
+		database_client.update_one(self.table, { "identifier": authentication["identifier"] }, authentication)
 		return self.convert_to_public(authentication)
 
 
-	def remove_password(self, user: str) -> None:
-		self.database_client.delete_one(self.table, { "user": user, "type": "password" })
+	def remove_password(self, database_client: DatabaseClient, user: str) -> None:
+		database_client.delete_one(self.table, { "user": user, "type": "password" })
 
 
-	def authenticate_with_password(self, user_identifier: str, password: str) -> bool:
-		authentication = self.database_client.find_one(self.table, { "user": user_identifier, "type": "password" })
+	def authenticate_with_password(self, database_client: DatabaseClient, user_identifier: str, password: str) -> bool:
+		authentication = database_client.find_one(self.table, { "user": user_identifier, "type": "password" })
 		if authentication is None:
 			return False
 		hashed_password = self.hash_password(password, authentication["hash_function_salt"], authentication["hash_function"], authentication["hash_function_parameters"])
 		return hmac.compare_digest(hashed_password, authentication["secret"])
 
 
-	def authenticate_with_token(self, user_identifier: str, secret: str) -> bool:
+	def authenticate_with_token(self, database_client: DatabaseClient, user_identifier: str, secret: str) -> bool:
 		now = self.date_time_provider.serialize(self.date_time_provider.now())
-		user_tokens = self.database_client.find_many(self.table, { "user": user_identifier, "type": "token" })
+		user_tokens = database_client.find_many(self.table, { "user": user_identifier, "type": "token" })
 
 		for token in user_tokens:
 			if "expiration_date" not in token or token["expiration_date"] > now:
@@ -84,25 +83,28 @@ class AuthenticationProvider:
 		return False
 
 
-	def count_tokens(self, user: Optional[str] = None) -> int:
+	def count_tokens(self, database_client: DatabaseClient, user: Optional[str] = None) -> int:
 		filter = { "user": user, "type": "token" } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
-		return self.database_client.count(self.table, filter)
+		return database_client.count(self.table, filter)
 
 
-	def get_token_list(self, user: Optional[str] = None, skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+	def get_token_list(self, # pylint: disable = too-many-arguments
+			database_client: DatabaseClient, user: Optional[str] = None,
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+
 		filter = { "user": user, "type": "token" } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
-		token_list = self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
+		token_list = database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 		return [ self.convert_to_public(token) for token in token_list ]
 
 
-	def get_token(self, user_identifier: str, token_identifier: str) -> Optional[dict]:
-		token = self.database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
+	def get_token(self, database_client: DatabaseClient, user_identifier: str, token_identifier: str) -> Optional[dict]:
+		token = database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
 		return self.convert_to_public(token) if token is not None else None
 
 
-	def create_token(self, user: str, description: str, expiration: Optional[datetime.timedelta]) -> dict:
+	def create_token(self, database_client: DatabaseClient, user: str, description: str, expiration: Optional[datetime.timedelta]) -> dict:
 		now = self.date_time_provider.now()
 
 		token = {
@@ -122,14 +124,14 @@ class AuthenticationProvider:
 		secret = secrets.token_hex(self.token_size)
 		token["secret"] = self.hash_token(secret, token["hash_function"], token["hash_function_parameters"])
 
-		self.database_client.insert_one(self.table, token)
+		database_client.insert_one(self.table, token)
 		result = self.convert_to_public(token)
 		result["secret"] = secret
 		return result
 
 
-	def set_token_expiration(self, user_identifier: str, token_identifier: str, expiration: datetime.timedelta) -> None:
-		token = self.database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
+	def set_token_expiration(self, database_client: DatabaseClient, user_identifier: str, token_identifier: str, expiration: datetime.timedelta) -> None:
+		token = database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
 		if "expiration_date" not in token:
 			raise ValueError("Token '%s' does not expire" % token_identifier)
 
@@ -140,11 +142,11 @@ class AuthenticationProvider:
 			"update_date": self.date_time_provider.serialize(now),
 		}
 
-		self.database_client.update_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" }, update_data)
+		database_client.update_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" }, update_data)
 
 
-	def delete_token(self, user_identifier: str, token_identifier: str) -> None:
-		self.database_client.delete_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
+	def delete_token(self, database_client: DatabaseClient, user_identifier: str, token_identifier: str) -> None:
+		database_client.delete_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
 
 
 	def hash_password(self, password: str, salt: str, function: str, parameters: dict) -> str: # pylint: disable = no-self-use

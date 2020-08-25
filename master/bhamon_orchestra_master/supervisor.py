@@ -1,12 +1,13 @@
 import asyncio
 import logging
 
-from typing import List, Type
+from typing import Callable, List, Type
 
 import websockets
 
 from bhamon_orchestra_master.protocol import WebSocketServerProtocol
 from bhamon_orchestra_master.worker import Worker, WorkerError
+from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.network.websocket import WebSocketConnection
 from bhamon_orchestra_model.run_provider import RunProvider
@@ -19,16 +20,16 @@ logger = logging.getLogger("Supervisor")
 class Supervisor:
 
 
-	def __init__( # pylint: disable = too-many-arguments
-			self, host: str, port: str,
-			run_provider: RunProvider, worker_provider: WorkerProvider,
-			protocol_factory: Type[WebSocketServerProtocol]) -> None:
+	def __init__(self, # pylint: disable = too-many-arguments
+			host: str, port: str, protocol_factory: Type[WebSocketServerProtocol],
+			database_client_factory: Callable[[], DatabaseClient], run_provider: RunProvider, worker_provider: WorkerProvider) -> None:
 
 		self._host = host
 		self._port = port
+		self._protocol_factory = protocol_factory
+		self._database_client_factory = database_client_factory
 		self._run_provider = run_provider
 		self._worker_provider = worker_provider
-		self._protocol_factory = protocol_factory
 
 		self._active_workers = {}
 		self.update_interval_seconds = 10
@@ -37,15 +38,17 @@ class Supervisor:
 	async def run_server(self) -> None:
 		""" Run the websocket server to handle worker connections """
 
-		for worker_record in self._worker_provider.get_list():
-			if worker_record["is_active"]:
-				self._worker_provider.update_status(worker_record, is_active = False, should_disconnect = False)
+		with self._database_client_factory() as database_client:
+			for worker_record in self._worker_provider.get_list(database_client):
+				if worker_record["is_active"]:
+					self._worker_provider.update_status(database_client, worker_record, is_active = False, should_disconnect = False)
 
 		logger.info("Listening for workers on '%s:%s'", self._host, self._port)
 		async with websockets.serve(self._process_connection, self._host, self._port, create_protocol = self._protocol_factory):
 			while True:
 				try:
-					await asyncio.gather(self.update(), asyncio.sleep(self.update_interval_seconds))
+					with self._database_client_factory() as database_client:
+						await asyncio.gather(self.update(database_client), asyncio.sleep(self.update_interval_seconds))
 				except asyncio.CancelledError: # pylint: disable = try-except-raise
 					raise
 				except Exception: # pylint: disable = broad-except
@@ -58,20 +61,20 @@ class Supervisor:
 		return self._active_workers[worker_identifier]
 
 
-	def is_worker_available(self, worker_identifier: str) -> bool:
+	def is_worker_available(self, database_client: DatabaseClient, worker_identifier: str) -> bool:
 		""" Check if a worker is available to execute runs """
 
 		if worker_identifier not in self._active_workers:
 			return False
 
-		worker_record = self._worker_provider.get(worker_identifier)
+		worker_record = self._worker_provider.get(database_client, worker_identifier)
 		return worker_record["is_enabled"] and not worker_record.get("should_disconnect", False)
 
 
-	async def update(self) -> None:
+	async def update(self, database_client: DatabaseClient) -> None:
 		""" Perform a single update """
 
-		all_worker_records = self._list_workers()
+		all_worker_records = self._list_workers(database_client)
 
 		for worker_record in all_worker_records:
 			worker_instance = self._active_workers[worker_record["identifier"]]
@@ -79,9 +82,9 @@ class Supervisor:
 				worker_instance.should_disconnect = True
 
 
-	def _list_workers(self) -> List[dict]:
+	def _list_workers(self, database_client: DatabaseClient) -> List[dict]:
 		""" Retrieve all worker records from the database """
-		all_workers = self._worker_provider.get_list()
+		all_workers = self._worker_provider.get_list(database_client)
 		all_workers = [ worker for worker in all_workers if worker["identifier"] in self._active_workers ]
 		return all_workers
 
@@ -134,11 +137,13 @@ class Supervisor:
 
 		logger.info("Registering worker '%s'", worker_identifier)
 		worker_properties = await messenger_instance.send_request({ "command": "describe" })
-		worker_record = self._register_worker(worker_identifier, user, **worker_properties)
-		worker_instance = self._instantiate_worker(worker_identifier, messenger_instance)
 
-		self._worker_provider.update_status(worker_record, is_active = True, should_disconnect = False)
-		self._active_workers[worker_identifier] = worker_instance
+		with self._database_client_factory() as database_client:
+			worker_record = self._register_worker(database_client, worker_identifier, user, **worker_properties)
+			worker_instance = self._instantiate_worker(worker_identifier, messenger_instance)
+
+			self._worker_provider.update_status(database_client, worker_record, is_active = True, should_disconnect = False)
+			self._active_workers[worker_identifier] = worker_instance
 
 		try:
 			logger.info("Worker '%s' is now active", worker_identifier)
@@ -146,29 +151,31 @@ class Supervisor:
 
 		finally:
 			del self._active_workers[worker_identifier]
-			self._worker_provider.update_status(worker_record, is_active = False, should_disconnect = False)
+			with self._database_client_factory() as database_client:
+				self._worker_provider.update_status(database_client, worker_record, is_active = False, should_disconnect = False)
 
 
-	def _register_worker(self, # pylint: disable = too-many-arguments
+	def _register_worker(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
 			worker_identifier: str, owner: str, version: str, display_name: str, properties: dict) -> dict:
 		""" Register the worker by creating or updating its record in the database and checking it is valid """
 
 		if worker_identifier in self._active_workers:
 			raise WorkerError("Worker '%s' is already active" % worker_identifier)
 
-		worker_record = self._worker_provider.get(worker_identifier)
+		worker_record = self._worker_provider.get(database_client, worker_identifier)
 		if worker_record is None:
-			worker_record = self._worker_provider.create(worker_identifier, owner, version, display_name)
+			worker_record = self._worker_provider.create(database_client, worker_identifier, owner, version, display_name)
 		if worker_record["owner"] != owner:
 			raise WorkerError("Worker '%s' is owned by another user (Expected: '%s', Actual: '%s')" % (worker_identifier, worker_record["owner"], owner))
 
-		self._worker_provider.update_properties(worker_record, version, display_name, properties)
+		self._worker_provider.update_properties(database_client, worker_record, version, display_name, properties)
 
 		return worker_record
 
 
 	def _instantiate_worker(self, worker_identifier: str, messenger_instance: Messenger) -> Worker:
 		""" Instantiate a new worker object to watch the remote worker process """
-		worker_instance = Worker(worker_identifier, messenger_instance, self._run_provider)
+
+		worker_instance = Worker(worker_identifier, messenger_instance, self._database_client_factory, self._run_provider)
 		messenger_instance.update_handler = worker_instance.handle_update
 		return worker_instance

@@ -27,16 +27,20 @@ def register_commands(subparsers):
 
 
 def initialize_database(application, arguments):
-	application.database_administration.initialize(simulate = arguments.simulate)
+	with application.database_administration_factory() as database_administration:
+		database_administration.initialize(simulate = arguments.simulate)
 
 
 def upgrade_database(application, arguments):
-	application.database_administration.upgrade(simulate = arguments.simulate)
+	with application.database_administration_factory() as database_administration:
+		database_administration.upgrade(simulate = arguments.simulate)
 
 
 def import_database(application, arguments):
-	database_import_export.import_database(application.database_client, arguments.source, simulate = arguments.simulate)
+	with application.database_client_factory() as database_client:
+		database_import_export.import_database(database_client, arguments.source, simulate = arguments.simulate)
 
 
 def export_database(application, arguments):
-	database_import_export.export_database(application.database_client, arguments.output, simulate = arguments.simulate)
+	with application.database_client_factory() as database_client:
+		database_import_export.export_database(database_client, arguments.output, simulate = arguments.simulate)

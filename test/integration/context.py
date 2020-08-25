@@ -77,17 +77,16 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 			self.database_administration_factory = environment.create_database_administration_factory(self.database_uri)
 			self.database_client_factory = environment.create_database_client_factory(self.database_uri)
-			self.database_client = self.database_client_factory()
 			self.file_storage = FileStorage(os.path.join(self.temporary_directory, "master"))
 
-			self.authentication_provider = AuthenticationProvider(self.database_client, date_time_provider_instance)
+			self.authentication_provider = AuthenticationProvider(date_time_provider_instance)
 			self.authorization_provider = AuthorizationProvider()
-			self.job_provider = JobProvider(self.database_client, date_time_provider_instance)
-			self.project_provider = ProjectProvider(self.database_client, date_time_provider_instance)
-			self.run_provider = RunProvider(self.database_client, self.file_storage, date_time_provider_instance)
-			self.schedule_provider = ScheduleProvider(self.database_client, date_time_provider_instance)
-			self.user_provider = UserProvider(self.database_client, date_time_provider_instance)
-			self.worker_provider = WorkerProvider(self.database_client, date_time_provider_instance)
+			self.job_provider = JobProvider(date_time_provider_instance)
+			self.project_provider = ProjectProvider(date_time_provider_instance)
+			self.run_provider = RunProvider(self.file_storage, date_time_provider_instance)
+			self.schedule_provider = ScheduleProvider(date_time_provider_instance)
+			self.user_provider = UserProvider(date_time_provider_instance)
+			self.worker_provider = WorkerProvider(date_time_provider_instance)
 
 
 	def __enter__(self):
@@ -112,9 +111,6 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 					process.kill()
 
 		self.process_collection.clear()
-
-		if self.database_uri is not None:
-			self.database_client.close()
 
 		if self.database_uri is not None and self.database_uri.startswith("mongodb://"):
 			with pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000) as mongo_client:
@@ -202,9 +198,10 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 
 	def configure_worker_authentication(self, worker_collection):
-		user = self.user_provider.create("worker", "Worker")
-		self.user_provider.update_roles(user, "Worker")
-		token = self.authentication_provider.create_token("worker", None, None)
+		with self.database_client_factory() as database_client:
+			user = self.user_provider.create(database_client, "worker", "Worker")
+			self.user_provider.update_roles(database_client, user, "Worker")
+			token = self.authentication_provider.create_token(database_client, "worker", None, None)
 
 		for worker in worker_collection:
 			worker_directory = os.path.join(self.temporary_directory, worker)
@@ -214,14 +211,18 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 
 	def configure_service_authentication(self, user_identifier, user_roles):
-		user = self.user_provider.create(user_identifier, user_identifier)
-		self.user_provider.update_roles(user, user_roles)
-		token = self.authentication_provider.create_token(user_identifier, None, None)
+		with self.database_client_factory() as database_client:
+			user = self.user_provider.create(database_client, user_identifier, user_identifier)
+			self.user_provider.update_roles(database_client, user, user_roles)
+			token = self.authentication_provider.create_token(database_client, user_identifier, None, None)
+
 		return (user_identifier, token["secret"])
 
 
 	def configure_website_authentication(self, user_identifier, user_roles):
-		user = self.user_provider.create(user_identifier, user_identifier)
-		self.user_provider.update_roles(user, user_roles)
-		self.authentication_provider.set_password(user_identifier, "password")
+		with self.database_client_factory() as database_client:
+			user = self.user_provider.create(database_client, user_identifier, user_identifier)
+			self.user_provider.update_roles(database_client, user, user_roles)
+			self.authentication_provider.set_password(database_client, user_identifier, "password")
+
 		return (user_identifier, "password")

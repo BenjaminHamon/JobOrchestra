@@ -22,17 +22,21 @@ def test_schedule(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		schedule = context_instance.schedule_provider.create_or_update("success_continuous", project_identifier, "Success Continuous", job_identifier, {}, "* * * * *")
-		context_instance.schedule_provider.update_status(schedule, is_enabled = True)
+		with context_instance.database_client_factory() as database_client:
+			schedule = context_instance.schedule_provider.create_or_update(
+				database_client, "success_continuous", project_identifier, "Success Continuous", job_identifier, {}, "* * * * *")
+			context_instance.schedule_provider.update_status(database_client, schedule, is_enabled = True)
 
 		time.sleep(1)
 
-		context_instance.schedule_provider.update_status(schedule, is_enabled = False)
+		with context_instance.database_client_factory() as database_client:
+			context_instance.schedule_provider.update_status(database_client, schedule, is_enabled = False)
 
 		time.sleep(5)
 
-		schedule = context_instance.schedule_provider.get(schedule["project"], schedule["identifier"])
-		run = context_instance.run_provider.get(schedule["project"], schedule["last_run"])
+		with context_instance.database_client_factory() as database_client:
+			schedule = context_instance.schedule_provider.get(database_client, schedule["project"], schedule["identifier"])
+			run = context_instance.run_provider.get(database_client, schedule["project"], schedule["last_run"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },

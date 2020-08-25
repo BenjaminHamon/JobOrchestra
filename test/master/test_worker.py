@@ -29,7 +29,7 @@ async def test_start_execution_success():
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance)
 
 	job = { "identifier": "my_job" }
 	run = { "identifier": "my_run", "job": job["identifier"], "status": "pending", "parameters": {} }
@@ -46,7 +46,7 @@ async def test_abort_execution_success():
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance)
 
 	job = { "identifier": "my_job" }
 	run = { "identifier": "my_run", "job": job["identifier"], "status": "running", "steps": [] }
@@ -65,7 +65,7 @@ async def test_finish_execution_success():
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance)
 
 	job = { "identifier": "my_job" }
 	run = { "identifier": "my_run", "job": job["identifier"], "status": "succeeded", "steps": [] }
@@ -83,14 +83,14 @@ async def test_process_success():
 	database_client_instance = MemoryDatabaseClient()
 	file_storage_instance = MemoryFileStorage()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
+	run_provider_instance = RunProvider(file_storage_instance, date_time_provider_instance)
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
 
 	job = { "project": "my_project", "identifier": "my_job" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
+	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -104,7 +104,7 @@ async def test_process_success():
 
 	# pending => running (_start_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "pending"
@@ -127,7 +127,7 @@ async def test_process_success():
 
 	# running => verifying
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "verifying"
 	assert run["status"] == "succeeded"
@@ -136,14 +136,14 @@ async def test_process_success():
 
 	# verifying => finishing
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "finishing"
 	assert run["status"] == "succeeded"
 
 	# finishing => done (_finish_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "succeeded"
@@ -157,14 +157,14 @@ async def test_process_abort():
 	database_client_instance = MemoryDatabaseClient()
 	file_storage_instance = MemoryFileStorage()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
+	run_provider_instance = RunProvider(file_storage_instance, date_time_provider_instance)
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
 
 	job = { "project": "my_project", "identifier": "my_job" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
+	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -178,7 +178,7 @@ async def test_process_abort():
 
 	# pending => running (_start_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "pending"
@@ -197,7 +197,7 @@ async def test_process_abort():
 
 	# running => aborting (_abort_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "aborting"
 	assert run["status"] == "running"
@@ -209,7 +209,7 @@ async def test_process_abort():
 
 	# aborting => verifying
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "verifying"
 	assert run["status"] == "aborted"
@@ -218,14 +218,14 @@ async def test_process_abort():
 
 	# verifying => finishing
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "finishing"
 	assert run["status"] == "aborted"
 
 	# finishing => done (_finish_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "aborted"
@@ -239,14 +239,14 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	database_client_instance = MemoryDatabaseClient()
 	file_storage_instance = MemoryFileStorage()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
+	run_provider_instance = RunProvider(file_storage_instance, date_time_provider_instance)
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
 
 	job = { "project": "my_project", "identifier": "my_job" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
+	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -260,7 +260,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 
 	# pending => running (_start_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "pending"
@@ -277,7 +277,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert len(worker_local_instance.executors) == 1
 
 	# New worker to simulate disconnection
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
 
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 0
@@ -285,7 +285,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	# none => running (_recover_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage") as worker_storage_patch:
 		worker_storage_patch.load_request = lambda run_identifier: remote_executor.request
-		worker_local_instance.executors = await worker_local_instance._recover_executors()
+		worker_local_instance.executors = await worker_local_instance._recover_executors(database_client_instance)
 	local_executor = worker_local_instance.executors[0]
 
 	assert local_executor["local_status"] == "running"
@@ -308,7 +308,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 
 	# running => verifying
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "verifying"
 	assert run["status"] == "succeeded"
@@ -317,14 +317,14 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 
 	# verifying => finishing
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "finishing"
 	assert run["status"] == "succeeded"
 
 	# finishing => done (_finish_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "succeeded"
@@ -338,14 +338,14 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	database_client_instance = MemoryDatabaseClient()
 	file_storage_instance = MemoryFileStorage()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
+	run_provider_instance = RunProvider(file_storage_instance, date_time_provider_instance)
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
 
 	job = { "project": "my_project", "identifier": "my_job" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
+	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -359,7 +359,7 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 
 	# pending => running (_start_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "pending"
@@ -376,7 +376,7 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	assert len(worker_local_instance.executors) == 1
 
 	# New worker to simulate disconnection
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
 
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 0
@@ -388,7 +388,7 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	# none => running (_recover_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage") as worker_storage_patch:
 		worker_storage_patch.load_request = lambda run_identifier: remote_executor.request
-		worker_local_instance.executors = await worker_local_instance._recover_executors()
+		worker_local_instance.executors = await worker_local_instance._recover_executors(database_client_instance)
 	local_executor = worker_local_instance.executors[0]
 
 	assert local_executor["local_status"] == "running"
@@ -400,7 +400,7 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 
 	# running => verifying
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "verifying"
 	assert run["status"] == "succeeded"
@@ -409,14 +409,14 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 
 	# verifying => finishing
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "finishing"
 	assert run["status"] == "succeeded"
 
 	# finishing => done (_finish_execution)
 	with patch("bhamon_orchestra_worker.worker.worker_storage"):
-		await worker_local_instance._process_executor(local_executor)
+		await worker_local_instance._process_executor(database_client_instance, local_executor)
 
 	assert local_executor["local_status"] == "done"
 	assert run["status"] == "succeeded"

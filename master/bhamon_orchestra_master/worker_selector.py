@@ -1,9 +1,10 @@
 import logging
 import random
 
-from typing import Optional
+from typing import Callable, Optional
 
 from bhamon_orchestra_master.supervisor import Supervisor
+from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 
@@ -18,7 +19,10 @@ class WorkerSelector:
 	"""
 
 
-	def __init__(self, worker_provider: WorkerProvider, supervisor: Supervisor) -> None:
+	def __init__(self, database_client_factory: Callable[[], DatabaseClient],
+			worker_provider: WorkerProvider, supervisor: Supervisor) -> None:
+
+		self._database_client_factory = database_client_factory
 		self._worker_provider = worker_provider
 		self._supervisor = supervisor
 
@@ -30,8 +34,10 @@ class WorkerSelector:
 	def select_worker(self, job: dict, run: dict) -> Optional[str]:
 		""" Find an available and suitable worker to execute the specified run """
 
-		all_workers = self._worker_provider.get_list()
-		all_available_workers = [ worker for worker in all_workers if self._supervisor.is_worker_available(worker["identifier"]) ]
+		with self._database_client_factory() as database_client:
+			all_workers = self._worker_provider.get_list(database_client)
+			all_available_workers = [ worker for worker in all_workers if self._supervisor.is_worker_available(database_client, worker["identifier"]) ]
+
 		random.shuffle(all_available_workers)
 
 		return next((worker["identifier"] for worker in all_available_workers if self.are_compatible(worker, job, run)), None)

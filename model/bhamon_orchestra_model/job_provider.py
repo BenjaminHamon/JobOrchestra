@@ -12,34 +12,35 @@ logger = logging.getLogger("JobProvider")
 class JobProvider:
 
 
-	def __init__(self, database_client: DatabaseClient, date_time_provider: DateTimeProvider) -> None:
-		self.database_client = database_client
+	def __init__(self,  date_time_provider: DateTimeProvider) -> None:
 		self.date_time_provider = date_time_provider
 		self.table = "job"
 
 
-	def count(self, project: Optional[str] = None) -> int:
+	def count(self, database_client: DatabaseClient, project: Optional[str] = None) -> int:
 		filter = { "project": project } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
-		return self.database_client.count(self.table, filter)
+		return database_client.count(self.table, filter)
 
 
-	def get_list(self, project: Optional[str] = None,
-			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+	def get_list(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
+			project: Optional[str] = None, skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+
 		filter = { "project": project } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
-		return self.database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
+		return database_client.find_many(self.table, filter, skip = skip, limit = limit, order_by = order_by)
 
 
-	def get(self, project: str, job_identifier: str) -> Optional[dict]:
-		return self.database_client.find_one(self.table, { "project": project, "identifier": job_identifier })
+	def get(self, database_client: DatabaseClient, project: str, job_identifier: str) -> Optional[dict]:
+		return database_client.find_one(self.table, { "project": project, "identifier": job_identifier })
 
 
-	def create_or_update(self, # pylint: disable = too-many-arguments
+	def create_or_update(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
 			job_identifier: str, project: str, display_name: str, description: str,
 			workspace: str, steps: list, parameters: list, properties: dict) -> dict:
+
 		now = self.date_time_provider.now()
-		job = self.get(project, job_identifier)
+		job = self.get(database_client, project, job_identifier)
 
 		if job is None:
 			job = {
@@ -56,7 +57,7 @@ class JobProvider:
 				"update_date": self.date_time_provider.serialize(now),
 			}
 
-			self.database_client.insert_one(self.table, job)
+			database_client.insert_one(self.table, job)
 
 		else:
 			update_data = {
@@ -70,12 +71,12 @@ class JobProvider:
 			}
 
 			job.update(update_data)
-			self.database_client.update_one(self.table, { "project": project, "identifier": job_identifier }, update_data)
+			database_client.update_one(self.table, { "project": project, "identifier": job_identifier }, update_data)
 
 		return job
 
 
-	def update_status(self, job: dict, is_enabled: Optional[bool] = None) -> None:
+	def update_status(self, database_client: DatabaseClient, job: dict, is_enabled: Optional[bool] = None) -> None:
 		now = self.date_time_provider.now()
 
 		update_data = {
@@ -86,8 +87,8 @@ class JobProvider:
 		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		job.update(update_data)
-		self.database_client.update_one(self.table, { "project": job["project"], "identifier": job["identifier"] }, update_data)
+		database_client.update_one(self.table, { "project": job["project"], "identifier": job["identifier"] }, update_data)
 
 
-	def delete(self, project: str, job_identifier: str) -> None:
-		self.database_client.delete_one(self.table, { "project": project, "identifier": job_identifier })
+	def delete(self, database_client: DatabaseClient, project: str, job_identifier: str) -> None:
+		database_client.delete_one(self.table, { "project": project, "identifier": job_identifier })

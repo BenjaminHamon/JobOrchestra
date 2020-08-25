@@ -2,13 +2,14 @@ import asyncio
 import datetime
 import logging
 
-from typing import List
+from typing import Callable, List
 
 import pycron
 
 from bhamon_orchestra_master.supervisor import Supervisor
 from bhamon_orchestra_master.worker_selector import WorkerSelector
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.schedule_provider import ScheduleProvider
@@ -21,10 +22,12 @@ class JobScheduler:
 	""" Trigger timed schedules and dispatch pending runs to workers """
 
 
-	def __init__( # pylint: disable = too-many-arguments
-			self, job_provider: JobProvider, run_provider: RunProvider, schedule_provider: ScheduleProvider,
+	def __init__(self, # pylint: disable = too-many-arguments
+			database_client_factory: Callable[[], DatabaseClient],
+			job_provider: JobProvider, run_provider: RunProvider, schedule_provider: ScheduleProvider,
 			supervisor: Supervisor, worker_selector: WorkerSelector, date_time_provider: DateTimeProvider) -> None:
 
+		self._database_client_factory = database_client_factory
 		self._job_provider = job_provider
 		self._run_provider = run_provider
 		self._schedule_provider = schedule_provider
@@ -41,7 +44,8 @@ class JobScheduler:
 
 		while True:
 			try:
-				await asyncio.gather(self.update(), asyncio.sleep(self.update_interval_seconds))
+				with self._database_client_factory() as database_client:
+					await asyncio.gather(self.update(database_client), asyncio.sleep(self.update_interval_seconds))
 			except asyncio.CancelledError: # pylint: disable = try-except-raise
 				raise
 			except Exception: # pylint: disable = broad-except
@@ -49,62 +53,62 @@ class JobScheduler:
 				await asyncio.sleep(self.update_interval_seconds)
 
 
-	async def update(self) -> None:
+	async def update(self, database_client: DatabaseClient) -> None:
 		""" Perform a single update """
 
 		now = self._date_time_provider.now()
 
-		all_active_schedules = self._list_active_schedules()
+		all_active_schedules = self._list_active_schedules(database_client)
 
 		for schedule in all_active_schedules:
-			if self._should_schedule_trigger(schedule, now):
+			if self._should_schedule_trigger(database_client, schedule, now):
 				logger.info("Triggering run for schedule '%s'", schedule["identifier"])
 				source = { "type": "schedule", "identifier": schedule["identifier"] }
-				run = self._run_provider.create(schedule["project"], schedule["job"], schedule["parameters"], source)
-				self._schedule_provider.update_status(schedule, last_run = run["identifier"])
+				run = self._run_provider.create(database_client, schedule["project"], schedule["job"], schedule["parameters"], source)
+				self._schedule_provider.update_status(database_client, schedule, last_run = run["identifier"])
 
-		all_pending_runs = self._list_pending_runs()
+		all_pending_runs = self._list_pending_runs(database_client)
 
 		for run in all_pending_runs:
 			creation_date = self._date_time_provider.deserialize(run["creation_date"])
 			if run.get("should_cancel", False) or now > creation_date + self.run_expiration:
 				logger.info("Cancelling run '%s'", run["identifier"])
-				self._run_provider.update_status(run, status = "cancelled")
+				self._run_provider.update_status(database_client, run, status = "cancelled")
 				continue
 
 			try:
-				self.trigger_run(run)
+				self.trigger_run(database_client, run)
 			except Exception: # pylint: disable = broad-except
 				logger.error("Run trigger '%s' raised an exception", run["identifier"], exc_info = True)
-				self._run_provider.update_status(run, status = "exception")
+				self._run_provider.update_status(database_client, run, status = "exception")
 
-		all_active_runs = self._list_active_runs()
+		all_active_runs = self._list_active_runs(database_client)
 
 		for run in all_active_runs:
 			if run.get("should_abort", False):
 				self.abort_run(run)
 
 
-	def _list_active_schedules(self) -> List[dict]:
+	def _list_active_schedules(self, database_client: DatabaseClient) -> List[dict]:
 		""" Retrieve all active schedules from the database """
-		all_schedules = self._schedule_provider.get_list()
+		all_schedules = self._schedule_provider.get_list(database_client)
 		all_schedules = [ schedule for schedule in all_schedules if schedule["is_enabled"] ]
 		return all_schedules
 
 
-	def _list_pending_runs(self) -> List[dict]:
+	def _list_pending_runs(self, database_client: DatabaseClient) -> List[dict]:
 		""" Retrieve all pending runs from the database """
-		all_runs = self._run_provider.get_list(status = "pending")
+		all_runs = self._run_provider.get_list(database_client, status = "pending")
 		all_runs = [ run for run in all_runs if run["worker"] is None ]
 		return all_runs
 
 
-	def _list_active_runs(self) -> List[dict]:
+	def _list_active_runs(self, database_client: DatabaseClient) -> List[dict]:
 		""" Retrieve all active runs from the database """
-		return self._run_provider.get_list(status = "running")
+		return self._run_provider.get_list(database_client, status = "running")
 
 
-	def _should_schedule_trigger(self, schedule: dict, now: datetime.datetime) -> bool:
+	def _should_schedule_trigger(self, database_client: DatabaseClient, schedule: dict, now: datetime.datetime) -> bool:
 		""" Check if a new run should be triggered based on a timed schedule """
 
 		now = now.replace(second = 0)
@@ -114,7 +118,7 @@ class JobScheduler:
 		if schedule["last_run"] is None:
 			return True
 
-		last_run = self._run_provider.get(schedule["project"], schedule["last_run"])
+		last_run = self._run_provider.get(database_client, schedule["project"], schedule["last_run"])
 		if last_run is None:
 			return True
 
@@ -128,13 +132,13 @@ class JobScheduler:
 		return True
 
 
-	def trigger_run(self, run: dict) -> bool:
+	def trigger_run(self, database_client: DatabaseClient, run: dict) -> bool:
 		""" Try to start a run execution """
 
 		if run["status"] != "pending":
 			raise ValueError("Run '%s' cannot be triggered (Status: '%s')" % (run["identifier"], run["status"]))
 
-		job = self._job_provider.get(run["project"], run["job"])
+		job = self._job_provider.get(database_client, run["project"], run["job"])
 		if not job["is_enabled"]:
 			return False
 

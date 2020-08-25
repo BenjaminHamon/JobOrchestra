@@ -9,15 +9,18 @@ logger = logging.getLogger("MeController")
 
 
 def get_user():
-	return flask.jsonify(flask.current_app.user_provider.get(flask.request.authorization.username))
+	database_client = flask.request.database_client()
+	return flask.jsonify(flask.current_app.user_provider.get(database_client, flask.request.authorization.username))
 
 
 def login():
 	parameters = flask.request.get_json()
-	if not flask.current_app.authentication_provider.authenticate_with_password(parameters["user"], parameters["password"]):
+	database_client = flask.request.database_client()
+
+	if not flask.current_app.authentication_provider.authenticate_with_password(database_client, parameters["user"], parameters["password"]):
 		flask.abort(401)
 
-	user = flask.current_app.user_provider.get(parameters["user"])
+	user = flask.current_app.user_provider.get(database_client, parameters["user"])
 	if not user["is_enabled"]:
 		flask.abort(403)
 
@@ -27,19 +30,22 @@ def login():
 		"expiration": flask.current_app.permanent_session_lifetime,
 	}
 
-	session_token = flask.current_app.authentication_provider.create_token(**token_parameters)
+	session_token = flask.current_app.authentication_provider.create_token(database_client, **token_parameters)
 	return flask.jsonify({ "user_identifier": session_token["user"], "token_identifier": session_token["identifier"], "secret": session_token["secret"] })
 
 
 def logout():
 	if flask.request.authorization is not None:
 		parameters = flask.request.get_json()
-		flask.current_app.authentication_provider.delete_token(flask.request.authorization.username, parameters["token_identifier"])
+		database_client = flask.request.database_client()
+		flask.current_app.authentication_provider.delete_token(database_client, flask.request.authorization.username, parameters["token_identifier"])
+
 	return flask.jsonify({})
 
 
 def refresh_session():
 	parameters = flask.request.get_json()
+	database_client = flask.request.database_client()
 
 	operation_parameters = {
 		"user_identifier": flask.request.authorization.username,
@@ -47,16 +53,18 @@ def refresh_session():
 		"expiration": flask.current_app.permanent_session_lifetime,
 	}
 
-	flask.current_app.authentication_provider.set_token_expiration(**operation_parameters)
+	flask.current_app.authentication_provider.set_token_expiration(database_client, **operation_parameters)
 	return flask.jsonify({})
 
 
 def change_password():
 	parameters = flask.request.get_json()
-	if not flask.current_app.authentication_provider.authenticate_with_password(flask.request.authorization.username, parameters["old_password"]):
+	database_client = flask.request.database_client()
+
+	if not flask.current_app.authentication_provider.authenticate_with_password(database_client, flask.request.authorization.username, parameters["old_password"]):
 		flask.abort(401)
 
-	flask.current_app.authentication_provider.set_password(flask.request.authorization.username, parameters["new_password"])
+	flask.current_app.authentication_provider.set_password(database_client, flask.request.authorization.username, parameters["new_password"])
 	return flask.jsonify({})
 
 

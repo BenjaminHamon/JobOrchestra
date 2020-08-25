@@ -12,27 +12,27 @@ logger = logging.getLogger("ProjectProvider")
 class ProjectProvider:
 
 
-	def __init__(self, database_client: DatabaseClient, date_time_provider: DateTimeProvider) -> None:
-		self.database_client = database_client
+	def __init__(self, date_time_provider: DateTimeProvider) -> None:
 		self.date_time_provider = date_time_provider
 		self.table = "project"
 
 
-	def count(self) -> int:
-		return self.database_client.count(self.table, {})
+	def count(self, database_client: DatabaseClient) -> int:
+		return database_client.count(self.table, {})
 
 
-	def get_list(self, skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
-		return self.database_client.find_many(self.table, {}, skip = skip, limit = limit, order_by = order_by)
+	def get_list(self, database_client: DatabaseClient,
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+		return database_client.find_many(self.table, {}, skip = skip, limit = limit, order_by = order_by)
 
 
-	def get(self, project_identifier: str) -> Optional[dict]:
-		return self.database_client.find_one(self.table, { "identifier": project_identifier })
+	def get(self, database_client: DatabaseClient, project_identifier: str) -> Optional[dict]:
+		return database_client.find_one(self.table, { "identifier": project_identifier })
 
 
-	def create_or_update(self, project_identifier: str, display_name: str, services: dict) -> dict:
+	def create_or_update(self, database_client: DatabaseClient, project_identifier: str, display_name: str, services: dict) -> dict:
 		now = self.date_time_provider.now()
-		project = self.get(project_identifier)
+		project = self.get(database_client, project_identifier)
 
 		if project is None:
 			project = {
@@ -43,7 +43,7 @@ class ProjectProvider:
 				"update_date": self.date_time_provider.serialize(now),
 			}
 
-			self.database_client.insert_one(self.table, project)
+			database_client.insert_one(self.table, project)
 
 		else:
 			update_data = {
@@ -53,6 +53,6 @@ class ProjectProvider:
 			}
 
 			project.update(update_data)
-			self.database_client.update_one(self.table, { "identifier": project_identifier }, update_data)
+			database_client.update_one(self.table, { "identifier": project_identifier }, update_data)
 
 		return project

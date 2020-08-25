@@ -36,19 +36,20 @@ def parse_arguments():
 
 
 def create_application(arguments):
-	database_client_instance = environment.create_database_client_factory(arguments.database)()
+	database_client_factory = environment.create_database_client_factory(arguments.database)
 	file_storage_instance = FileStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 
 	application = flask.Flask(__name__)
-	application.authentication_provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+	application.database_client_factory = database_client_factory
+	application.authentication_provider = AuthenticationProvider(date_time_provider_instance)
 	application.authorization_provider = AuthorizationProvider()
-	application.job_provider = JobProvider(database_client_instance, date_time_provider_instance)
-	application.project_provider = ProjectProvider(database_client_instance, date_time_provider_instance)
-	application.run_provider = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
-	application.schedule_provider = ScheduleProvider(database_client_instance, date_time_provider_instance)
-	application.user_provider = UserProvider(database_client_instance, date_time_provider_instance)
-	application.worker_provider = WorkerProvider(database_client_instance, date_time_provider_instance)
+	application.job_provider = JobProvider(date_time_provider_instance)
+	application.project_provider = ProjectProvider(date_time_provider_instance)
+	application.run_provider = RunProvider(file_storage_instance, date_time_provider_instance)
+	application.schedule_provider = ScheduleProvider(date_time_provider_instance)
+	application.user_provider = UserProvider(date_time_provider_instance)
+	application.worker_provider = WorkerProvider(date_time_provider_instance)
 
 	application.run_result_transformer = transform_run_results
 

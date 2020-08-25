@@ -22,11 +22,13 @@ def test_job_success(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
 
 		time.sleep(5)
 
-		run = context_instance.run_provider.get(run["project"], run["identifier"])
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -67,11 +69,13 @@ def test_job_failure(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
 
 		time.sleep(5)
 
-		run = context_instance.run_provider.get(run["project"], run["identifier"])
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -112,11 +116,13 @@ def test_job_exception(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
 
 		time.sleep(5)
 
-		run = context_instance.run_provider.get(run["project"], run["identifier"])
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -155,12 +161,14 @@ def test_run_cancel(tmpdir, database_type):
 	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		master_process = context_instance.invoke_master()
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
-		context_instance.run_provider.update_status(run, should_cancel = True)
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+			context_instance.run_provider.update_status(database_client, run, should_cancel = True)
 
 		time.sleep(2)
 
-		run = context_instance.run_provider.get(run["project"], run["identifier"])
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -188,12 +196,14 @@ def test_run_abort(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
-		context_instance.run_provider.update_status(run, should_abort = True)
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+			context_instance.run_provider.update_status(database_client, run, should_abort = True)
 
 		time.sleep(5)
 
-		run = context_instance.run_provider.get(run["project"], run["identifier"])
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -238,12 +248,14 @@ def test_job_controller_success(tmpdir, database_type):
 		worker_01_process = context_instance.invoke_worker("worker_01")
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
 
 		time.sleep(10)
 
-		run = context_instance.run_provider.get(run["project"], run["identifier"])
-		all_runs = context_instance.run_provider.get_list()
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+			all_runs = context_instance.run_provider.get_list(database_client)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -291,12 +303,14 @@ def test_job_controller_failure(tmpdir, database_type):
 		worker_01_process = context_instance.invoke_worker("worker_01")
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
-		run = context_instance.run_provider.create(project_identifier, job_identifier, {}, None)
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
 
 		time.sleep(10)
 
-		run = context_instance.run_provider.get(run["project"], run["identifier"])
-		all_runs = context_instance.run_provider.get_list()
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+			all_runs = context_instance.run_provider.get_list(database_client)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
