@@ -42,21 +42,22 @@ def parse_arguments():
 
 
 def create_application(arguments): # pylint: disable = too-many-locals
-	database_client_instance = environment.create_database_client(arguments.database)
+	database_client_factory = environment.create_database_client_factory(arguments.database)
 	file_storage_instance = FileStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 
-	authentication_provider_instance = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+	authentication_provider_instance = AuthenticationProvider(date_time_provider_instance)
 	authorization_provider_instance = AuthorizationProvider()
-	job_provider_instance = JobProvider(database_client_instance, date_time_provider_instance)
-	project_provider_instance = ProjectProvider(database_client_instance, date_time_provider_instance)
-	run_provider_instance = RunProvider(database_client_instance, file_storage_instance, date_time_provider_instance)
-	schedule_provider_instance = ScheduleProvider(database_client_instance, date_time_provider_instance)
-	user_provider_instance = UserProvider(database_client_instance, date_time_provider_instance)
-	worker_provider_instance = WorkerProvider(database_client_instance, date_time_provider_instance)
+	job_provider_instance = JobProvider(date_time_provider_instance)
+	project_provider_instance = ProjectProvider(date_time_provider_instance)
+	run_provider_instance = RunProvider(file_storage_instance, date_time_provider_instance)
+	schedule_provider_instance = ScheduleProvider(date_time_provider_instance)
+	user_provider_instance = UserProvider(date_time_provider_instance)
+	worker_provider_instance = WorkerProvider(date_time_provider_instance)
 
 	protocol_factory = functools.partial(
 		WebSocketServerProtocol,
+		database_client_factory = database_client_factory,
 		user_provider = user_provider_instance,
 		authentication_provider = authentication_provider_instance,
 		authorization_provider = authorization_provider_instance,
@@ -65,17 +66,20 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	supervisor_instance = Supervisor(
 		host = arguments.address,
 		port = arguments.port,
+		protocol_factory = protocol_factory,
+		database_client_factory = database_client_factory,
 		worker_provider = worker_provider_instance,
 		run_provider = run_provider_instance,
-		protocol_factory = protocol_factory,
 	)
 
 	worker_selector_instance = WorkerSelector(
+		database_client_factory = database_client_factory,
 		worker_provider = worker_provider_instance,
 		supervisor = supervisor_instance,
 	)
 
 	job_scheduler_instance = JobScheduler(
+		database_client_factory = database_client_factory,
 		job_provider = job_provider_instance,
 		run_provider = run_provider_instance,
 		schedule_provider = schedule_provider_instance,
@@ -85,6 +89,7 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	)
 
 	master_instance = Master(
+		database_client_factory = database_client_factory,
 		project_provider = project_provider_instance,
 		job_provider = job_provider_instance,
 		schedule_provider = schedule_provider_instance,

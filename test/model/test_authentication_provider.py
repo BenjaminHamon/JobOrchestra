@@ -14,31 +14,31 @@ def test_password_success():
 
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+	provider = AuthenticationProvider(date_time_provider_instance)
 
 	user = "user"
 	first_secret = "first"
 	second_secret = "second"
 	wrong_secret = "wrong"
 
-	assert provider.authenticate_with_password(user, first_secret) is False
-	assert provider.authenticate_with_password(user, second_secret) is False
-	assert provider.authenticate_with_password(user, wrong_secret) is False
+	assert provider.authenticate_with_password(database_client_instance, user, first_secret) is False
+	assert provider.authenticate_with_password(database_client_instance, user, second_secret) is False
+	assert provider.authenticate_with_password(database_client_instance, user, wrong_secret) is False
 
-	provider.set_password(user, first_secret)
-	assert provider.authenticate_with_password(user, first_secret) is True
-	assert provider.authenticate_with_password(user, second_secret) is False
-	assert provider.authenticate_with_password(user, wrong_secret) is False
+	provider.set_password(database_client_instance, user, first_secret)
+	assert provider.authenticate_with_password(database_client_instance, user, first_secret) is True
+	assert provider.authenticate_with_password(database_client_instance, user, second_secret) is False
+	assert provider.authenticate_with_password(database_client_instance, user, wrong_secret) is False
 
-	provider.set_password(user, second_secret)
-	assert provider.authenticate_with_password(user, first_secret) is False
-	assert provider.authenticate_with_password(user, second_secret) is True
-	assert provider.authenticate_with_password(user, wrong_secret) is False
+	provider.set_password(database_client_instance, user, second_secret)
+	assert provider.authenticate_with_password(database_client_instance, user, first_secret) is False
+	assert provider.authenticate_with_password(database_client_instance, user, second_secret) is True
+	assert provider.authenticate_with_password(database_client_instance, user, wrong_secret) is False
 
-	provider.remove_password(user)
-	assert provider.authenticate_with_password(user, first_secret) is False
-	assert provider.authenticate_with_password(user, second_secret) is False
-	assert provider.authenticate_with_password(user, wrong_secret) is False
+	provider.remove_password(database_client_instance, user)
+	assert provider.authenticate_with_password(database_client_instance, user, first_secret) is False
+	assert provider.authenticate_with_password(database_client_instance, user, second_secret) is False
+	assert provider.authenticate_with_password(database_client_instance, user, wrong_secret) is False
 
 
 def test_token_success():
@@ -46,30 +46,30 @@ def test_token_success():
 
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+	provider = AuthenticationProvider(date_time_provider_instance)
 
 	user = "user"
 	wrong_secret = secrets.token_hex(provider.token_size)
 
-	assert provider.count_tokens(user) == 0
-	assert provider.authenticate_with_token(user, wrong_secret) is False
+	assert provider.count_tokens(database_client_instance, user) == 0
+	assert provider.authenticate_with_token(database_client_instance, user, wrong_secret) is False
 
-	first_token = provider.create_token(user, None, None)
-	assert provider.count_tokens(user) == 1
-	assert provider.authenticate_with_token(user, first_token["secret"]) is True
-	assert provider.authenticate_with_token(user, wrong_secret) is False
+	first_token = provider.create_token(database_client_instance, user, None, None)
+	assert provider.count_tokens(database_client_instance, user) == 1
+	assert provider.authenticate_with_token(database_client_instance, user, first_token["secret"]) is True
+	assert provider.authenticate_with_token(database_client_instance, user, wrong_secret) is False
 
-	second_token = provider.create_token(user, None, None)
-	assert provider.count_tokens(user) == 2
-	assert provider.authenticate_with_token(user, first_token["secret"]) is True
-	assert provider.authenticate_with_token(user, second_token["secret"]) is True
-	assert provider.authenticate_with_token(user, wrong_secret) is False
+	second_token = provider.create_token(database_client_instance, user, None, None)
+	assert provider.count_tokens(database_client_instance, user) == 2
+	assert provider.authenticate_with_token(database_client_instance, user, first_token["secret"]) is True
+	assert provider.authenticate_with_token(database_client_instance, user, second_token["secret"]) is True
+	assert provider.authenticate_with_token(database_client_instance, user, wrong_secret) is False
 
-	provider.delete_token(user, first_token["identifier"])
-	assert provider.count_tokens(user) == 1
-	assert provider.authenticate_with_token(user, first_token["secret"]) is False
-	assert provider.authenticate_with_token(user, second_token["secret"]) is True
-	assert provider.authenticate_with_token(user, wrong_secret) is False
+	provider.delete_token(database_client_instance, user, first_token["identifier"])
+	assert provider.count_tokens(database_client_instance, user) == 1
+	assert provider.authenticate_with_token(database_client_instance, user, first_token["secret"]) is False
+	assert provider.authenticate_with_token(database_client_instance, user, second_token["secret"]) is True
+	assert provider.authenticate_with_token(database_client_instance, user, wrong_secret) is False
 
 
 def test_token_expired():
@@ -77,25 +77,24 @@ def test_token_expired():
 
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+	provider = AuthenticationProvider(date_time_provider_instance)
 
 	user = "user"
 
-	permanent_token = provider.create_token(user, None, None)
-	valid_token = provider.create_token(user, None, datetime.timedelta(days = 1))
-	expired_token = provider.create_token(user, None, datetime.timedelta(days = -1))
+	permanent_token = provider.create_token(database_client_instance, user, None, None)
+	valid_token = provider.create_token(database_client_instance, user, None, datetime.timedelta(days = 1))
+	expired_token = provider.create_token(database_client_instance, user, None, datetime.timedelta(days = -1))
 
-	assert provider.authenticate_with_token(user, permanent_token["secret"]) is True
-	assert provider.authenticate_with_token(user, valid_token["secret"]) is True
-	assert provider.authenticate_with_token(user, expired_token["secret"]) is False
+	assert provider.authenticate_with_token(database_client_instance, user, permanent_token["secret"]) is True
+	assert provider.authenticate_with_token(database_client_instance, user, valid_token["secret"]) is True
+	assert provider.authenticate_with_token(database_client_instance, user, expired_token["secret"]) is False
 
 
 def test_hash_password_success():
 	""" Test hash_password succeeds in a normal situation """
 
-	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+	provider = AuthenticationProvider(date_time_provider_instance)
 
 	secret = "password"
 	salt = secrets.token_hex(provider.password_salt_size)
@@ -105,9 +104,8 @@ def test_hash_password_success():
 def test_hash_password_determinist():
 	""" Test hash_password returns a determinist result """
 
-	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+	provider = AuthenticationProvider(date_time_provider_instance)
 
 	secret = "password"
 	salt = secrets.token_hex(provider.password_salt_size)
@@ -120,9 +118,8 @@ def test_hash_password_determinist():
 def test_hash_token_success():
 	""" Test hash_token succeeds in a normal situation """
 
-	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+	provider = AuthenticationProvider(date_time_provider_instance)
 
 	secret = secrets.token_hex(provider.token_size)
 	provider.hash_token(secret, provider.token_hash_function, provider.token_hash_function_parameters)
@@ -131,9 +128,8 @@ def test_hash_token_success():
 def test_hash_token_determinist():
 	""" Test hash_token returns a determinist result """
 
-	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	provider = AuthenticationProvider(database_client_instance, date_time_provider_instance)
+	provider = AuthenticationProvider(date_time_provider_instance)
 
 	secret = secrets.token_hex(provider.token_size)
 	first_token_hash = provider.hash_token(secret, provider.token_hash_function, provider.token_hash_function_parameters)

@@ -18,12 +18,12 @@ def test_abort_run_pending():
 
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
+	run_provider_instance = RunProvider(None, date_time_provider_instance)
+	supervisor_instance = Supervisor(None, None, None, None, None, None)
+	job_scheduler_instance = JobScheduler(lambda: database_client_instance, None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
 
 	job = { "project": "examples", "identifier": "empty" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
+	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
 
 	assert run["status"] == "pending"
 	assert len(supervisor_instance._active_workers) == 0
@@ -39,17 +39,17 @@ def test_abort_run_running_connected():
 
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
-	worker_instance = Worker("worker_test", None, run_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
+	run_provider_instance = RunProvider(None, date_time_provider_instance)
+	worker_instance = Worker("worker_test", None, lambda: database_client_instance, run_provider_instance)
+	supervisor_instance = Supervisor(None, None, None, None, None, None)
+	job_scheduler_instance = JobScheduler(lambda: database_client_instance, None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
 
 	supervisor_instance._active_workers[worker_instance.identifier] = worker_instance
 
 	job = { "project": "examples", "identifier": "empty" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
+	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
 	worker_instance.assign_run(job, run)
-	run_provider_instance.update_status(run, status = "running")
+	run_provider_instance.update_status(database_client_instance, run, status = "running")
 
 	assert run["status"] == "running"
 	assert run["worker"] == worker_instance.identifier
@@ -68,15 +68,15 @@ def test_abort_run_running_disconnected():
 
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
-	worker_instance = Worker("worker_test", None, run_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
+	run_provider_instance = RunProvider(None, date_time_provider_instance)
+	worker_instance = Worker("worker_test", None, lambda: database_client_instance, run_provider_instance)
+	supervisor_instance = Supervisor(None, None, None, None, None, None)
+	job_scheduler_instance = JobScheduler(lambda: database_client_instance, None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
 
 	job = { "project": "examples", "identifier": "empty" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
+	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
 	worker_instance.assign_run(job, run)
-	run_provider_instance.update_status(run, status = "running")
+	run_provider_instance.update_status(database_client_instance, run, status = "running")
 
 	assert run["status"] == "running"
 	assert run["worker"] == worker_instance.identifier
@@ -95,13 +95,13 @@ def test_abort_run_completed():
 
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(database_client_instance, None, date_time_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
+	run_provider_instance = RunProvider(None, date_time_provider_instance)
+	supervisor_instance = Supervisor(None, None, None, None, None, None)
+	job_scheduler_instance = JobScheduler(lambda: database_client_instance, None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
 
 	job = { "project": "examples", "identifier": "empty" }
-	run = run_provider_instance.create(job["project"], job["identifier"], {}, None)
-	run_provider_instance.update_status(run, status = "succeeded")
+	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
+	run_provider_instance.update_status(database_client_instance, run, status = "succeeded")
 
 	assert run["status"] == "succeeded"
 	assert len(supervisor_instance._active_workers) == 0

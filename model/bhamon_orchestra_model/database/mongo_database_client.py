@@ -65,6 +65,7 @@ class MongoDatabaseClient(DatabaseClient):
 
 
 	def close(self) -> None:
+		""" Close the database connection """
 		self.mongo_client.close()
 
 

@@ -29,19 +29,19 @@ def configure_logging(log_level):
 	logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 
-def create_database_administration(database_uri):
+def create_database_administration_factory(database_uri):
 	if database_uri.startswith("json://"):
-		return JsonDatabaseAdministration(re.sub("^json://", "", database_uri))
+		return lambda: JsonDatabaseAdministration(re.sub("^json://", "", database_uri))
 	if database_uri.startswith("mongodb://"):
-		return MongoDatabaseAdministration(pymongo.MongoClient(database_uri))
+		return lambda: MongoDatabaseAdministration(pymongo.MongoClient(database_uri))
 	raise ValueError("Unsupported database uri '%s'" % database_uri)
 
 
-def create_database_client(database_uri):
+def create_database_client_factory(database_uri):
 	if database_uri.startswith("json://"):
-		return JsonDatabaseClient(re.sub("^json://", "", database_uri))
+		return lambda: JsonDatabaseClient(re.sub("^json://", "", database_uri))
 	if database_uri.startswith("mongodb://"):
-		return MongoDatabaseClient(pymongo.MongoClient(database_uri))
+		return lambda: MongoDatabaseClient(pymongo.MongoClient(database_uri))
 	raise ValueError("Unsupported database uri '%s'" % database_uri)
 
 

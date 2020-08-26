@@ -10,7 +10,8 @@ logger = logging.getLogger("ProjectController")
 
 
 def get_count():
-	return flask.jsonify(flask.current_app.project_provider.count())
+	database_client = flask.request.database_client()
+	return flask.jsonify(flask.current_app.project_provider.count(database_client))
 
 
 def get_collection():
@@ -20,15 +21,18 @@ def get_collection():
 		"order_by": [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ],
 	}
 
-	return flask.jsonify(flask.current_app.project_provider.get_list(**query_parameters))
+	database_client = flask.request.database_client()
+	return flask.jsonify(flask.current_app.project_provider.get_list(database_client, **query_parameters))
 
 
 def get(project_identifier):
-	return flask.jsonify(flask.current_app.project_provider.get(project_identifier))
+	database_client = flask.request.database_client()
+	return flask.jsonify(flask.current_app.project_provider.get(database_client, project_identifier))
 
 
 def get_repository(project_identifier):
-	project = flask.current_app.project_provider.get(project_identifier)
+	database_client = flask.request.database_client()
+	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 
 	query_parameters = {
@@ -40,7 +44,8 @@ def get_repository(project_identifier):
 
 
 def get_branch_collection(project_identifier):
-	project = flask.current_app.project_provider.get(project_identifier)
+	database_client = flask.request.database_client()
+	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 
 	query_parameters = {
@@ -51,7 +56,8 @@ def get_branch_collection(project_identifier):
 
 
 def get_revision_collection(project_identifier):
-	project = flask.current_app.project_provider.get(project_identifier)
+	database_client = flask.request.database_client()
+	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 
 	query_parameters = {
@@ -64,7 +70,8 @@ def get_revision_collection(project_identifier):
 
 
 def get_revision(project_identifier, revision_reference):
-	project = flask.current_app.project_provider.get(project_identifier)
+	database_client = flask.request.database_client()
+	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 
 	query_parameters = {
@@ -76,7 +83,8 @@ def get_revision(project_identifier, revision_reference):
 
 
 def get_revision_status(project_identifier, revision_reference):
-	project = flask.current_app.project_provider.get(project_identifier)
+	database_client = flask.request.database_client()
+	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	repository = project["services"]["revision_control"]["repository"]
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 	revision = revision_control_client.get_revision(repository, revision_reference)
@@ -89,7 +97,7 @@ def get_revision_status(project_identifier, revision_reference):
 		"order_by": [("update_date", "descending")],
 	}
 
-	run_collection = flask.current_app.run_provider.get_list_as_documents(**run_query_parameters)
+	run_collection = flask.current_app.run_provider.get_list_as_documents(database_client, **run_query_parameters)
 
 	for run in run_collection:
 		revision_identifier = run.get("results", {}).get("revision_control", {}).get("revision", None)
@@ -123,7 +131,8 @@ def get_revision_status(project_identifier, revision_reference):
 
 
 def get_project_status(project_identifier):
-	project = flask.current_app.project_provider.get(project_identifier)
+	database_client = flask.request.database_client()
+	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	repository = project["services"]["revision_control"]["repository"]
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
 
@@ -140,7 +149,7 @@ def get_project_status(project_identifier):
 	}
 
 	revision_collection = revision_control_client.get_revision_list(**revision_query_parameters)
-	run_collection = flask.current_app.run_provider.get_list_as_documents(**run_query_parameters)
+	run_collection = flask.current_app.run_provider.get_list_as_documents(database_client, **run_query_parameters)
 
 	revision_dictionary = { revision["identifier"]: revision for revision in revision_collection }
 	for revision in revision_collection:

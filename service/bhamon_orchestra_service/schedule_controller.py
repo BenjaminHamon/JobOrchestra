@@ -12,7 +12,8 @@ def get_count(project_identifier):
 		"job": flask.request.args.get("job", default = None),
 	}
 
-	return flask.jsonify(flask.current_app.schedule_provider.count(**query_parameters))
+	database_client = flask.request.database_client()
+	return flask.jsonify(flask.current_app.schedule_provider.count(database_client, **query_parameters))
 
 
 def get_collection(project_identifier):
@@ -24,18 +25,22 @@ def get_collection(project_identifier):
 		"order_by": [ tuple(x.split(" ")) for x in flask.request.args.getlist("order_by") ],
 	}
 
-	return flask.jsonify(flask.current_app.schedule_provider.get_list(**query_parameters))
+	database_client = flask.request.database_client()
+	return flask.jsonify(flask.current_app.schedule_provider.get_list(database_client, **query_parameters))
 
 
 def get(project_identifier, schedule_identifier):
-	return flask.jsonify(flask.current_app.schedule_provider.get(project_identifier, schedule_identifier))
+	database_client = flask.request.database_client()
+	return flask.jsonify(flask.current_app.schedule_provider.get(database_client, project_identifier, schedule_identifier))
 
 
 def enable(project_identifier, schedule_identifier):
-	flask.current_app.schedule_provider.update_status({ "project": project_identifier, "identifier": schedule_identifier }, is_enabled = True)
+	database_client = flask.request.database_client()
+	flask.current_app.schedule_provider.update_status(database_client, { "project": project_identifier, "identifier": schedule_identifier }, is_enabled = True)
 	return flask.jsonify({})
 
 
 def disable(project_identifier, schedule_identifier):
-	flask.current_app.schedule_provider.update_status({ "project": project_identifier, "identifier": schedule_identifier }, is_enabled = False)
+	database_client = flask.request.database_client()
+	flask.current_app.schedule_provider.update_status(database_client, { "project": project_identifier, "identifier": schedule_identifier }, is_enabled = False)
 	return flask.jsonify({})

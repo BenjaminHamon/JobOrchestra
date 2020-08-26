@@ -16,6 +16,14 @@ class MongoDatabaseAdministration:
 		self.mongo_client = mongo_client
 
 
+	def __enter__(self):
+		return self
+
+
+	def __exit__(self, exception_type, exception_value, traceback):
+		self.close()
+
+
 	def initialize(self, simulate: bool = False) -> None:
 		logger.info("Initializing" + (" (simulation)" if simulate else "")) # pylint: disable = logging-not-lazy
 

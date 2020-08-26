@@ -32,7 +32,9 @@ def configure(application, title = None, copyright = None, version = None, date 
 def register_handlers(application):
 	application.log_exception = lambda exc_info: None
 	application.before_request(log_request)
+	application.before_request(setup_request_dependencies)
 	application.before_request(authorize_request)
+	application.teardown_request(teardown_request_dependencies)
 	for exception in werkzeug.exceptions.default_exceptions:
 		application.register_error_handler(exception, handle_error)
 
@@ -117,6 +119,22 @@ def log_request():
 	request_logger.info("(%s) %s %s", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url)
 
 
+def setup_request_dependencies():
+
+	def get_or_create_database_client():
+		if getattr(flask.request, "database_client_instance", None) is None:
+			flask.request.database_client_instance = flask.current_app.database_client_factory()
+		return flask.request.database_client_instance
+
+	flask.request.database_client = get_or_create_database_client
+
+
+def teardown_request_dependencies(exception): # pylint: disable = unused-argument
+	if getattr(flask.request, "database_client_instance", None) is not None:
+		flask.request.database_client_instance.close()
+		flask.request.database_client_instance = None
+
+
 def authorize_request():
 	flask.request.user = None
 
@@ -124,8 +142,11 @@ def authorize_request():
 		return
 
 	if flask.request.authorization is not None:
-		is_authenticated = flask.current_app.authentication_provider.authenticate_with_token(flask.request.authorization.username, flask.request.authorization.password)
-		flask.request.user = flask.current_app.user_provider.get(flask.request.authorization.username) if is_authenticated else None
+		user_identifier = flask.request.authorization.username
+		token = flask.request.authorization.password
+		database_client = flask.request.database_client()
+		is_authenticated = flask.current_app.authentication_provider.authenticate_with_token(database_client, user_identifier, token)
+		flask.request.user = flask.current_app.user_provider.get(database_client, user_identifier) if is_authenticated else None
 
 	is_authorized = flask.current_app.authorization_provider.authorize_request(flask.request.user, flask.request.method, flask.request.url_rule.rule)
 	if not is_authorized:

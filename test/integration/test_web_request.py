@@ -54,14 +54,15 @@ def test_service_routes(tmpdir, database_type, user_identifier, user_roles): # p
 	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		authentication = context_instance.configure_service_authentication(user_identifier, user_roles)
 
-		project = context_instance.project_provider.create_or_update("examples", "Examples", {})
-		job = context_instance.job_provider.create_or_update("empty", "examples", "Empty", None, None, None, [], None)
-		schedule = context_instance.schedule_provider.create_or_update("empty_nightly", "examples", "Empty Nightly", "empty", None, "0 0 * * *")
-		run = context_instance.run_provider.create("examples", "empty", {}, { "type": "user", "identifier": "my_user" })
-		context_instance.run_provider.update_status(run, worker = "my_worker")
-		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
-		worker = context_instance.worker_provider.create("my_worker", "my_user", None, "MyWorker")
-		user = context_instance.user_provider.create("my_user", "MyUser")
+		with context_instance.database_client_factory() as database_client:
+			project = context_instance.project_provider.create_or_update(database_client, "examples", "Examples", {})
+			job = context_instance.job_provider.create_or_update(database_client, "empty", "examples", "Empty", None, None, None, [], None)
+			schedule = context_instance.schedule_provider.create_or_update(database_client, "empty_nightly", "examples", "Empty Nightly", "empty", None, "0 0 * * *")
+			run = context_instance.run_provider.create(database_client, "examples", "empty", {}, { "type": "user", "identifier": "my_user" })
+			context_instance.run_provider.update_status(database_client, run, worker = "my_worker")
+			context_instance.run_provider.update_steps(database_client, run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
+			worker = context_instance.worker_provider.create(database_client, "my_worker", "my_user", None, "MyWorker")
+			user = context_instance.user_provider.create(database_client, "my_user", "MyUser")
 
 		service_process = context_instance.invoke_service()
 
@@ -142,15 +143,16 @@ def test_website_pages(tmpdir, database_type, user_identifier, user_roles): # py
 	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		authentication = context_instance.configure_website_authentication(user_identifier, user_roles)
 
-		project = context_instance.project_provider.create_or_update("examples", "Examples", {})
-		job = context_instance.job_provider.create_or_update("empty", "examples", "Empty", None, None, None, [], None)
-		schedule = context_instance.schedule_provider.create_or_update("empty_nightly", "examples", "Empty Nightly", "empty", None, "0 0 * * *")
-		run = context_instance.run_provider.create("examples", "empty", {}, { "type": "user", "identifier": "my_user" })
-		context_instance.run_provider.update_status(run, worker = "my_worker")
-		context_instance.run_provider.update_steps(run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
-		worker = context_instance.worker_provider.create("my_worker", "my_user", None, "MyWorker")
-		context_instance.run_provider.update_status(run, worker = worker["identifier"])
-		user = context_instance.user_provider.create("my_user", "MyUser")
+		with context_instance.database_client_factory() as database_client:
+			project = context_instance.project_provider.create_or_update(database_client, "examples", "Examples", {})
+			job = context_instance.job_provider.create_or_update(database_client, "empty", "examples", "Empty", None, None, None, [], None)
+			schedule = context_instance.schedule_provider.create_or_update(database_client, "empty_nightly", "examples", "Empty Nightly", "empty", None, "0 0 * * *")
+			run = context_instance.run_provider.create(database_client, "examples", "empty", {}, { "type": "user", "identifier": "my_user" })
+			context_instance.run_provider.update_status(database_client, run, worker = "my_worker")
+			context_instance.run_provider.update_steps(database_client, run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
+			worker = context_instance.worker_provider.create(database_client, "my_worker", "my_user", None, "MyWorker")
+			context_instance.run_provider.update_status(database_client, run, worker = worker["identifier"])
+			user = context_instance.user_provider.create(database_client, "my_user", "MyUser")
 
 		service_process = context_instance.invoke_service()
 		website_process = context_instance.invoke_website()
