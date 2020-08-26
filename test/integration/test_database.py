@@ -207,9 +207,9 @@ def test_import_export(tmpdir, database_type_source, database_type_target):
 
 	with context.OrchestraContext(tmpdir, database_type_source, "source") as context_instance:
 		with context_instance.database_client_factory() as database_client:
-			context_instance.project_provider.create_or_update(database_client, "my-project", None, None)
-			context_instance.job_provider.create_or_update(database_client, "my-job", "my-project", None, None, None, None, None, None)
-			run = context_instance.run_provider.create(database_client, "my-project", "my-job", None, None)
+			context_instance.project_provider.create_or_update(database_client, "my-project", "My Project", {})
+			context_instance.job_provider.create_or_update(database_client, "my-job", "my-project", "My Job", "", "workspace", [], [], {})
+			run = context_instance.run_provider.create(database_client, "my-project", "my-job", {}, {})
 
 			database_import_export.export_database(database_client, intermediate_directory)
 
