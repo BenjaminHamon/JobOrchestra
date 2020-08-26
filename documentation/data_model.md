@@ -94,6 +94,7 @@ Represents a mean for a user to authenticate with the service.
 * identifier: the unique string key used to identify the authentication, implemented as a UUID
 * user: the identifier of the user for which the authentication is
 * type: the type of the authentication (by password or by token)
+* description: the description associated with a token
 * hash_function: the string identifying the hash function used to protect the secret
 * hash_function_parameters: the dictionary of parameters to pass to the hash function invocation
 * hash_function_salt: the random salt used with the hash function, as a hexadecimal string
