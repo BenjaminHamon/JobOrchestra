@@ -41,13 +41,13 @@
 {% macro run_actions(run) %}
 <form class="action-group" method="post">
 	{% if run['status'] == 'pending' %}
-		{% if run.get('should_cancel', false) %}
+		{% if run['should_cancel'] %}
 	<button formaction="{{ url_for('run_controller.cancel', project_identifier = run['project'], run_identifier = run['identifier']) }}" disabled>Cancelling</button>
 		{% else %}
 	<button formaction="{{ url_for('run_controller.cancel', project_identifier = run['project'], run_identifier = run['identifier']) }}">Cancel</button>
 		{% endif %}
 	{% elif run['status'] == 'running' %}
-		{% if run.get('should_abort', false) %}
+		{% if run['should_abort'] %}
 	<button formaction="{{ url_for('run_controller.abort', project_identifier = run['project'], run_identifier = run['identifier']) }}" disabled>Aborting</button>
 		{% else %}
 	<button formaction="{{ url_for('run_controller.abort', project_identifier = run['project'], run_identifier = run['identifier']) }}">Abort</button>

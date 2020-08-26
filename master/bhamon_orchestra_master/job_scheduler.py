@@ -71,7 +71,7 @@ class JobScheduler:
 
 		for run in all_pending_runs:
 			creation_date = self._date_time_provider.deserialize(run["creation_date"])
-			if run.get("should_cancel", False) or now > creation_date + self.run_expiration:
+			if run["should_cancel"] or now > creation_date + self.run_expiration:
 				logger.info("Cancelling run '%s'", run["identifier"])
 				self._run_provider.update_status(database_client, run, status = "cancelled")
 				continue
@@ -85,7 +85,7 @@ class JobScheduler:
 		all_active_runs = self._list_active_runs(database_client)
 
 		for run in all_active_runs:
-			if run.get("should_abort", False):
+			if run["should_abort"]:
 				self.abort_run(run)
 
 

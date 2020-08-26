@@ -67,8 +67,14 @@ class RunProvider:
 			"job": job,
 			"parameters": parameters,
 			"source": source,
-			"status": "pending",
 			"worker": None,
+			"status": "pending",
+			"steps": None,
+			"start_date": None,
+			"completion_date": None,
+			"results": None,
+			"should_cancel": False,
+			"should_abort": False,
 			"creation_date": self.date_time_provider.serialize(now),
 			"update_date": self.date_time_provider.serialize(now),
 		}
@@ -101,7 +107,7 @@ class RunProvider:
 
 
 	def get_all_steps(self, database_client: DatabaseClient, project: str, run_identifier: str) -> List[dict]:
-		return database_client.find_one(self.table, { "project": project, "identifier": run_identifier }).get("steps", [])
+		return database_client.find_one(self.table, { "project": project, "identifier": run_identifier })["steps"]
 
 
 	def get_step(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> dict:
@@ -152,7 +158,7 @@ class RunProvider:
 
 
 	def get_results(self, database_client: DatabaseClient, project: str, run_identifier: str) -> dict:
-		return database_client.find_one(self.table, { "project": project, "identifier": run_identifier }).get("results", {})
+		return database_client.find_one(self.table, { "project": project, "identifier": run_identifier })["results"]
 
 
 	def set_results(self, database_client: DatabaseClient, run: dict, results: dict) -> None:
@@ -180,11 +186,13 @@ class RunProvider:
 				entry_info = zipfile.ZipInfo("run.json", now[0:6])
 				entry_info.external_attr = 0o644 << 16
 				archive.writestr(entry_info, json.dumps(run, indent = 4))
-				for step in run.get("steps", []):
-					log_path = self._get_step_log_path(database_client, project, run_identifier, step["index"])
-					entry_info = zipfile.ZipInfo(os.path.basename(log_path), now[0:6])
-					entry_info.external_attr = 0o644 << 16
-					archive.writestr(entry_info, self.file_storage.load_or_default(log_path, ""))
+
+				if run["steps"] is not None:
+					for step in run["steps"]:
+						log_path = self._get_step_log_path(database_client, project, run_identifier, step["index"])
+						entry_info = zipfile.ZipInfo(os.path.basename(log_path), now[0:6])
+						entry_info.external_attr = 0o644 << 16
+						archive.writestr(entry_info, self.file_storage.load_or_default(log_path, ""))
 
 			return { "file_name": file_name, "data": file_object.getvalue(), "type": "zip" }
 

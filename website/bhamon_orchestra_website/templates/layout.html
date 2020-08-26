@@ -22,7 +22,7 @@
 				<a href="{{ url_for('website.home') }}">{{ config['WEBSITE_TITLE'] }}</a>
 			</div>
 			<div class="login">
-				{% if not "token" in session %}
+				{% if not 'token' in session %}
 				<span><a href="{{ url_for('me_controller.login') }}">Log In</a></span>
 				{% else %}
 				<span>Logged in as <a href="{{ url_for('me_controller.show_profile') }}">{{ session["user"]["display_name"] }} ({{ session["user"]["identifier"] }})</a></span>

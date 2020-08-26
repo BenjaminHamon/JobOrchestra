@@ -75,7 +75,7 @@ class AuthenticationProvider:
 		user_tokens = database_client.find_many(self.table, { "user": user_identifier, "type": "token" })
 
 		for token in user_tokens:
-			if "expiration_date" not in token or token["expiration_date"] > now:
+			if token["expiration_date"] is None or token["expiration_date"] > now:
 				hashed_secret = self.hash_token(secret, token["hash_function"], token["hash_function_parameters"])
 				if hashed_secret == token["secret"]:
 					return True
@@ -114,6 +114,8 @@ class AuthenticationProvider:
 			"description": description,
 			"hash_function": self.token_hash_function,
 			"hash_function_parameters": self.token_hash_function_parameters,
+			"hash_function_salt": None,
+			"expiration_date": None,
 			"creation_date": self.date_time_provider.serialize(now),
 			"update_date": self.date_time_provider.serialize(now),
 		}
@@ -132,7 +134,7 @@ class AuthenticationProvider:
 
 	def set_token_expiration(self, database_client: DatabaseClient, user_identifier: str, token_identifier: str, expiration: datetime.timedelta) -> None:
 		token = database_client.find_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
-		if "expiration_date" not in token:
+		if token["expiration_date"] is None:
 			raise ValueError("Token '%s' does not expire" % token_identifier)
 
 		now = self.date_time_provider.now()

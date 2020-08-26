@@ -56,10 +56,6 @@ class MongoDatabaseAdministration:
 			if not simulate:
 				self.mongo_client.get_database()["build"].rename("run")
 
-		logger.info("Ensure run worker fields exist")
-		if not simulate:
-			self.mongo_client.get_database()["run"].update_many({ "worker": { "$exists": False } }, { "$set": { "worker": None } })
-
 		logger.info("Updating run project and job fields")
 		for run in self.mongo_client.get_database()["run"].find():
 			if "project" not in run:
@@ -67,6 +63,26 @@ class MongoDatabaseAdministration:
 				logger.info("Run %s: Job %s => Project %s, Job %s", run["identifier"], run["job"], project, job)
 				if not simulate:
 					self.mongo_client.get_database()["run"].update_one({ "identifier": run["identifier"] }, { "$set": { "project": project, "job": job } })
+
+		logger.info("Fix missing fields for user authentications")
+		if not simulate:
+			self.mongo_client.get_database()["user_authentication"].update_many({ "hash_function_salt": { "$exists": False } }, { "$set": { "hash_function_salt": None } })
+			self.mongo_client.get_database()["user_authentication"].update_many({ "expiration_date": { "$exists": False } }, { "$set": { "expiration_date": None } })
+
+		logger.info("Fix missing fields for runs")
+		if not simulate:
+			self.mongo_client.get_database()["run"].update_many({ "source": { "$exists": False } }, { "$set": { "source": None } })
+			self.mongo_client.get_database()["run"].update_many({ "worker": { "$exists": False } }, { "$set": { "worker": None } })
+			self.mongo_client.get_database()["run"].update_many({ "steps": { "$exists": False } }, { "$set": { "steps": None } })
+			self.mongo_client.get_database()["run"].update_many({ "start_date": { "$exists": False } }, { "$set": { "start_date": None } })
+			self.mongo_client.get_database()["run"].update_many({ "completion_date": { "$exists": False } }, { "$set": { "completion_date": None } })
+			self.mongo_client.get_database()["run"].update_many({ "results": { "$exists": False } }, { "$set": { "results": None } })
+			self.mongo_client.get_database()["run"].update_many({ "should_abort": { "$exists": False } }, { "$set": { "should_abort": False } })
+			self.mongo_client.get_database()["run"].update_many({ "should_cancel": { "$exists": False } }, { "$set": { "should_cancel": False } })
+
+		logger.info("Fix missing fields for workers")
+		if not simulate:
+			self.mongo_client.get_database()["worker"].update_many({ "should_disconnect": { "$exists": False } }, { "$set": { "should_disconnect": False } })
 
 
 	def create_index(self, table: str, identifier: str, field_collection: List[Tuple[str,str]], is_unique: bool = False) -> None:

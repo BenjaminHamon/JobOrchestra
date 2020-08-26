@@ -68,7 +68,7 @@ class Supervisor:
 			return False
 
 		worker_record = self._worker_provider.get(database_client, worker_identifier)
-		return worker_record["is_enabled"] and not worker_record.get("should_disconnect", False)
+		return worker_record["is_enabled"] and not worker_record["should_disconnect"]
 
 
 	async def update(self, database_client: DatabaseClient) -> None:
@@ -78,7 +78,7 @@ class Supervisor:
 
 		for worker_record in all_worker_records:
 			worker_instance = self._active_workers[worker_record["identifier"]]
-			if worker_record.get("should_disconnect", False):
+			if worker_record["should_disconnect"]:
 				worker_instance.should_disconnect = True
 
 

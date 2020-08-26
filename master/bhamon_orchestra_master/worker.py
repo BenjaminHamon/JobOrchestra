@@ -162,7 +162,10 @@ class Worker:
 
 		reset = { "steps": [] }
 
-		for step in self._run_provider.get_all_steps(database_client, run["project"], run["identifier"]):
+		run_steps = self._run_provider.get_all_steps(database_client, run["project"], run["identifier"])
+		run_steps = run_steps if run_steps is not None else []
+
+		for step in run_steps:
 			if self._run_provider.has_step_log(database_client, run["project"], run["identifier"], step["index"]):
 				log_size = self._run_provider.get_step_log_size(database_client, run["project"], run["identifier"], step["index"])
 				reset["steps"].append({ "index": step["index"], "log_file_cursor": log_size })

@@ -75,11 +75,11 @@ def refresh_session():
 def show_profile():
 	user = service_client.get("/me")
 	user_tokens = service_client.get("/me/token_collection", { "order_by": [ "update_date descending" ] })
-	user_tokens.sort(key = lambda token: "expiration_date" in token)
+	user_tokens.sort(key = lambda token: token["expiration_date"] is not None)
 
 	now = flask.current_app.date_time_provider.serialize(flask.current_app.date_time_provider.now())
 	for token in user_tokens:
-		token["is_active"] = token["expiration_date"] > now if "expiration_date" in token else True
+		token["is_active"] = token["expiration_date"] > now if token["expiration_date"] is not None else True
 
 	return flask.render_template("me/profile.html", title = "Profile", user = user, user_tokens = user_tokens)
 

@@ -27,7 +27,7 @@
 	<ul>
 		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = run['project']) }}">{{ run['project_display_name'] }}</a></li>
 		<li>Job: <a href="{{ url_for('job_controller.show', project_identifier = run['project'], job_identifier = run['job']) }}">{{ run['job_display_name'] }}</a></li>
-		{% if 'source' in run %}
+		{% if run['source'] != None %}
 			{% if run['source']['type'] == 'run' %}
 		<li>Source: run <a href="{{ url_for('run_controller.show', project_identifier = run['source']['project'], run_identifier = run['source']['identifier']) }}">{{ run['source']['identifier'] }}</a></li>
 			{% elif run['source']['type'] == 'schedule' %}
@@ -36,11 +36,11 @@
 		<li>Source: user <a href="{{ url_for('user_controller.show', user_identifier = run['source']['identifier']) }}">{{ run['source']['display_name'] }}</a></li>
 			{% endif %}
 		{% endif %}
-		<li>Worker: {% if run['worker'] %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker_display_name'] }}</a>{% endif %}</li>
+		<li>Worker: {% if run['worker'] != None %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker_display_name'] }}</a>{% endif %}</li>
 		<li>Creation date: {{ run['creation_date'] }}</li>
 		<li>Update date: {{ run['update_date'] }}</li>
-		<li>Start date: {% if 'start_date' in run %}{{ run['start_date'] }}{% endif %}</li>
-		<li>Completion date: {% if 'completion_date' in run %}{{ run['completion_date'] }}{% endif %}</li>
+		<li>Start date: {% if run['start_date'] != None %}{{ run['start_date'] }}{% endif %}</li>
+		<li>Completion date: {% if run['completion_date'] != None %}{{ run['completion_date'] }}{% endif %}</li>
 	</ul>
 </section>
 
@@ -53,6 +53,7 @@
 	</ul>
 </section>
 
+{% if run_steps != None %}
 <section>
 	<h2>Steps</h2>
 	<table>
@@ -83,7 +84,10 @@
 		</tbody>
 	</table>
 </section>
+{% endif %}
 
-{% include 'run/results.html' %}
+{% if run_results != None %}
+	{% include 'run/results.html' %}
+{% endif %}
 
 {% endblock %}

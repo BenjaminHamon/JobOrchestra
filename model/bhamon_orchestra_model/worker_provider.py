@@ -49,6 +49,7 @@ class WorkerProvider:
 			"properties": {},
 			"is_enabled": True,
 			"is_active": False,
+			"should_disconnect": False,
 			"creation_date": self.date_time_provider.serialize(now),
 			"update_date": self.date_time_provider.serialize(now),
 		}

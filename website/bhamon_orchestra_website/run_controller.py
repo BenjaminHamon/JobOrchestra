@@ -51,7 +51,7 @@ def show(project_identifier, run_identifier): # pylint: disable = unused-argumen
 	job = service_client.get_or_default(job_route, default_value = {})
 	run["job_display_name"] = job.get("display_name", run["job"])
 
-	if run.get("source", None) is not None:
+	if run["source"] is not None:
 		if run["source"]["type"] == "schedule":
 			schedule_route = "/project/{project}/schedule/{schedule}".format(project = project_identifier, schedule = run["source"]["identifier"])
 			schedule = service_client.get_or_default(schedule_route, default_value = {})
