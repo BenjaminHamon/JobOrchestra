@@ -26,10 +26,7 @@ def show_collection():
 def show(project_identifier): # pylint: disable = unused-argument
 	view_data = {
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
-		"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 10, "order_by": [ "identifier ascending" ] }),
 		"run_collection": service_client.get("/project/{project_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
-		"schedule_collection": service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), { "limit": 10, "order_by": [ "identifier ascending" ] }),
-		"worker_collection": service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 	}
 
 	if "revision_control" in view_data["project"]["services"]:
@@ -38,7 +35,9 @@ def show(project_identifier): # pylint: disable = unused-argument
 			branch_status = service_client.get("/project/{project_identifier}/repository/revision/{branch}/status".format(**locals()))
 			view_data["revision_collection"].append(branch_status)
 
-	helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], view_data["run_collection"], view_data["schedule_collection"], view_data["worker_collection"])
+	job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
+	worker_collection = service_client.get("/worker_collection", { "order_by": [ "identifier ascending" ] })
+	helpers.add_display_names([ view_data["project"] ], job_collection, view_data["run_collection"], [], worker_collection)
 
 	return flask.render_template("project/index.html", title = "Project " + view_data["project"]["display_name"], **view_data)
 
