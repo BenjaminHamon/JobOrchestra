@@ -7,7 +7,10 @@ import sys
 import time
 
 import pymongo
+import sqlalchemy
+import sqlalchemy_utils
 
+import bhamon_orchestra_model.database.sql_database_model as sql_database_model
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.database.file_storage import FileStorage
@@ -30,19 +33,33 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 class DatabaseContext:
 
 
-	def __init__(self, temporary_directory, database_type, database_suffix = None):
+	def __init__(self, temporary_directory, database_type, database_suffix = None, metadata_factory = None):
 		environment_instance = environment.load_test_context_environment(str(temporary_directory), database_type)
 
 		self.temporary_directory = str(temporary_directory)
 		self.database_uri = environment_instance["database_uri"] + (("_" + database_suffix) if database_suffix else "")
-		self.database_administration_factory = environment.create_database_administration_factory(self.database_uri)
-		self.database_client_factory = environment.create_database_client_factory(self.database_uri)
+		self.metadata = None
+
+		if self.database_uri.startswith("postgresql://"):
+			self.metadata = metadata_factory()
+
+		self.database_administration_factory = environment.create_database_administration_factory(self.database_uri, self.metadata)
+		self.database_client_factory = environment.create_database_client_factory(self.database_uri, self.metadata)
 
 
 	def __enter__(self):
 		if self.database_uri.startswith("mongodb://"):
 			with pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000) as mongo_client:
 				mongo_client.drop_database(mongo_client.get_database())
+
+		if self.database_uri.startswith("postgresql://"):
+			if sqlalchemy_utils.database_exists(self.database_uri):
+				sqlalchemy_utils.drop_database(self.database_uri)
+			sqlalchemy_utils.create_database(self.database_uri)
+
+			database_engine = sqlalchemy.create_engine(self.database_uri)
+			self.metadata.create_all(database_engine)
+			database_engine.dispose()
 
 		return self
 
@@ -51,6 +68,10 @@ class DatabaseContext:
 		if self.database_uri.startswith("mongodb://"):
 			with pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000) as mongo_client:
 				mongo_client.drop_database(mongo_client.get_database())
+
+		if self.database_uri.startswith("postgresql://"):
+			if sqlalchemy_utils.database_exists(self.database_uri):
+				sqlalchemy_utils.drop_database(self.database_uri)
 
 
 
@@ -75,8 +96,8 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 			date_time_provider_instance = DateTimeProvider()
 
-			self.database_administration_factory = environment.create_database_administration_factory(self.database_uri)
-			self.database_client_factory = environment.create_database_client_factory(self.database_uri)
+			self.database_administration_factory = environment.create_database_administration_factory(self.database_uri, sql_database_model.metadata)
+			self.database_client_factory = environment.create_database_client_factory(self.database_uri, sql_database_model.metadata)
 			self.file_storage = FileStorage(os.path.join(self.temporary_directory, "master"))
 
 			self.authentication_provider = AuthenticationProvider(date_time_provider_instance)
@@ -93,6 +114,11 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 		if self.database_uri is not None and self.database_uri.startswith("mongodb://"):
 			with pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000) as mongo_client:
 				mongo_client.drop_database(mongo_client.get_database())
+
+		if self.database_uri is not None and self.database_uri.startswith("postgresql://"):
+			if sqlalchemy_utils.database_exists(self.database_uri):
+				sqlalchemy_utils.drop_database(self.database_uri)
+			sqlalchemy_utils.create_database(self.database_uri)
 
 		if self.database_uri is not None:
 			with self.database_administration_factory() as database_administration:
@@ -115,6 +141,10 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 		if self.database_uri is not None and self.database_uri.startswith("mongodb://"):
 			with pymongo.MongoClient(self.database_uri, serverSelectionTimeoutMS = 5000) as mongo_client:
 				mongo_client.drop_database(mongo_client.get_database())
+
+		if self.database_uri is not None and self.database_uri.startswith("postgresql://"):
+			if sqlalchemy_utils.database_exists(self.database_uri):
+				sqlalchemy_utils.drop_database(self.database_uri)
 
 
 	def get_service_uri(self):

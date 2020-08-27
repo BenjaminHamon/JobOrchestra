@@ -3,11 +3,39 @@
 import os
 
 import pytest
+import sqlalchemy.schema
+import sqlalchemy.types
 
 import bhamon_orchestra_model.database.import_export as database_import_export
 
 from . import context
 from . import environment
+
+
+def create_database_metadata():
+	metadata = sqlalchemy.schema.MetaData()
+
+	sqlalchemy.schema.Table("record_simple", metadata,
+		sqlalchemy.schema.Column("id", sqlalchemy.types.Integer, nullable = False),
+		sqlalchemy.schema.Column("key", sqlalchemy.types.String, nullable = True),
+		sqlalchemy.schema.PrimaryKeyConstraint("id"),
+	)
+
+	sqlalchemy.schema.Table("record_complex", metadata,
+		sqlalchemy.schema.Column("id", sqlalchemy.types.Integer, nullable = False),
+		sqlalchemy.schema.Column("key_1", sqlalchemy.types.String, nullable = True),
+		sqlalchemy.schema.Column("key_2", sqlalchemy.types.String, nullable = True),
+		sqlalchemy.schema.Column("key_3", sqlalchemy.types.String, nullable = True),
+		sqlalchemy.schema.PrimaryKeyConstraint("id"),
+	)
+
+	sqlalchemy.schema.Table("record_document", metadata,
+		sqlalchemy.schema.Column("id", sqlalchemy.types.Integer, nullable = False),
+		sqlalchemy.schema.Column("data", sqlalchemy.types.JSON, nullable = True),
+		sqlalchemy.schema.PrimaryKeyConstraint("id"),
+	)
+
+	return metadata
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
@@ -17,7 +45,7 @@ def test_single(tmpdir, database_type):
 	table = "record_simple"
 	record = { "id": 1, "key": "value" }
 
-	with context.DatabaseContext(tmpdir, database_type) as context_instance:
+	with context.DatabaseContext(tmpdir, database_type, metadata_factory = create_database_metadata) as context_instance:
 		with context_instance.database_client_factory() as database_client:
 
 			assert database_client.count(table, {}) == 0
@@ -40,7 +68,7 @@ def test_many(tmpdir, database_type):
 	second_record = { "id": 2, "key": "second" }
 	third_record = { "id": 3, "key": "third" }
 
-	with context.DatabaseContext(tmpdir, database_type) as context_instance:
+	with context.DatabaseContext(tmpdir, database_type, metadata_factory = create_database_metadata) as context_instance:
 		with context_instance.database_client_factory() as database_client:
 
 			assert database_client.count(table, {}) == 0
@@ -59,16 +87,23 @@ def test_find_with_inner_key(tmpdir, database_type):
 	""" Test finding a record using an inner key """
 
 	table = "record_document"
-	record = { "id": 1, "key": "value", "data": { "inner_key": "inner_value" } }
+	record_with_boolean = { "id": 1, "data": { "key_boolean": True } }
+	record_with_integer = { "id": 2, "data": { "key_integer": 1 } }
+	record_with_string = { "id": 3, "data": { "key_string": "value" } }
 
-	with context.DatabaseContext(tmpdir, database_type) as context_instance:
+	with context.DatabaseContext(tmpdir, database_type, metadata_factory = create_database_metadata) as context_instance:
 		with context_instance.database_client_factory() as database_client:
 
 			assert database_client.count(table, {}) == 0
 
-			database_client.insert_one(table, record)
-			assert database_client.count(table, { "data.inner_key": "inner_value" }) == 1
-			assert database_client.find_one(table, { "data.inner_key": "inner_value" }) == record
+			database_client.insert_many(table, [ record_with_boolean, record_with_integer, record_with_string ])
+
+			assert database_client.count(table, { "data.key_boolean": True }) == 1
+			assert database_client.find_one(table, { "data.key_boolean": True }) == record_with_boolean
+			assert database_client.count(table, { "data.key_integer": 1 }) == 1
+			assert database_client.find_one(table, { "data.key_integer": 1 }) == record_with_integer
+			assert database_client.count(table, { "data.key_string": "value" }) == 1
+			assert database_client.find_one(table, { "data.key_string": "value" }) == record_with_string
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
@@ -89,7 +124,7 @@ def test_order_by(tmpdir, database_type):
 	sorted_records_ascending = list(sorted(all_records, key = lambda x: (x["key"] is not None, x["key"])))
 	sorted_records_descending = list(sorted(all_records, key = lambda x: (x["key"] is not None, x["key"]), reverse = True))
 
-	with context.DatabaseContext(tmpdir, database_type) as context_instance:
+	with context.DatabaseContext(tmpdir, database_type, metadata_factory = create_database_metadata) as context_instance:
 		with context_instance.database_client_factory() as database_client:
 
 			assert database_client.count(table, {}) == 0
@@ -128,7 +163,7 @@ def test_order_by_many(tmpdir, database_type):
 	sorted_records = sorted(sorted_records, key = lambda x: (x["key_2"] is not None, x["key_2"]), reverse = True)
 	sorted_records = sorted(sorted_records, key = lambda x: (x["key_1"] is not None, x["key_1"]))
 
-	with context.DatabaseContext(tmpdir, database_type) as context_instance:
+	with context.DatabaseContext(tmpdir, database_type, metadata_factory = create_database_metadata) as context_instance:
 		with context_instance.database_client_factory() as database_client:
 
 			assert database_client.count(table, {}) == 0
@@ -157,7 +192,7 @@ def test_order_by_with_inner_key(tmpdir, database_type):
 
 	sorted_records = sorted(all_records, key = lambda x: (x["data"].get("inner_key", None) is not None, x["data"].get("inner_key", None)))
 
-	with context.DatabaseContext(tmpdir, database_type) as context_instance:
+	with context.DatabaseContext(tmpdir, database_type, metadata_factory = create_database_metadata) as context_instance:
 		with context_instance.database_client_factory() as database_client:
 
 			assert database_client.count(table, {}) == 0
@@ -173,12 +208,15 @@ def test_order_by_with_inner_key(tmpdir, database_type):
 def test_index(tmpdir, database_type):
 	""" Test database operations on a table with an index """
 
+	if database_type == "postgresql":
+		pytest.skip("Unsupported operation")
+
 	table = "record_simple"
 	first_record = { "id": 1, "key": "first" }
 	second_record = { "id": 2, "key": "second" }
 	third_record = { "id": 3, "key": "third" }
 
-	with context.DatabaseContext(tmpdir, database_type) as context_instance:
+	with context.DatabaseContext(tmpdir, database_type, metadata_factory = create_database_metadata) as context_instance:
 		with context_instance.database_administration_factory() as database_administration:
 			database_administration.create_index(table, "id_unique", [ ("id", "ascending") ], is_unique = True)
 
@@ -205,7 +243,7 @@ def test_import_export(tmpdir, database_type_source, database_type_target):
 
 	intermediate_directory = os.path.join(str(tmpdir), "export")
 
-	with context.OrchestraContext(tmpdir, database_type_source, "source") as context_instance:
+	with context.OrchestraContext(tmpdir, database_type_source, database_suffix = "source") as context_instance:
 		with context_instance.database_client_factory() as database_client:
 			context_instance.project_provider.create_or_update(database_client, "my-project", "My Project", {})
 			context_instance.job_provider.create_or_update(database_client, "my-job", "my-project", "My Job", "", "workspace", [], [], {})
@@ -213,7 +251,7 @@ def test_import_export(tmpdir, database_type_source, database_type_target):
 
 			database_import_export.export_database(database_client, intermediate_directory)
 
-	with context.OrchestraContext(tmpdir, database_type_target, "target") as context_instance:
+	with context.OrchestraContext(tmpdir, database_type_target, database_suffix = "target") as context_instance:
 		with context_instance.database_client_factory() as database_client:
 			database_import_export.import_database(database_client, intermediate_directory)
 

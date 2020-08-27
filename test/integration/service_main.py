@@ -1,4 +1,5 @@
 import argparse
+import importlib
 import logging
 
 import flask
@@ -36,7 +37,11 @@ def parse_arguments():
 
 
 def create_application(arguments):
-	database_client_factory = environment.create_database_client_factory(arguments.database)
+	database_metadata = None
+	if arguments.database.startswith("postgresql://"):
+		database_metadata = importlib.import_module("bhamon_orchestra_model.database.sql_database_model").metadata
+
+	database_client_factory = environment.create_database_client_factory(arguments.database, database_metadata)
 	file_storage_instance = FileStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 
