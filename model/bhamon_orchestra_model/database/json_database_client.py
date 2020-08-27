@@ -158,5 +158,5 @@ class JsonDatabaseClient(DatabaseClient):
 				reverse = False
 			elif direction in [ "desc", "descending" ]:
 				reverse = True
-			row_collection = sorted(row_collection, key = lambda x: x[key], reverse = reverse) # pylint: disable = cell-var-from-loop
+			row_collection = sorted(row_collection, key = lambda x: (x[key] is not None, x[key]), reverse = reverse) # pylint: disable = cell-var-from-loop
 		return row_collection
