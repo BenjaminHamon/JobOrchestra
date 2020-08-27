@@ -24,8 +24,10 @@ def test_single(tmpdir, database_type):
 
 			database_client.insert_one(table, record)
 			assert database_client.count(table, {}) == 1
+			assert database_client.find_one(table, {}) == record
 
 			database_client.delete_one(table, record)
+			assert database_client.find_one(table, {}) is None
 			assert database_client.count(table, {}) == 0
 
 
@@ -44,12 +46,29 @@ def test_many(tmpdir, database_type):
 			assert database_client.count(table, {}) == 0
 
 			database_client.insert_many(table, [ first_record, second_record, third_record ])
-			assert database_client.find_many(table, {}) == [ first_record, second_record, third_record ]
 			assert database_client.count(table, {}) == 3
+			assert database_client.find_many(table, {}) == [ first_record, second_record, third_record ]
 
 			database_client.delete_one(table, third_record)
-			assert database_client.find_many(table, {}) == [ first_record, second_record ]
 			assert database_client.count(table, {}) == 2
+			assert database_client.find_many(table, {}) == [ first_record, second_record ]
+
+
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_find_with_inner_key(tmpdir, database_type):
+	""" Test finding a record using an inner key """
+
+	table = "record_document"
+	record = { "id": 1, "key": "value", "data": { "inner_key": "inner_value" } }
+
+	with context.DatabaseContext(tmpdir, database_type) as context_instance:
+		with context_instance.database_client_factory() as database_client:
+
+			assert database_client.count(table, {}) == 0
+
+			database_client.insert_one(table, record)
+			assert database_client.count(table, { "data.inner_key": "inner_value" }) == 1
+			assert database_client.find_one(table, { "data.inner_key": "inner_value" }) == record
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
@@ -119,6 +138,35 @@ def test_order_by_many(tmpdir, database_type):
 			assert database_client.count(table, {}) == len(all_records)
 			assert database_client.find_many(table, {}) == all_records
 			assert database_client.find_many(table, {}, order_by = order_by) == sorted_records
+
+
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_order_by_with_inner_key(tmpdir, database_type):
+	""" Test ordering records using an inner key """
+
+	table = "record_document"
+
+	all_records = [
+		{ "id": 1, "data": { "inner_key": "inner_value_1" } },
+		{ "id": 2, "data": { "inner_key": "inner_value_3" } },
+		{ "id": 3, "data": { "inner_key": None } },
+		{ "id": 4, "data": {} },
+		{ "id": 5, "data": { "inner_key": None } },
+		{ "id": 6, "data": { "inner_key": "inner_value_2" } },
+	]
+
+	sorted_records = sorted(all_records, key = lambda x: (x["data"].get("inner_key", None) is not None, x["data"].get("inner_key", None)))
+
+	with context.DatabaseContext(tmpdir, database_type) as context_instance:
+		with context_instance.database_client_factory() as database_client:
+
+			assert database_client.count(table, {}) == 0
+
+			database_client.insert_many(table, all_records)
+
+			assert database_client.count(table, {}) == len(all_records)
+			assert database_client.find_many(table, {}) == all_records
+			assert database_client.find_many(table, {}, order_by = [ "data.inner_key" ]) == sorted_records
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
