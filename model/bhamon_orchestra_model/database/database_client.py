@@ -65,7 +65,9 @@ class DatabaseClient(abc.ABC):
 
 		normalized_expression = []
 		for item in expression:
-			if len(item) == 1:
+			if isinstance(item, str):
+				normalized_expression.append((item, "ascending"))
+			elif len(item) == 1:
 				normalized_expression.append((item[0], "ascending"))
 			elif len(item) == 2:
 				if item[1] not in [ "asc", "ascending", "desc", "descending" ]:
