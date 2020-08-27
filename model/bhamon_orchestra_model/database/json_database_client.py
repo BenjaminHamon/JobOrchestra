@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 
@@ -158,5 +158,17 @@ class JsonDatabaseClient(DatabaseClient):
 				reverse = False
 			elif direction in [ "desc", "descending" ]:
 				reverse = True
-			row_collection = sorted(row_collection, key = lambda x: (x[key] is not None, x[key]), reverse = reverse) # pylint: disable = cell-var-from-loop
+			sort_lambda = lambda x: (self._get_value(x, key) is not None, self._get_value(x, key)) # pylint: disable = cell-var-from-loop
+			row_collection = sorted(row_collection, key = sort_lambda, reverse = reverse)
 		return row_collection
+
+
+	def _get_value(self, row: dict, key: str) -> Any: # pylint: disable = no-self-use
+		""" Get a value from the item using its key """
+
+		data = row
+		for key_part in key.split("."):
+			if key_part not in data.keys():
+				return None
+			data = data[key_part]
+		return data
