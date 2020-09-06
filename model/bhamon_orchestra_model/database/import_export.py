@@ -16,8 +16,9 @@ def import_database(database_client: DatabaseClient, source_directory: str, simu
 	if not os.path.exists(source_directory):
 		raise ValueError("Source directory does not exist: '%s'" % source_directory)
 
-	all_tables = [ "project", "job", "schedule", "run", "worker" ]
+	all_tables = []
 	all_tables += [ "user", "user_authentication" ]
+	all_tables += [ "project", "job", "run", "schedule", "worker" ]
 
 	check_if_empty(database_client, all_tables)
 
