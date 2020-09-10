@@ -84,7 +84,7 @@ def get_test_context_database_uri(temporary_directory, database_type):
 	if database_type == "mongo":
 		return "mongodb://127.0.0.1:27017/" + database_name
 	if database_type == "postgresql":
-		return "postgresql://127.0.0.1:5432/" + database_name
+		return "postgresql:///" + database_name
 	raise ValueError("Unsupported database type '%s'" % database_type)
 
 
