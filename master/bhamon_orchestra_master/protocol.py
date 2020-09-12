@@ -1,11 +1,12 @@
 import base64
 import logging
-import http
 
-from typing import Any, Awaitable, Callable
+from http import HTTPStatus as HttpStatus
+from typing import Any, Awaitable, Callable, Optional
 
-import websockets
-import websockets.http
+from websockets.http import Headers
+from websockets.server import HTTPResponse as HttpResponse
+from websockets.server import WebSocketServerProtocol as BaseWebSocketServerProtocol
 
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
@@ -16,7 +17,7 @@ from bhamon_orchestra_model.user_provider import UserProvider
 logger = logging.getLogger("WebSocket")
 
 
-class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
+class WebSocketServerProtocol(BaseWebSocketServerProtocol):
 	""" WebSocket server protocol implementation, extended to process connections from workers """
 
 
@@ -36,7 +37,7 @@ class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 		self.worker = None
 
 
-	async def process_request(self, path: str, request_headers: websockets.http.Headers) -> tuple: # pylint: disable = invalid-overridden-method
+	async def process_request(self, path: str, request_headers: Headers) -> Optional[HttpResponse]:
 		""" Process the incoming HTTP request """
 
 		try:
@@ -44,7 +45,7 @@ class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 				with self._database_client_factory() as database_client:
 					self._authorize_request(database_client, request_headers)
 			except ValueError as exception:
-				raise HttpError(http.HTTPStatus.UNAUTHORIZED) from exception
+				raise HttpError(HttpStatus.UNAUTHORIZED) from exception
 		except HttpError as exception:
 			logger.error("Request error: %s (%s)", exception.status.phrase, exception.status.value, exc_info = True)
 			return (exception.status, [], (exception.status.phrase + "\n").encode())
@@ -52,15 +53,15 @@ class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 		return await super().process_request(path, request_headers)
 
 
-	def _authorize_request(self, database_client: DatabaseClient, request_headers: websockets.http.Headers) -> None:
+	def _authorize_request(self, database_client: DatabaseClient, request_headers: Headers) -> None:
 		""" Check if the websocket connection is authorized and can proceed, otherwise raise an HTTP error """
 
 		if "Authorization" not in request_headers or "X-Orchestra-Worker" not in request_headers:
-			raise HttpError(http.HTTPStatus.FORBIDDEN)
+			raise HttpError(HttpStatus.FORBIDDEN)
 
 		self.worker = request_headers["X-Orchestra-Worker"]
 		if not self.worker:
-			raise HttpError(http.HTTPStatus.FORBIDDEN)
+			raise HttpError(HttpStatus.FORBIDDEN)
 
 		self.user = self._authorize_worker(database_client, request_headers["Authorization"])
 
@@ -70,15 +71,15 @@ class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 
 		authentication_type, authentication_data = authorization.split(" ", 1)
 		if authentication_type != "Basic":
-			raise HttpError(http.HTTPStatus.FORBIDDEN)
+			raise HttpError(HttpStatus.FORBIDDEN)
 
 		user, secret = base64.b64decode(authentication_data.encode()).decode().split(":", 1)
 		if not self._authentication_provider.authenticate_with_token(database_client, user, secret):
-			raise HttpError(http.HTTPStatus.UNAUTHORIZED)
+			raise HttpError(HttpStatus.UNAUTHORIZED)
 
 		user_record = self._user_provider.get(database_client, user)
 		if not self._authorization_provider.authorize_worker(user_record):
-			raise HttpError(http.HTTPStatus.FORBIDDEN)
+			raise HttpError(HttpStatus.FORBIDDEN)
 
 		return user
 
@@ -87,6 +88,6 @@ class WebSocketServerProtocol(websockets.WebSocketServerProtocol):
 class HttpError(Exception):
 	""" Exception class for HTTP errors """
 
-	def __init__(self, status: http.HTTPStatus):
+	def __init__(self, status: HttpStatus):
 		super().__init__()
 		self.status = status

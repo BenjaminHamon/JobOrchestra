@@ -23,8 +23,8 @@ parameters.update({
 		"bhamon_orchestra_worker/revision_control",
 	],
 
-	"python_requires": "~= 3.5",
-	"install_requires": [ "filelock ~= 3.0", "requests ~= 2.23", "websockets ~= 7.0" ],
+	"python_requires": "~= 3.7",
+	"install_requires": [ "filelock ~= 3.0", "requests ~= 2.24", "websockets ~= 8.1" ],
 })
 
 setuptools.setup(**parameters)
