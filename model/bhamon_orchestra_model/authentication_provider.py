@@ -1,6 +1,5 @@
 import datetime
 import hashlib
-import hmac
 import logging
 import secrets
 import uuid
@@ -67,7 +66,7 @@ class AuthenticationProvider:
 		if authentication is None:
 			return False
 		hashed_password = self.hash_password(password, authentication["hash_function_salt"], authentication["hash_function"], authentication["hash_function_parameters"])
-		return hmac.compare_digest(hashed_password, authentication["secret"])
+		return secrets.compare_digest(hashed_password, authentication["secret"])
 
 
 	def authenticate_with_token(self, database_client: DatabaseClient, user_identifier: str, secret: str) -> bool:
@@ -77,7 +76,7 @@ class AuthenticationProvider:
 		for token in user_tokens:
 			if token["expiration_date"] is None or token["expiration_date"] > now:
 				hashed_secret = self.hash_token(secret, token["hash_function"], token["hash_function_parameters"])
-				if hashed_secret == token["secret"]:
+				if secrets.compare_digest(hashed_secret, token["secret"]):
 					return True
 
 		return False
