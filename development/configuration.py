@@ -36,6 +36,7 @@ def load_configuration(environment):
 	configuration["project_identifier_for_artifact_server"] = "JobOrchestra"
 
 	configuration["artifact_directory"] = "artifacts"
+	configuration["temporary_directory"] = os.path.join("artifacts", "temporary")
 
 	configuration["filesets"] = load_filesets(configuration)
 	configuration["artifacts"] = load_artifacts(configuration)
