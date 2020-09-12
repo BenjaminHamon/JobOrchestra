@@ -26,7 +26,7 @@ class SqlDatabaseClient(DatabaseClient):
 		""" Return how many items are in a table, after applying a filter """
 
 		where_clause = self._convert_filter(table, filter)
-		query = self.metadata.tables[table].count().where(where_clause)
+		query = sqlalchemy.select([ sqlalchemy.func.count() ]).select_from(self.metadata.tables[table]).where(where_clause)
 		return self.connection.execute(query).scalar()
 
 
