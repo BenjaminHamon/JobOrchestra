@@ -18,7 +18,7 @@ parameters.update({
 	"name": "bhamon-orchestra-cli",
 	"description": "Command line interpreter component for Job Orchestra, to interact with the master from a terminal",
 	"packages": [ "bhamon_orchestra_cli" ],
-	"python_requires": "~= 3.5",
+	"python_requires": "~= 3.7",
 })
 
 setuptools.setup(**parameters)

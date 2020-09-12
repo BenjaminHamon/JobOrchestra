@@ -25,8 +25,8 @@ parameters.update({
 		"bhamon_orchestra_model/revision_control",
 	],
 
-	"python_requires": "~= 3.5",
-	"install_requires": [ "python-dateutil ~= 2.8", "python2-secrets ~= 1.0 ; python_version < '3.6'" ],
+	"python_requires": "~= 3.7",
+	"install_requires": [ "python-dateutil ~= 2.8" ],
 })
 
 setuptools.setup(**parameters)

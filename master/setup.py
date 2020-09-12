@@ -18,7 +18,7 @@ parameters.update({
 	"name": "bhamon-orchestra-master",
 	"description": "Master component for Job Orchestra, responsible for supervising workers and runs",
 	"packages": [ "bhamon_orchestra_master" ],
-	"python_requires": "~= 3.5",
+	"python_requires": "~= 3.7",
 	"install_requires": [ "pycron ~= 3.0", "websockets ~= 7.0" ],
 })
 
