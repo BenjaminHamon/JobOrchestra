@@ -14,7 +14,7 @@
 		</div>
 			{% if authorize_view("worker-actions") %}
 		<form method="post">
-				{% if worker.get('should_disconnect', false) %}
+				{% if worker['should_disconnect'] %}
 			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}" disabled>Disconnecting</button>
 				{% else %}
 			<button formaction="{{ url_for('worker_controller.disconnect', worker_identifier = worker['identifier']) }}">Disconnect</button>

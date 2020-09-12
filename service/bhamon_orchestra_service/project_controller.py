@@ -100,7 +100,11 @@ def get_revision_status(project_identifier, revision_reference):
 	run_collection = flask.current_app.run_provider.get_list_as_documents(database_client, **run_query_parameters)
 
 	for run in run_collection:
-		revision_identifier = run.get("results", {}).get("revision_control", {}).get("revision", None)
+		revision_identifier = None
+
+		if revision_identifier is None and run["results"] is not None:
+			revision_identifier = run["results"].get("revision_control", {}).get("revision", None)
+
 		if revision_identifier is None and run["status"] in [ "pending", "running" ]:
 			try:
 				revision_identifier = revision_control_client.get_revision(repository, run["parameters"]["revision"])["identifier"]
@@ -156,7 +160,11 @@ def get_project_status(project_identifier):
 		revision["runs"] = []
 
 	for run in run_collection:
-		revision_identifier = run.get("results", {}).get("revision_control", {}).get("revision", None)
+		revision_identifier = None
+
+		if revision_identifier is None and run["results"] is not None:
+			revision_identifier = run["results"].get("revision_control", {}).get("revision", None)
+
 		if revision_identifier is None and run["status"] in [ "pending", "running" ]:
 			try:
 				revision_identifier = revision_control_client.get_revision(repository, run["parameters"]["revision"])["identifier"]

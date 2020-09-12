@@ -37,11 +37,11 @@ def show(user_identifier): # pylint: disable = unused-argument
 
 	if flask.current_app.authorization_provider.authorize_view(flask.request.user, "user-security"):
 		user_tokens = service_client.get("/user/{user_identifier}/token_collection".format(**locals()), { "order_by": [ "update_date descending" ] })
-		user_tokens.sort(key = lambda token: "expiration_date" in token)
+		user_tokens.sort(key = lambda token: token["expiration_date"] is not None)
 
 		now = flask.current_app.date_time_provider.serialize(flask.current_app.date_time_provider.now())
 		for token in user_tokens:
-			token["is_active"] = token["expiration_date"] > now if "expiration_date" in token else True
+			token["is_active"] = token["expiration_date"] > now if token["expiration_date"] is not None else True
 
 		view_data["user_tokens"] = user_tokens
 
