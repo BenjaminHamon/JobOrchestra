@@ -24,7 +24,7 @@ parameters.update({
 	],
 
 	"python_requires": "~= 3.7",
-	"install_requires": [ "filelock ~= 3.0", "requests ~= 2.24", "websockets ~= 7.0" ],
+	"install_requires": [ "filelock ~= 3.0", "requests ~= 2.24", "websockets ~= 8.1" ],
 })
 
 setuptools.setup(**parameters)
