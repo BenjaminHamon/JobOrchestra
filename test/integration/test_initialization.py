@@ -71,7 +71,7 @@ def test_service(tmpdir, database_type):
 		service_process = context_instance.invoke_service()
 
 	assert_extensions.assert_multi_process([
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": service_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
 	])
 
 
@@ -82,5 +82,5 @@ def test_website(tmpdir):
 		website_process = context_instance.invoke_website()
 
 	assert_extensions.assert_multi_process([
-		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": website_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
 	])

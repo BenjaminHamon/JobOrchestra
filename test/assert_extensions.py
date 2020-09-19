@@ -1,5 +1,6 @@
 import platform
 import re
+import signal
 import sys
 import time
 
@@ -7,10 +8,6 @@ import pytest
 
 
 STATUS_CONTROL_C_EXIT = 0xC000013A # pylint: disable = invalid-name
-
-
-def get_flask_exit_code():
-	return STATUS_CONTROL_C_EXIT if platform.system() == "Windows" else 0
 
 
 def wait_for_condition(condition_function, timeout_seconds = 10, delay_seconds = 0.1):
@@ -43,9 +40,17 @@ def assert_multi_process(process_information_collection):
 			sys.stderr.write("\n\n")
 
 	for process_information in process_information_collection:
+		all_expected_result_codes = [ process_information["expected_result_code"] ]
+
+		# Check for exit codes from signals
+		if platform.system() == "Windows" and process_information["expected_result_code"] == 0:
+			all_expected_result_codes += [ STATUS_CONTROL_C_EXIT ]
+		if platform.system() != "Windows" and process_information["expected_result_code"] == 0:
+			all_expected_result_codes += [ - signal.SIGINT, - signal.SIGTERM ]
+
 		if process_information["result_code"] is None:
 			pytest.fail("Process %s did not complete" % process_information["process"]["identifier"])
-		if process_information["result_code"] != process_information["expected_result_code"]:
+		if process_information["result_code"] not in all_expected_result_codes:
 			pytest.fail("Process %s completed with result code %s, expected %s"
 				% (process_information["process"]["identifier"], process_information["result_code"], process_information["expected_result_code"]))
 		assert_log(process_information["stderr"], process_information["log_format"], process_information["expected_messages"])

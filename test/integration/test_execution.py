@@ -259,7 +259,7 @@ def test_job_controller_success(tmpdir, database_type):
 
 	assert_extensions.assert_multi_process([
 		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": service_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
 		{ "process": controller_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": controller_expected_messages },
 		{ "process": worker_01_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
 		{ "process": worker_02_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
@@ -309,7 +309,7 @@ def test_job_controller_failure(tmpdir, database_type):
 
 	assert_extensions.assert_multi_process([
 		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": service_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
 		{ "process": controller_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": controller_expected_messages },
 		{ "process": worker_01_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
 		{ "process": worker_02_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
