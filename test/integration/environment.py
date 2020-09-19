@@ -14,7 +14,7 @@ from bhamon_orchestra_model.database.sql_database_administration import SqlDatab
 from bhamon_orchestra_model.database.sql_database_client import SqlDatabaseClient
 
 
-log_format = "[{levelname}][{name}] {message}"
+log_format = "{asctime} [{levelname}][{name}] {message}"
 
 
 def configure_logging(log_level):
