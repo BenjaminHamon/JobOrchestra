@@ -1,6 +1,7 @@
 import platform
 import re
 import sys
+import time
 
 import pytest
 
@@ -10,6 +11,15 @@ STATUS_CONTROL_C_EXIT = 0xC000013A # pylint: disable = invalid-name
 
 def get_flask_exit_code():
 	return STATUS_CONTROL_C_EXIT if platform.system() == "Windows" else 0
+
+
+def wait_for_condition(condition_function, timeout_seconds = 10, delay_seconds = 0.1):
+	start_time = time.time()
+
+	while not condition_function():
+		if time.time() > (start_time + timeout_seconds):
+			raise TimeoutError
+		time.sleep(delay_seconds)
 
 
 def assert_multi_process(process_information_collection):

@@ -27,14 +27,17 @@ def test_schedule(tmpdir, database_type):
 				database_client, "success_continuous", project_identifier, "Success Continuous", job_identifier, {}, "* * * * *")
 			context_instance.schedule_provider.update_status(database_client, schedule, is_enabled = True)
 
-		time.sleep(1)
+			condition_function = lambda: context_instance.schedule_provider.get(database_client, schedule["project"], schedule["identifier"])["last_run"] is not None
+			assert_extensions.wait_for_condition(condition_function)
 
-		with context_instance.database_client_factory() as database_client:
 			context_instance.schedule_provider.update_status(database_client, schedule, is_enabled = False)
+			schedule = context_instance.schedule_provider.get(database_client, schedule["project"], schedule["identifier"])
+			run = context_instance.run_provider.get(database_client, schedule["project"], schedule["last_run"])
 
-		time.sleep(5)
+			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
+			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
+			time.sleep(1)
 
-		with context_instance.database_client_factory() as database_client:
 			schedule = context_instance.schedule_provider.get(database_client, schedule["project"], schedule["identifier"])
 			run = context_instance.run_provider.get(database_client, schedule["project"], schedule["last_run"])
 

@@ -23,12 +23,7 @@ def test_job_success(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
-
-		time.sleep(5)
-
-		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -70,12 +65,7 @@ def test_job_failure(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
-
-		time.sleep(5)
-
-		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -117,12 +107,7 @@ def test_job_exception(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
-
-		time.sleep(5)
-
-		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -165,9 +150,10 @@ def test_run_cancel(tmpdir, database_type):
 			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
 			context_instance.run_provider.update_status(database_client, run, should_cancel = True)
 
-		time.sleep(2)
+			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
+			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
+			time.sleep(1)
 
-		with context_instance.database_client_factory() as database_client:
 			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
 	master_expected_messages = [
@@ -200,9 +186,10 @@ def test_run_abort(tmpdir, database_type):
 			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
 			context_instance.run_provider.update_status(database_client, run, should_abort = True)
 
-		time.sleep(5)
+			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
+			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
+			time.sleep(1)
 
-		with context_instance.database_client_factory() as database_client:
 			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
 	master_expected_messages = [
@@ -249,12 +236,7 @@ def test_job_controller_success(tmpdir, database_type):
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
-
-		time.sleep(10)
-
-		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 			all_runs = context_instance.run_provider.get_list(database_client)
 
 	master_expected_messages = [
@@ -304,12 +286,7 @@ def test_job_controller_failure(tmpdir, database_type):
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
-
-		time.sleep(10)
-
-		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 			all_runs = context_instance.run_provider.get_list(database_client)
 
 	master_expected_messages = [
@@ -340,3 +317,13 @@ def test_job_controller_failure(tmpdir, database_type):
 
 	assert run["status"] == "failed"
 	assert len(all_runs) == 3
+
+
+def run_and_wait(run_provider, database_client, project_identifier, job_identifier):
+	run = run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+
+	condition_function = lambda: run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
+	assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
+	time.sleep(1)
+
+	return run_provider.get(database_client, run["project"], run["identifier"])

@@ -21,7 +21,10 @@ def test_worker_disconnection(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		os.kill(worker_process["process"].pid, context.shutdown_signal)
-		time.sleep(1) # Wait for disconnection
+
+		with context_instance.database_client_factory() as database_client:
+			condition_function = lambda: not context_instance.worker_provider.get(database_client, "worker_01")["is_active"]
+			assert_extensions.wait_for_condition(condition_function)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
@@ -56,7 +59,12 @@ def test_master_disconnection(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		os.kill(master_process["process"].pid, context.shutdown_signal)
-		time.sleep(1) # Wait for disconnection
+
+		with context_instance.database_client_factory() as database_client:
+			condition_function = lambda: not context_instance.worker_provider.get(database_client, "worker_01")["is_active"]
+			assert_extensions.wait_for_condition(condition_function)
+
+		time.sleep(1)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
