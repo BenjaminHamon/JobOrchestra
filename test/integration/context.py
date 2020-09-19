@@ -25,7 +25,7 @@ from bhamon_orchestra_model.worker_provider import WorkerProvider
 from . import environment
 
 
-shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT # pylint: disable = no-member
+shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGTERM # pylint: disable = no-member
 subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 
