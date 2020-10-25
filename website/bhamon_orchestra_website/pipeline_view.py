@@ -223,3 +223,8 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 			svg_commands.append("L %s %s" % point)
 
 		return " ".join(svg_commands)
+
+
+
+def build_pipeline_view(pipeline):
+	return PipelineViewBuilder(pipeline).build()

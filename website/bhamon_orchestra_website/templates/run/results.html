@@ -1,3 +1,13 @@
+{% import 'run/macros.html' as run_macros %}
+
+{% if 'pipeline' in run_results %}
+<section>
+	<h2>Pipeline</h2>
+	{% set pipeline_view = run_results['pipeline'] | build_pipeline_view %}
+	{{ run_macros.pipeline_svg(pipeline_view) }}
+</section>
+{% endif %}
+
 <section>
 	<h2>Results</h2>
 	<ul>

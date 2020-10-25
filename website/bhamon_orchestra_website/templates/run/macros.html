@@ -55,3 +55,54 @@
 	{% endif %}
 </form>
 {% endmacro %}
+
+{% macro pipeline_svg(pipeline) %}
+{% set cell_width = pipeline['cell_width'] %}
+{% set cell_height = pipeline['cell_height'] %}
+{% set cell_padding = pipeline['cell_padding'] %}
+
+<svg class="pipeline" width="{{ pipeline['grid_width'] }}" height="{{ pipeline['grid_height'] }}">
+
+	<style>
+		.cell-border
+		{
+			visibility: hidden;
+			fill: none;
+			stroke: gray;
+		}
+
+		.node-border
+		{
+			fill: none;
+			stroke: black;
+			rx: 4;
+		}
+
+		.node-text
+		{
+			dominant-baseline: middle;
+			font-size: small;
+		}
+
+		.edge
+		{
+			fill: none;
+		}
+	</style>
+
+	{% for node in pipeline['nodes'] %}
+		{% set cell_x = cell_width * node['column'] %}
+		{% set cell_y = cell_height * node['row'] %}
+	<!-- Node '{{ node['identifier'] }}' -->
+	<rect class="cell-border" x="{{ cell_x }}" y="{{ cell_y }}" width="{{ cell_width }}" height="{{ cell_height }}"/>
+	<rect class="node-border" x="{{ cell_x + cell_padding }}" y="{{ (cell_y + cell_padding / 2) | int }}" width="{{ cell_width - cell_padding * 2 }}" height="{{ cell_height - cell_padding }}"/>
+	<text class="node-text" x="{{ cell_x + cell_padding + 10 }}" y="{{ (cell_y + cell_height / 2) | int }}">{{ node['identifier'] }}</text>
+	{% endfor %}
+
+	{% for edge in pipeline['edges'] %}
+	<!-- Edge from '{{ edge['start']['identifier'] }}' to '{{ edge['end']['identifier'] }}' -->
+	<path class="edge" stroke="{{ edge['color'] }}" d="{{ edge['path_svg'] }}"/>
+	{% endfor %}
+
+</svg>
+{% endmacro %}
