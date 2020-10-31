@@ -36,7 +36,16 @@ class Worker:
 
 		with self._database_client_factory() as database_client:
 			self._run_provider.update_status(database_client, run, worker = self.identifier)
-		executor = { "job": job, "run": run, "local_status": "pending", "synchronization": "unknown", "should_abort": False }
+
+		executor = {
+			"job": job,
+			"run": run,
+			"local_status": "pending",
+			"synchronization": "unknown",
+			"received_updates": [],
+			"should_abort": False,
+		}
+
 		self.executors.append(executor)
 
 
@@ -133,6 +142,10 @@ class Worker:
 			await self._finish_execution(executor["run"])
 			executor["local_status"] = "done"
 
+		for update in executor["received_updates"]:
+			await self._process_update(database_client,executor, update)
+		executor["received_updates"].clear()
+
 
 	async def _recover_execution(self, database_client: DatabaseClient, run_identifier: str) -> dict:
 		""" Recover the state for an executor from the remote worker """
@@ -140,7 +153,15 @@ class Worker:
 		logger.info("(%s) Recovering run %s", self.identifier, run_identifier)
 		run_request = await self._retrieve_request(run_identifier)
 		run = self._run_provider.get(database_client, run_request["job"]["project"], run_identifier)
-		return { "job": run_request["job"], "run": run, "local_status": "running", "synchronization": "unknown", "should_abort": False }
+
+		return {
+			"job": run_request["job"],
+			"run": run,
+			"local_status": "running",
+			"synchronization": "unknown",
+			"received_updates": [],
+			"should_abort": False,
+		}
 
 
 	async def _start_execution(self, run: dict, job: dict) -> None:
@@ -190,7 +211,7 @@ class Worker:
 		return await self._execute_remote_command("request", parameters)
 
 
-	async def handle_update(self, update: dict) -> None:
+	async def receive_update(self, update: dict) -> None:
 		""" Process an incoming update from the remote worker """
 
 		executor = self._find_executor(update["run"])
@@ -198,15 +219,18 @@ class Worker:
 		if executor["local_status"] == "finishing":
 			raise RuntimeError("Update received after completion and verification")
 
-		with self._database_client_factory() as database_client:
-			if "status" in update:
-				self._update_status(database_client, executor["run"], update["status"])
-			if "results" in update:
-				self._update_results(database_client, executor["run"], update["results"])
-			if "log_chunk" in update:
-				self._update_log_file(database_client, executor["run"], update["step_index"], update["log_chunk"])
-			if "event" in update:
-				self._handle_event(executor, update["event"])
+		executor["received_updates"].append(update)
+
+
+	async def _process_update(self, database_client: DatabaseClient, executor: dict, update: dict) -> None:
+		if "status" in update:
+			self._update_status(database_client, executor["run"], update["status"])
+		if "results" in update:
+			self._update_results(database_client, executor["run"], update["results"])
+		if "log_chunk" in update:
+			self._update_log_file(database_client, executor["run"], update["step_index"], update["log_chunk"])
+		if "event" in update:
+			self._handle_event(executor, update["event"])
 
 
 	def _update_status(self, database_client: DatabaseClient, run: dict, status: dict) -> None:

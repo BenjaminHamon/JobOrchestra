@@ -177,5 +177,5 @@ class Supervisor:
 		""" Instantiate a new worker object to watch the remote worker process """
 
 		worker_instance = Worker(worker_identifier, messenger_instance, self._database_client_factory, self._run_provider)
-		messenger_instance.update_handler = worker_instance.handle_update
+		messenger_instance.update_handler = worker_instance.receive_update
 		return worker_instance
