@@ -23,6 +23,7 @@ from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 from . import environment
+from . import factory
 
 
 shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGINT # pylint: disable = no-member
@@ -43,8 +44,8 @@ class DatabaseContext:
 		if self.database_uri.startswith("postgresql://"):
 			self.metadata = metadata_factory()
 
-		self.database_administration_factory = environment.create_database_administration_factory(self.database_uri, self.metadata)
-		self.database_client_factory = environment.create_database_client_factory(self.database_uri, self.metadata)
+		self.database_administration_factory = factory.create_database_administration_factory(self.database_uri, self.metadata)
+		self.database_client_factory = factory.create_database_client_factory(self.database_uri, self.metadata)
 
 
 	def __enter__(self):
@@ -96,8 +97,8 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 			date_time_provider_instance = DateTimeProvider()
 
-			self.database_administration_factory = environment.create_database_administration_factory(self.database_uri, sql_database_model.metadata)
-			self.database_client_factory = environment.create_database_client_factory(self.database_uri, sql_database_model.metadata)
+			self.database_administration_factory = factory.create_database_administration_factory(self.database_uri, sql_database_model.metadata)
+			self.database_client_factory = factory.create_database_client_factory(self.database_uri, sql_database_model.metadata)
 			self.file_storage = FileStorage(os.path.join(self.temporary_directory, "master"))
 
 			self.authentication_provider = AuthenticationProvider(date_time_provider_instance)

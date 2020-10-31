@@ -19,6 +19,7 @@ import bhamon_orchestra_cli.admin_controller as admin_controller
 import bhamon_orchestra_cli.database_controller as database_controller
 
 import environment
+import factory
 
 
 logger = logging.getLogger("Main")
@@ -52,8 +53,8 @@ def create_application(arguments):
 	if arguments.database.startswith("postgresql://"):
 		database_metadata = importlib.import_module("bhamon_orchestra_model.database.sql_database_model").metadata
 
-	database_administration_factory = environment.create_database_administration_factory(arguments.database, database_metadata)
-	database_client_factory = environment.create_database_client_factory(arguments.database, database_metadata)
+	database_administration_factory = factory.create_database_administration_factory(arguments.database, database_metadata)
+	database_client_factory = factory.create_database_client_factory(arguments.database, database_metadata)
 	file_storage_instance = FileStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 
