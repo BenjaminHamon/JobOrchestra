@@ -46,8 +46,10 @@ class AuthorizationProvider:
 	def build_user_roles(self, user: Optional[dict]) -> List[object]: # pylint: disable = no-self-use
 		""" Instantiate user role classes based on a user record """
 
-		if user is None or not user["is_enabled"]:
+		if user is None:
 			return [ user_role_classes.Anonymous() ]
+		if not user["is_enabled"]:
+			return [ user_role_classes.Default() ]
 
 		user_roles = [ user_role_classes.Default() ]
 

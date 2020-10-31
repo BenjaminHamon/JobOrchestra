@@ -20,10 +20,6 @@ def login():
 	if not flask.current_app.authentication_provider.authenticate_with_password(database_client, parameters["user"], parameters["password"]):
 		flask.abort(401)
 
-	user = flask.current_app.user_provider.get(database_client, parameters["user"])
-	if not user["is_enabled"]:
-		flask.abort(403)
-
 	token_parameters = {
 		"user": parameters["user"],
 		"description": "Session from %s" % flask.request.environ["REMOTE_ADDR"],

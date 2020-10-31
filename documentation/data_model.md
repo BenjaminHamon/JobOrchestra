@@ -69,7 +69,7 @@ Represents a timed job schedule, so that it gets triggered at specific times.
 * job: the identifier of the job to trigger
 * parameters: the dictionary of parameters to pass with the trigger, as key value pairs
 * expression: the cron expression defining when the job gets triggered
-* is_enabled: the boolean indicating if the schedule is enabled or not, disabled schedules will not trigger runs
+* is_enabled: the boolean indicating if the schedule is enabled or not, a disabled schedule will not trigger runs
 * last_run: the identifier of the last triggered run
 * creation_date: the UTC date at which the schedule was created
 * update_date: the UTC date at which the schedule was updated last
@@ -82,7 +82,7 @@ Represents a user accessing the service, with its authorizations.
 * identifier: the unique string key used to identify the user
 * display_name: the full name displayed in user interfaces
 * roles: the list of roles attributed to the user, which define their authorizations
-* is_enabled: the boolean indicating the user is enabled or not, a disabled user has the same authorizations as an anonymous user
+* is_enabled: the boolean indicating if the user is enabled or not, a disabled user has minimal authorizations
 * creation_date: the UTC date at which the user was created
 * update_date: the UTC date at which the user was updated last
 
