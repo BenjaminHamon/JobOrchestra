@@ -81,6 +81,16 @@ class Worker:
 		return await self._messenger.send_request({ "command": command, "parameters": parameters if parameters is not None else {} })
 
 
+	def _find_executor(self, run_identifier: str) -> dict:
+		""" Retrieve the local object for an active executor """
+
+		for executor in self.executors:
+			if executor["run"]["identifier"] == run_identifier:
+				return executor
+
+		raise KeyError("Executor not found for %s" % run_identifier)
+
+
 	async def _recover_executors(self, database_client: DatabaseClient) -> List[dict]:
 		""" Retrieve the executor list from the remote worker """
 
@@ -197,16 +207,6 @@ class Worker:
 				self._update_log_file(database_client, executor["run"], update["step_index"], update["log_chunk"])
 			if "event" in update:
 				self._handle_event(executor, update["event"])
-
-
-	def _find_executor(self, run_identifier: str) -> dict:
-		""" Retrieve the local object for an active executor """
-
-		for executor in self.executors:
-			if executor["run"]["identifier"] == run_identifier:
-				return executor
-
-		raise KeyError("Executor not found for %s" % run_identifier)
 
 
 	def _update_status(self, database_client: DatabaseClient, run: dict, status: dict) -> None:
