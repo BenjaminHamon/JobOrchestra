@@ -8,6 +8,9 @@ from . import context
 from . import environment
 
 
+log_format = environment.load_environment()["logging_stream_format"]
+
+
 def get_all_user_parameters():
 	return [
 		pytest.param("auditor", [ "Auditor" ], id = "auditor"),
@@ -26,7 +29,7 @@ def test_service_response(tmpdir, database_type):
 		response.raise_for_status()
 
 	assert_extensions.assert_multi_process([
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 	])
 
 
@@ -42,7 +45,7 @@ def test_service_response_with_authorization(tmpdir, database_type, user_identif
 		response.raise_for_status()
 
 	assert_extensions.assert_multi_process([
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 	])
 
 
@@ -95,7 +98,7 @@ def test_service_routes(tmpdir, database_type, user_identifier, user_roles): # p
 			response.raise_for_status()
 
 	assert_extensions.assert_multi_process([
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 	])
 
 
@@ -108,7 +111,7 @@ def test_website_response(tmpdir):
 		response.raise_for_status()
 
 	assert_extensions.assert_multi_process([
-		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 	])
 
 
@@ -130,8 +133,8 @@ def test_website_response_with_authorization(tmpdir, database_type, user_identif
 		response.raise_for_status()
 
 	assert_extensions.assert_multi_process([
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
-		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
+		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 	])
 
 
@@ -183,6 +186,6 @@ def test_website_pages(tmpdir, database_type, user_identifier, user_roles): # py
 			response.raise_for_status()
 
 	assert_extensions.assert_multi_process([
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
-		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
+		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 	])

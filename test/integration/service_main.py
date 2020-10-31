@@ -20,9 +20,13 @@ import bhamon_orchestra_service.service as service
 import environment
 
 
+logger = logging.getLogger("Service")
+
+
 def main():
-	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
+	environment_instance = environment.load_environment()
+	environment.configure_logging(environment_instance, arguments)
 
 	application = create_application(arguments)
 	application.run(host = arguments.address, port = arguments.port)

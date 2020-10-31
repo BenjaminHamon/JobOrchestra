@@ -9,6 +9,9 @@ from . import context
 from . import environment
 
 
+log_format = environment.load_environment()["logging_stream_format"]
+
+
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
 def test_job_success(tmpdir, database_type):
 	""" Test executing a job which should succeed """
@@ -44,8 +47,8 @@ def test_job_success(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": worker_expected_messages },
 	])
 
 	assert run["status"] == "succeeded"
@@ -86,8 +89,8 @@ def test_job_failure(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": worker_expected_messages },
 	])
 
 	assert run["status"] == "failed"
@@ -129,8 +132,8 @@ def test_job_exception(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": worker_expected_messages },
 	])
 
 	assert run["status"] == "exception"
@@ -163,7 +166,7 @@ def test_run_cancel(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
 	])
 
 	assert run["status"] == "cancelled"
@@ -212,8 +215,8 @@ def test_run_abort(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": worker_expected_messages },
 	])
 
 	assert run["status"] == "aborted"
@@ -258,11 +261,11 @@ def test_job_controller_success(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
-		{ "process": controller_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": controller_expected_messages },
-		{ "process": worker_01_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
-		{ "process": worker_02_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
+		{ "process": controller_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": controller_expected_messages },
+		{ "process": worker_01_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": [] },
+		{ "process": worker_02_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": [] },
 	])
 
 	assert run["status"] == "succeeded"
@@ -308,11 +311,11 @@ def test_job_controller_failure(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
-		{ "process": controller_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": controller_expected_messages },
-		{ "process": worker_01_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
-		{ "process": worker_02_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
+		{ "process": controller_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": controller_expected_messages },
+		{ "process": worker_01_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": [] },
+		{ "process": worker_02_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": [] },
 	])
 
 	assert run["status"] == "failed"

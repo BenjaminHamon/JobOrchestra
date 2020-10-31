@@ -10,9 +10,14 @@ from bhamon_orchestra_worker.worker import Worker
 import environment
 
 
+logger = logging.getLogger("Worker")
+
+
 def main():
-	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
+	environment_instance = environment.load_environment()
+	environment.configure_logging(environment_instance, arguments)
+
 	executor_script = os.path.join(os.path.dirname(__file__), "executor_main.py")
 
 	authentication_file_path = os.path.join(os.getcwd(), "authentication.json")

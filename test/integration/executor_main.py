@@ -10,12 +10,15 @@ from bhamon_orchestra_worker.executor import Executor
 import environment
 
 
+logger = logging.getLogger("Executor")
+
+
 def main():
 	arguments = parse_arguments()
-	environment.configure_logging(logging.INFO)
 	environment_instance = environment.load_environment()
 	environment_instance["script_root"] = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
 	environment_instance["orchestra_worker_authentication"] = os.path.join(os.getcwd(), "authentication.json")
+	environment.configure_logging(environment_instance, arguments)
 
 	with filelock.FileLock(os.path.join("runs", arguments.run_identifier, "executor.lock"), 5):
 		executor_instance = create_application(arguments)

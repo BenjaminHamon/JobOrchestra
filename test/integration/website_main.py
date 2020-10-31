@@ -11,10 +11,13 @@ import bhamon_orchestra_website.website as website
 import environment
 
 
+logger = logging.getLogger("Website")
+
+
 def main():
-	environment.configure_logging(logging.INFO)
-	environment_instance = environment.load_environment()
 	arguments = parse_arguments()
+	environment_instance = environment.load_environment()
+	environment.configure_logging(environment_instance, arguments)
 
 	application = create_application(environment_instance)
 	application.run(host = arguments.address, port = arguments.port)

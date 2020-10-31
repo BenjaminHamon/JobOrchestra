@@ -9,6 +9,9 @@ from . import context
 from . import environment
 
 
+log_format = environment.load_environment()["logging_stream_format"]
+
+
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
 def test_schedule(tmpdir, database_type):
 	""" Test executing a job which should succeed """
@@ -55,8 +58,8 @@ def test_schedule(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
-		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": worker_expected_messages },
 	])
 
 	assert schedule["last_run"] is not None

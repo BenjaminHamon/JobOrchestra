@@ -21,9 +21,13 @@ import bhamon_orchestra_cli.database_controller as database_controller
 import environment
 
 
+logger = logging.getLogger("Main")
+
+
 def main():
-	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
+	environment_instance = environment.load_environment()
+	environment.configure_logging(environment_instance, arguments)
 
 	application = create_application(arguments)
 	result = arguments.handler(application, arguments)

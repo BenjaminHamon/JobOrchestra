@@ -25,9 +25,13 @@ import configuration
 import environment
 
 
+logger = logging.getLogger("Master")
+
+
 def main():
-	environment.configure_logging(logging.INFO)
 	arguments = parse_arguments()
+	environment_instance = environment.load_environment()
+	environment.configure_logging(environment_instance, arguments)
 
 	with filelock.FileLock("master.lock", 5):
 		application = create_application(arguments)

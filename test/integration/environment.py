@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import re
@@ -14,11 +15,58 @@ from bhamon_orchestra_model.database.sql_database_administration import SqlDatab
 from bhamon_orchestra_model.database.sql_database_client import SqlDatabaseClient
 
 
-log_format = "{asctime} [{levelname}][{name}] {message}"
+def create_default_environment():
+	return {
+		"logging_stream_level": "info",
+		"logging_stream_format": "{asctime} [{levelname}][{name}] {message}",
+		"logging_stream_date_format": "%Y-%m-%dT%H:%M:%S",
+		"logging_stream_traceback": False,
+
+		"logging_file_level": "debug",
+		"logging_file_format": "{asctime} [{levelname}][{name}] {message}",
+		"logging_file_date_format": "%Y-%m-%dT%H:%M:%S",
+		"logging_file_traceback": True,
+		"logging_file_mode": "w",
+		"logging_file_paths": [],
+
+		"logging_summary_format": "[{levelname}][{name}] {message}",
+		"logging_summary_date_format": "%Y-%m-%dT%H:%M:%S",
+
+		"python3_executable": sys.executable,
+
+		"orchestra_service_url": "http://127.0.0.1:5902",
+	}
 
 
-def configure_logging(log_level):
-	logging.basicConfig(level = log_level, format = log_format, style = "{")
+def load_environment():
+	environment_instance = create_default_environment()
+	environment_instance.update(_load_environment_transform(os.path.join(os.path.expanduser("~"), "environment.json")))
+	environment_instance.update(_load_environment_transform("environment.json"))
+	return environment_instance
+
+
+def _load_environment_transform(transform_file_path):
+	if not os.path.exists(transform_file_path):
+		return {}
+	with open(transform_file_path, mode = "r", encoding = "utf-8") as transform_file:
+		return json.load(transform_file)
+
+
+def configure_logging(environment_instance, arguments):
+	if arguments is not None and getattr(arguments, "verbosity", None) is not None:
+		environment_instance["logging_stream_level"] = arguments.verbosity
+	if arguments is not None and getattr(arguments, "verbosity", None) == "debug":
+		environment_instance["logging_stream_traceback"] = True
+	if arguments is not None and getattr(arguments, "log_file_verbosity", None) is not None:
+		environment_instance["logging_file_level"] = arguments.log_file_verbosity
+	if arguments is not None and getattr(arguments, "log_file", None) is not None:
+		environment_instance["logging_file_paths"].append(arguments.log_file)
+
+	environment_instance["logging_stream_levelno"] = logging.getLevelName(environment_instance["logging_stream_level"].upper())
+	environment_instance["logging_file_levelno"] = logging.getLevelName(environment_instance["logging_file_level"].upper())
+
+	logging.root.setLevel(logging.DEBUG)
+
 	logging.addLevelName(logging.DEBUG, "Debug")
 	logging.addLevelName(logging.INFO, "Info")
 	logging.addLevelName(logging.WARNING, "Warning")
@@ -30,6 +78,29 @@ def configure_logging(log_level):
 	logging.getLogger("urllib3").setLevel(logging.INFO)
 	logging.getLogger("websockets.protocol").setLevel(logging.INFO)
 	logging.getLogger("werkzeug").setLevel(logging.WARNING)
+
+	configure_log_stream(environment_instance, sys.stdout)
+	for log_file_path in environment_instance["logging_file_paths"]:
+		configure_log_file(environment_instance, log_file_path)
+
+
+def configure_log_stream(environment_instance, stream):
+	formatter = logging.Formatter(environment_instance["logging_stream_format"], environment_instance["logging_stream_date_format"], "{")
+	stream_handler = logging.StreamHandler(stream)
+	stream_handler.setLevel(environment_instance["logging_stream_levelno"])
+	stream_handler.formatter = formatter
+	logging.root.addHandler(stream_handler)
+
+
+def configure_log_file(environment_instance, file_path):
+	if os.path.dirname(file_path):
+		os.makedirs(os.path.dirname(file_path), exist_ok = True)
+
+	formatter = logging.Formatter(environment_instance["logging_file_format"], environment_instance["logging_file_date_format"], "{")
+	file_handler = logging.FileHandler(file_path, mode = environment_instance["logging_file_mode"], encoding = "utf-8")
+	file_handler.setLevel(environment_instance["logging_file_levelno"])
+	file_handler.formatter = formatter
+	logging.root.addHandler(file_handler)
 
 
 def create_database_administration_factory(database_uri, database_metadata):
@@ -52,13 +123,6 @@ def create_database_client_factory(database_uri, database_metadata):
 		database_engine = sqlalchemy.create_engine(database_uri)
 		return lambda: SqlDatabaseClient(database_engine.connect(), database_metadata)
 	raise ValueError("Unsupported database uri '%s'" % database_uri)
-
-
-def load_environment():
-	return {
-		"python3_executable": sys.executable,
-		"orchestra_service_url": "http://127.0.0.1:5902",
-	}
 
 
 def load_test_context_environment(temporary_directory, database_type):

@@ -9,6 +9,9 @@ from . import context
 from . import environment
 
 
+log_format = environment.load_environment()["logging_stream_format"]
+
+
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
 def test_master(tmpdir, database_type):
 	""" Test if the master starts successfully """
@@ -22,7 +25,7 @@ def test_master(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": master_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": master_expected_messages },
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
 	])
 
 
@@ -43,7 +46,7 @@ def test_worker(tmpdir, database_type):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": worker_process, "expected_result_code": 0, "log_format": environment.log_format, "expected_messages": worker_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": worker_expected_messages },
 	])
 
 
@@ -59,7 +62,7 @@ def test_executor(tmpdir):
 	]
 
 	assert_extensions.assert_multi_process([
-		{ "process": executor_process, "expected_result_code": 1, "log_format": environment.log_format, "expected_messages": executor_expected_messages },
+		{ "process": executor_process, "expected_result_code": 1, "log_format": log_format, "expected_messages": executor_expected_messages },
 	])
 
 
@@ -71,7 +74,7 @@ def test_service(tmpdir, database_type):
 		service_process = context_instance.invoke_service()
 
 	assert_extensions.assert_multi_process([
-		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 	])
 
 
@@ -82,5 +85,5 @@ def test_website(tmpdir):
 		website_process = context_instance.invoke_website()
 
 	assert_extensions.assert_multi_process([
-		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": environment.log_format, "expected_messages": [] },
+		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 	])
