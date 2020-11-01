@@ -33,8 +33,9 @@ class WebSocketServerProtocol(BaseWebSocketServerProtocol):
 		self._authentication_provider = authentication_provider
 		self._authorization_provider = authorization_provider
 
-		self.user = None
-		self.worker = None
+		self.user_identifier = None
+		self.worker_identifier = None
+		self.worker_version = None
 
 
 	async def process_request(self, path: str, request_headers: Headers) -> Optional[HttpResponse]:
@@ -56,14 +57,18 @@ class WebSocketServerProtocol(BaseWebSocketServerProtocol):
 	def _authorize_request(self, database_client: DatabaseClient, request_headers: Headers) -> None:
 		""" Check if the websocket connection is authorized and can proceed, otherwise raise an HTTP error """
 
-		if "Authorization" not in request_headers or "X-Orchestra-Worker" not in request_headers:
+		if "Authorization" not in request_headers:
 			raise HttpError(HttpStatus.FORBIDDEN)
 
-		self.worker = request_headers["X-Orchestra-Worker"]
-		if not self.worker:
-			raise HttpError(HttpStatus.FORBIDDEN)
+		self.worker_identifier = request_headers.get("X-Orchestra-WorkerIdentifier", None)
+		if self.worker_identifier is None or self.worker_identifier == "":
+			raise HttpError(HttpStatus.BAD_REQUEST)
 
-		self.user = self._authorize_worker(database_client, request_headers["Authorization"])
+		self.worker_version = request_headers.get("X-Orchestra-WorkerVersion", None)
+		if self.worker_version is None or self.worker_version == "":
+			raise HttpError(HttpStatus.BAD_REQUEST)
+
+		self.user_identifier = self._authorize_worker(database_client, request_headers["Authorization"])
 
 
 	def _authorize_worker(self, database_client: DatabaseClient, authorization: str) -> str:

@@ -40,7 +40,7 @@ def test_abort_run_running_connected():
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
 	run_provider_instance = RunProvider(None, date_time_provider_instance)
-	worker_instance = Worker("worker_test", None, lambda: database_client_instance, run_provider_instance)
+	worker_instance = Worker("worker_test", None, lambda: database_client_instance, run_provider_instance, None)
 	supervisor_instance = Supervisor(None, None, None, None, None, None)
 	job_scheduler_instance = JobScheduler(lambda: database_client_instance, None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
 
@@ -69,7 +69,7 @@ def test_abort_run_running_disconnected():
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
 	run_provider_instance = RunProvider(None, date_time_provider_instance)
-	worker_instance = Worker("worker_test", None, lambda: database_client_instance, run_provider_instance)
+	worker_instance = Worker("worker_test", None, lambda: database_client_instance, run_provider_instance, None)
 	supervisor_instance = Supervisor(None, None, None, None, None, None)
 	job_scheduler_instance = JobScheduler(lambda: database_client_instance, None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
 

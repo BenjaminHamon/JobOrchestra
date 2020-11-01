@@ -1,31 +1,32 @@
 import asyncio
 import logging
-
 from typing import Callable, List, Optional
+
+import websockets
 
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 
 logger = logging.getLogger("Worker")
-
-
-class WorkerError(Exception):
-	""" Exception class for worker errors occuring in normal operations """
 
 
 class Worker:
 	""" Watcher for a remote worker process """
 
 
-	def __init__(self, identifier: str, messenger: Messenger,
-			database_client_factory: Callable[[], DatabaseClient], run_provider: RunProvider) -> None:
+	def __init__(self, # pylint: disable = too-many-arguments
+			identifier: str, messenger: Messenger,
+			database_client_factory: Callable[[], DatabaseClient],
+			run_provider: RunProvider, worker_provider: WorkerProvider) -> None:
 
 		self.identifier = identifier
 		self._messenger = messenger
 		self._database_client_factory = database_client_factory
 		self._run_provider = run_provider
+		self._worker_provider = worker_provider
 
 		self.should_disconnect = False
 		self.executors = []
@@ -36,7 +37,16 @@ class Worker:
 
 		with self._database_client_factory() as database_client:
 			self._run_provider.update_status(database_client, run, worker = self.identifier)
-		executor = { "job": job, "run": run, "local_status": "pending", "synchronization": "unknown", "should_abort": False }
+
+		executor = {
+			"job": job,
+			"run": run,
+			"local_status": "pending",
+			"synchronization": "unknown",
+			"received_updates": [],
+			"should_abort": False,
+		}
+
 		self.executors.append(executor)
 
 
@@ -49,6 +59,40 @@ class Worker:
 
 	async def run(self) -> None:
 		""" Perform updates until cancelled """
+
+		messenger_future = asyncio.ensure_future(self._messenger.run())
+		worker_future = asyncio.ensure_future(self._run_worker())
+
+		try:
+			await asyncio.wait([ messenger_future, worker_future ], return_when = asyncio.FIRST_COMPLETED)
+
+		finally:
+			worker_future.cancel()
+			messenger_future.cancel()
+
+			self._messenger.dispose()
+
+			try:
+				await worker_future
+			except asyncio.CancelledError:
+				pass
+			except Exception: # pylint: disable = broad-except
+				logger.error("(%s) Unhandled exception", self.identifier, exc_info = True)
+
+			try:
+				await messenger_future
+			except websockets.exceptions.ConnectionClosed as exception:
+				if exception.code not in [ 1000, 1001 ] and not isinstance(exception.__cause__, asyncio.CancelledError):
+					logger.error("(%s) Lost connection with remote", self.identifier, exc_info = True)
+			except asyncio.CancelledError:
+				pass
+			except Exception as exception: # pylint: disable = broad-except
+				logger.error("(%s) Unhandled exception from messenger", self.identifier, exc_info = True)
+
+
+	async def _run_worker(self) -> None:
+		with self._database_client_factory() as database_client:
+			await self._update_properties(database_client)
 
 		try:
 			with self._database_client_factory() as database_client:
@@ -79,6 +123,21 @@ class Worker:
 	async def _execute_remote_command(self, command: str, parameters: Optional[dict] = None) -> Optional[dict]:
 		""" Execute a command on the remote worker """
 		return await self._messenger.send_request({ "command": command, "parameters": parameters if parameters is not None else {} })
+
+
+	def _find_executor(self, run_identifier: str) -> dict:
+		""" Retrieve the local object for an active executor """
+
+		for executor in self.executors:
+			if executor["run"]["identifier"] == run_identifier:
+				return executor
+
+		raise KeyError("Executor not found for %s" % run_identifier)
+
+
+	async def _update_properties(self, database_client: DatabaseClient) -> None:
+		worker_properties = await self._execute_remote_command("describe")
+		self._worker_provider.update_properties(database_client, { "identifier": self.identifier }, **worker_properties)
 
 
 	async def _recover_executors(self, database_client: DatabaseClient) -> List[dict]:
@@ -123,6 +182,10 @@ class Worker:
 			await self._finish_execution(executor["run"])
 			executor["local_status"] = "done"
 
+		for update in executor["received_updates"]:
+			await self._process_update(database_client,executor, update)
+		executor["received_updates"].clear()
+
 
 	async def _recover_execution(self, database_client: DatabaseClient, run_identifier: str) -> dict:
 		""" Recover the state for an executor from the remote worker """
@@ -130,7 +193,15 @@ class Worker:
 		logger.info("(%s) Recovering run %s", self.identifier, run_identifier)
 		run_request = await self._retrieve_request(run_identifier)
 		run = self._run_provider.get(database_client, run_request["job"]["project"], run_identifier)
-		return { "job": run_request["job"], "run": run, "local_status": "running", "synchronization": "unknown", "should_abort": False }
+
+		return {
+			"job": run_request["job"],
+			"run": run,
+			"local_status": "running",
+			"synchronization": "unknown",
+			"received_updates": [],
+			"should_abort": False,
+		}
 
 
 	async def _start_execution(self, run: dict, job: dict) -> None:
@@ -180,7 +251,7 @@ class Worker:
 		return await self._execute_remote_command("request", parameters)
 
 
-	async def handle_update(self, update: dict) -> None:
+	async def receive_update(self, update: dict) -> None:
 		""" Process an incoming update from the remote worker """
 
 		executor = self._find_executor(update["run"])
@@ -188,25 +259,18 @@ class Worker:
 		if executor["local_status"] == "finishing":
 			raise RuntimeError("Update received after completion and verification")
 
-		with self._database_client_factory() as database_client:
-			if "status" in update:
-				self._update_status(database_client, executor["run"], update["status"])
-			if "results" in update:
-				self._update_results(database_client, executor["run"], update["results"])
-			if "log_chunk" in update:
-				self._update_log_file(database_client, executor["run"], update["step_index"], update["log_chunk"])
-			if "event" in update:
-				self._handle_event(executor, update["event"])
+		executor["received_updates"].append(update)
 
 
-	def _find_executor(self, run_identifier: str) -> dict:
-		""" Retrieve the local object for an active executor """
-
-		for executor in self.executors:
-			if executor["run"]["identifier"] == run_identifier:
-				return executor
-
-		raise KeyError("Executor not found for %s" % run_identifier)
+	async def _process_update(self, database_client: DatabaseClient, executor: dict, update: dict) -> None:
+		if "status" in update:
+			self._update_status(database_client, executor["run"], update["status"])
+		if "results" in update:
+			self._update_results(database_client, executor["run"], update["results"])
+		if "log_chunk" in update:
+			self._update_log_file(database_client, executor["run"], update["step_index"], update["log_chunk"])
+		if "event" in update:
+			self._handle_event(executor, update["event"])
 
 
 	def _update_status(self, database_client: DatabaseClient, run: dict, status: dict) -> None:

@@ -102,16 +102,15 @@ class Worker: # pylint: disable = too-many-instance-attributes
 
 		headers = {
 			"Authorization": "Basic" + " " + authentication_data,
-		 	"X-Orchestra-Worker": self._identifier,
-			"X-Orchestra-Version": bhamon_orchestra_worker.__version__,
+		 	"X-Orchestra-WorkerIdentifier": self._identifier,
+			"X-Orchestra-WorkerVersion": bhamon_orchestra_worker.__version__,
 		}
 
 		await websocket_client_instance.run_forever(self._process_connection, extra_headers = headers)
 
 
 	async def _process_connection(self, connection):
-		messenger_instance = Messenger(connection)
-		messenger_instance.identifier = connection.connection.remote_address
+		messenger_instance = Messenger(connection.connection.remote_address, connection)
 		messenger_instance.request_handler = self._handle_request
 
 		self._messenger = messenger_instance
@@ -192,7 +191,6 @@ class Worker: # pylint: disable = too-many-instance-attributes
 
 	def _describe(self):
 		return {
-			"version": bhamon_orchestra_worker.__version__,
 			"display_name": self._display_name,
 			"properties": self._properties,
 		}
