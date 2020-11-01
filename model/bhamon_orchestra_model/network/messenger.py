@@ -174,7 +174,7 @@ class Messenger:
 
 	async def _handle_request(self, request: dict) -> bool:
 		if self.request_handler is None:
-			return False
+			raise ValueError("Request handler is None")
 
 		logger.debug("Handling request '%s'", request["identifier"])
 
@@ -201,7 +201,7 @@ class Messenger:
 
 	async def _handle_update(self, update: dict) -> bool:
 		if self.update_handler is None:
-			return False
+			raise ValueError("Update handler is None")
 
 		logger.debug("Handling update '%s'", update["identifier"])
 
