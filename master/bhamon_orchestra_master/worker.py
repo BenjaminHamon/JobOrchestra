@@ -1,7 +1,8 @@
 import asyncio
 import logging
-
 from typing import Callable, List, Optional
+
+import websockets
 
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.network.messenger import Messenger
@@ -10,10 +11,6 @@ from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 
 logger = logging.getLogger("Worker")
-
-
-class WorkerError(Exception):
-	""" Exception class for worker errors occuring in normal operations """
 
 
 class Worker:
@@ -63,6 +60,37 @@ class Worker:
 	async def run(self) -> None:
 		""" Perform updates until cancelled """
 
+		messenger_future = asyncio.ensure_future(self._messenger.run())
+		worker_future = asyncio.ensure_future(self._run_worker())
+
+		try:
+			await asyncio.wait([ messenger_future, worker_future ], return_when = asyncio.FIRST_COMPLETED)
+
+		finally:
+			worker_future.cancel()
+			messenger_future.cancel()
+
+			self._messenger.dispose()
+
+			try:
+				await worker_future
+			except asyncio.CancelledError:
+				pass
+			except Exception: # pylint: disable = broad-except
+				logger.error("(%s) Unhandled exception", self.identifier, exc_info = True)
+
+			try:
+				await messenger_future
+			except websockets.exceptions.ConnectionClosed as exception:
+				if exception.code not in [ 1000, 1001 ] and not isinstance(exception.__cause__, asyncio.CancelledError):
+					logger.error("(%s) Lost connection with remote", self.identifier, exc_info = True)
+			except asyncio.CancelledError:
+				pass
+			except Exception as exception: # pylint: disable = broad-except
+				logger.error("(%s) Unhandled exception from messenger", self.identifier, exc_info = True)
+
+
+	async def _run_worker(self) -> None:
 		with self._database_client_factory() as database_client:
 			await self._update_properties(database_client)
 

@@ -31,10 +31,10 @@ def test_worker_disconnection(tmpdir, database_type):
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Connection from worker 'worker_01' (User: 'worker', RemoteAddress: '127.0.0.1')" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' connected (User: 'worker', RemoteAddress: '127.0.0.1')" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Registering worker 'worker_01'" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' is now active" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker 'worker_01'" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' disconnected" },
 		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
@@ -71,10 +71,10 @@ def test_master_disconnection(tmpdir, database_type):
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Master", "message": "Starting master" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Connection from worker 'worker_01' (User: 'worker', RemoteAddress: '127.0.0.1')" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' connected (User: 'worker', RemoteAddress: '127.0.0.1')" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Registering worker 'worker_01'" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' is now active" },
-		{ "level": "Info", "logger": "Supervisor", "message": "Terminating connection with worker 'worker_01'" },
+		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' disconnected" },
 		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
