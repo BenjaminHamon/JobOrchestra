@@ -29,7 +29,7 @@ async def test_start_execution_success():
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
 	job = { "identifier": "my_job" }
 	run = { "identifier": "my_run", "job": job["identifier"], "status": "pending", "parameters": {} }
@@ -46,7 +46,7 @@ async def test_abort_execution_success():
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
 	job = { "identifier": "my_job" }
 	run = { "identifier": "my_run", "job": job["identifier"], "status": "running", "steps": [] }
@@ -65,7 +65,7 @@ async def test_finish_execution_success():
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
 	job = { "identifier": "my_job" }
 	run = { "identifier": "my_run", "job": job["identifier"], "status": "succeeded", "steps": [] }
@@ -87,7 +87,7 @@ async def test_process_success():
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance, None)
 
 	job = { "project": "my_project", "identifier": "my_job" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
@@ -164,7 +164,7 @@ async def test_process_abort(): # pylint: disable = too-many-statements
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance, None)
 
 	job = { "project": "my_project", "identifier": "my_job" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
@@ -249,7 +249,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance, None)
 
 	job = { "project": "my_project", "identifier": "my_job" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
@@ -284,7 +284,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert len(worker_local_instance.executors) == 1
 
 	# New worker to simulate disconnection
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance, None)
 
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 0
@@ -352,7 +352,7 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance, None)
 
 	job = { "project": "my_project", "identifier": "my_job" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
@@ -387,7 +387,7 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	assert len(worker_local_instance.executors) == 1
 
 	# New worker to simulate disconnection
-	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance)
+	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance, None)
 
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 0

@@ -77,7 +77,7 @@ class WorkerProvider:
 
 
 	def update_properties(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
-			worker: dict, version: str, display_name: str, properties: dict) -> None:
+			worker: dict, version: Optional[str] = None, display_name: Optional[str] = None, properties: Optional[dict] = None) -> None:
 
 		now = self.date_time_provider.now()
 
@@ -87,6 +87,8 @@ class WorkerProvider:
 			"properties": properties,
 			"update_date": self.date_time_provider.serialize(now),
 		}
+
+		update_data = { key: value for key, value in update_data.items() if value is not None }
 
 		worker.update(update_data)
 		database_client.update_one(self.table, { "identifier": worker["identifier"] }, update_data)

@@ -6,6 +6,7 @@ from typing import Callable, List, Optional
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 
 logger = logging.getLogger("Worker")
@@ -19,13 +20,16 @@ class Worker:
 	""" Watcher for a remote worker process """
 
 
-	def __init__(self, identifier: str, messenger: Messenger,
-			database_client_factory: Callable[[], DatabaseClient], run_provider: RunProvider) -> None:
+	def __init__(self, # pylint: disable = too-many-arguments
+			identifier: str, messenger: Messenger,
+			database_client_factory: Callable[[], DatabaseClient],
+			run_provider: RunProvider, worker_provider: WorkerProvider) -> None:
 
 		self.identifier = identifier
 		self._messenger = messenger
 		self._database_client_factory = database_client_factory
 		self._run_provider = run_provider
+		self._worker_provider = worker_provider
 
 		self.should_disconnect = False
 		self.executors = []
@@ -58,6 +62,9 @@ class Worker:
 
 	async def run(self) -> None:
 		""" Perform updates until cancelled """
+
+		with self._database_client_factory() as database_client:
+			await self._update_properties(database_client)
 
 		try:
 			with self._database_client_factory() as database_client:
@@ -98,6 +105,11 @@ class Worker:
 				return executor
 
 		raise KeyError("Executor not found for %s" % run_identifier)
+
+
+	async def _update_properties(self, database_client: DatabaseClient) -> None:
+		worker_properties = await self._execute_remote_command("describe")
+		self._worker_provider.update_properties(database_client, { "identifier": self.identifier }, **worker_properties)
 
 
 	async def _recover_executors(self, database_client: DatabaseClient) -> List[dict]:

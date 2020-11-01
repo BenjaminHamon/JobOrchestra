@@ -93,11 +93,11 @@ class Supervisor:
 		""" Wrapper around the connection processing to initialize objects and to handle cancellation and exceptions """
 
 		try:
-			logger.info("Connection from worker '%s' (User: '%s', RemoteAddress: '%s')", connection.worker, connection.user, connection.remote_address[0])
+			logger.info("Connection from worker '%s' (User: '%s', RemoteAddress: '%s')", connection.worker_identifier, connection.user_identifier, connection.remote_address[0])
 			messenger_instance = Messenger(WebSocketConnection(connection))
 			messenger_instance.identifier = connection.remote_address
 			messenger_future = asyncio.ensure_future(messenger_instance.run())
-			worker_future = asyncio.ensure_future(self._process_connection_internal(connection.user, connection.worker, messenger_instance))
+			worker_future = asyncio.ensure_future(self._process_connection_internal(connection, messenger_instance))
 
 			try:
 				await asyncio.wait([ messenger_future, worker_future ], return_when = asyncio.FIRST_COMPLETED)
@@ -114,49 +114,47 @@ class Supervisor:
 				except WorkerError as exception:
 					logger.error("Worker error: %s", exception)
 				except Exception: # pylint: disable = broad-except
-					logger.error("Unhandled exception from worker '%s'", connection.worker, exc_info = True)
+					logger.error("Unhandled exception from worker '%s'", connection.worker_identifier, exc_info = True)
 
 				try:
 					await messenger_future
 				except websockets.exceptions.ConnectionClosed as exception:
 					if exception.code not in [ 1000, 1001 ] and not isinstance(exception.__cause__, asyncio.CancelledError):
-						logger.error("Lost connection from worker '%s'", connection.worker, exc_info = True)
+						logger.error("Lost connection from worker '%s'", connection.worker_identifier, exc_info = True)
 				except asyncio.CancelledError:
 					pass
 				except Exception as exception: # pylint: disable = broad-except
 					logger.error("Unhandled exception from messenger", exc_info = True)
 
-				logger.info("Terminating connection with worker '%s'", connection.worker)
+				logger.info("Terminating connection with worker '%s'", connection.worker_identifier)
 
 		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception in connection handler", exc_info = True)
 
 
-	async def _process_connection_internal(self, user: str, worker_identifier: str, messenger_instance: Messenger) -> None:
+	async def _process_connection_internal(self, connection: WebSocketServerProtocol, messenger_instance: Messenger) -> None:
 		""" Internal implementation for processing a worker connection """
 
-		logger.info("Registering worker '%s'", worker_identifier)
-		worker_properties = await messenger_instance.send_request({ "command": "describe" })
+		logger.info("Registering worker '%s'", connection.worker_identifier)
 
 		with self._database_client_factory() as database_client:
-			worker_record = self._register_worker(database_client, worker_identifier, user, **worker_properties)
-			worker_instance = self._instantiate_worker(worker_identifier, messenger_instance)
+			worker_record = self._register_worker(database_client, connection.worker_identifier, connection.worker_version, connection.user_identifier)
+			worker_instance = self._instantiate_worker(worker_record, messenger_instance)
 
 			self._worker_provider.update_status(database_client, worker_record, is_active = True, should_disconnect = False)
-			self._active_workers[worker_identifier] = worker_instance
+			self._active_workers[connection.worker_identifier] = worker_instance
 
 		try:
-			logger.info("Worker '%s' is now active", worker_identifier)
+			logger.info("Worker '%s' is now active", connection.worker_identifier)
 			await worker_instance.run()
 
 		finally:
-			del self._active_workers[worker_identifier]
+			del self._active_workers[connection.worker_identifier]
 			with self._database_client_factory() as database_client:
 				self._worker_provider.update_status(database_client, worker_record, is_active = False, should_disconnect = False)
 
 
-	def _register_worker(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
-			worker_identifier: str, owner: str, version: str, display_name: str, properties: dict) -> dict:
+	def _register_worker(self, database_client: DatabaseClient, worker_identifier: str, worker_version: str, user_identifier: str) -> dict:
 		""" Register the worker by creating or updating its record in the database and checking it is valid """
 
 		if worker_identifier in self._active_workers:
@@ -164,18 +162,18 @@ class Supervisor:
 
 		worker_record = self._worker_provider.get(database_client, worker_identifier)
 		if worker_record is None:
-			worker_record = self._worker_provider.create(database_client, worker_identifier, owner, version, display_name)
-		if worker_record["owner"] != owner:
-			raise WorkerError("Worker '%s' is owned by another user (Expected: '%s', Actual: '%s')" % (worker_identifier, worker_record["owner"], owner))
-
-		self._worker_provider.update_properties(database_client, worker_record, version, display_name, properties)
+			worker_record = self._worker_provider.create(database_client, worker_identifier, user_identifier, worker_version, worker_identifier)
+		if worker_record["owner"] != user_identifier:
+			raise WorkerError("Worker '%s' is owned by another user (Expected: '%s', Actual: '%s')" % (worker_identifier, worker_record["owner"], user_identifier))
+		if worker_record["version"] != worker_version:
+			self._worker_provider.update_properties(database_client, worker_record, version = worker_version)
 
 		return worker_record
 
 
-	def _instantiate_worker(self, worker_identifier: str, messenger_instance: Messenger) -> Worker:
+	def _instantiate_worker(self, worker_record: dict, messenger_instance: Messenger) -> Worker:
 		""" Instantiate a new worker object to watch the remote worker process """
 
-		worker_instance = Worker(worker_identifier, messenger_instance, self._database_client_factory, self._run_provider)
+		worker_instance = Worker(worker_record["identifier"], messenger_instance, self._database_client_factory, self._run_provider, self._worker_provider)
 		messenger_instance.update_handler = worker_instance.receive_update
 		return worker_instance
