@@ -3,8 +3,7 @@ import json
 import logging
 import traceback
 import uuid
-
-from typing import Optional
+from typing import Callable, Optional
 
 from bhamon_orchestra_model.network.connection import NetworkConnection
 
@@ -15,17 +14,20 @@ logger = logging.getLogger("Messenger")
 class Messenger:
 
 
-	def __init__(self, connection: NetworkConnection) -> None:
-		self.connection = connection
+	def __init__(self, identifier: str, connection: NetworkConnection,
+			request_handler: Callable[[dict],None] = None, update_handler: Callable[[dict],None] = None) -> None:
 
-		self.identifier = None
-		self.request_handler = None
-		self.update_handler = None
-		self.messages_to_send = []
-		self.messages_to_wait = []
-		self.messages_to_handle = []
-		self._messages_events = {}
+		self.identifier = identifier
+		self.connection = connection
+		self.request_handler = request_handler
+		self.update_handler = update_handler
+
 		self.is_disposed = False
+
+		self._messages_to_send = []
+		self._messages_to_wait = []
+		self._messages_to_handle = []
+		self._messages_events = {}
 
 
 	async def run(self) -> None:
@@ -46,27 +48,27 @@ class Messenger:
 
 
 	def dispose(self) -> None:
-		for message in self.messages_to_send:
+		for message in self._messages_to_send:
 			logger.warning("Cancelling outgoing %s %s", message["type"], message["identifier"])
 
 			if message["type"] == "request":
 				message["response"] = { "identifier": message["identifier"], "error": "Cancelled" }
 				self._messages_events[message["identifier"]].set()
 
-		for message in self.messages_to_wait:
+		for message in self._messages_to_wait:
 			logger.warning("Cancelling expected response %s", message["identifier"])
 
 			if message["type"] == "request":
 				message["response"] = { "identifier": message["identifier"], "error": "Cancelled" }
 				self._messages_events[message["identifier"]].set()
 
-		for message in self.messages_to_handle:
+		for message in self._messages_to_handle:
 			logger.warning("Cancelling handling %s %s", message["type"], message["identifier"])
 
-		self.messages_to_send = []
-		self.messages_to_wait = []
-		self.messages_to_handle = []
-		self._messages_events = {}
+		self._messages_to_send.clear()
+		self._messages_to_wait.clear()
+		self._messages_to_handle.clear()
+		self._messages_events.clear()
 
 		self.is_disposed = True
 
@@ -80,7 +82,7 @@ class Messenger:
 		message = { "type": "request", "identifier": identifier, "data": data }
 
 		self._messages_events[identifier] = message_event
-		self.messages_to_send.append(message)
+		self._messages_to_send.append(message)
 
 		await message_event.wait()
 
@@ -91,12 +93,12 @@ class Messenger:
 
 	def _send_response(self, identifier: str, data: dict) -> None:
 		message = { "type": "response", "identifier": identifier, "data": data }
-		self.messages_to_send.append(message)
+		self._messages_to_send.append(message)
 
 
 	def _send_response_error(self, identifier: str, error: dict) -> None:
 		message = { "type": "response", "identifier": identifier, "error": error }
-		self.messages_to_send.append(message)
+		self._messages_to_send.append(message)
 
 
 	def send_update(self, data: dict) -> None:
@@ -105,27 +107,27 @@ class Messenger:
 
 		identifier = str(uuid.uuid4())
 		message = { "type": "update", "identifier": identifier, "data": data }
-		self.messages_to_send.append(message)
+		self._messages_to_send.append(message)
 
 
 	async def _push(self) -> None:
 		while True:
-			while len(self.messages_to_send) > 0:
+			while len(self._messages_to_send) > 0:
 				await self._send_next()
 			await asyncio.sleep(0.1)
 
 
 	async def _send_next(self) -> None:
-		if len(self.messages_to_send) == 0:
+		if len(self._messages_to_send) == 0:
 			return
 
-		message = self.messages_to_send[0]
+		message = self._messages_to_send[0]
 		logger.debug("(%s) > %s %s", self.identifier, message["type"], message["identifier"])
 		await self.connection.send(json.dumps(message))
-		self.messages_to_send.remove(message)
+		self._messages_to_send.remove(message)
 
 		if message["type"] == "request":
-			self.messages_to_wait.append(message)
+			self._messages_to_wait.append(message)
 
 
 	async def _pull(self) -> None:
@@ -136,26 +138,26 @@ class Messenger:
 	async def _receive_next(self) -> None:
 		message = json.loads(await self.connection.receive())
 		logger.debug("(%s) < %s %s", self.identifier, message["type"], message["identifier"])
-		self.messages_to_handle.append(message)
+		self._messages_to_handle.append(message)
 
 
 	async def _handle_incoming(self) -> None:
 		while True:
-			while len(self.messages_to_handle) > 0:
+			while len(self._messages_to_handle) > 0:
 				await self._handle_next()
 			await asyncio.sleep(0.1)
 
 
 	async def _handle_next(self) -> None:
-		if len(self.messages_to_handle) == 0:
+		if len(self._messages_to_handle) == 0:
 			return
 
-		message = self.messages_to_handle[0]
+		message = self._messages_to_handle[0]
 
 		try:
 			message_was_handled = await self._handle_message(message)
 			if message_was_handled:
-				self.messages_to_handle.remove(message)
+				self._messages_to_handle.remove(message)
 		except Exception: # pylint: disable = broad-except
 			logger.error("Unhandled exception in message handler", exc_info = True)
 
@@ -177,7 +179,7 @@ class Messenger:
 		logger.debug("Handling request '%s'", request["identifier"])
 
 		try:
-			result = await self.request_handler(request["data"]) # pylint: disable = not-callable
+			result = await self.request_handler(request["data"])
 			self._send_response(request["identifier"], result)
 		except Exception as exception: # pylint: disable = broad-except
 			logger.error("Handler for request '%s' raised an exception", request["identifier"], exc_info = True)
@@ -190,10 +192,10 @@ class Messenger:
 	async def _handle_response(self, response: dict) -> bool:
 		logger.debug("Handling response '%s'", response["identifier"])
 
-		request = next(r for r in self.messages_to_wait if r["type"] == "request" and r["identifier"] == response["identifier"])
+		request = next(r for r in self._messages_to_wait if r["type"] == "request" and r["identifier"] == response["identifier"])
 		request["response"] = response
 		self._messages_events[request["identifier"]].set()
-		self.messages_to_wait.remove(request)
+		self._messages_to_wait.remove(request)
 		return True
 
 
@@ -204,7 +206,7 @@ class Messenger:
 		logger.debug("Handling update '%s'", update["identifier"])
 
 		try:
-			await self.update_handler(update["data"]) # pylint: disable = not-callable
+			await self.update_handler(update["data"])
 		except Exception: # pylint: disable = broad-except
 			logger.error("Handler for update '%s' raised an exception", update["identifier"], exc_info = True)
 		return True

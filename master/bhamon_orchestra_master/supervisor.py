@@ -159,8 +159,7 @@ class Supervisor:
 	def _instantiate_worker(self, worker_record: dict, connection: WebSocketServerProtocol) -> Worker:
 		""" Instantiate a new worker object to watch the remote worker process """
 
-		messenger_instance = Messenger(WebSocketConnection(connection))
-		messenger_instance.identifier = connection.remote_address
+		messenger_instance = Messenger(connection.remote_address, WebSocketConnection(connection))
 		worker_instance = Worker(worker_record["identifier"], messenger_instance, self._database_client_factory, self._run_provider, self._worker_provider)
 		messenger_instance.update_handler = worker_instance.receive_update
 
