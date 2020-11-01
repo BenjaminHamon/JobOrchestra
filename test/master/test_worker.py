@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
-from bhamon_orchestra_model.database.memory_file_storage import MemoryFileStorage
+from bhamon_orchestra_model.database.memory_data_storage import MemoryDataStorage
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_master.worker import Worker as LocalWorker
 from bhamon_orchestra_worker.worker import Worker as RemoteWorker
@@ -81,9 +81,9 @@ async def test_process_success():
 	""" Test executing a run which succeeds """
 
 	database_client_instance = MemoryDatabaseClient()
-	file_storage_instance = MemoryFileStorage()
+	data_storage_instance = MemoryDataStorage()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(file_storage_instance, date_time_provider_instance)
+	run_provider_instance = RunProvider(data_storage_instance, date_time_provider_instance)
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
@@ -158,9 +158,9 @@ async def test_process_abort(): # pylint: disable = too-many-statements
 	""" Test executing a run which gets aborted """
 
 	database_client_instance = MemoryDatabaseClient()
-	file_storage_instance = MemoryFileStorage()
+	data_storage_instance = MemoryDataStorage()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(file_storage_instance, date_time_provider_instance)
+	run_provider_instance = RunProvider(data_storage_instance, date_time_provider_instance)
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
@@ -243,9 +243,9 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	""" Test executing a run which gets recovered after a disconnection and while it is running """
 
 	database_client_instance = MemoryDatabaseClient()
-	file_storage_instance = MemoryFileStorage()
+	data_storage_instance = MemoryDataStorage()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(file_storage_instance, date_time_provider_instance)
+	run_provider_instance = RunProvider(data_storage_instance, date_time_provider_instance)
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
@@ -346,9 +346,9 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	""" Test executing a run which gets recovered after a disconnection and after it completed """
 
 	database_client_instance = MemoryDatabaseClient()
-	file_storage_instance = MemoryFileStorage()
+	data_storage_instance = MemoryDataStorage()
 	date_time_provider_instance = FakeDateTimeProvider()
-	run_provider_instance = RunProvider(file_storage_instance, date_time_provider_instance)
+	run_provider_instance = RunProvider(data_storage_instance, date_time_provider_instance)
 	worker_remote_instance = RemoteWorker("my_worker", None, None, None, None, None, None)
 	worker_remote_instance.executor_factory = FakeExecutorWatcher
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
