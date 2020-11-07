@@ -5,7 +5,9 @@ import os
 
 import filelock
 
+from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
 from bhamon_orchestra_worker.worker import Worker
+from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 import environment
 
@@ -43,7 +45,11 @@ def create_application(arguments, authentication, executor_script):
 		"executor_limit": 100 if arguments.identifier == "controller" else 1,
 	}
 
-	return Worker(
+	data_storage_instance = FileDataStorage(".")
+	worker_storage_instance = WorkerStorage(data_storage_instance)
+
+	worker_instance = Worker(
+		storage = worker_storage_instance,
 		identifier = arguments.identifier,
 		master_uri = arguments.master_uri,
 		user = authentication["user"],
@@ -52,6 +58,8 @@ def create_application(arguments, authentication, executor_script):
 		properties = properties,
 		executor_script = executor_script,
 	)
+
+	return worker_instance
 
 
 if __name__ == "__main__":

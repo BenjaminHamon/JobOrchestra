@@ -7,7 +7,7 @@ import subprocess
 from typing import List
 
 from bhamon_orchestra_model.network.messenger import Messenger
-import bhamon_orchestra_worker.worker_storage as worker_storage
+from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 
 logger = logging.getLogger("ExecutorWatcher")
@@ -19,7 +19,8 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 class ExecutorWatcher:
 
 
-	def __init__(self, run_identifier: str) -> None:
+	def __init__(self, storage: WorkerStorage, run_identifier: str) -> None:
+		self._storage = storage
 		self.run_identifier = run_identifier
 
 		self.process = None
@@ -98,8 +99,8 @@ class ExecutorWatcher:
 		if self.is_running():
 			return
 
-		status = worker_storage.load_status(self.run_identifier)
+		status = self._storage.load_status(self.run_identifier)
 		if status["status"] in [ "unknown", "running" ]:
 			logger.error("(%s) Run terminated before completion", self.run_identifier)
 			status["status"] = "exception"
-			worker_storage.save_status(self.run_identifier, status)
+			self._storage.save_status(self.run_identifier, status)

@@ -12,7 +12,7 @@ from bhamon_orchestra_model.network.websocket import WebSocketConnection
 from bhamon_orchestra_worker.executor_watcher import ExecutorWatcher
 from bhamon_orchestra_worker.synchronization import Synchronization
 import bhamon_orchestra_worker.worker_logging as worker_logging
-import bhamon_orchestra_worker.worker_storage as worker_storage
+from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 import bhamon_orchestra_worker
 
@@ -23,9 +23,11 @@ logger = logging.getLogger("Worker")
 class Worker: # pylint: disable = too-many-instance-attributes
 
 
-	def __init__( # pylint: disable = too-many-arguments
-			self, identifier: str, master_uri: str, user: str, secret: str, display_name: str, properties: dict, executor_script: str) -> None:
+	def __init__(self, # pylint: disable = too-many-arguments
+			storage: WorkerStorage, identifier: str, master_uri: str, user: str, secret: str,
+			display_name: str, properties: dict, executor_script: str) -> None:
 
+		self._storage = storage
 		self._identifier = identifier
 		self._master_uri = master_uri
 		self._user = user
@@ -38,7 +40,6 @@ class Worker: # pylint: disable = too-many-instance-attributes
 		self._messenger = None
 		self._should_shutdown = False
 
-		self.executor_factory = ExecutorWatcher
 		self.termination_timeout_seconds = 30
 
 
@@ -134,13 +135,13 @@ class Worker: # pylint: disable = too-many-instance-attributes
 
 
 	def _recover(self) -> None:
-		all_runs = worker_storage.list_runs()
+		all_runs = self._storage.list_runs()
 		for run_identifier in all_runs:
 			logger.info("Recovering run %s", run_identifier)
 			for executor in self._active_executors:
 				if executor.run_identifier == run_identifier:
 					continue
-			executor = self.executor_factory(run_identifier)
+			executor = self._instantiate_executor(run_identifier)
 			self._active_executors.append(executor)
 
 
@@ -185,6 +186,10 @@ class Worker: # pylint: disable = too-many-instance-attributes
 		raise ValueError("Unknown command '%s'" % command)
 
 
+	def _instantiate_executor(self, run_identifier: str) -> ExecutorWatcher:
+		return ExecutorWatcher(self._storage, run_identifier)
+
+
 	def _find_executor(self, run_identifier: str) -> ExecutorWatcher:
 		for executor in self._active_executors:
 			if executor.run_identifier == run_identifier:
@@ -215,10 +220,10 @@ class Worker: # pylint: disable = too-many-instance-attributes
 			"parameters": parameters,
 		}
 
-		worker_storage.create_run(run_identifier)
-		worker_storage.save_request(run_identifier, run_request)
+		self._storage.create_run(run_identifier)
+		self._storage.save_request(run_identifier, run_request)
 
-		executor = self.executor_factory(run_identifier)
+		executor = self._instantiate_executor(run_identifier)
 		executor_command = [ sys.executable, self._executor_script, run_identifier ]
 
 		try:
@@ -239,7 +244,7 @@ class Worker: # pylint: disable = too-many-instance-attributes
 			executor.synchronization = None
 
 		self._active_executors.remove(executor)
-		worker_storage.delete_run(run_identifier)
+		self._storage.delete_run(run_identifier)
 
 
 	def _abort(self, run_identifier: str) -> None:
@@ -250,17 +255,17 @@ class Worker: # pylint: disable = too-many-instance-attributes
 
 
 	def _retrieve_request(self, run_identifier: str) -> dict: # pylint: disable = no-self-use
-		return worker_storage.load_request(run_identifier)
+		return self._storage.load_request(run_identifier)
 
 
 	def _resynchronize(self, run_identifier: str, reset: dict) -> None:
 		executor = self._find_executor(run_identifier)
-		run_request = worker_storage.load_request(run_identifier)
+		run_request = self._storage.load_request(run_identifier)
 
 		if executor.synchronization is not None:
 			executor.synchronization.dispose()
 			executor.synchronization = None
 
-		executor.synchronization = Synchronization(run_request)
+		executor.synchronization = Synchronization(self._storage, run_request)
 		executor.synchronization.reset(reset["steps"])
 		executor.synchronization.resume()

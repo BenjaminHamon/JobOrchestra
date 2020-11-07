@@ -4,8 +4,10 @@ import os
 
 import filelock
 
+from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_worker.executor import Executor
+from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 import environment
 
@@ -32,11 +34,14 @@ def parse_arguments():
 
 
 def create_application(arguments):
+	data_storage_instance = FileDataStorage(".")
 	date_time_provider_instance = DateTimeProvider()
+	worker_storage_instance = WorkerStorage(data_storage_instance)
 
 	executor_instance = Executor(
-		run_identifier = arguments.run_identifier,
+		storage = worker_storage_instance,
 		date_time_provider = date_time_provider_instance,
+		run_identifier = arguments.run_identifier,
 	)
 
 	return executor_instance

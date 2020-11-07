@@ -9,7 +9,7 @@ import traceback
 from typing import List
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
-import bhamon_orchestra_worker.worker_storage as worker_storage
+from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 
 logger = logging.getLogger("Executor")
@@ -21,9 +21,10 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 class Executor: # pylint: disable = too-few-public-methods
 
 
-	def __init__(self, run_identifier: str, date_time_provider: DateTimeProvider) -> None:
-		self.run_identifier = run_identifier
+	def __init__(self, storage: WorkerStorage, date_time_provider: DateTimeProvider, run_identifier: str) -> None:
+		self._storage = storage
 		self._date_time_provider = date_time_provider
+		self.run_identifier = run_identifier
 
 		self._run_status = None
 		self._should_shutdown = False
@@ -53,7 +54,7 @@ class Executor: # pylint: disable = too-few-public-methods
 
 
 	def _initialize(self, environment: dict) -> None:
-		run_request = worker_storage.load_request(self.run_identifier)
+		run_request = self._storage.load_request(self.run_identifier)
 
 		self._run_status = {
 			"project_identifier": run_request["job"]["project"],
@@ -79,7 +80,7 @@ class Executor: # pylint: disable = too-few-public-methods
 			"completion_date": None,
 		}
 
-		worker_storage.save_status(self.run_identifier, self._run_status)
+		self._storage.save_status(self.run_identifier, self._run_status)
 
 
 	def _run_internal(self) -> None:
@@ -87,7 +88,7 @@ class Executor: # pylint: disable = too-few-public-methods
 
 		try:
 			self._run_status["start_date"] = self._date_time_provider.serialize(self._date_time_provider.now())
-			worker_storage.save_status(self.run_identifier, self._run_status)
+			self._storage.save_status(self.run_identifier, self._run_status)
 
 			if not os.path.exists(self._run_status["workspace"]):
 				os.makedirs(self._run_status["workspace"])
@@ -106,13 +107,13 @@ class Executor: # pylint: disable = too-few-public-methods
 
 			self._run_status["status"] = run_final_status
 			self._run_status["completion_date"] = self._date_time_provider.serialize(self._date_time_provider.now())
-			worker_storage.save_status(self.run_identifier, self._run_status)
+			self._storage.save_status(self.run_identifier, self._run_status)
 
 		except: # pylint: disable = bare-except
 			logger.error("(%s) Run raised an exception", self.run_identifier, exc_info = True)
 			self._run_status["status"] = "exception"
 			self._run_status["completion_date"] = self._date_time_provider.serialize(self._date_time_provider.now())
-			worker_storage.save_status(self.run_identifier, self._run_status)
+			self._storage.save_status(self.run_identifier, self._run_status)
 
 		logger.info("(%s) Run completed with status %s", self.run_identifier, self._run_status["status"])
 
@@ -122,9 +123,9 @@ class Executor: # pylint: disable = too-few-public-methods
 
 		try:
 			step["status"] = "running"
-			worker_storage.save_status(self.run_identifier, self._run_status)
+			self._storage.save_status(self.run_identifier, self._run_status)
 
-			log_file_path = worker_storage.get_log_path(self.run_identifier, step["index"], step["name"])
+			log_file_path = self._storage.get_log_path(self.run_identifier, step["index"], step["name"])
 			result_file_path = os.path.join(self._run_status["workspace"], ".orchestra", "runs", self.run_identifier, "results.json")
 
 			if is_skipping:
@@ -138,14 +139,14 @@ class Executor: # pylint: disable = too-few-public-methods
 				if os.path.isfile(result_file_path):
 					with open(result_file_path, mode = "r", encoding = "utf-8") as result_file:
 						results = json.load(result_file)
-					worker_storage.save_results(self.run_identifier, results)
+					self._storage.save_results(self.run_identifier, results)
 
-			worker_storage.save_status(self.run_identifier, self._run_status)
+			self._storage.save_status(self.run_identifier, self._run_status)
 
 		except: # pylint: disable = bare-except
 			logger.error("(%s) Step %s raised an exception", self.run_identifier, step["name"], exc_info = True)
 			step["status"] = "exception"
-			worker_storage.save_status(self.run_identifier, self._run_status)
+			self._storage.save_status(self.run_identifier, self._run_status)
 
 		logger.info("(%s) Step %s completed with status %s", self.run_identifier, step["name"], step["status"])
 
