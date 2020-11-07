@@ -11,11 +11,11 @@ logger = logging.getLogger("Git")
 class GitClient:
 
 
-	def __init__(self, git_executable):
+	def __init__(self, git_executable: str) -> None:
 		self.git_executable = git_executable
 
 
-	def initialize(self, repository):
+	def initialize(self, repository: str) -> None:
 		logger.info("Initializating repository")
 
 		init_command = [ self.git_executable, "init" ]
@@ -31,7 +31,7 @@ class GitClient:
 		subprocess.check_call(set_remote_command)
 
 
-	def resolve(self, revision):
+	def resolve(self, revision: str) -> None:
 		try:
 			revision_command = [ self.git_executable, "rev-parse", "--verify", "origin/" + revision ]
 			logger.info("+ %s", " ".join(revision_command))
@@ -49,7 +49,7 @@ class GitClient:
 		raise ValueError("Could not resolve exact revision for '%s'" % revision)
 
 
-	def update(self, revision, result_file_path):
+	def update(self, revision: str, result_file_path: str) -> None:
 		logger.info("Updating to revision '%s'", revision)
 
 		fetch_command = [ self.git_executable, "fetch", "--prune", "--verbose" ]

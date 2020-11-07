@@ -6,7 +6,9 @@ import signal
 import subprocess
 import time
 import traceback
+from typing import List
 
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 import bhamon_orchestra_worker.worker_storage as worker_storage
 
 
@@ -19,7 +21,7 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 class Executor: # pylint: disable = too-few-public-methods
 
 
-	def __init__(self, run_identifier, date_time_provider):
+	def __init__(self, run_identifier: str, date_time_provider: DateTimeProvider) -> None:
 		self.run_identifier = run_identifier
 		self._date_time_provider = date_time_provider
 
@@ -28,7 +30,7 @@ class Executor: # pylint: disable = too-few-public-methods
 		self.termination_timeout_seconds = 30
 
 
-	def run(self, environment):
+	def run(self, environment: dict) -> None:
 		if platform.system() == "Windows":
 			signal.signal(signal.SIGBREAK, lambda signal_number, frame: self._shutdown()) # pylint: disable = no-member
 		signal.signal(signal.SIGINT, lambda signal_number, frame: self._shutdown())
@@ -46,11 +48,11 @@ class Executor: # pylint: disable = too-few-public-methods
 		logger.info("(%s) Exiting executor", self.run_identifier)
 
 
-	def _shutdown(self):
+	def _shutdown(self) -> None:
 		self._should_shutdown = True
 
 
-	def _initialize(self, environment):
+	def _initialize(self, environment: dict) -> None:
 		run_request = worker_storage.load_request(self.run_identifier)
 
 		self._run_status = {
@@ -80,7 +82,7 @@ class Executor: # pylint: disable = too-few-public-methods
 		worker_storage.save_status(self.run_identifier, self._run_status)
 
 
-	def _run_internal(self):
+	def _run_internal(self) -> None:
 		logger.info("(%s) Run is starting for project '%s' and job '%s'", self.run_identifier, self._run_status["project_identifier"], self._run_status["job_identifier"])
 
 		try:
@@ -115,7 +117,7 @@ class Executor: # pylint: disable = too-few-public-methods
 		logger.info("(%s) Run completed with status %s", self.run_identifier, self._run_status["status"])
 
 
-	def _execute_step(self, step, is_skipping):
+	def _execute_step(self, step: dict, is_skipping: bool) -> None:
 		logger.info("(%s) Step %s is starting", self.run_identifier, step["name"])
 
 		try:
@@ -148,7 +150,7 @@ class Executor: # pylint: disable = too-few-public-methods
 		logger.info("(%s) Step %s completed with status %s", self.run_identifier, step["name"], step["status"])
 
 
-	def _format_command(self, command, result_file_path, log_file_path):
+	def _format_command(self, command: List[str], result_file_path: str, log_file_path: str) -> List[str]:
 		results = {}
 		if os.path.isfile(result_file_path):
 			with open(result_file_path, mode = "r", encoding = "utf-8") as result_file:
@@ -177,7 +179,7 @@ class Executor: # pylint: disable = too-few-public-methods
 			raise
 
 
-	def _execute_command(self, command, log_file_path):
+	def _execute_command(self, command: List[str], log_file_path: str) -> None:
 		with open(log_file_path, mode = "w", encoding = "utf-8") as log_file:
 			log_file.write("# Workspace: %s\n" % os.path.abspath(self._run_status["workspace"]))
 			log_file.write("# Command: %s\n" % " ".join(command))
@@ -195,7 +197,7 @@ class Executor: # pylint: disable = too-few-public-methods
 			return self._wait_process(child_process)
 
 
-	def _wait_process(self, child_process):
+	def _wait_process(self, child_process: subprocess.Popen) -> str:
 		result = None
 		while result is None:
 			if self._should_shutdown:

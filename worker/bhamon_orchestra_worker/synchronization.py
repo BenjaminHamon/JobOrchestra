@@ -1,6 +1,9 @@
+import io
 import logging
 import os
+from typing import List
 
+from bhamon_orchestra_model.network.messenger import Messenger
 import bhamon_orchestra_worker.worker_storage as worker_storage
 
 
@@ -11,7 +14,7 @@ class Synchronization:
 	""" Responsible for pushing data from an executor to the master """
 
 
-	def __init__(self, run_request):
+	def __init__(self, run_request: dict) -> None:
 		self.run_identifier = run_request["run_identifier"]
 
 		self.internal_status = "paused"
@@ -25,29 +28,29 @@ class Synchronization:
 		self.results_last_timestamp = None
 
 
-	def resume(self):
+	def resume(self) -> None:
 		if self.internal_status == "paused":
 			self.internal_status = "running"
 
 
-	def pause(self):
+	def pause(self) -> None:
 		if self.internal_status == "running":
 			self.internal_status = "paused"
 
 
-	def dispose(self):
+	def dispose(self) -> None:
 		for step in self.run_steps:
 			if "log_file" in step:
 				step["log_file"].close()
 		self.internal_status = "disposed"
 
 
-	def reset(self, step_collection):
+	def reset(self, step_collection: List[dict]) -> None:
 		for step in step_collection:
 			self.run_steps[step["index"]]["log_file_cursor"] = step["log_file_cursor"]
 
 
-	def update(self, messenger):
+	def update(self, messenger: Messenger) -> None:
 		if self.internal_status == "running":
 			try:
 				self._send_updates(messenger)
@@ -60,7 +63,7 @@ class Synchronization:
 				self.internal_status = "done"
 
 
-	def _send_updates(self, messenger):
+	def _send_updates(self, messenger: Messenger) -> None:
 		status_timestamp = worker_storage.get_status_timestamp(self.run_identifier)
 		status = worker_storage.load_status(self.run_identifier)
 		if status_timestamp != self.status_last_timestamp:
@@ -76,7 +79,7 @@ class Synchronization:
 			self.results_last_timestamp = results_timestamp
 
 
-	def _send_log_updates(self, messenger):
+	def _send_log_updates(self, messenger: Messenger) -> None:
 		status = worker_storage.load_status(self.run_identifier)
 		if "steps" not in status:
 			return
@@ -112,7 +115,7 @@ class Synchronization:
 				step["log_status"] = "done"
 
 
-	def _read_lines(self, log_file, limit): # pylint: disable = no-self-use
+	def _read_lines(self, log_file: io.TextIOWrapper, limit: int) -> str: # pylint: disable = no-self-use
 		all_lines = []
 
 		while len(all_lines) < limit:

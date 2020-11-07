@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+from typing import Any, Callable, Optional
 
 import requests
 
@@ -13,7 +14,7 @@ logger = logging.getLogger("Controller")
 class Controller:
 
 
-	def __init__(self, service_url, authorization):
+	def __init__(self, service_url: str, authorization: Any) -> None:
 		self.service_url = service_url
 		self.authorization = authorization
 
@@ -22,7 +23,9 @@ class Controller:
 
 
 	def trigger_run(self, # pylint: disable = too-many-arguments
-			result_file_path, project_identifier, job_identifier, parameters, source_project_identifier, source_run_identifier): # pylint: disable = unused-argument
+			result_file_path: str, project_identifier: str, job_identifier: str, # pylint: disable = unused-argument
+			parameters: dict, source_project_identifier: str, source_run_identifier: str) -> None:
+
 		message = "Triggering run for job %s" % job_identifier
 		route = "/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals())
 		trigger_data = { "parameters": parameters, "source": { "type": "run", "project": source_project_identifier, "identifier": source_run_identifier } }
@@ -35,7 +38,7 @@ class Controller:
 		workspace.save_results(result_file_path, results)
 
 
-	def wait_run(self, result_file_path):
+	def wait_run(self, result_file_path: str) -> None:
 		results = workspace.load_results(result_file_path)
 
 		for run in results["child_runs"]:
@@ -58,7 +61,7 @@ class Controller:
 			raise RuntimeError("One or more runs failed")
 
 
-	def _try_request(self, message, send_request):
+	def _try_request(self, message: str, send_request: Callable[[],None]) -> Any:
 		request_attempt_counter = 0
 
 		while True:
@@ -78,7 +81,7 @@ class Controller:
 				time.sleep(request_attempt_delay)
 
 
-	def _service_get(self, route, parameters = None):
+	def _service_get(self, route: str, parameters: Optional[dict] = None) -> Any:
 		headers = { "Content-Type": "application/json" }
 		if parameters is None:
 			parameters = {}
@@ -88,7 +91,7 @@ class Controller:
 		return response.json()
 
 
-	def _service_post(self, route, data = None):
+	def _service_post(self, route: str, data: Optional[Any] = None) -> Any:
 		if data is None:
 			data = {}
 

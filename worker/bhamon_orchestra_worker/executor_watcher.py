@@ -4,7 +4,9 @@ import os
 import platform
 import signal
 import subprocess
+from typing import List
 
+from bhamon_orchestra_model.network.messenger import Messenger
 import bhamon_orchestra_worker.worker_storage as worker_storage
 
 
@@ -17,14 +19,15 @@ subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "
 class ExecutorWatcher:
 
 
-	def __init__(self, run_identifier):
+	def __init__(self, run_identifier: str) -> None:
 		self.run_identifier = run_identifier
+
 		self.process = None
 		self.synchronization = None
 		self.stdout_future = None
 
 
-	async def start(self, command):
+	async def start(self, command: List[str]) -> None:
 		process_environment = os.environ.copy()
 		process_environment["PYTHONIOENCODING"] = "utf-8" # Force executor to use utf-8 instead of the default stdout encoding
 
@@ -33,7 +36,7 @@ class ExecutorWatcher:
 		self.stdout_future = asyncio.ensure_future(self.watch_stdout())
 
 
-	async def terminate(self, timeout_seconds):
+	async def terminate(self, timeout_seconds: int) -> None:
 		if self.is_running():
 			logger.info("(%s) Aborting", self.run_identifier)
 			os.kill(self.process.pid, shutdown_signal)
@@ -51,17 +54,17 @@ class ExecutorWatcher:
 				logger.warning("(%s) Timeout on stdout future", self.run_identifier)
 
 
-	def abort(self):
+	def abort(self) -> None:
 		os.kill(self.process.pid, shutdown_signal)
 		# The executor should terminate nicely, if it does not it will stays as running and should be investigated
 		# Forcing termination here would leave orphan processes and the status as running
 
 
-	def is_running(self):
+	def is_running(self) -> bool:
 		return self.process is not None and self.process.returncode is None
 
 
-	async def watch_stdout(self):
+	async def watch_stdout(self) -> None:
 		raw_logger = logging.getLogger("raw")
 
 		while True:
@@ -73,14 +76,14 @@ class ExecutorWatcher:
 			raw_logger.info(line)
 
 
-	def update(self, messenger):
+	def update(self, messenger: Messenger) -> None:
 		self._check_termination()
 
 		if self.synchronization is not None:
 			self.synchronization.update(messenger)
 
 
-	async def complete(self):
+	async def complete(self) -> None:
 		if self.is_running():
 			raise RuntimeError("Run '%s' is still active" % self.run_identifier)
 
@@ -91,7 +94,7 @@ class ExecutorWatcher:
 				logger.warning("(%s) Timeout on stdout future", self.run_identifier)
 
 
-	def _check_termination(self):
+	def _check_termination(self) -> None:
 		if self.is_running():
 			return
 
