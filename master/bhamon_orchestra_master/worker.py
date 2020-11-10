@@ -183,7 +183,7 @@ class Worker:
 			executor["local_status"] = "done"
 
 		for update in executor["received_updates"]:
-			await self._process_update(database_client,executor, update)
+			await self._process_update(database_client, executor, update)
 		executor["received_updates"].clear()
 
 
@@ -192,10 +192,10 @@ class Worker:
 
 		logger.info("(%s) Recovering run %s", self.identifier, run_identifier)
 		run_request = await self._retrieve_request(run_identifier)
-		run = self._run_provider.get(database_client, run_request["job"]["project"], run_identifier)
+		run = self._run_provider.get(database_client, run_request["project_identifier"], run_identifier)
 
 		return {
-			"job": run_request["job"],
+			"job": run_request["job_definition"],
 			"run": run,
 			"local_status": "running",
 			"synchronization": "unknown",

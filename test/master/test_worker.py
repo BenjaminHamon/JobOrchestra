@@ -45,8 +45,8 @@ async def test_start_execution_success():
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
-	job = { "identifier": "my_job" }
-	run = { "identifier": "my_run", "job": job["identifier"], "status": "pending", "parameters": {} }
+	job = { "project": "my_project", "identifier": "my_job" }
+	run = { "project": "my_project", "identifier": "my_run", "job": "my_job", "status": "pending", "parameters": {} }
 
 	await worker_local_instance._start_execution(run, job)
 
@@ -62,8 +62,7 @@ async def test_abort_execution_success():
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
-	job = { "identifier": "my_job" }
-	run = { "identifier": "my_run", "job": job["identifier"], "status": "running", "steps": [] }
+	run = { "project": "my_project", "identifier": "my_run", "job": "my_job", "status": "running", "steps": [] }
 
 	worker_remote_instance._active_executors.append(FakeExecutorWatcher(run["identifier"]))
 
@@ -81,8 +80,7 @@ async def test_finish_execution_success():
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
-	job = { "identifier": "my_job" }
-	run = { "identifier": "my_run", "job": job["identifier"], "status": "succeeded", "steps": [] }
+	run = { "project": "my_project", "identifier": "my_run", "job": "my_job", "status": "succeeded", "steps": [] }
 
 	worker_remote_instance._active_executors.append(FakeExecutorWatcher(run["identifier"]))
 
@@ -258,7 +256,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 
 	job = { "project": "my_project", "identifier": "my_job" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
-	request = { "run_identifier": run["identifier"], "job": job, "parameters": {} }
+	request = { "project_identifier": run["project"], "run_identifier": run["identifier"], "job_definition": job, "parameters": {} }
 
 	worker_storage_instance.load_request.return_value = request
 
@@ -355,7 +353,7 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 
 	job = { "project": "my_project", "identifier": "my_job" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
-	request = { "run_identifier": run["identifier"], "job": job, "parameters": {} }
+	request = { "project_identifier": run["project"], "run_identifier": run["identifier"], "job_definition": job, "parameters": {} }
 
 	worker_storage_instance.load_request.return_value = request
 

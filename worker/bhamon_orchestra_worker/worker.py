@@ -175,8 +175,10 @@ class Worker: # pylint: disable = too-few-public-methods
 		logger.info("Executing run %s", run_identifier)
 
 		run_request = {
+			"project_identifier": job["project"],
+			"job_identifier": job["identifier"],
 			"run_identifier": run_identifier,
-			"job": job,
+			"job_definition": job,
 			"parameters": parameters,
 		}
 

@@ -22,7 +22,7 @@ class Synchronization:
 		self.run_status = "unknown"
 		self.run_steps = []
 
-		for step_index, step in enumerate(run_request["job"]["steps"]):
+		for step_index, step in enumerate(run_request["job_definition"]["steps"]):
 			self.run_steps.append({ "index": step_index, "name": step["name"], "log_status": "pending" })
 
 		self.status_last_timestamp = None
@@ -66,23 +66,24 @@ class Synchronization:
 
 	def _send_updates(self, messenger: Messenger) -> None:
 		status_timestamp = self._storage.get_status_timestamp(self.run_identifier)
-		status = self._storage.load_status(self.run_identifier)
 		if status_timestamp != self.status_last_timestamp:
-			if status["status"] != "unknown":
+			status = self._storage.load_status(self.run_identifier)
+			if status is not None:
 				messenger.send_update({ "run": self.run_identifier, "status": status })
-			self.run_status = status["status"]
+				self.run_status = status["status"]
 			self.status_last_timestamp = status_timestamp
 
 		results_timestamp = self._storage.get_results_timestamp(self.run_identifier)
 		if results_timestamp != self.results_last_timestamp:
 			results = self._storage.load_results(self.run_identifier)
-			messenger.send_update({ "run": self.run_identifier, "results": results })
+			if results is not None:
+				messenger.send_update({ "run": self.run_identifier, "results": results })
 			self.results_last_timestamp = results_timestamp
 
 
 	def _send_log_updates(self, messenger: Messenger) -> None:
 		status = self._storage.load_status(self.run_identifier)
-		if "steps" not in status:
+		if status is None or "steps" not in status:
 			return
 
 		for step in self.run_steps:
