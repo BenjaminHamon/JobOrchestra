@@ -9,7 +9,7 @@ class FakeDateTimeProvider(DateTimeProvider):
 
 	def __init__(self):
 		super().__init__()
-		self.now_value = datetime.datetime(2020, 1, 1, 0, 0, 0)
+		self.now_value = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo = datetime.timezone.utc)
 
 
 	def now(self):

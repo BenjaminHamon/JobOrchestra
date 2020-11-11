@@ -10,7 +10,7 @@ def test_serialization():
 
 	date_time_provider_instance = DateTimeProvider()
 
-	value_as_datetime = datetime.datetime(2020, 1, 1, 0, 0, 0)
+	value_as_datetime = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo = datetime.timezone.utc)
 	value_as_string = "2020-01-01T00:00:00Z"
 
 	value_serialized = date_time_provider_instance.serialize(value_as_datetime)
