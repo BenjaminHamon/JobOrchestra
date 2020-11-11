@@ -13,7 +13,7 @@ import sqlalchemy_utils
 import bhamon_orchestra_model.database.sql_database_model as sql_database_model
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
-from bhamon_orchestra_model.database.file_storage import FileStorage
+from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.project_provider import ProjectProvider
@@ -99,13 +99,13 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 			self.database_administration_factory = factory.create_database_administration_factory(self.database_uri, sql_database_model.metadata)
 			self.database_client_factory = factory.create_database_client_factory(self.database_uri, sql_database_model.metadata)
-			self.file_storage = FileStorage(os.path.join(self.temporary_directory, "master"))
+			self.data_storage = FileDataStorage(os.path.join(self.temporary_directory, "master"))
 
 			self.authentication_provider = AuthenticationProvider(date_time_provider_instance)
 			self.authorization_provider = AuthorizationProvider()
 			self.job_provider = JobProvider(date_time_provider_instance)
 			self.project_provider = ProjectProvider(date_time_provider_instance)
-			self.run_provider = RunProvider(self.file_storage, date_time_provider_instance)
+			self.run_provider = RunProvider(self.data_storage, date_time_provider_instance)
 			self.schedule_provider = ScheduleProvider(date_time_provider_instance)
 			self.user_provider = UserProvider(date_time_provider_instance)
 			self.worker_provider = WorkerProvider(date_time_provider_instance)

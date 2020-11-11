@@ -6,7 +6,7 @@ import types
 
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
-from bhamon_orchestra_model.database.file_storage import FileStorage
+from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.project_provider import ProjectProvider
@@ -55,7 +55,7 @@ def create_application(arguments):
 
 	database_administration_factory = factory.create_database_administration_factory(arguments.database, database_metadata)
 	database_client_factory = factory.create_database_client_factory(arguments.database, database_metadata)
-	file_storage_instance = FileStorage(".")
+	data_storage_instance = FileDataStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 
 	application = types.SimpleNamespace()
@@ -65,7 +65,7 @@ def create_application(arguments):
 	application.authorization_provider = AuthorizationProvider()
 	application.job_provider = JobProvider(date_time_provider_instance)
 	application.project_provider = ProjectProvider(date_time_provider_instance)
-	application.run_provider = RunProvider(file_storage_instance, date_time_provider_instance)
+	application.run_provider = RunProvider(data_storage_instance, date_time_provider_instance)
 	application.schedule_provider = ScheduleProvider(date_time_provider_instance)
 	application.user_provider = UserProvider(date_time_provider_instance)
 	application.worker_provider = WorkerProvider(date_time_provider_instance)

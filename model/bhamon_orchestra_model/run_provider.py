@@ -9,7 +9,7 @@ import zipfile
 from typing import List, Optional, Tuple
 
 from bhamon_orchestra_model.database.database_client import DatabaseClient
-from bhamon_orchestra_model.database.file_storage import FileStorage
+from bhamon_orchestra_model.database.data_storage import DataStorage
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 
 
@@ -19,8 +19,8 @@ logger = logging.getLogger("RunProvider")
 class RunProvider:
 
 
-	def __init__(self, file_storage: FileStorage, date_time_provider: DateTimeProvider) -> None:
-		self.file_storage = file_storage
+	def __init__(self, data_storage: DataStorage, date_time_provider: DateTimeProvider) -> None:
+		self.data_storage = data_storage
 		self.date_time_provider = date_time_provider
 		self.table = "run"
 
@@ -126,35 +126,37 @@ class RunProvider:
 		database_client.update_one(self.table, { "project": run["project"], "identifier": run["identifier"] }, update_data)
 
 
-	def _get_step_log_path(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> str:
-		run_step = self.get_step(database_client, project, run_identifier, step_index)
-		return os.path.join("projects", project, "runs", run_identifier, "step_{index}_{name}.log".format(**run_step))
+	def _get_step_log_key(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> str:
+		run_step = self.get_step(database_client, project, run_identifier, step_index) # pylint: disable = possibly-unused-variable
+		return "projects/{project}/runs/{run_identifier}/step_{run_step[index]}_{run_step[name]}.log".format(**locals())
 
 
 	def has_step_log(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> bool:
-		return self.file_storage.exists(self._get_step_log_path(database_client, project, run_identifier, step_index))
+		return self.data_storage.exists(self._get_step_log_key(database_client, project, run_identifier, step_index))
 
 
 	def get_step_log(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> Tuple[str,int]:
-		return self.file_storage.load_chunk_or_default(self._get_step_log_path(database_client, project, run_identifier, step_index), "", skip = 0, limit = None)
+		key = self._get_step_log_key(database_client, project, run_identifier, step_index)
+		raw_data = self.data_storage.get(key)
+		text_data = raw_data.decode("utf-8") if raw_data is not None else ""
+		return text_data, len(raw_data) if raw_data is not None else 0
 
 
 	def get_step_log_chunk(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
 			project: str, run_identifier: str, step_index: int, skip: int = 0, limit: Optional[int] = None) -> Tuple[str,int]:
-		return self.file_storage.load_chunk_or_default(self._get_step_log_path(database_client, project, run_identifier, step_index), "", skip = skip, limit = limit)
+		key = self._get_step_log_key(database_client, project, run_identifier, step_index)
+		raw_data = self.data_storage.get_chunk(key, skip = skip, limit = limit)
+		text_data = raw_data.decode("utf-8") if raw_data is not None else ""
+		return text_data, (len(raw_data) if raw_data is not None else 0) + skip
 
 
 	def get_step_log_size(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> int:
-		return self.file_storage.get_universal_size(self._get_step_log_path(database_client, project, run_identifier, step_index))
+		return self.data_storage.get_size(self._get_step_log_key(database_client, project, run_identifier, step_index))
 
 
 	def append_step_log(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
 			project: str, run_identifier: str, step_index: int, log_text: str) -> None:
-		self.file_storage.append_unsafe(self._get_step_log_path(database_client, project, run_identifier, step_index), log_text)
-
-
-	def delete_step_log(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> None:
-		self.file_storage.delete(self._get_step_log_path(database_client, project, run_identifier, step_index))
+		self.data_storage.append(self._get_step_log_key(database_client, project, run_identifier, step_index), log_text.encode("utf-8"))
 
 
 	def get_results(self, database_client: DatabaseClient, project: str, run_identifier: str) -> dict:
@@ -189,10 +191,13 @@ class RunProvider:
 
 				if run["steps"] is not None:
 					for step in run["steps"]:
-						log_path = self._get_step_log_path(database_client, project, run_identifier, step["index"])
-						entry_info = zipfile.ZipInfo(os.path.basename(log_path), now[0:6])
-						entry_info.external_attr = 0o644 << 16
-						archive.writestr(entry_info, self.file_storage.load_or_default(log_path, ""))
+						log_key = self._get_step_log_key(database_client, project, run_identifier, step["index"])
+						log_data = self.data_storage.get(log_key)
+
+						if log_data is not None:
+							entry_info = zipfile.ZipInfo(os.path.basename(log_key), now[0:6])
+							entry_info.external_attr = 0o644 << 16
+							archive.writestr(entry_info, self.data_storage.get(log_key))
 
 			return { "file_name": file_name, "data": file_object.getvalue(), "type": "zip" }
 

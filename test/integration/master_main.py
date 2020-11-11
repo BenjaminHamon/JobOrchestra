@@ -12,7 +12,7 @@ from bhamon_orchestra_master.supervisor import Supervisor
 from bhamon_orchestra_master.worker_selector import WorkerSelector
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
-from bhamon_orchestra_model.database.file_storage import FileStorage
+from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.project_provider import ProjectProvider
@@ -53,14 +53,14 @@ def create_application(arguments): # pylint: disable = too-many-locals
 		database_metadata = importlib.import_module("bhamon_orchestra_model.database.sql_database_model").metadata
 
 	database_client_factory = factory.create_database_client_factory(arguments.database, database_metadata)
-	file_storage_instance = FileStorage(".")
+	data_storage_instance = FileDataStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 
 	authentication_provider_instance = AuthenticationProvider(date_time_provider_instance)
 	authorization_provider_instance = AuthorizationProvider()
 	job_provider_instance = JobProvider(date_time_provider_instance)
 	project_provider_instance = ProjectProvider(date_time_provider_instance)
-	run_provider_instance = RunProvider(file_storage_instance, date_time_provider_instance)
+	run_provider_instance = RunProvider(data_storage_instance, date_time_provider_instance)
 	schedule_provider_instance = ScheduleProvider(date_time_provider_instance)
 	user_provider_instance = UserProvider(date_time_provider_instance)
 	worker_provider_instance = WorkerProvider(date_time_provider_instance)

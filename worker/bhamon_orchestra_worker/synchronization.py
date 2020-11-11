@@ -4,7 +4,7 @@ import os
 from typing import List
 
 from bhamon_orchestra_model.network.messenger import Messenger
-import bhamon_orchestra_worker.worker_storage as worker_storage
+from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 
 logger = logging.getLogger("Synchronization")
@@ -14,7 +14,8 @@ class Synchronization:
 	""" Responsible for pushing data from an executor to the master """
 
 
-	def __init__(self, run_request: dict) -> None:
+	def __init__(self, storage: WorkerStorage, run_request: dict) -> None:
+		self._storage = storage
 		self.run_identifier = run_request["run_identifier"]
 
 		self.internal_status = "paused"
@@ -64,23 +65,23 @@ class Synchronization:
 
 
 	def _send_updates(self, messenger: Messenger) -> None:
-		status_timestamp = worker_storage.get_status_timestamp(self.run_identifier)
-		status = worker_storage.load_status(self.run_identifier)
+		status_timestamp = self._storage.get_status_timestamp(self.run_identifier)
+		status = self._storage.load_status(self.run_identifier)
 		if status_timestamp != self.status_last_timestamp:
 			if status["status"] != "unknown":
 				messenger.send_update({ "run": self.run_identifier, "status": status })
 			self.run_status = status["status"]
 			self.status_last_timestamp = status_timestamp
 
-		results_timestamp = worker_storage.get_results_timestamp(self.run_identifier)
+		results_timestamp = self._storage.get_results_timestamp(self.run_identifier)
 		if results_timestamp != self.results_last_timestamp:
-			results = worker_storage.load_results(self.run_identifier)
+			results = self._storage.load_results(self.run_identifier)
 			messenger.send_update({ "run": self.run_identifier, "results": results })
 			self.results_last_timestamp = results_timestamp
 
 
 	def _send_log_updates(self, messenger: Messenger) -> None:
-		status = worker_storage.load_status(self.run_identifier)
+		status = self._storage.load_status(self.run_identifier)
 		if "steps" not in status:
 			return
 
@@ -88,7 +89,7 @@ class Synchronization:
 			step_status = status["steps"][step["index"]]["status"]
 
 			if step["log_status"] == "pending" and step_status not in [ "pending", "skipped" ]:
-				log_file_path = worker_storage.get_log_path(self.run_identifier, step["index"], step["name"])
+				log_file_path = self._storage.get_log_path(self.run_identifier, step["index"], step["name"])
 				if os.path.exists(log_file_path):
 					step["log_file"] = open(log_file_path, mode = "r", encoding = "utf-8")
 					step["log_status"] = "running"

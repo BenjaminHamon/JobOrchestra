@@ -43,4 +43,5 @@ class FakeExecutorWatcher:
 
 
 	async def complete(self):
-		pass
+		if self.is_running():
+			raise RuntimeError("Executor is running")
