@@ -126,9 +126,7 @@ async def test_process_success():
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
 
-	remote_executor.status["status"] = "succeeded"
-	for step in remote_executor.status["steps"]:
-		step["status"] = "succeeded"
+	remote_executor.succeed()
 
 	await worker_local_instance.receive_update({ "run": run["identifier"], "status": remote_executor.status })
 	await worker_local_instance._process_executor(database_client_instance, local_executor)
@@ -256,6 +254,9 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 
 	job = { "project": "my_project", "identifier": "my_job" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
+	request = { "run_identifier": run["identifier"], "job": job, "parameters": {} }
+
+	worker_storage_instance.load_request.return_value = request
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -275,8 +276,6 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert len(worker_local_instance.executors) == 1
 
 	remote_executor = worker_remote_instance._find_executor(run["identifier"])
-	remote_executor.request["job"] = job
-	remote_executor.request["parameters"] = {}
 
 	await worker_local_instance.receive_update({ "run": run["identifier"], "status": remote_executor.status })
 	await worker_local_instance._process_executor(database_client_instance, local_executor)
@@ -292,7 +291,6 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert len(worker_local_instance.executors) == 0
 
 	# none => running (_recover_execution)
-	worker_storage_instance.load_request.return_value = remote_executor.request
 	worker_local_instance.executors = await worker_local_instance._recover_executors(database_client_instance)
 	local_executor = worker_local_instance.executors[0]
 
@@ -306,9 +304,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
 
-	remote_executor.status["status"] = "succeeded"
-	for step in remote_executor.status["steps"]:
-		step["status"] = "succeeded"
+	remote_executor.succeed()
 
 	await worker_local_instance.receive_update({ "run": run["identifier"], "status": remote_executor.status })
 	await worker_local_instance._process_executor(database_client_instance, local_executor)
@@ -355,6 +351,9 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 
 	job = { "project": "my_project", "identifier": "my_job" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
+	request = { "run_identifier": run["identifier"], "job": job, "parameters": {} }
+
+	worker_storage_instance.load_request.return_value = request
 
 	assert run["status"] == "pending"
 	assert len(worker_local_instance.executors) == 0
@@ -374,8 +373,6 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	assert len(worker_local_instance.executors) == 1
 
 	remote_executor = worker_remote_instance._find_executor(run["identifier"])
-	remote_executor.request["job"] = job
-	remote_executor.request["parameters"] = {}
 
 	await worker_local_instance.receive_update({ "run": run["identifier"], "status": remote_executor.status })
 	await worker_local_instance._process_executor(database_client_instance, local_executor)
@@ -390,12 +387,9 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	assert run["status"] == "running"
 	assert len(worker_local_instance.executors) == 0
 
-	remote_executor.status["status"] = "succeeded"
-	for step in remote_executor.status["steps"]:
-		step["status"] = "succeeded"
+	remote_executor.succeed()
 
 	# none => running (_recover_execution)
-	worker_storage_instance.load_request.return_value = remote_executor.request
 	worker_local_instance.executors = await worker_local_instance._recover_executors(database_client_instance)
 	local_executor = worker_local_instance.executors[0]
 

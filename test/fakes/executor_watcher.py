@@ -5,10 +5,6 @@ class FakeExecutorWatcher:
 		self.run_identifier = run_identifier
 		self.synchronization = None
 
-		self.request = {
-			"run_identifier": run_identifier,
-		}
-
 		self.status = {
 			"run_identifier": run_identifier,
 			"status": "pending",
@@ -45,3 +41,9 @@ class FakeExecutorWatcher:
 	async def complete(self):
 		if self.is_running():
 			raise RuntimeError("Executor is running")
+
+
+	def succeed(self):
+		self.status["status"] = "succeeded"
+		for step in self.status["steps"]:
+			step["status"] = "succeeded"
