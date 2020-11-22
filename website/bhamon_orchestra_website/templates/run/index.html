@@ -45,6 +45,7 @@
 	</ul>
 </section>
 
+{% if run['parameters'] != None and (run['parameters'] | length) != 0 %}
 <section>
 	<h2>Parameters</h2>
 	<ul>
@@ -52,34 +53,6 @@
 		<li>{{ key }}: {{ value }}</li>
 		{% endfor %}
 	</ul>
-</section>
-
-{% if run_steps != None %}
-<section>
-	<h2>Steps</h2>
-	<table>
-		<thead>
-			<tr>
-				<th>Index</th>
-				<th>Name</th>
-				<th>Status</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for step in run_steps %}
-			<tr>
-				<td>{{ step['index'] }}</td>
-				<td>{{ step['name'] }}</td>
-				<td>
-					<div class="status-group">
-						<div class="status-indicator {{ step['status'] }}"></div>
-						<div class="status-text">{{ step['status'] }}</div>
-					</div>
-				</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
 </section>
 {% endif %}
 

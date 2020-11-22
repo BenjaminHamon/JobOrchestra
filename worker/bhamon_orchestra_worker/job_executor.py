@@ -159,26 +159,3 @@ class JobExecutor(Executor):
 			time.sleep(1)
 			result = child_process.poll()
 		return "succeeded" if result == 0 else "failed"
-
-
-	def _save_status(self) -> None:
-		status = {
-			"project_identifier": self.project_identifier,
-			"job_identifier": self.job_identifier,
-			"run_identifier": self.run_identifier,
-			"workspace": self.workspace,
-			"environment": self.environment,
-			"status": self.run_status,
-			"start_date": self.start_date,
-			"completion_date": self.completion_date,
-		}
-
-		status["steps"] = []
-		for step in self.step_collection:
-			status["steps"].append({
-				"index": step["index"],
-				"name": step["name"],
-				"status": step["status"],
-			})
-
-		self._storage.save_status(self.run_identifier, status)

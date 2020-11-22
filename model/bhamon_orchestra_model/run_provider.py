@@ -69,7 +69,6 @@ class RunProvider:
 			"source": source,
 			"worker": None,
 			"status": "pending",
-			"steps": None,
 			"start_date": None,
 			"completion_date": None,
 			"results": None,
@@ -101,26 +100,6 @@ class RunProvider:
 		}
 
 		update_data = { key: value for key, value in update_data.items() if value is not None }
-
-		run.update(update_data)
-		database_client.update_one(self.table, { "project": run["project"], "identifier": run["identifier"] }, update_data)
-
-
-	def get_all_steps(self, database_client: DatabaseClient, project: str, run_identifier: str) -> List[dict]:
-		return database_client.find_one(self.table, { "project": project, "identifier": run_identifier })["steps"]
-
-
-	def get_step(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> dict:
-		return database_client.find_one(self.table, { "project": project, "identifier": run_identifier })["steps"][step_index]
-
-
-	def update_steps(self, database_client: DatabaseClient, run: dict, step_collection: List[dict]) -> None:
-		now = self.date_time_provider.now()
-
-		update_data = {
-			"steps": step_collection,
-			"update_date": self.date_time_provider.serialize(now),
-		}
 
 		run.update(update_data)
 		database_client.update_one(self.table, { "project": run["project"], "identifier": run["identifier"] }, update_data)

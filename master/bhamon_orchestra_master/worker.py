@@ -272,10 +272,6 @@ class Worker:
 		properties_to_update = [ "status", "start_date", "completion_date" ]
 		self._run_provider.update_status(database_client, run, ** { key: value for key, value in status.items() if key in properties_to_update })
 
-		step_properties_to_update = [ "name", "index", "status" ]
-		step_collection = [ { key: value for key, value in step.items() if key in step_properties_to_update } for step in status.get("steps", []) ]
-		self._run_provider.update_steps(database_client, run, step_collection)
-
 
 	def _update_results(self, database_client: DatabaseClient, run: dict, results: dict) -> None:
 		""" Process an update for the run results """

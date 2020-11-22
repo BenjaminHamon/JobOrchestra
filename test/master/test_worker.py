@@ -62,7 +62,7 @@ async def test_abort_execution_success():
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
-	run = { "project": "my_project", "identifier": "my_run", "job": "my_job", "status": "running", "steps": [] }
+	run = { "project": "my_project", "identifier": "my_run", "job": "my_job", "status": "running" }
 
 	worker_remote_instance._active_executors.append(FakeExecutorWatcher(run["identifier"]))
 
@@ -80,7 +80,7 @@ async def test_finish_execution_success():
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
-	run = { "project": "my_project", "identifier": "my_run", "job": "my_job", "status": "succeeded", "steps": [] }
+	run = { "project": "my_project", "identifier": "my_run", "job": "my_job", "status": "succeeded" }
 
 	worker_remote_instance._active_executors.append(FakeExecutorWatcher(run["identifier"]))
 

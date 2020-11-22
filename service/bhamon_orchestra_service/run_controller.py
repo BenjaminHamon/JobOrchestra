@@ -38,16 +38,6 @@ def get(project_identifier, run_identifier):
 	return flask.jsonify(flask.current_app.run_provider.get(database_client, project_identifier, run_identifier))
 
 
-def get_step_collection(project_identifier, run_identifier):
-	database_client = flask.request.database_client()
-	return flask.jsonify(flask.current_app.run_provider.get_all_steps(database_client, project_identifier, run_identifier))
-
-
-def get_step(project_identifier, run_identifier, step_index):
-	database_client = flask.request.database_client()
-	return flask.jsonify(flask.current_app.run_provider.get_step(database_client, project_identifier, run_identifier, step_index))
-
-
 def get_log(project_identifier, run_identifier):
 	log_text, log_cursor = flask.current_app.run_provider.get_log(project_identifier, run_identifier)
 	return flask.Response(log_text, mimetype = "text/plain", headers = { "X-Orchestra-FileCursor": log_cursor })

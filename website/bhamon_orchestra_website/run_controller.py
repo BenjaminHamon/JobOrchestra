@@ -42,7 +42,6 @@ def show_collection(project_identifier):
 def show(project_identifier, run_identifier): # pylint: disable = unused-argument
 	project = service_client.get("/project/{project_identifier}".format(**locals()))
 	run = service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals()))
-	run_steps = service_client.get("/project/{project_identifier}/run/{run_identifier}/step_collection".format(**locals()))
 	run_results = service_client.get("/project/{project_identifier}/run/{run_identifier}/results".format(**locals()))
 
 	run["project_display_name"] = project["display_name"]
@@ -66,7 +65,7 @@ def show(project_identifier, run_identifier): # pylint: disable = unused-argumen
 		worker = service_client.get_or_default(worker_route, default_value = {})
 		run["worker_display_name"] = worker.get("display_name", run["worker"])
 
-	view_data = { "project": project, "run": run, "run_steps": run_steps, "run_results": run_results }
+	view_data = { "project": project, "run": run, "run_results": run_results }
 
 	return flask.render_template("run/index.html", title = "Run " + run_identifier[:18], **view_data)
 

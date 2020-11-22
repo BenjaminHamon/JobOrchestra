@@ -65,7 +65,6 @@ def test_service_routes(tmpdir, database_type, user_identifier, user_roles): # p
 			worker = context_instance.worker_provider.create(database_client, "my_worker", "my_user", "0.0.0", "MyWorker")
 			run = context_instance.run_provider.create(database_client, "examples", "empty", {}, { "type": "user", "identifier": "my_user" })
 			context_instance.run_provider.update_status(database_client, run, worker = "my_worker")
-			context_instance.run_provider.update_steps(database_client, run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 
 		service_process = context_instance.invoke_service()
 
@@ -86,7 +85,6 @@ def test_service_routes(tmpdir, database_type, user_identifier, user_roles): # p
 			if route == "/project/<project_identifier>/status":
 				continue
 
-			route = route.replace("<int:step_index>", "0")
 			route = route.replace("<job_identifier>", job["identifier"])
 			route = route.replace("<project_identifier>", project["identifier"])
 			route = route.replace("<run_identifier>", run["identifier"])
@@ -154,7 +152,6 @@ def test_website_pages(tmpdir, database_type, user_identifier, user_roles): # py
 			worker = context_instance.worker_provider.create(database_client, "my_worker", "my_user", "0.0.0", "MyWorker")
 			run = context_instance.run_provider.create(database_client, "examples", "empty", {}, { "type": "user", "identifier": "my_user" })
 			context_instance.run_provider.update_status(database_client, run, worker = "my_worker")
-			context_instance.run_provider.update_steps(database_client, run, [ { "index": 0, "name": "step_0", "status": "pending" } ])
 
 		service_process = context_instance.invoke_service()
 		website_process = context_instance.invoke_website()
@@ -173,7 +170,6 @@ def test_website_pages(tmpdir, database_type, user_identifier, user_roles): # py
 			if route == "/project/<project_identifier>/status":
 				continue
 
-			route = route.replace("<int:step_index>", "0")
 			route = route.replace("<job_identifier>", job["identifier"])
 			route = route.replace("<project_identifier>", project["identifier"])
 			route = route.replace("<run_identifier>", run["identifier"])
