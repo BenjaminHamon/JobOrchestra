@@ -24,11 +24,7 @@ def test_success(tmpdir):
 		"project_identifier": "my_project",
 		"job_identifier": "my_job",
 		"run_identifier": "my_run",
-
-		"job_definition": {
-			"workspace": "my_project",
-		},
-
+		"job_definition": {},
 		"parameters": {},
 	}
 
@@ -82,11 +78,7 @@ def test_exception(tmpdir):
 		"project_identifier": "my_project",
 		"job_identifier": "my_job",
 		"run_identifier": "my_run",
-
-		"job_definition": {
-			"workspace": "my_project",
-		},
-
+		"job_definition": {},
 		"parameters": {},
 	}
 

@@ -60,7 +60,7 @@ def test_service_routes(tmpdir, database_type, user_identifier, user_roles): # p
 		with context_instance.database_client_factory() as database_client:
 			user = context_instance.user_provider.create(database_client, "my_user", "MyUser")
 			project = context_instance.project_provider.create_or_update(database_client, "examples", "Examples", {})
-			job = context_instance.job_provider.create_or_update(database_client, "empty", "examples", "Empty", "", "workspace", [], [], {})
+			job = context_instance.job_provider.create_or_update(database_client, "empty", "examples", "Empty", "", [], [], {})
 			schedule = context_instance.schedule_provider.create_or_update(database_client, "empty_nightly", "examples", "Empty Nightly", "empty", {}, "0 0 * * *")
 			worker = context_instance.worker_provider.create(database_client, "my_worker", "my_user", "0.0.0", "MyWorker")
 			run = context_instance.run_provider.create(database_client, "examples", "empty", {}, { "type": "user", "identifier": "my_user" })
@@ -147,7 +147,7 @@ def test_website_pages(tmpdir, database_type, user_identifier, user_roles): # py
 		with context_instance.database_client_factory() as database_client:
 			user = context_instance.user_provider.create(database_client, "my_user", "MyUser")
 			project = context_instance.project_provider.create_or_update(database_client, "examples", "Examples", {})
-			job = context_instance.job_provider.create_or_update(database_client, "empty", "examples", "Empty", "", "workspace", [], [], {})
+			job = context_instance.job_provider.create_or_update(database_client, "empty", "examples", "Empty", "", [], [], {})
 			schedule = context_instance.schedule_provider.create_or_update(database_client, "empty_nightly", "examples", "Empty Nightly", "empty", {}, "0 0 * * *")
 			worker = context_instance.worker_provider.create(database_client, "my_worker", "my_user", "0.0.0", "MyWorker")
 			run = context_instance.run_provider.create(database_client, "examples", "empty", {}, { "type": "user", "identifier": "my_user" })

@@ -22,7 +22,6 @@ Represents a job to be executed by a worker, with requirements, parameters and t
 * identifier: the string key unique within the project, used to identify the job
 * display_name: the user-friendly name displayed in user interfaces
 * description: the description of what the job does, to be diplayed in user interfaces
-* workspace: the directory where the job is executed on a worker
 * steps: the list of commands to execute
 	* step.name: the step name
 	* step.command: the command as an array of strings, to be formatted and passed to python subprocess

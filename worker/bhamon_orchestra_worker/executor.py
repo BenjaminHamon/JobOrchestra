@@ -72,7 +72,7 @@ class Executor: # pylint: disable = too-many-instance-attributes
 
 		self.run_status = "pending"
 
-		self.workspace = os.path.join("workspaces", run_request["job_definition"]["workspace"])
+		self.workspace = os.path.join("workspaces", run_request["project_identifier"])
 		self.environment = environment
 		self.log_file_path = self._storage.get_log_path(self.run_identifier)
 
