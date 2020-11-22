@@ -20,11 +20,11 @@ class FileDataStorage(DataStorage):
 		self.storage_directory = storage_directory
 
 
-	def get_keys(self) -> List[str]:
+	def get_keys(self, prefix: str) -> List[str]:
 		""" Get all keys """
 
 		all_keys = []
-		for file_path in glob.glob(self.get_file_path("**"), recursive = True):
+		for file_path in glob.glob(self.get_file_path(prefix + "**"), recursive = True):
 			if os.path.isfile(file_path):
 				all_keys.append(os.path.relpath(file_path, self.storage_directory).replace("\\", "/"))
 		return all_keys

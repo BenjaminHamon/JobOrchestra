@@ -20,9 +20,9 @@ class WorkerStorage:
 
 	def list_runs(self) -> List[str]:
 		all_runs = []
-		for key in self._storage.get_keys():
-			if re.search(r"^[0-a\-]+/request\.json$", key) is not None:
-				all_runs.append(key.split("/")[0])
+		for key in self._storage.get_keys("runs/"):
+			if re.search(r"^runs/[a-zA-Z0-9_\-\.]+/request\.json$", key) is not None:
+				all_runs.append(key.split("/")[1])
 		return all_runs
 
 

@@ -8,7 +8,7 @@ class DataStorage(abc.ABC):
 
 
 	@abc.abstractmethod
-	def get_keys(self) -> List[str]:
+	def get_keys(self, prefix: str) -> List[str]:
 		""" Get all keys """
 
 

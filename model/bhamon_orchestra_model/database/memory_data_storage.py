@@ -16,10 +16,10 @@ class MemoryDataStorage(DataStorage):
 		self.storage = {}
 
 
-	def get_keys(self) -> List[str]:
+	def get_keys(self, prefix: str) -> List[str]:
 		""" Get all keys """
 
-		return list(self.storage.keys())
+		return [ key for key in self.storage if key.startswith(prefix) ]
 
 
 	def exists(self, key: str) -> bool:

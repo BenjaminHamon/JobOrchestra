@@ -71,4 +71,4 @@ def test_get_keys(tmpdir, storage_implementation):
 
 	data_storage_instance.set(key, data)
 
-	assert data_storage_instance.get_keys() == [ key ]
+	assert data_storage_instance.get_keys("my/") == [ key ]
