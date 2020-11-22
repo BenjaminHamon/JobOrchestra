@@ -39,7 +39,7 @@ def test_schedule(tmpdir, database_type):
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
 			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
-			time.sleep(1)
+			time.sleep(2)
 
 			schedule = context_instance.schedule_provider.get(database_client, schedule["project"], schedule["identifier"])
 			run = context_instance.run_provider.get(database_client, schedule["project"], schedule["last_run"])

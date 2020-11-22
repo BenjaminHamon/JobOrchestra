@@ -155,7 +155,7 @@ def test_run_cancel(tmpdir, database_type):
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
 			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
-			time.sleep(1)
+			time.sleep(2)
 
 			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
@@ -191,7 +191,7 @@ def test_run_abort(tmpdir, database_type):
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
 			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
-			time.sleep(1)
+			time.sleep(2)
 
 			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
@@ -328,6 +328,6 @@ def run_and_wait(run_provider, database_client, project_identifier, job_identifi
 
 	condition_function = lambda: run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
 	assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
-	time.sleep(1)
+	time.sleep(2)
 
 	return run_provider.get(database_client, run["project"], run["identifier"])
