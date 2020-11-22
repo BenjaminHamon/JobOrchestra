@@ -178,7 +178,7 @@ class Worker: # pylint: disable = too-few-public-methods
 			"project_identifier": job["project"],
 			"job_identifier": job["identifier"],
 			"run_identifier": run_identifier,
-			"job_definition": job,
+			"job_definition": job["definition"],
 			"parameters": parameters,
 		}
 

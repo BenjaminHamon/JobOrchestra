@@ -37,7 +37,7 @@ class JobProvider:
 
 	def create_or_update(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
 			job_identifier: str, project: str, display_name: str, description: str,
-			steps: list, parameters: list, properties: dict) -> dict:
+			definition: dict, parameters: list, properties: dict) -> dict:
 
 		now = self.date_time_provider.now()
 		job = self.get(database_client, project, job_identifier)
@@ -48,7 +48,7 @@ class JobProvider:
 				"identifier": job_identifier,
 				"display_name": display_name,
 				"description": description,
-				"steps": steps,
+				"definition": definition,
 				"parameters": parameters,
 				"properties": properties,
 				"is_enabled": True,
@@ -62,7 +62,7 @@ class JobProvider:
 			update_data = {
 				"display_name": display_name,
 				"description": description,
-				"steps": steps,
+				"definition": definition,
 				"parameters": parameters,
 				"properties": properties,
 				"update_date": self.date_time_provider.serialize(now),

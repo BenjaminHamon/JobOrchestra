@@ -4,7 +4,6 @@ import os
 import platform
 import signal
 import subprocess
-import sys
 import time
 from typing import List
 
@@ -25,8 +24,6 @@ class JobExecutor(Executor):
 	def __init__(self, storage: WorkerStorage, date_time_provider: DateTimeProvider) -> None:
 		super().__init__(storage, date_time_provider)
 
-		self.is_skipping = False
-		self.step_collection = []
 		self.result_file_path = None
 
 		self.termination_timeout_seconds = 30
@@ -37,72 +34,48 @@ class JobExecutor(Executor):
 
 		self.result_file_path = os.path.join(self.workspace, ".orchestra", "runs", self.run_identifier, "results.json")
 
-		self.step_collection = []
-
-		for step_index, step in enumerate(self.job_definition["steps"]):
-			self.step_collection.append({
-				"index": step_index,
-				"name": step["name"],
-				"status": "pending",
-				"command": step["command"],
-			})
-
-		self._save_status()
-
 
 	def execute_implementation(self) -> None:
-		run_final_status = "succeeded"
-		self.is_skipping = False
+		overall_success = True
 
-		for step in self.step_collection:
-			if not self.is_skipping and self._should_shutdown:
-				run_final_status = "aborted"
-				self.is_skipping = True
+		for command in self.job_definition["commands"]:
+			success = self.execute_command(command)
 
-			self.execute_step(step)
+			if not success:
+				overall_success = False
+				break
 
-			if not self.is_skipping and step["status"] != "succeeded":
-				run_final_status = step["status"]
-				self.is_skipping = True
-
-		self.run_status = run_final_status
+		self.run_status = "succeeded" if overall_success else "failed"
 
 
-	def execute_step(self, step: dict) -> None:
-		logger.info("(%s) Step %s is starting", self.run_identifier, step["name"])
+	def execute_command(self, command: List[str]):
+		command = self.format_command(command)
+		logger.info("(%s) + %s", self.run_identifier, " ".join(("'" + x + "'") if " " in x else x for x in command))
 
-		try:
-			step["status"] = "running"
-			self._save_status()
+		with open(self.log_file_path, mode = "a", encoding = "utf-8") as log_file:
+			log_file.write("(orchestra) + %s\n" % " ".join(("'" + x + "'") if " " in x else x for x in command))
+			log_file.write("\n")
+			log_file.flush()
 
-			if self.is_skipping:
-				step["status"] = "skipped"
+			executor_directory = os.getcwd()
+			os.chdir(self.workspace)
 
-			else:
-				step_command = self.format_command(step["command"])
-				logger.info("(%s) + %s", self.run_identifier, " ".join(step_command))
-				step["status"] = self.execute_command(step_command)
+			try:
+				child_process = subprocess.Popen(command, stdout = log_file, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
+			finally:
+				os.chdir(executor_directory)
 
-				if os.path.isfile(self.result_file_path):
-					with open(self.result_file_path, mode = "r", encoding = "utf-8") as result_file:
-						results = json.load(result_file)
-					self._storage.save_results(self.run_identifier, results)
+			try:
+				success = self._wait_process(child_process)
+			finally:
+				log_file.write("\n")
 
-			self._save_status()
+		if os.path.isfile(self.result_file_path):
+			with open(self.result_file_path, mode = "r", encoding = "utf-8") as result_file:
+				results = json.load(result_file)
+			self._storage.save_results(self.run_identifier, results)
 
-		except KeyboardInterrupt: # pylint: disable = bare-except
-			logger.error("(%s) Step was aborted", self.run_identifier, exc_info = True)
-			self.run_status = "aborted"
-			self._save_status()
-			self._log_exception(sys.exc_info())
-
-		except: # pylint: disable = bare-except
-			logger.error("(%s) Step %s raised an exception", self.run_identifier, step["name"], exc_info = True)
-			step["status"] = "exception"
-			self._save_status()
-			self._log_exception(sys.exc_info())
-
-		logger.info("(%s) Step %s completed with status %s", self.run_identifier, step["name"], step["status"])
+		return success
 
 
 	def format_command(self, command: List[str]) -> List[str]:
@@ -124,27 +97,7 @@ class JobExecutor(Executor):
 		return [ argument.format(**format_parameters) for argument in command ]
 
 
-	def execute_command(self, command):
-		with open(self.log_file_path, mode = "a", encoding = "utf-8") as log_file:
-			log_file.write("(orchestra) + %s\n" % " ".join(("'" + x + "'") if " " in x else x for x in command))
-			log_file.write("\n")
-			log_file.flush()
-
-			executor_directory = os.getcwd()
-			os.chdir(self.workspace)
-
-			try:
-				child_process = subprocess.Popen(command, stdout = log_file, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
-			finally:
-				os.chdir(executor_directory)
-
-			try:
-				return self._wait_process(child_process)
-			finally:
-				log_file.write("\n")
-
-
-	def _wait_process(self, child_process: subprocess.Popen) -> str:
+	def _wait_process(self, child_process: subprocess.Popen) -> bool:
 		result = None
 		while result is None:
 			if self._should_shutdown:
@@ -155,7 +108,7 @@ class JobExecutor(Executor):
 				except subprocess.TimeoutExpired:
 					logger.warning("(%s) Terminating child process (force)", self.run_identifier)
 					child_process.kill()
-				return "aborted"
+				raise KeyboardInterrupt
 			time.sleep(1)
 			result = child_process.poll()
-		return "succeeded" if result == 0 else "failed"
+		return result == 0
