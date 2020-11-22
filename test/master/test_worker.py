@@ -26,7 +26,7 @@ class FakeRemoteWorker(RemoteWorker): # pylint: disable = too-few-public-methods
 		super().__init__(storage, None, None, None, None)
 
 
-	def _resynchronize(self, run_identifier: str, reset: dict) -> None:
+	def _resynchronize(self, run_identifier: str, log_cursor: int) -> None:
 		pass
 
 

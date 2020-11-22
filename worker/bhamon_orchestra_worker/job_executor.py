@@ -4,8 +4,8 @@ import os
 import platform
 import signal
 import subprocess
+import sys
 import time
-import traceback
 from typing import List
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
@@ -27,12 +27,15 @@ class JobExecutor(Executor):
 
 		self.is_skipping = False
 		self.step_collection = []
+		self.result_file_path = None
 
 		self.termination_timeout_seconds = 30
 
 
 	def initialize(self, environment: dict) -> None:
 		super().initialize(environment)
+
+		self.result_file_path = os.path.join(self.workspace, ".orchestra", "runs", self.run_identifier, "results.json")
 
 		self.step_collection = []
 
@@ -76,14 +79,12 @@ class JobExecutor(Executor):
 				step["status"] = "skipped"
 
 			else:
-				log_file_path = self._storage.get_log_path(self.run_identifier, step["index"], step["name"])
-				result_file_path = os.path.join(self.workspace, ".orchestra", "runs", self.run_identifier, "results.json")
-				step_command = self.format_command(step["command"], result_file_path, log_file_path)
+				step_command = self.format_command(step["command"])
 				logger.info("(%s) + %s", self.run_identifier, " ".join(step_command))
-				step["status"] = self.execute_command(step_command, log_file_path)
+				step["status"] = self.execute_command(step_command)
 
-				if os.path.isfile(result_file_path):
-					with open(result_file_path, mode = "r", encoding = "utf-8") as result_file:
+				if os.path.isfile(self.result_file_path):
+					with open(self.result_file_path, mode = "r", encoding = "utf-8") as result_file:
 						results = json.load(result_file)
 					self._storage.save_results(self.run_identifier, results)
 
@@ -93,20 +94,22 @@ class JobExecutor(Executor):
 			logger.error("(%s) Step was aborted", self.run_identifier, exc_info = True)
 			self.run_status = "aborted"
 			self._save_status()
+			self._log_exception(sys.exc_info())
 
 		except: # pylint: disable = bare-except
 			logger.error("(%s) Step %s raised an exception", self.run_identifier, step["name"], exc_info = True)
 			step["status"] = "exception"
 			self._save_status()
+			self._log_exception(sys.exc_info())
 
 		logger.info("(%s) Step %s completed with status %s", self.run_identifier, step["name"], step["status"])
 
 
-	def format_command(self, command: List[str], result_file_path: str, log_file_path: str) -> List[str]:
+	def format_command(self, command: List[str]) -> List[str]:
 		results = {}
-		if os.path.isfile(result_file_path):
-			with open(result_file_path, mode = "r", encoding = "utf-8") as result_file:
-				results = json.load(result_file)
+		if os.path.isfile(self.result_file_path):
+			with open(self.result_file_path, mode = "r", encoding = "utf-8") as results_file:
+				results = json.load(results_file)
 
 		format_parameters = {
 			"project_identifier": self.project_identifier,
@@ -115,26 +118,15 @@ class JobExecutor(Executor):
 			"environment": self.environment,
 			"parameters": self.parameters,
 			"results": results,
-			"result_file_path": os.path.relpath(result_file_path, self.workspace),
+			"result_file_path": os.path.relpath(self.result_file_path, self.workspace),
 		}
 
-		try:
-			return [ argument.format(**format_parameters) for argument in command ]
-		except KeyError:
-			with open(log_file_path, mode = "w", encoding = "utf-8") as log_file:
-				log_file.write("# Workspace: %s\n" % os.path.abspath(self.workspace))
-				log_file.write("# Command: %s\n" % " ".join(command))
-				log_file.write("\n")
-				log_file.write("Exception while formatting the step command\n")
-				log_file.write("\n")
-				log_file.write(traceback.format_exc())
-			raise
+		return [ argument.format(**format_parameters) for argument in command ]
 
 
-	def execute_command(self, command: List[str], log_file_path: str) -> str:
-		with open(log_file_path, mode = "w", encoding = "utf-8") as log_file:
-			log_file.write("# Workspace: %s\n" % os.path.abspath(self.workspace))
-			log_file.write("# Command: %s\n" % " ".join(command))
+	def execute_command(self, command):
+		with open(self.log_file_path, mode = "a", encoding = "utf-8") as log_file:
+			log_file.write("(orchestra) + %s\n" % " ".join(("'" + x + "'") if " " in x else x for x in command))
 			log_file.write("\n")
 			log_file.flush()
 
@@ -146,7 +138,10 @@ class JobExecutor(Executor):
 			finally:
 				os.chdir(executor_directory)
 
-			return self._wait_process(child_process)
+			try:
+				return self._wait_process(child_process)
+			finally:
+				log_file.write("\n")
 
 
 	def _wait_process(self, child_process: subprocess.Popen) -> str:

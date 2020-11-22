@@ -126,37 +126,23 @@ class RunProvider:
 		database_client.update_one(self.table, { "project": run["project"], "identifier": run["identifier"] }, update_data)
 
 
-	def _get_step_log_key(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> str:
-		run_step = self.get_step(database_client, project, run_identifier, step_index) # pylint: disable = possibly-unused-variable
-		return "projects/{project}/runs/{run_identifier}/step_{run_step[index]}_{run_step[name]}.log".format(**locals())
-
-
-	def has_step_log(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> bool:
-		return self.data_storage.exists(self._get_step_log_key(database_client, project, run_identifier, step_index))
-
-
-	def get_step_log(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> Tuple[str,int]:
-		key = self._get_step_log_key(database_client, project, run_identifier, step_index)
+	def get_log(self, project: str, run_identifier: str) -> Tuple[str,int]: # pylint: disable = unused-argument
+		key = "projects/{project}/runs/{run_identifier}/run.log".format(**locals())
 		raw_data = self.data_storage.get(key)
-		text_data = raw_data.decode("utf-8") if raw_data is not None else ""
+		text_data = raw_data.decode("utf-8").replace(os.linesep, "\n") if raw_data is not None else ""
 		return text_data, len(raw_data) if raw_data is not None else 0
 
 
-	def get_step_log_chunk(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
-			project: str, run_identifier: str, step_index: int, skip: int = 0, limit: Optional[int] = None) -> Tuple[str,int]:
-		key = self._get_step_log_key(database_client, project, run_identifier, step_index)
+	def get_log_chunk(self, project: str, run_identifier: str, skip: int = 0, limit: Optional[int] = None) -> Tuple[str,int]: # pylint: disable = unused-argument
+		key = "projects/{project}/runs/{run_identifier}/run.log".format(**locals())
 		raw_data = self.data_storage.get_chunk(key, skip = skip, limit = limit)
-		text_data = raw_data.decode("utf-8") if raw_data is not None else ""
+		text_data = raw_data.decode("utf-8").replace(os.linesep, "\n") if raw_data is not None else ""
 		return text_data, (len(raw_data) if raw_data is not None else 0) + skip
 
 
-	def get_step_log_size(self, database_client: DatabaseClient, project: str, run_identifier: str, step_index: int) -> int:
-		return self.data_storage.get_size(self._get_step_log_key(database_client, project, run_identifier, step_index))
-
-
-	def append_step_log(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
-			project: str, run_identifier: str, step_index: int, log_text: str) -> None:
-		self.data_storage.append(self._get_step_log_key(database_client, project, run_identifier, step_index), log_text.encode("utf-8"))
+	def append_log_chunk(self, project: str, run_identifier: str, log_chunk: str) -> None: # pylint: disable = unused-argument
+		key = "projects/{project}/runs/{run_identifier}/run.log".format(**locals())
+		self.data_storage.append(key, log_chunk.replace("\n", os.linesep).encode("utf-8"))
 
 
 	def get_results(self, database_client: DatabaseClient, project: str, run_identifier: str) -> dict:
@@ -189,15 +175,9 @@ class RunProvider:
 				entry_info.external_attr = 0o644 << 16
 				archive.writestr(entry_info, json.dumps(run, indent = 4))
 
-				if run["steps"] is not None:
-					for step in run["steps"]:
-						log_key = self._get_step_log_key(database_client, project, run_identifier, step["index"])
-						log_data = self.data_storage.get(log_key)
-
-						if log_data is not None:
-							entry_info = zipfile.ZipInfo(os.path.basename(log_key), now[0:6])
-							entry_info.external_attr = 0o644 << 16
-							archive.writestr(entry_info, self.data_storage.get(log_key))
+				entry_info = zipfile.ZipInfo("run.log", now[0:6])
+				entry_info.external_attr = 0o644 << 16
+				archive.writestr(entry_info, self.get_log(project, run_identifier)[0])
 
 			return { "file_name": file_name, "data": file_object.getvalue(), "type": "zip" }
 

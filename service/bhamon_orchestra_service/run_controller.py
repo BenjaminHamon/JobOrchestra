@@ -48,23 +48,20 @@ def get_step(project_identifier, run_identifier, step_index):
 	return flask.jsonify(flask.current_app.run_provider.get_step(database_client, project_identifier, run_identifier, step_index))
 
 
-def get_step_log(project_identifier, run_identifier, step_index):
-	database_client = flask.request.database_client()
-	log_text, log_cursor = flask.current_app.run_provider.get_step_log(database_client, project_identifier, run_identifier, step_index)
+def get_log(project_identifier, run_identifier):
+	log_text, log_cursor = flask.current_app.run_provider.get_log(project_identifier, run_identifier)
 	return flask.Response(log_text, mimetype = "text/plain", headers = { "X-Orchestra-FileCursor": log_cursor })
 
 
-def get_step_log_chunk(project_identifier, run_identifier, step_index):
+def get_log_chunk(project_identifier, run_identifier):
 	query_parameters = {
 		"project": project_identifier,
 		"run_identifier": run_identifier,
-		"step_index": step_index,
 		"skip": max(flask.request.headers.get("X-Orchestra-FileCursor", default = 0, type = int), 0),
 		"limit": max(flask.request.args.get("limit", default = 1024 * 1024, type = int), 0),
 	}
 
-	database_client = flask.request.database_client()
-	log_text, log_cursor = flask.current_app.run_provider.get_step_log_chunk(database_client, **query_parameters)
+	log_text, log_cursor = flask.current_app.run_provider.get_log_chunk(**query_parameters)
 	return flask.Response(log_text, mimetype = "text/plain", headers = { "X-Orchestra-FileCursor": log_cursor })
 
 

@@ -9,6 +9,7 @@
 
 <section>
 	<div class="link-group">
+		<a href="{{ url_for('run_controller.show_log', project_identifier = run['project'], run_identifier = run['identifier']) }}">Show log</a>
 		<a href="{{ url_for('run_controller.download_archive', project_identifier = run['project'], run_identifier = run['identifier']) }}">Download as archive</a>
 	</div>
 </section>
@@ -62,8 +63,6 @@
 				<th>Index</th>
 				<th>Name</th>
 				<th>Status</th>
-				<th>Details</th>
-				<th>Raw log</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -77,8 +76,6 @@
 						<div class="status-text">{{ step['status'] }}</div>
 					</div>
 				</td>
-				<td><a href="{{ url_for('run_controller.show_step', project_identifier = run['project'], run_identifier = run['identifier'], step_index = step['index']) }}">Details</a></td>
-				<td><a href="{{ url_for('run_controller.show_step_log', project_identifier = run['project'], run_identifier = run['identifier'], step_index = step['index']) }}">Raw log</a></td>
 			</tr>
 			{% endfor %}
 		</tbody>

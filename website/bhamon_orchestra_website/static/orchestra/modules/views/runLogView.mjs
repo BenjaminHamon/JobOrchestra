@@ -3,7 +3,7 @@ import { RunProvider } from "/static/orchestra/modules/providers/runProvider.mjs
 window.onload = function() {
 	var runProvider = new RunProvider(window.location.origin + "/service_proxy");
 
-	var view = new RunStepView(runProvider, window.viewData.projectIdentifier, window.viewData.runIdentifier, window.viewData.stepIndex);
+	var view = new RunLogView(runProvider, window.viewData.projectIdentifier, window.viewData.runIdentifier);
 
 	view.statusIndicatorElement = document.getElementsByClassName("status-indicator")[0];
 	view.statusTextElement = document.getElementsByClassName("status-text")[0];
@@ -11,28 +11,28 @@ window.onload = function() {
 
 	view.refresh().then(
 		_ => {
-			if (view.isStepCompleted(view.stepStatus) == false) {
+			if (view.isRunCompleted() == false) {
 				view.resumeAutoRefresh();
 			};
 		}
 	)
 };
 
-export class RunStepView {
+export class RunLogView {
 
-	constructor(runProvider, projectIdentifier, runIdentifier, stepIndex) {
+	constructor(runProvider, projectIdentifier, runIdentifier) {
 		this.runProvider = runProvider;
 		this.projectIdentifier = projectIdentifier;
 		this.runIdentifier = runIdentifier;
-		this.stepIndex = stepIndex;
 	
-		this.stepStatus = null;
+		this.runStatus = null;
 		this.logText = null;
 		this.logCursor = null;
 		this.logChunkSize = 1024 * 1024;
 		this.logLengthLimit = 1000 * 1000;
-		this.refreshInterval = null;
+
 		this.isRefreshing = false;
+		this.refreshInterval = null;
 
 		this.statusIndicatorElement = null;
 		this.statusTextElement = null;
@@ -40,15 +40,15 @@ export class RunStepView {
 	}
 
 	resumeAutoRefresh() {
-		if (this.refreshStepViewInterval == null) {
-			this.refreshStepViewInterval = setInterval(this.refresh.bind(this), 5 * 1000);
+		if (this.refreshInterval == null) {
+			this.refreshInterval = setInterval(this.refresh.bind(this), 5 * 1000);
 		}
 	}
 
 	pauseAutoRefresh() {
-		if (this.refreshStepViewInterval != null) {
-			clearInterval(this.refreshStepViewInterval);
-			this.refreshStepViewInterval = null;
+		if (this.refreshInterval != null) {
+			clearInterval(this.refreshInterval);
+			this.refreshInterval = null;
 		}
 	}
 
@@ -62,7 +62,7 @@ export class RunStepView {
 			await this.refreshStatus();
 			await this.refreshLog();
 
-			if (this.isStepCompleted(this.stepStatus)) {
+			if (this.isRunCompleted()) {
 				this.pauseAutoRefresh();
 			}
 		}
@@ -75,14 +75,14 @@ export class RunStepView {
 	}
 
 	async refreshStatus() {
-		var step = await this.runProvider.getStep(this.projectIdentifier, this.runIdentifier, this.stepIndex);
+		var run = await this.runProvider.getRun(this.projectIdentifier, this.runIdentifier);
 
-		if (step.status != this.stepStatus) {
-			var oldStatus = this.stepStatus;
-			this.stepStatus = step.status;
+		if (run.status != this.runStatus) {
+			var oldStatus = this.runStatus;
+			this.runStatus = run.status;
 			this.statusIndicatorElement.classList.remove(oldStatus);
-			this.statusIndicatorElement.classList.add(this.stepStatus);
-			this.statusTextElement.textContent = this.stepStatus;
+			this.statusIndicatorElement.classList.add(this.runStatus);
+			this.statusTextElement.textContent = this.runStatus;
 		}
 	}
 
@@ -99,7 +99,7 @@ export class RunStepView {
 		var lastChunkSize = null;
 
 		do {
-			var logChunk = await this.runProvider.getLogChunk(this.projectIdentifier, this.runIdentifier, this.stepIndex, this.logCursor, this.logChunkSize);
+			var logChunk = await this.runProvider.getLogChunk(this.projectIdentifier, this.runIdentifier, this.logCursor, this.logChunkSize);
 
 			this.logText += logChunk.text;
 			this.logCursor = logChunk.cursor;
@@ -117,12 +117,11 @@ export class RunStepView {
 		} while ((this.logText.length <= this.logLengthLimit) && (lastChunkSize == this.logChunkSize));
 	}
 
-	isStepCompleted(status) {
-		return status == "succeeded"
-			|| status == "failed"
-			|| status == "aborted"
-			|| status == "exception"
-			|| status == "skipped";
+	isRunCompleted() {
+		return this.runStatus == "succeeded"
+			|| this.runStatus == "failed"
+			|| this.runStatus == "aborted"
+			|| this.runStatus == "exception";
 	}
 
 }
