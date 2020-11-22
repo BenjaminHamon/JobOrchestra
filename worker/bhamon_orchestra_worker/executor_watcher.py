@@ -73,7 +73,7 @@ class ExecutorWatcher:
 			if not line:
 				break
 
-			line = line.decode("utf-8").strip()
+			line = line.decode("utf-8").rstrip()
 			raw_logger.info(line)
 
 
