@@ -9,6 +9,10 @@ from typing import Any
 logger = logging.getLogger("Application")
 
 
+EXIT_SUCCESS = 0 # pylint: disable = invalid-name
+EXIT_FAILURE = 1 # pylint: disable = invalid-name
+
+
 class AsyncioApplication:
 	""" Main class for an application running with asyncio """
 
@@ -32,7 +36,7 @@ class AsyncioApplication:
 		if platform.system() == "Windows":
 			asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy()) # pylint: disable = no-member
 
-		exit_code = 0
+		exit_code = EXIT_SUCCESS
 
 		logger.info("%s %s", self.title, self.version)
 
@@ -42,7 +46,7 @@ class AsyncioApplication:
 			exit_code = exception.code
 			logger.info("SystemExit", exc_info = True)
 		except: # pylint: disable = bare-except
-			exit_code = 1
+			exit_code = EXIT_FAILURE
 			logger.error("Unhandled exception", exc_info = True)
 
 		logger.info("Exit with code %s", exit_code)

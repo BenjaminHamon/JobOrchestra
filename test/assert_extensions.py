@@ -1,5 +1,6 @@
 import platform
 import re
+import signal
 import sys
 import time
 
@@ -10,7 +11,7 @@ STATUS_CONTROL_C_EXIT = 0xC000013A # pylint: disable = invalid-name
 
 
 def get_flask_exit_code():
-	return STATUS_CONTROL_C_EXIT if platform.system() == "Windows" else 0
+	return STATUS_CONTROL_C_EXIT if platform.system() == "Windows" else (- signal.SIGTERM)
 
 
 def wait_for_condition(condition_function, timeout_seconds = 10, delay_seconds = 0.1):
