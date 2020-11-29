@@ -216,8 +216,8 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 		os.makedirs(workspace, exist_ok = True)
 
-		with open(os.path.join(self.temporary_directory, identifier + "_" + "stdout.log"), mode = "w", encoding = "utf-8") as stdout_file:
-			with open(os.path.join(self.temporary_directory, identifier + "_" + "stderr.log"), mode = "w", encoding = "utf-8") as stderr_file:
+		with open(os.path.join(self.temporary_directory, identifier + "_" + "stdout.log"), mode = "a", encoding = "utf-8") as stdout_file:
+			with open(os.path.join(self.temporary_directory, identifier + "_" + "stderr.log"), mode = "a", encoding = "utf-8") as stderr_file:
 				process = subprocess.Popen(command, cwd = workspace, stdout = stdout_file, stderr = stderr_file, creationflags = subprocess_flags)
 
 		logger.info("New subprocess '%s' (PID: %s)", identifier, process.pid)
