@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import platform
 import signal
@@ -27,9 +28,12 @@ from . import environment
 from . import factory
 
 
+logger = logging.getLogger("Context")
+
 shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGTERM # pylint: disable = no-member
 subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
+termination_timeout_seconds = 5
 
 
 class DatabaseContext:
@@ -131,12 +135,7 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 	def __exit__(self, exception_type, exception_value, traceback):
 		for process in self.process_collection:
-			if process.poll() is None:
-				os.kill(process.pid, shutdown_signal)
-				try:
-					process.wait(5)
-				except subprocess.TimeoutExpired:
-					process.kill()
+			self.terminate(str(process.pid), process, "ContextExit")
 
 		self.process_collection.clear()
 
@@ -210,6 +209,8 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 
 	def invoke(self, identifier, script, arguments, workspace):
+		logger.info("Invoking subprocess '%s'", identifier)
+
 		script_root = os.path.dirname(os.path.realpath(__file__))
 		command = [ sys.executable, os.path.join(script_root, script) ] + arguments
 
@@ -218,6 +219,8 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 		with open(os.path.join(self.temporary_directory, identifier + "_" + "stdout.log"), mode = "w", encoding = "utf-8") as stdout_file:
 			with open(os.path.join(self.temporary_directory, identifier + "_" + "stderr.log"), mode = "w", encoding = "utf-8") as stderr_file:
 				process = subprocess.Popen(command, cwd = workspace, stdout = stdout_file, stderr = stderr_file, creationflags = subprocess_flags)
+
+		logger.info("New subprocess '%s' (PID: %s)", identifier, process.pid)
 
 		self.process_collection.append(process)
 
@@ -229,6 +232,37 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 			"stdout_file_path": os.path.join(self.temporary_directory, identifier + "_" + "stdout.log"),
 			"stderr_file_path": os.path.join(self.temporary_directory, identifier + "_" + "stderr.log"),
 		}
+
+
+	def terminate(self, identifier, process, reason):
+		if process not in self.process_collection:
+			raise ValueError("Unknown process '%s' (PID: %s)" % (identifier, process.pid))
+
+		logger.info("Terminating subprocess '%s' (PID: %s, Reason: '%s')", identifier, process.pid, reason)
+
+		if process.poll() is None:
+			logger.info("Requesting subprocess '%s' for termination (PID: %s)", identifier, process.pid)
+			os.kill(process.pid, shutdown_signal)
+
+			try:
+				process.wait(termination_timeout_seconds)
+			except subprocess.TimeoutExpired:
+				pass
+
+		if process.poll() is None:
+			logger.error("Forcing subprocess '%s' termination (PID: %s)", identifier, process.pid)
+			process.kill()
+
+			try:
+				process.wait(termination_timeout_seconds)
+			except subprocess.TimeoutExpired:
+				pass
+
+		if process.poll() is None:
+			logger.error("Terminating subprocess '%s' failed (PID: %s)", identifier, process.pid)
+
+		if process.poll() is not None:
+			logger.info("Terminating subprocess '%s' succeeded (PID: %s)", identifier, process.pid)
 
 
 	def configure_worker_authentication(self, worker_collection):
