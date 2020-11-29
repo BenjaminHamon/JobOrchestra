@@ -7,8 +7,8 @@ from bhamon_orchestra_model.network.connection import NetworkConnection
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_worker.executor_watcher import ExecutorWatcher
 from bhamon_orchestra_worker.master_client import MasterClient
+from bhamon_orchestra_worker.process_watcher import ProcessWatcher
 from bhamon_orchestra_worker.synchronization import Synchronization
-import bhamon_orchestra_worker.worker_logging as worker_logging
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 
@@ -35,8 +35,6 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	async def run(self) -> None:
-		worker_logging.configure_logging_handlers()
-
 		self._recover()
 
 		executors_future = asyncio.ensure_future(self._run_executors())
@@ -69,7 +67,7 @@ class Worker: # pylint: disable = too-few-public-methods
 	async def _run_executors(self) -> None:
 		while True:
 			for executor in self._active_executors:
-				executor.update(self._messenger)
+				await executor.update(self._messenger)
 			await asyncio.sleep(1)
 
 
@@ -108,7 +106,7 @@ class Worker: # pylint: disable = too-few-public-methods
 	async def _terminate(self) -> None:
 		all_futures = []
 		for executor in self._active_executors:
-			all_futures.append(asyncio.ensure_future(executor.terminate(self.termination_timeout_seconds)))
+			all_futures.append(asyncio.ensure_future(executor.terminate("Worker shutdown")))
 
 		if len(all_futures) > 0:
 			await asyncio.wait(all_futures, return_when = asyncio.ALL_COMPLETED)
@@ -143,7 +141,9 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	def _instantiate_executor(self, run_identifier: str) -> ExecutorWatcher:
-		return ExecutorWatcher(self._storage, run_identifier)
+		executor = ExecutorWatcher(self._storage, run_identifier)
+		executor.termination_timeout_seconds = self.termination_timeout_seconds
+		return executor
 
 
 	def _find_executor(self, run_identifier: str) -> ExecutorWatcher:
@@ -182,6 +182,9 @@ class Worker: # pylint: disable = too-few-public-methods
 		self._storage.save_request(run_identifier, run_request)
 
 		executor = self._instantiate_executor(run_identifier)
+		executor.process_watcher = ProcessWatcher()
+		executor.process_watcher.output_handler = self._log_executor_output
+
 		executor_command = [ sys.executable, self._executor_script, run_identifier ]
 
 		try:
@@ -227,3 +230,8 @@ class Worker: # pylint: disable = too-few-public-methods
 		executor.synchronization = Synchronization(self._storage, run_request)
 		executor.synchronization.reset(log_cursor)
 		executor.synchronization.resume()
+
+
+	def _log_executor_output(self, line: str) -> None: # pylint: disable = no-self-use
+		for log_handler in logging.root.handlers:
+			log_handler.stream.write(line + "\n")
