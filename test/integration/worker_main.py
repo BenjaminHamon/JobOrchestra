@@ -7,6 +7,7 @@ import filelock
 
 import bhamon_orchestra_worker
 
+from bhamon_orchestra_model.application import AsyncioApplication
 from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
 from bhamon_orchestra_worker.master_client import MasterClient
 from bhamon_orchestra_worker.worker import Worker
@@ -30,8 +31,9 @@ def main():
 		authentication = json.load(authentication_file)
 
 	with filelock.FileLock("worker.lock", 5):
-		worker_instance = create_application(arguments, authentication, executor_script)
-		worker_instance.run()
+		worker_application = create_application(arguments, authentication, executor_script)
+		asyncio_application = AsyncioApplication()
+		asyncio_application.run_as_standalone(worker_application.run())
 
 
 def parse_arguments():

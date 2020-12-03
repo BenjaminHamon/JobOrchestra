@@ -19,7 +19,7 @@ from ..fakes.fake_date_time_provider import FakeDateTimeProvider
 from ..fakes.messenger import InProcessMessenger
 
 
-class FakeRemoteWorker(RemoteWorker):
+class FakeRemoteWorker(RemoteWorker): # pylint: disable = too-few-public-methods
 
 
 	def __init__(self, storage: WorkerStorage) -> None:
