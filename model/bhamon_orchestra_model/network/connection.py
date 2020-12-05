@@ -4,6 +4,11 @@ import abc
 class NetworkConnection(abc.ABC):
 	""" Base class for a network connection """
 
+	@property
+	@abc.abstractmethod
+	def remote_address(self) -> str:
+		""" The connection remote address """
+
 	@abc.abstractmethod
 	async def ping(self) -> None:
 		""" Send a ping """

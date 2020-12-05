@@ -22,6 +22,10 @@ from ..fakes.messenger import InProcessMessenger
 class FakeRemoteWorker(RemoteWorker):
 
 
+	def __init__(self, storage: WorkerStorage) -> None:
+		super().__init__(storage, None, None, None, None)
+
+
 	def _resynchronize(self, run_identifier: str, reset: dict) -> None:
 		pass
 
@@ -37,7 +41,7 @@ async def test_start_execution_success():
 	run_provider_instance = Mock(spec = RunProvider)
 	worker_storage_instance = Mock(spec = WorkerStorage)
 
-	worker_remote_instance = FakeRemoteWorker(worker_storage_instance, "my_worker", None, None, None, None, None, None)
+	worker_remote_instance = FakeRemoteWorker(worker_storage_instance)
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
@@ -54,7 +58,7 @@ async def test_abort_execution_success():
 	run_provider_instance = Mock(spec = RunProvider)
 	worker_storage_instance = Mock(spec = WorkerStorage)
 
-	worker_remote_instance = FakeRemoteWorker(worker_storage_instance, "my_worker", None, None, None, None, None, None)
+	worker_remote_instance = FakeRemoteWorker(worker_storage_instance)
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
@@ -73,7 +77,7 @@ async def test_finish_execution_success():
 	run_provider_instance = Mock(spec = RunProvider)
 	worker_storage_instance = Mock(spec = WorkerStorage)
 
-	worker_remote_instance = FakeRemoteWorker(worker_storage_instance, "my_worker", None, None, None, None, None, None)
+	worker_remote_instance = FakeRemoteWorker(worker_storage_instance)
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: None, run_provider_instance, None)
 
@@ -95,7 +99,7 @@ async def test_process_success():
 	worker_storage_instance = Mock(spec = WorkerStorage)
 
 	run_provider_instance = RunProvider(data_storage_instance, date_time_provider_instance)
-	worker_remote_instance = FakeRemoteWorker(worker_storage_instance, "my_worker", None, None, None, None, None, None)
+	worker_remote_instance = FakeRemoteWorker(worker_storage_instance)
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance, None)
 
@@ -167,7 +171,7 @@ async def test_process_abort():
 	worker_storage_instance = Mock(spec = WorkerStorage)
 
 	run_provider_instance = RunProvider(data_storage_instance, date_time_provider_instance)
-	worker_remote_instance = FakeRemoteWorker(worker_storage_instance, "my_worker", None, None, None, None, None, None)
+	worker_remote_instance = FakeRemoteWorker(worker_storage_instance)
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance, None)
 
@@ -248,7 +252,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	worker_storage_instance = Mock(spec = WorkerStorage)
 
 	run_provider_instance = RunProvider(data_storage_instance, date_time_provider_instance)
-	worker_remote_instance = FakeRemoteWorker(worker_storage_instance, "my_worker", None, None, None, None, None, None)
+	worker_remote_instance = FakeRemoteWorker(worker_storage_instance)
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance, None)
 
@@ -345,7 +349,7 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	worker_storage_instance = Mock(spec = WorkerStorage)
 
 	run_provider_instance = RunProvider(data_storage_instance, date_time_provider_instance)
-	worker_remote_instance = FakeRemoteWorker(worker_storage_instance, "my_worker", None, None, None, None, None, None)
+	worker_remote_instance = FakeRemoteWorker(worker_storage_instance)
 	worker_messenger = InProcessMessenger(worker_remote_instance._handle_request)
 	worker_local_instance = LocalWorker("my_worker", worker_messenger, lambda: database_client_instance, run_provider_instance, None)
 

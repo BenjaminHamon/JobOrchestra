@@ -1,37 +1,31 @@
 import asyncio
-import base64
 import logging
 import platform
 import signal
 import sys
 from typing import Any, List, Optional
 
+from bhamon_orchestra_model.network.connection import NetworkConnection
 from bhamon_orchestra_model.network.messenger import Messenger
-from bhamon_orchestra_model.network.websocket import WebSocketClient
-from bhamon_orchestra_model.network.websocket import WebSocketConnection
 from bhamon_orchestra_worker.executor_watcher import ExecutorWatcher
+from bhamon_orchestra_worker.master_client import MasterClient
 from bhamon_orchestra_worker.synchronization import Synchronization
 import bhamon_orchestra_worker.worker_logging as worker_logging
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
-
-import bhamon_orchestra_worker
 
 
 logger = logging.getLogger("Worker")
 
 
-class Worker: # pylint: disable = too-many-instance-attributes
+class Worker:
 
 
 	def __init__(self, # pylint: disable = too-many-arguments
-			storage: WorkerStorage, identifier: str, master_uri: str, user: str, secret: str,
+			storage: WorkerStorage, master_client: MasterClient,
 			display_name: str, properties: dict, executor_script: str) -> None:
 
 		self._storage = storage
-		self._identifier = identifier
-		self._master_uri = master_uri
-		self._user = user
-		self._secret = secret
+		self._master_client = master_client
 		self._display_name = display_name
 		self._properties = properties
 		self._executor_script = executor_script
@@ -67,14 +61,14 @@ class Worker: # pylint: disable = too-many-instance-attributes
 		self._recover()
 
 		executors_future = asyncio.ensure_future(self._run_executors())
-		messenger_future = asyncio.ensure_future(self._run_messenger())
+		master_client_future = asyncio.ensure_future(self._master_client.run(self._process_connection))
 
 		try:
-			await asyncio.wait([ executors_future, messenger_future ], return_when = asyncio.FIRST_COMPLETED)
+			await asyncio.wait([ executors_future, master_client_future ], return_when = asyncio.FIRST_COMPLETED)
 
 		finally:
 			executors_future.cancel()
-			messenger_future.cancel()
+			master_client_future.cancel()
 
 			try:
 				await executors_future
@@ -84,11 +78,11 @@ class Worker: # pylint: disable = too-many-instance-attributes
 				logger.error("Unhandled exception from executors", exc_info = True)
 
 			try:
-				await messenger_future
+				await master_client_future
 			except asyncio.CancelledError:
 				pass
 			except Exception: # pylint: disable = broad-except
-				logger.error("Unhandled exception from messenger", exc_info = True)
+				logger.error("Unhandled exception from master client", exc_info = True)
 
 			await self._terminate()
 
@@ -100,21 +94,8 @@ class Worker: # pylint: disable = too-many-instance-attributes
 			await asyncio.sleep(1)
 
 
-	async def _run_messenger(self) -> None:
-		websocket_client_instance = WebSocketClient("master", self._master_uri)
-		authentication_data = base64.b64encode(b"%s:%s" % (self._user.encode(), self._secret.encode())).decode()
-
-		headers = {
-			"Authorization": "Basic" + " " + authentication_data,
-		 	"X-Orchestra-WorkerIdentifier": self._identifier,
-			"X-Orchestra-WorkerVersion": bhamon_orchestra_worker.__version__,
-		}
-
-		await websocket_client_instance.run_forever(self._process_connection, extra_headers = headers)
-
-
-	async def _process_connection(self, connection: WebSocketConnection) -> None:
-		messenger_instance = Messenger(connection.connection.remote_address, connection)
+	async def _process_connection(self, connection: NetworkConnection) -> None:
+		messenger_instance = Messenger(connection.remote_address, connection)
 		messenger_instance.request_handler = self._handle_request
 
 		self._messenger = messenger_instance
