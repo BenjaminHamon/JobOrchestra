@@ -6,9 +6,9 @@ import signal
 import sys
 from typing import Any, List, Optional
 
+from bhamon_orchestra_model.network.connection import NetworkConnection
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.network.websocket import WebSocketClient
-from bhamon_orchestra_model.network.websocket import WebSocketConnection
 from bhamon_orchestra_worker.executor_watcher import ExecutorWatcher
 from bhamon_orchestra_worker.synchronization import Synchronization
 import bhamon_orchestra_worker.worker_logging as worker_logging
@@ -113,8 +113,8 @@ class Worker: # pylint: disable = too-many-instance-attributes
 		await websocket_client_instance.run_forever(self._process_connection, extra_headers = headers)
 
 
-	async def _process_connection(self, connection: WebSocketConnection) -> None:
-		messenger_instance = Messenger(connection.connection.remote_address, connection)
+	async def _process_connection(self, connection: NetworkConnection) -> None:
+		messenger_instance = Messenger(connection.remote_address, connection)
 		messenger_instance.request_handler = self._handle_request
 
 		self._messenger = messenger_instance

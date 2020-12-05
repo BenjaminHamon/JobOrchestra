@@ -20,6 +20,11 @@ class WebSocketConnection(NetworkConnection):
 		self.connection = connection
 
 
+	@property
+	def remote_address(self) -> str:
+		return self.connection.remote_address[0]
+
+
 	async def ping(self) -> None:
 		""" Send a ping """
 		return await self.connection.ping()
