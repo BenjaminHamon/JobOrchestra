@@ -5,7 +5,10 @@ import os
 
 import filelock
 
+import bhamon_orchestra_worker
+
 from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
+from bhamon_orchestra_worker.master_client import MasterClient
 from bhamon_orchestra_worker.worker import Worker
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
@@ -48,12 +51,17 @@ def create_application(arguments, authentication, executor_script):
 	data_storage_instance = FileDataStorage(".")
 	worker_storage_instance = WorkerStorage(data_storage_instance)
 
-	worker_instance = Worker(
-		storage = worker_storage_instance,
-		identifier = arguments.identifier,
+	master_client_instance = MasterClient(
 		master_uri = arguments.master_uri,
+		worker_identifier = arguments.identifier,
+		worker_version = bhamon_orchestra_worker.__version__,
 		user = authentication["user"],
 		secret = authentication["secret"],
+	)
+
+	worker_instance = Worker(
+		storage = worker_storage_instance,
+		master_client = master_client_instance,
 		display_name = arguments.identifier,
 		properties = properties,
 		executor_script = executor_script,
