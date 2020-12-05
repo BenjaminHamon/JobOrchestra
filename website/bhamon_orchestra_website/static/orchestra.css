@@ -54,6 +54,7 @@ td > .action-group button
 .status-indicator.pending { background-color: lightblue; }
 .status-indicator.running { background-color: yellow; }
 .status-indicator.cancelled { background-color: gray; }
+.status-indicator.skipped { background-color: gray; }
 .status-indicator.succeeded { background-color: green; }
 .status-indicator.failed { background-color: red; }
 .status-indicator.aborted { background-color: purple; }
