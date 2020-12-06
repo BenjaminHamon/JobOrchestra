@@ -1,7 +1,5 @@
 import asyncio
 import logging
-import platform
-import signal
 
 from typing import Callable
 
@@ -35,38 +33,19 @@ class Master:
 		self._job_scheduler = job_scheduler
 		self._supervisor = supervisor
 
-		self._should_shutdown = False
 
-
-	def run(self) -> None:
-		""" Run the master application """
+	async def run(self) -> None:
+		""" Run the master """
 
 		logger.info("Starting master")
 
-		if platform.system() == "Windows":
-			signal.signal(signal.SIGBREAK, lambda signal_number, frame: self.shutdown()) # pylint: disable = no-member
-		signal.signal(signal.SIGINT, lambda signal_number, frame: self.shutdown())
-		signal.signal(signal.SIGTERM, lambda signal_number, frame: self.shutdown())
-
-		asyncio_loop = asyncio.get_event_loop()
-		asyncio_loop.run_until_complete(self.run_async())
-		asyncio_loop.close()
-
-		logger.info("Exiting master")
-
-
-	async def run_async(self) -> None:
-		""" Run the master application as an asyncio coroutine """
-
-		shutdown_future = asyncio.ensure_future(self._watch_shutdown())
 		job_scheduler_future = asyncio.ensure_future(self._job_scheduler.run())
 		supervisor_future = asyncio.ensure_future(self._supervisor.run_server())
 
 		try:
-			await asyncio.wait([ shutdown_future, job_scheduler_future, supervisor_future ], return_when = asyncio.FIRST_COMPLETED)
+			await asyncio.wait([ job_scheduler_future, supervisor_future ], return_when = asyncio.FIRST_COMPLETED)
 
 		finally:
-			shutdown_future.cancel()
 			job_scheduler_future.cancel()
 			supervisor_future.cancel()
 
@@ -84,10 +63,7 @@ class Master:
 			except Exception: # pylint: disable = broad-except
 				logger.error("Unhandled exception from supervisor", exc_info = True)
 
-
-	async def _watch_shutdown(self) -> None:
-		while not self._should_shutdown:
-			await asyncio.sleep(1)
+			logger.info("Exiting master")
 
 
 	def apply_configuration(self, configuration: dict) -> None:
@@ -121,8 +97,3 @@ class Master:
 					logger.info("Adding/Updating project %s schedule %s", project["identifier"], schedule["identifier"])
 					self._schedule_provider.create_or_update(database_client, schedule["identifier"], project["identifier"],
 							**{ key: value for key, value in schedule.items() if key != "identifier" })
-
-
-	def shutdown(self) -> None:
-		""" Request the master to shutdown """
-		self._should_shutdown = True

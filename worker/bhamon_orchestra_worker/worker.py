@@ -1,7 +1,5 @@
 import asyncio
 import logging
-import platform
-import signal
 import sys
 from typing import Any, List, Optional
 
@@ -17,7 +15,7 @@ from bhamon_orchestra_worker.worker_storage import WorkerStorage
 logger = logging.getLogger("Worker")
 
 
-class Worker:
+class Worker: # pylint: disable = too-few-public-methods
 
 
 	def __init__(self, # pylint: disable = too-many-arguments
@@ -32,32 +30,15 @@ class Worker:
 
 		self._active_executors = []
 		self._messenger = None
-		self._should_shutdown = False
 
 		self.termination_timeout_seconds = 30
 
 
-	def run(self) -> None:
+	async def run(self) -> None:
 		logger.info("Starting worker")
-
-		if platform.system() == "Windows":
-			signal.signal(signal.SIGBREAK, lambda signal_number, frame: self._shutdown()) # pylint: disable = no-member
-		signal.signal(signal.SIGINT, lambda signal_number, frame: self._shutdown())
-		signal.signal(signal.SIGTERM, lambda signal_number, frame: self._shutdown())
-
-		if platform.system() == "Windows":
-			asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy()) # pylint: disable = no-member
 
 		worker_logging.configure_logging_handlers()
 
-		asyncio_loop = asyncio.get_event_loop()
-		asyncio_loop.run_until_complete(self.run_async())
-		asyncio_loop.close()
-
-		logger.info("Exiting worker")
-
-
-	async def run_async(self) -> None:
 		self._recover()
 
 		executors_future = asyncio.ensure_future(self._run_executors())
@@ -86,9 +67,11 @@ class Worker:
 
 			await self._terminate()
 
+			logger.info("Exiting worker")
+
 
 	async def _run_executors(self) -> None:
-		while not self._should_shutdown:
+		while True:
 			for executor in self._active_executors:
 				executor.update(self._messenger)
 			await asyncio.sleep(1)
@@ -124,10 +107,6 @@ class Worker:
 					continue
 			executor = self._instantiate_executor(run_identifier)
 			self._active_executors.append(executor)
-
-
-	def _shutdown(self) -> None:
-		self._should_shutdown = True
 
 
 	async def _terminate(self) -> None:

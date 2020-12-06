@@ -10,6 +10,7 @@ from bhamon_orchestra_master.master import Master
 from bhamon_orchestra_master.protocol import WebSocketServerProtocol
 from bhamon_orchestra_master.supervisor import Supervisor
 from bhamon_orchestra_master.worker_selector import WorkerSelector
+from bhamon_orchestra_model.application import AsyncioApplication
 from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
@@ -35,8 +36,9 @@ def main():
 	environment.configure_logging(environment_instance, arguments)
 
 	with filelock.FileLock("master.lock", 5):
-		application = create_application(arguments)
-		application.run()
+		master_application = create_application(arguments)
+		asyncio_application = AsyncioApplication()
+		asyncio_application.run_as_standalone(master_application.run())
 
 
 def parse_arguments():
