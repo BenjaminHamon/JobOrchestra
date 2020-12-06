@@ -35,8 +35,6 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	async def run(self) -> None:
-		logger.info("Starting worker")
-
 		worker_logging.configure_logging_handlers()
 
 		self._recover()
@@ -66,8 +64,6 @@ class Worker: # pylint: disable = too-few-public-methods
 				logger.error("Unhandled exception from master client", exc_info = True)
 
 			await self._terminate()
-
-			logger.info("Exiting worker")
 
 
 	async def _run_executors(self) -> None:

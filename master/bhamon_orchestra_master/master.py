@@ -37,8 +37,6 @@ class Master:
 	async def run(self) -> None:
 		""" Run the master """
 
-		logger.info("Starting master")
-
 		job_scheduler_future = asyncio.ensure_future(self._job_scheduler.run())
 		supervisor_future = asyncio.ensure_future(self._supervisor.run_server())
 
@@ -62,8 +60,6 @@ class Master:
 				pass
 			except Exception: # pylint: disable = broad-except
 				logger.error("Unhandled exception from supervisor", exc_info = True)
-
-			logger.info("Exiting master")
 
 
 	def apply_configuration(self, configuration: dict) -> None:

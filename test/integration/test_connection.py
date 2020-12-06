@@ -30,19 +30,15 @@ def test_worker_disconnection(tmpdir, database_type):
 			assert_extensions.wait_for_condition(condition_function)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' connected (User: 'worker', RemoteAddress: '127.0.0.1')" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Registering worker 'worker_01'" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' is now active" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' disconnected" },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "WebSocket", "message": "Connected to master" },
 		{ "level": "Info", "logger": "WebSocket", "message": "Closed connection to master" },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -70,20 +66,16 @@ def test_master_disconnection(tmpdir, database_type):
 		time.sleep(1)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' connected (User: 'worker', RemoteAddress: '127.0.0.1')" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Registering worker 'worker_01'" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' is now active" },
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' disconnected" },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "WebSocket", "message": "Connected to master" },
 		{ "level": "Info", "logger": "WebSocket", "message": "Closed connection to master" },
 		{ "level": "Info", "logger": "WebSocket", "message": "Retrying connection in 10 seconds" },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([

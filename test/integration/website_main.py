@@ -11,7 +11,7 @@ import bhamon_orchestra_website.website as website
 import environment
 
 
-logger = logging.getLogger("Website")
+logger = logging.getLogger("Main")
 
 
 def main():

@@ -12,7 +12,7 @@ from bhamon_orchestra_worker.worker_storage import WorkerStorage
 import environment
 
 
-logger = logging.getLogger("Executor")
+logger = logging.getLogger("Main")
 
 
 def main():

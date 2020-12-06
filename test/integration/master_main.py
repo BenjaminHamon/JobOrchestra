@@ -5,6 +5,8 @@ import logging
 
 import filelock
 
+import bhamon_orchestra_master
+
 from bhamon_orchestra_master.job_scheduler import JobScheduler
 from bhamon_orchestra_master.master import Master
 from bhamon_orchestra_master.protocol import WebSocketServerProtocol
@@ -27,7 +29,7 @@ import environment
 import factory
 
 
-logger = logging.getLogger("Master")
+logger = logging.getLogger("Main")
 
 
 def main():
@@ -35,9 +37,13 @@ def main():
 	environment_instance = environment.load_environment()
 	environment.configure_logging(environment_instance, arguments)
 
+	application_title = bhamon_orchestra_master.__product__ + " " + "Master"
+	application_version = bhamon_orchestra_master.__version__
+
 	with filelock.FileLock("master.lock", 5):
 		master_application = create_application(arguments)
-		asyncio_application = AsyncioApplication()
+		master_application.apply_configuration(configuration.configure())
+		asyncio_application = AsyncioApplication(application_title, application_version)
 		asyncio_application.run_as_standalone(master_application.run())
 
 
@@ -113,8 +119,6 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	# Rapid updates to reduce delays in tests
 	job_scheduler_instance.update_interval_seconds = 1
 	supervisor_instance.update_interval_seconds = 1
-
-	master_instance.apply_configuration(configuration.configure())
 
 	return master_instance
 

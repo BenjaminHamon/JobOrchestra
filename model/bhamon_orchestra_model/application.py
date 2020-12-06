@@ -13,7 +13,10 @@ class AsyncioApplication:
 	""" Main class for an application running with asyncio """
 
 
-	def __init__(self) -> None:
+	def __init__(self, title, version) -> None:
+		self.title = title
+		self.version = version
+
 		self.should_shutdown = False
 		self.shutdown_timeout_seconds = 30
 
@@ -31,11 +34,18 @@ class AsyncioApplication:
 
 		exit_code = 0
 
+		logger.info("%s %s", self.title, self.version)
+
 		try:
 			self.run(future)
-		except Exception: # pylint: disable = broad-except
+		except SystemExit as exception:
+			exit_code = exception.code
+			logger.info("SystemExit", exc_info = True)
+		except: # pylint: disable = bare-except
 			exit_code = 1
 			logger.error("Unhandled exception", exc_info = True)
+
+		logger.info("Exit with code %s", exit_code)
 
 		sys.exit(exit_code)
 

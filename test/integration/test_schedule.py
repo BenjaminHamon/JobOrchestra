@@ -45,16 +45,16 @@ def test_schedule(tmpdir, database_type):
 			run = context_instance.run_provider.get(database_client, schedule["project"], schedule["last_run"])
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "JobScheduler", "message": "Triggering run for schedule '%s'" % schedule["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status succeeded" % run["identifier"] },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
+		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status succeeded" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
 	]
 
 	assert_extensions.assert_multi_process([

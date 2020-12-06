@@ -4,6 +4,9 @@ import time
 
 import pytest
 
+import bhamon_orchestra_master
+import bhamon_orchestra_worker
+
 from .. import assert_extensions
 from . import context
 from . import environment
@@ -16,12 +19,16 @@ log_format = environment.load_environment()["logging_stream_format"]
 def test_master(tmpdir, database_type):
 	""" Test if the master starts successfully """
 
+	application_title = bhamon_orchestra_master.__product__ + " " + "Master"
+	application_version = bhamon_orchestra_master.__version__
+
 	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		master_process = context_instance.invoke_master()
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
+		{ "level": "Info", "logger": "Application", "message": "%s %s" % (application_title, application_version) },
+		{ "level": "Info", "logger": "Supervisor", "message": "Listening for workers on '127.0.0.1:5901'" },
+		{ "level": "Info", "logger": "Application", "message": "Exit with code 0" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -33,6 +40,9 @@ def test_master(tmpdir, database_type):
 def test_worker(tmpdir, database_type):
 	""" Test if the worker starts successfully """
 
+	application_title = bhamon_orchestra_worker.__product__ + " " + "Worker"
+	application_version = bhamon_orchestra_worker.__version__
+
 	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		context_instance.configure_worker_authentication([ "worker" ])
 		worker_process = context_instance.invoke_worker("worker")
@@ -40,9 +50,9 @@ def test_worker(tmpdir, database_type):
 		time.sleep(2) # Wait for the connection to fail
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
+		{ "level": "Info", "logger": "Application", "message": "%s %s" % (application_title, application_version) },
 		{ "level": "Error", "logger": "WebSocket", "message": "Failed to connect to master" },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
+		{ "level": "Info", "logger": "Application", "message": "Exit with code 0" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -57,12 +67,8 @@ def test_executor(tmpdir):
 		run_identifier = "00000000-0000-0000-0000-000000000000"
 		executor_process = context_instance.invoke_executor("worker", run_identifier)
 
-	executor_expected_messages = [
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Starting executor" % run_identifier },
-	]
-
 	assert_extensions.assert_multi_process([
-		{ "process": executor_process, "expected_result_code": 1, "log_format": log_format, "expected_messages": executor_expected_messages },
+		{ "process": executor_process, "expected_result_code": 1, "log_format": log_format, "expected_messages": [] },
 	])
 
 

@@ -46,16 +46,12 @@ class Executor: # pylint: disable = too-many-instance-attributes
 
 		self.run_identifier = run_identifier
 
-		logger.info("(%s) Starting executor", self.run_identifier)
-
 		# Prevent executor pyvenv from overriding a python executable specified in a command
 		if "__PYVENV_LAUNCHER__" in os.environ:
 			del os.environ["__PYVENV_LAUNCHER__"]
 
 		self.initialize(environment)
 		self.execute()
-
-		logger.info("(%s) Exiting executor", self.run_identifier)
 
 
 	def _shutdown(self) -> None:

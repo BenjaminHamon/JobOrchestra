@@ -21,7 +21,7 @@ import environment
 import factory
 
 
-logger = logging.getLogger("Service")
+logger = logging.getLogger("Main")
 
 
 def main():

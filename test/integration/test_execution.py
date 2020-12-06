@@ -29,21 +29,15 @@ def test_job_success(tmpdir, database_type):
 			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status succeeded" % run["identifier"] },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Starting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status succeeded" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Exiting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -71,21 +65,15 @@ def test_job_failure(tmpdir, database_type):
 			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status failed" % run["identifier"] },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Starting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status failed" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Exiting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -113,22 +101,16 @@ def test_job_exception(tmpdir, database_type):
 			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status exception" % run["identifier"] },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Starting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Error", "logger": "Executor", "message": "(%s) Run raised an exception" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status exception" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Exiting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -160,9 +142,7 @@ def test_run_cancel(tmpdir, database_type):
 			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "JobScheduler", "message": "Cancelling run '%s'" % run["identifier"] },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -196,23 +176,17 @@ def test_run_abort(tmpdir, database_type):
 			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Aborting run %s" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status aborted" % run["identifier"] },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Starting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Error", "logger": "Executor", "message": "(%s) Run was aborted" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status aborted" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Exiting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -244,21 +218,15 @@ def test_job_controller_success(tmpdir, database_type):
 			all_runs = context_instance.run_provider.get_list(database_client)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting run %s" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "(controller) Completed run %s with status succeeded" % run["identifier"] },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	controller_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Starting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status succeeded" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Exiting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -294,21 +262,15 @@ def test_job_controller_failure(tmpdir, database_type):
 			all_runs = context_instance.run_provider.get_list(database_client)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Master", "message": "Starting master" },
 		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting run %s" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "(controller) Completed run %s with status failed" % run["identifier"] },
-		{ "level": "Info", "logger": "Master", "message": "Exiting master" },
 	]
 
 	controller_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Starting worker" },
 		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Starting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status failed" % run["identifier"] },
-		{ "level": "Info", "logger": "Executor", "message": "(%s) Exiting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Exiting worker" },
 	]
 
 	assert_extensions.assert_multi_process([

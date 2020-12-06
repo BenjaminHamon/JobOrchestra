@@ -16,7 +16,7 @@ from bhamon_orchestra_worker.worker_storage import WorkerStorage
 import environment
 
 
-logger = logging.getLogger("Worker")
+logger = logging.getLogger("Main")
 
 
 def main():
@@ -24,6 +24,8 @@ def main():
 	environment_instance = environment.load_environment()
 	environment.configure_logging(environment_instance, arguments)
 
+	application_title = bhamon_orchestra_worker.__product__ + " " + "Worker"
+	application_version = bhamon_orchestra_worker.__version__
 	executor_script = os.path.join(os.path.dirname(__file__), "executor_main.py")
 
 	authentication_file_path = os.path.join(os.getcwd(), "authentication.json")
@@ -32,7 +34,7 @@ def main():
 
 	with filelock.FileLock("worker.lock", 5):
 		worker_application = create_application(arguments, authentication, executor_script)
-		asyncio_application = AsyncioApplication()
+		asyncio_application = AsyncioApplication(application_title, application_version)
 		asyncio_application.run_as_standalone(worker_application.run())
 
 
