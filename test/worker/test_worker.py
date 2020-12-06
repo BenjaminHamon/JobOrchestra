@@ -10,13 +10,15 @@ from bhamon_orchestra_worker.master_client import MasterClient
 from bhamon_orchestra_worker.worker import Worker
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
+from ..mock_extensions import AsyncMock, CancellableAsyncMock, MockException
+
 
 @pytest.mark.asyncio
 async def test_run(caplog):
 	""" Test run with dummy dependencies """
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
-	master_client_mock = Mock(spec = MasterClient)
+	master_client_mock = Mock(spec = MasterClient, run = AsyncMock())
 
 	worker_storage_mock.list_runs.return_value = []
 
@@ -39,11 +41,8 @@ async def test_run(caplog):
 async def test_run_cancel(caplog):
 	""" Test run getting cancelled """
 
-	async def run_mock(*args, **kwargs): # pylint: disable = unused-argument
-		await asyncio.sleep(1)
-
 	worker_storage_mock = Mock(spec = WorkerStorage)
-	master_client_mock = Mock(spec = MasterClient, run = run_mock)
+	master_client_mock = Mock(spec = MasterClient, run = CancellableAsyncMock())
 
 	worker_storage_mock.list_runs.return_value = []
 
@@ -73,11 +72,8 @@ async def test_run_cancel(caplog):
 async def test_run_exception(caplog):
 	""" Test run with a dependency raising an exception """
 
-	class MockException(Exception):
-		pass
-
 	worker_storage_mock = Mock(spec = WorkerStorage)
-	master_client_mock = Mock(spec = MasterClient)
+	master_client_mock = Mock(spec = MasterClient, run = AsyncMock())
 
 	worker_storage_mock.list_runs.return_value = []
 

@@ -10,13 +10,15 @@ from bhamon_orchestra_master.job_scheduler import JobScheduler
 from bhamon_orchestra_master.master import Master
 from bhamon_orchestra_master.supervisor import Supervisor
 
+from ..mock_extensions import AsyncMock, CancellableAsyncMock, MockException
+
 
 @pytest.mark.asyncio
 async def test_run(caplog):
 	""" Test run with dummy dependencies """
 
-	job_scheduler_mock = Mock(spec = JobScheduler)
-	supervisor_mock = Mock(spec = Supervisor)
+	job_scheduler_mock = Mock(spec = JobScheduler, run = AsyncMock())
+	supervisor_mock = Mock(spec = Supervisor, run_server = AsyncMock())
 
 	master_instance = Master(
 		database_client_factory = None,
@@ -38,11 +40,8 @@ async def test_run(caplog):
 async def test_run_cancel(caplog):
 	""" Test run getting cancelled """
 
-	async def run_mock(*args, **kwargs): # pylint: disable = unused-argument
-		await asyncio.sleep(1)
-
-	job_scheduler_mock = Mock(spec = JobScheduler, run = run_mock)
-	supervisor_mock = Mock(spec = Supervisor, run_server = run_mock)
+	job_scheduler_mock = Mock(spec = JobScheduler, run = CancellableAsyncMock())
+	supervisor_mock = Mock(spec = Supervisor, run_server = CancellableAsyncMock())
 
 	master_instance = Master(
 		database_client_factory = None,
@@ -71,11 +70,8 @@ async def test_run_cancel(caplog):
 async def test_run_exception(caplog):
 	""" Test run with a dependency raising an exception """
 
-	class MockException(Exception):
-		pass
-
-	job_scheduler_mock = Mock(spec = JobScheduler)
-	supervisor_mock = Mock(spec = Supervisor)
+	job_scheduler_mock = Mock(spec = JobScheduler, run = AsyncMock())
+	supervisor_mock = Mock(spec = Supervisor, run_server = AsyncMock())
 
 	master_instance = Master(
 		database_client_factory = None,
