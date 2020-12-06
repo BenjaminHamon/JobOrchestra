@@ -48,7 +48,10 @@ def assert_multi_process(process_information_collection):
 		if process_information["result_code"] != process_information["expected_result_code"]:
 			pytest.fail("Process %s completed with result code %s, expected %s"
 				% (process_information["process"]["identifier"], process_information["result_code"], process_information["expected_result_code"]))
+
 		assert_log(process_information["stdout"], process_information["log_format"], process_information["expected_messages"])
+		if process_information["stderr"] != "":
+			pytest.fail("Error output is not empty")
 
 
 def assert_log(log_text, log_format, expected_messages = None, failure_log_levels = None):
