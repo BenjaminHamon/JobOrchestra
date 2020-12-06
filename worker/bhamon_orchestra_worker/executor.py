@@ -1,10 +1,7 @@
+import asyncio
 import logging
 import os
-import platform
-import signal
 import socket
-import sys
-import traceback
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
@@ -22,6 +19,9 @@ class Executor: # pylint: disable = too-many-instance-attributes
 		self._storage = storage
 		self._date_time_provider = date_time_provider
 
+		self.run_logger = None
+		self.run_logging_handler = None
+
 		self.project_identifier = None
 		self.job_identifier = None
 		self.run_identifier = None
@@ -31,34 +31,31 @@ class Executor: # pylint: disable = too-many-instance-attributes
 		self.run_status = None
 		self.workspace = None
 		self.environment = None
-		self.log_file_path = None
 		self.start_date = None
 		self.completion_date = None
 
-		self._should_shutdown = False
 
-
-	def run(self, run_identifier: str, environment: dict) -> None:
-		if platform.system() == "Windows":
-			signal.signal(signal.SIGBREAK, lambda signal_number, frame: self._shutdown()) # pylint: disable = no-member
-		signal.signal(signal.SIGINT, lambda signal_number, frame: self._shutdown())
-		signal.signal(signal.SIGTERM, lambda signal_number, frame: self._shutdown())
-
-		self.run_identifier = run_identifier
+	async def run(self, run_identifier: str, environment: dict) -> None:
 
 		# Prevent executor pyvenv from overriding a python executable specified in a command
 		if "__PYVENV_LAUNCHER__" in os.environ:
 			del os.environ["__PYVENV_LAUNCHER__"]
 
-		self.initialize(environment)
-		self.execute()
+		self.run_identifier = run_identifier
+
+		try:
+			await self.initialize(environment)
+			await self.execute()
+		finally:
+			await self.dispose()
 
 
-	def _shutdown(self) -> None:
-		self._should_shutdown = True
+	async def initialize(self, environment: dict) -> None:
+		self.run_logger = logging.Logger("Executor", logging.INFO)
+		self.run_logging_handler = logging.FileHandler(self._storage.get_log_path(self.run_identifier), mode = "a", encoding = "utf-8")
+		self.run_logging_handler.formatter = logging.Formatter("{asctime} [{levelname}][{name}] {message}", "%Y-%m-%dT%H:%M:%S", "{")
+		self.run_logger.handlers.append(self.run_logging_handler)
 
-
-	def initialize(self, environment: dict) -> None:
 		run_request = self._storage.load_request(self.run_identifier)
 
 		self.project_identifier = run_request["project_identifier"]
@@ -70,14 +67,12 @@ class Executor: # pylint: disable = too-many-instance-attributes
 
 		self.workspace = os.path.join("workspaces", run_request["project_identifier"])
 		self.environment = environment
-		self.log_file_path = self._storage.get_log_path(self.run_identifier)
 
 		self._save_status()
 
 
-	def execute(self) -> None:
+	async def execute(self) -> None:
 		logger.info("(%s) Run is starting for project '%s' and job '%s'", self.run_identifier, self.project_identifier, self.job_identifier)
-
 
 		try:
 			self.run_status = "running"
@@ -89,36 +84,44 @@ class Executor: # pylint: disable = too-many-instance-attributes
 			if not os.path.exists(self.workspace):
 				os.makedirs(self.workspace)
 
-			self.execute_implementation()
+			await self.execute_implementation()
 
 			if self.run_status == "running":
 				raise RuntimeError("Unexpected status 'running' after execution")
 
 			self.completion_date = self._date_time_provider.serialize(self._date_time_provider.now())
-			self._log_completion()
+			self.run_logger.info("Run completed with status %s", self.run_status)
 			self._save_status()
 
-		except KeyboardInterrupt: # pylint: disable = bare-except
+		except asyncio.CancelledError:
 			logger.error("(%s) Run was aborted", self.run_identifier, exc_info = True)
 			self.run_status = "aborted"
 			self.completion_date = self._date_time_provider.serialize(self._date_time_provider.now())
-			self._log_completion()
-			self._log_exception(sys.exc_info())
+			self.run_logger.info("Run completed with status %s", self.run_status)
+			self.run_logger.error("Exception", exc_info = True)
 			self._save_status()
+
+			raise
 
 		except Exception: # pylint: disable = broad-except
 			logger.error("(%s) Run raised an exception", self.run_identifier, exc_info = True)
 			self.run_status = "exception"
 			self.completion_date = self._date_time_provider.serialize(self._date_time_provider.now())
-			self._log_completion()
-			self._log_exception(sys.exc_info())
+			self.run_logger.info("Run completed with status %s", self.run_status)
+			self.run_logger.error("Exception", exc_info = True)
 			self._save_status()
 
-		logger.info("(%s) Run completed with status %s", self.run_identifier, self.run_status)
+		finally:
+			logger.info("(%s) Run completed with status %s", self.run_identifier, self.run_status)
 
 
-	def execute_implementation(self) -> None:
+	async def execute_implementation(self) -> None:
 		raise NotImplementedError
+
+
+	async def dispose(self) -> None:
+		self.run_logger.handlers.remove(self.run_logging_handler)
+		self.run_logging_handler.close()
 
 
 	def _save_status(self) -> None:
@@ -137,8 +140,8 @@ class Executor: # pylint: disable = too-many-instance-attributes
 
 
 	def _log_executor_information(self) -> None:
-		orchestra_title = "Job Orchestra"
-		worker_version = bhamon_orchestra_worker.__version__
+		self.run_logger.info("%s %s", bhamon_orchestra_worker.__product__, bhamon_orchestra_worker.__version__)
+		self.run_logging_handler.stream.write("\n")
 
 		executor_information = {
 			"Run": self.run_identifier,
@@ -146,24 +149,8 @@ class Executor: # pylint: disable = too-many-instance-attributes
 			"Workspace": os.path.abspath(self.workspace)
 		}
 
-		text = "%s %s" % (orchestra_title, worker_version) + "\n"
-		text += "\n"
 		for key, value in executor_information.items():
-			text += "%s: '%s'" % (key, value) + "\n"
-		text += "\n"
+			self.run_logger.info("%s: '%s'", key, value)
 
-		with open(self.log_file_path, mode = "a", encoding = "utf-8") as log_file:
-			log_file.write(text)
-
-
-	def _log_exception(self, exc_info: tuple) -> None:
-		text = "(orchestra) Exception" + "\n"
-		text += "".join(traceback.format_exception(*exc_info)) + "\n"
-		with open(self.log_file_path, mode = "a", encoding = "utf-8") as log_file:
-			log_file.write(text)
-
-
-	def _log_completion(self) -> None:
-		text = "(orchestra) Run completed with status %s" % self.run_status + "\n"
-		with open(self.log_file_path, mode = "a", encoding = "utf-8") as log_file:
-			log_file.write(text)
+		self.run_logging_handler.stream.write("\n")
+		self.run_logging_handler.flush()
