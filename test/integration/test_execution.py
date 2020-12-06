@@ -124,7 +124,7 @@ def test_job_exception(tmpdir, database_type):
 		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Starting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
-		{ "level": "Error", "logger": "Executor", "message": "(%s) Step exception raised an exception" % run["identifier"] },
+		{ "level": "Error", "logger": "Executor", "message": "(%s) Run raised an exception" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status exception" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Exiting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
@@ -155,7 +155,7 @@ def test_run_cancel(tmpdir, database_type):
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
 			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
-			time.sleep(1)
+			time.sleep(2)
 
 			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
@@ -191,7 +191,7 @@ def test_run_abort(tmpdir, database_type):
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
 			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
-			time.sleep(1)
+			time.sleep(2)
 
 			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
@@ -208,6 +208,7 @@ def test_run_abort(tmpdir, database_type):
 		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Starting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
+		{ "level": "Error", "logger": "Executor", "message": "(%s) Run was aborted" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status aborted" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Exiting executor" % run["identifier"] },
 		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
@@ -327,6 +328,6 @@ def run_and_wait(run_provider, database_client, project_identifier, job_identifi
 
 	condition_function = lambda: run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
 	assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
-	time.sleep(1)
+	time.sleep(2)
 
 	return run_provider.get(database_client, run["project"], run["identifier"])

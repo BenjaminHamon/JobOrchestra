@@ -175,8 +175,10 @@ class Worker: # pylint: disable = too-few-public-methods
 		logger.info("Executing run %s", run_identifier)
 
 		run_request = {
+			"project_identifier": job["project"],
+			"job_identifier": job["identifier"],
 			"run_identifier": run_identifier,
-			"job": job,
+			"job_definition": job["definition"],
 			"parameters": parameters,
 		}
 
@@ -218,7 +220,7 @@ class Worker: # pylint: disable = too-few-public-methods
 		return self._storage.load_request(run_identifier)
 
 
-	def _resynchronize(self, run_identifier: str, reset: dict) -> None:
+	def _resynchronize(self, run_identifier: str, log_cursor: int) -> None:
 		executor = self._find_executor(run_identifier)
 		run_request = self._storage.load_request(run_identifier)
 
@@ -227,5 +229,5 @@ class Worker: # pylint: disable = too-few-public-methods
 			executor.synchronization = None
 
 		executor.synchronization = Synchronization(self._storage, run_request)
-		executor.synchronization.reset(reset["steps"])
+		executor.synchronization.reset(log_cursor)
 		executor.synchronization.resume()

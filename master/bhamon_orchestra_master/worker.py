@@ -167,7 +167,7 @@ class Worker:
 				executor["local_status"] = "aborting"
 
 			if executor["synchronization"] == "unknown":
-				await self._resynchronize(database_client, executor["run"])
+				await self._resynchronize(executor["run"])
 				executor["synchronization"] = "running"
 
 		elif executor["local_status"] == "aborting":
@@ -183,7 +183,7 @@ class Worker:
 			executor["local_status"] = "done"
 
 		for update in executor["received_updates"]:
-			await self._process_update(database_client,executor, update)
+			await self._process_update(database_client, executor, update)
 		executor["received_updates"].clear()
 
 
@@ -192,10 +192,10 @@ class Worker:
 
 		logger.info("(%s) Recovering run %s", self.identifier, run_identifier)
 		run_request = await self._retrieve_request(run_identifier)
-		run = self._run_provider.get(database_client, run_request["job"]["project"], run_identifier)
+		run = self._run_provider.get(database_client, run_request["project_identifier"], run_identifier)
 
 		return {
-			"job": run_request["job"],
+			"job": run_request["job_definition"],
 			"run": run,
 			"local_status": "running",
 			"synchronization": "unknown",
@@ -228,20 +228,13 @@ class Worker:
 		logger.info("(%s) Completed run %s with status %s", self.identifier, run["identifier"], run["status"])
 
 
-	async def _resynchronize(self, database_client: DatabaseClient, run: dict) -> None:
+	async def _resynchronize(self, run: dict) -> None:
 		""" Resumes data synchronization with the remote worker for the specified run """
 
-		reset = { "steps": [] }
-
-		run_steps = self._run_provider.get_all_steps(database_client, run["project"], run["identifier"])
-		run_steps = run_steps if run_steps is not None else []
-
-		for step in run_steps:
-			if self._run_provider.has_step_log(database_client, run["project"], run["identifier"], step["index"]):
-				log_size = self._run_provider.get_step_log_size(database_client, run["project"], run["identifier"], step["index"])
-				reset["steps"].append({ "index": step["index"], "log_file_cursor": log_size })
-
-		resynchronization_request = { "run_identifier": run["identifier"], "reset": reset }
+		# The log cursor is computed on the text size instead of the binary size
+		# to take into account encoding and end-of-lines differences.
+		log_cursor = len(self._run_provider.get_log(run["project"], run["identifier"])[0])
+		resynchronization_request = { "run_identifier": run["identifier"], "log_cursor": log_cursor }
 		await self._execute_remote_command("resynchronize", resynchronization_request)
 
 
@@ -268,7 +261,7 @@ class Worker:
 		if "results" in update:
 			self._update_results(database_client, executor["run"], update["results"])
 		if "log_chunk" in update:
-			self._update_log_file(database_client, executor["run"], update["step_index"], update["log_chunk"])
+			self._update_log_file(executor["run"], update["log_chunk"])
 		if "event" in update:
 			self._handle_event(executor, update["event"])
 
@@ -279,19 +272,15 @@ class Worker:
 		properties_to_update = [ "status", "start_date", "completion_date" ]
 		self._run_provider.update_status(database_client, run, ** { key: value for key, value in status.items() if key in properties_to_update })
 
-		step_properties_to_update = [ "name", "index", "status" ]
-		step_collection = [ { key: value for key, value in step.items() if key in step_properties_to_update } for step in status.get("steps", []) ]
-		self._run_provider.update_steps(database_client, run, step_collection)
-
 
 	def _update_results(self, database_client: DatabaseClient, run: dict, results: dict) -> None:
 		""" Process an update for the run results """
 		self._run_provider.set_results(database_client, run, results)
 
 
-	def _update_log_file(self, database_client: DatabaseClient, run: str, step_index: int, log_chunk: str) -> None:
+	def _update_log_file(self, run: dict, log_chunk: str) -> None:
 		""" Process an update for the run log files """
-		self._run_provider.append_step_log(database_client, run["project"], run["identifier"], step_index, log_chunk)
+		self._run_provider.append_log_chunk(run["project"], run["identifier"], log_chunk)
 
 
 	def _handle_event(self, executor: dict, event: str) -> None: # pylint: disable = no-self-use

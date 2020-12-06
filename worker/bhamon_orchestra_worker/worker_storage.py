@@ -51,8 +51,7 @@ class WorkerStorage:
 
 
 	def load_status(self, run_identifier: str) -> dict:
-		status = self.load_json(run_identifier, "status")
-		return status if status is not None else { "run_identifier": run_identifier, "status": "unknown" }
+		return self.load_json(run_identifier, "status")
 
 
 	def save_status(self, run_identifier: str, status: dict) -> None:
@@ -72,9 +71,8 @@ class WorkerStorage:
 		self.save_json(run_identifier, "results", results)
 
 
-	def get_log_path(self, run_identifier: str, step_index: int, step_name: str) -> str:
-		log_file_name = "step_{index}_{name}.log".format(index = step_index, name = step_name)
-		return self._storage.get_file_path("runs" + "/" + run_identifier + "/" + log_file_name)
+	def get_log_path(self, run_identifier: str) -> str:
+		return self._storage.get_file_path("runs" + "/" + run_identifier + "/" + "run.log")
 
 
 	def get_timestamp(self, run_identifier: str, key: str) -> Optional[float]:

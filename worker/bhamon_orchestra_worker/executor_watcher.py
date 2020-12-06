@@ -100,7 +100,14 @@ class ExecutorWatcher:
 			return
 
 		status = self._storage.load_status(self.run_identifier)
-		if status["status"] in [ "unknown", "running" ]:
+
+		if status is None:
+			status = {
+				"run_identifier": self.run_identifier,
+				"status": "unknown",
+			}
+
+		if status["status"] in [ "pending", "running", "unknown" ]:
 			logger.error("(%s) Run terminated before completion", self.run_identifier)
 			status["status"] = "exception"
 			self._storage.save_status(self.run_identifier, status)

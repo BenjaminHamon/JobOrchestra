@@ -73,7 +73,6 @@ class MongoDatabaseAdministration:
 		if not simulate:
 			self.mongo_client.get_database()["run"].update_many({ "source": { "$exists": False } }, { "$set": { "source": None } })
 			self.mongo_client.get_database()["run"].update_many({ "worker": { "$exists": False } }, { "$set": { "worker": None } })
-			self.mongo_client.get_database()["run"].update_many({ "steps": { "$exists": False } }, { "$set": { "steps": None } })
 			self.mongo_client.get_database()["run"].update_many({ "start_date": { "$exists": False } }, { "$set": { "start_date": None } })
 			self.mongo_client.get_database()["run"].update_many({ "completion_date": { "$exists": False } }, { "$set": { "completion_date": None } })
 			self.mongo_client.get_database()["run"].update_many({ "results": { "$exists": False } }, { "$set": { "results": None } })

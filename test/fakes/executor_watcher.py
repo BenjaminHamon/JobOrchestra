@@ -8,11 +8,6 @@ class FakeExecutorWatcher:
 		self.status = {
 			"run_identifier": run_identifier,
 			"status": "pending",
-			"steps": [
-				{ "index": 0, "name": "first", "status": "pending" },
-				{ "index": 1, "name": "second", "status": "pending" },
-				{ "index": 2, "name": "third", "status": "pending" },
-			],
 		}
 
 
@@ -45,5 +40,3 @@ class FakeExecutorWatcher:
 
 	def succeed(self):
 		self.status["status"] = "succeeded"
-		for step in self.status["steps"]:
-			step["status"] = "succeeded"

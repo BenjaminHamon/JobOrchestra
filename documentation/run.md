@@ -47,7 +47,7 @@ If the worker process terminates with local runs still present, or if the connec
 1. A new executor process starts up
 2. The executor loads the run request
 3. The executor initializes the run status
-4. The executor executes each job step
+4. The executor executes each command from the job definition
 	1. The executor formats the command
 	2. The executor logs the commands
 	3. The executor spawns a process

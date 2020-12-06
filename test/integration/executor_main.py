@@ -6,7 +6,7 @@ import filelock
 
 from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
-from bhamon_orchestra_worker.executor import Executor
+from bhamon_orchestra_worker.job_executor import JobExecutor
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 import environment
@@ -23,8 +23,8 @@ def main():
 	environment.configure_logging(environment_instance, arguments)
 
 	with filelock.FileLock(os.path.join("runs", arguments.run_identifier, "executor.lock"), 5):
-		executor_instance = create_application(arguments)
-		executor_instance.run(environment_instance)
+		executor_instance = create_application()
+		executor_instance.run(arguments.run_identifier, environment_instance)
 
 
 def parse_arguments():
@@ -33,15 +33,14 @@ def parse_arguments():
 	return argument_parser.parse_args()
 
 
-def create_application(arguments):
+def create_application():
 	data_storage_instance = FileDataStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 	worker_storage_instance = WorkerStorage(data_storage_instance)
 
-	executor_instance = Executor(
+	executor_instance = JobExecutor(
 		storage = worker_storage_instance,
 		date_time_provider = date_time_provider_instance,
-		run_identifier = arguments.run_identifier,
 	)
 
 	return executor_instance

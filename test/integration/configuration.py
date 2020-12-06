@@ -44,17 +44,18 @@ def success():
 		"identifier": "success",
 		"display_name": "Success",
 		"description": "Test job which succeeds.",
-		"workspace": "examples",
 
-		"properties": {
-			"is_controller": False,
+		"definition": {
+			"commands": [
+				[ "{environment[python3_executable]}", "-c", "pass" ],
+			]
 		},
 
 		"parameters": [],
 
-		"steps": [
-			{ "name": "hello", "command": [ "{environment[python3_executable]}", "-c", "pass" ] },
-		],
+		"properties": {
+			"is_controller": False,
+		},
 	}
 
 
@@ -63,17 +64,18 @@ def sleep():
 		"identifier": "sleep",
 		"display_name": "Sleep",
 		"description": "Test job which succeeds after several seconds.",
-		"workspace": "examples",
 
-		"properties": {
-			"is_controller": False,
+		"definition": {
+			"commands": [
+				[ "{environment[python3_executable]}", "-c", "import time; time.sleep(5)" ],
+			]
 		},
 
 		"parameters": [],
 
-		"steps": [
-			{ "name": "hello", "command": [ "{environment[python3_executable]}", "-c", "import time; time.sleep(5)" ] },
-		],
+		"properties": {
+			"is_controller": False,
+		},
 	}
 
 
@@ -81,18 +83,19 @@ def failure():
 	return {
 		"identifier": "failure",
 		"display_name": "Failure",
-		"description": "Test job with a failing step.",
-		"workspace": "examples",
+		"description": "Test job which fails.",
 
-		"properties": {
-			"is_controller": False,
+		"definition": {
+			"commands": [
+				[ "{environment[python3_executable]}", "-c", "raise RuntimeError" ],
+			]
 		},
 
 		"parameters": [],
 
-		"steps": [
-			{ "name": "fail", "command": [ "{environment[python3_executable]}", "-c", "raise RuntimeError" ] },
-		],
+		"properties": {
+			"is_controller": False,
+		},
 	}
 
 
@@ -101,17 +104,18 @@ def exception():
 		"identifier": "exception",
 		"display_name": "Exception",
 		"description": "Test job with mistakes in its definition.",
-		"workspace": "examples",
 
-		"properties": {
-			"is_controller": False,
+		"definition": {
+			"commands": [
+				[ "{environment[python3_executable]}", "-c", "print('{undefined}')" ],
+			]
 		},
 
 		"parameters": [],
 
-		"steps": [
-			{ "name": "exception", "command": [ "{environment[python3_executable]}", "-c", "print('{undefined}')" ] },
-		],
+		"properties": {
+			"is_controller": False,
+		},
 	}
 
 
@@ -127,19 +131,20 @@ def controller_success():
 		"identifier": "controller_success",
 		"display_name": "Controller Success",
 		"description": "Trigger all test jobs.",
-		"workspace": "examples",
 
-		"properties": {
-			"is_controller": True,
+		"definition": {
+			"commands": [
+				controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters,
+				controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters,
+				controller_entry_point + [ "wait" ],
+			]
 		},
 
 		"parameters": [],
 
-		"steps": [
-			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters },
-			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters },
-			{ "name": "wait", "command": controller_entry_point + [ "wait" ] },
-		],
+		"properties": {
+			"is_controller": True,
+		},
 	}
 
 
@@ -155,17 +160,18 @@ def controller_failure():
 		"identifier": "controller_failure",
 		"display_name": "Controller Failure",
 		"description": "Trigger all test jobs.",
-		"workspace": "examples",
 
-		"properties": {
-			"is_controller": True,
+		"definition": {
+			"commands": [
+				controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters,
+				controller_entry_point + [ "trigger", "--project", "examples", "--job", "failure" ] + trigger_source_parameters,
+				controller_entry_point + [ "wait" ],
+			]
 		},
 
 		"parameters": [],
 
-		"steps": [
-			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters },
-			{ "name": "trigger", "command": controller_entry_point + [ "trigger", "--project", "examples", "--job", "failure" ] + trigger_source_parameters },
-			{ "name": "wait", "command": controller_entry_point + [ "wait" ] },
-		],
+		"properties": {
+			"is_controller": True,
+		},
 	}

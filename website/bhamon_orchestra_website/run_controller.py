@@ -42,7 +42,6 @@ def show_collection(project_identifier):
 def show(project_identifier, run_identifier): # pylint: disable = unused-argument
 	project = service_client.get("/project/{project_identifier}".format(**locals()))
 	run = service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals()))
-	run_steps = service_client.get("/project/{project_identifier}/run/{run_identifier}/step_collection".format(**locals()))
 	run_results = service_client.get("/project/{project_identifier}/run/{run_identifier}/results".format(**locals()))
 
 	run["project_display_name"] = project["display_name"]
@@ -66,31 +65,23 @@ def show(project_identifier, run_identifier): # pylint: disable = unused-argumen
 		worker = service_client.get_or_default(worker_route, default_value = {})
 		run["worker_display_name"] = worker.get("display_name", run["worker"])
 
-	view_data = { "project": project, "run": run, "run_steps": run_steps, "run_results": run_results }
+	view_data = { "project": project, "run": run, "run_results": run_results }
 
 	return flask.render_template("run/index.html", title = "Run " + run_identifier[:18], **view_data)
 
 
-def show_step(project_identifier, run_identifier, step_index): # pylint: disable = unused-argument
-	project = service_client.get("/project/{project_identifier}".format(**locals()))
-	run = service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals()))
-	step_collection = service_client.get("/project/{project_identifier}/run/{run_identifier}/step_collection".format(**locals()))
-
+def show_log(project_identifier, run_identifier): # pylint: disable = unused-argument
 	view_data = {
-		"project": project,
-		"run": run,
-		"current": step_collection[step_index],
-		"previous": step_collection[step_index - 1] if step_index > 0 else None,
-		"next": step_collection[step_index + 1] if step_index < (len(step_collection) - 1) else None,
+		"project": service_client.get("/project/{project_identifier}".format(**locals())),
+		"run": service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals())),
 	}
 
-	return flask.render_template("run/step.html", title = "Run " + run_identifier[:18], **view_data)
+	return flask.render_template("run/log.html", title = "Run " + run_identifier[:18], **view_data)
 
 
-def show_step_log(project_identifier, run_identifier, step_index): # pylint: disable = unused-argument
-	step = service_client.get("/project/{project_identifier}/run/{run_identifier}/step/{step_index}".format(**locals()))
-	log_text = service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/step/{step_index}/log".format(**locals())).text
-	content_disposition = "inline; filename=\"step_{index}_{name}.log\"".format(**step)
+def show_log_raw(project_identifier, run_identifier): # pylint: disable = unused-argument
+	log_text = service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/log".format(**locals())).text
+	content_disposition = "inline; filename=\"%s.log\"" % run_identifier
 	return flask.Response(log_text, headers = { "Content-Disposition": content_disposition }, mimetype = "text/plain")
 
 
