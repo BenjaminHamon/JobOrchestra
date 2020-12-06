@@ -14,7 +14,7 @@ from bhamon_orchestra_worker.process_watcher import ProcessWatcher
 async def test_run_success():
 	process_watcher_instance = ProcessWatcher()
 
-	await process_watcher_instance.run([ "python", "-c", "pass" ])
+	await process_watcher_instance.run("context", [ "python", "-c", "pass" ])
 
 	assert process_watcher_instance.process is not None
 	assert process_watcher_instance.process.returncode == 0
@@ -26,7 +26,7 @@ async def test_run_failure():
 	process_watcher_instance = ProcessWatcher()
 
 	with pytest.raises(ProcessException) as exception:
-		await process_watcher_instance.run([ "python", "-c", "raise RuntimeError" ])
+		await process_watcher_instance.run("context", [ "python", "-c", "raise RuntimeError" ])
 		assert exception.exit_code == 1
 
 	assert process_watcher_instance.process is not None
@@ -42,7 +42,7 @@ async def test_termination():
 
 	process_watcher_instance = ProcessWatcher()
 
-	await process_watcher_instance.start([ "python", "-c", "import time; time.sleep(10)" ])
+	await process_watcher_instance.start("context", [ "python", "-c", "import time; time.sleep(10)" ])
 
 	assert process_watcher_instance.process is not None
 	assert process_watcher_instance.process.returncode is None
@@ -65,7 +65,7 @@ async def test_output():
 	process_watcher_instance = ProcessWatcher()
 	process_watcher_instance.output_handler = output_lines.append
 
-	await process_watcher_instance.run([ "python", "-c", "print('hello')" ])
+	await process_watcher_instance.run("context", [ "python", "-c", "print('hello')" ])
 
 	assert output_lines == [ "hello" ]
 
@@ -78,6 +78,6 @@ async def test_output_unicode():
 	process_watcher_instance = ProcessWatcher()
 	process_watcher_instance.output_handler = output_lines.append
 
-	await process_watcher_instance.run([ "python", "-c", "print('… é ² √ 👍')" ])
+	await process_watcher_instance.run("context", [ "python", "-c", "print('… é ² √ 👍')" ])
 
 	assert output_lines == [ "… é ² √ 👍" ]

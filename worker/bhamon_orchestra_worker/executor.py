@@ -94,11 +94,9 @@ class Executor: # pylint: disable = too-many-instance-attributes
 			self._save_status()
 
 		except asyncio.CancelledError:
-			logger.error("(%s) Run was aborted", self.run_identifier, exc_info = True)
 			self.run_status = "aborted"
 			self.completion_date = self._date_time_provider.serialize(self._date_time_provider.now())
 			self.run_logger.info("Run completed with status %s", self.run_status)
-			self.run_logger.error("Exception", exc_info = True)
 			self._save_status()
 
 			raise

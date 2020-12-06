@@ -11,7 +11,7 @@ class FakeExecutorWatcher:
 		}
 
 
-	async def start(self, command): # pylint: disable = unused-argument
+	async def start(self, context, command): # pylint: disable = unused-argument
 		if self.is_running():
 			raise RuntimeError("Executor is already running")
 		self.status["status"] = "running"

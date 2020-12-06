@@ -60,7 +60,7 @@ class JobExecutor(Executor):
 		os.chdir(self.workspace)
 
 		try:
-			await process_watcher_instance.run(command)
+			await process_watcher_instance.run(self.run_identifier, command)
 		except ProcessException:
 			pass
 		finally:

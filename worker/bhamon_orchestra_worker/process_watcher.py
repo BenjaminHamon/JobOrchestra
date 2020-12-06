@@ -17,6 +17,7 @@ class ProcessWatcher:
 
 
 	def __init__(self) -> None:
+		self.context = None
 		self.process = None
 		self.output_future = None
 		self.output_handler = None
@@ -27,9 +28,9 @@ class ProcessWatcher:
 		self.subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 
-	async def run(self, command: List[str]) -> None:
+	async def run(self, context: str, command: List[str]) -> None:
 		try:
-			await self.start(command)
+			await self.start(context, command)
 			await self.wait()
 			await self.complete()
 
@@ -40,14 +41,16 @@ class ProcessWatcher:
 			raise
 
 
-	async def start(self, command: List[str]):
+	async def start(self, context: str, command: List[str]):
+		self.context = context
+
 		process_environment = os.environ.copy()
 		process_environment["PYTHONIOENCODING"] = "utf-8" # Force executor to use utf-8 instead of the default stdout encoding
 
 		self.process = await asyncio.create_subprocess_exec(*command,
 				stdout = subprocess.PIPE, stderr = subprocess.STDOUT, env = process_environment, creationflags = self.subprocess_flags)
 
-		logger.info("New subprocess (PID: %s)", self.process.pid)
+		logger.info("(%s) New subprocess (PID: %s)", self.context, self.process.pid)
 
 		self.output_future = asyncio.ensure_future(self._watch_output())
 
@@ -58,7 +61,7 @@ class ProcessWatcher:
 		try:
 			await asyncio.wait_for(self.output_future, 1)
 		except asyncio.TimeoutError:
-			logger.warning("Timeout on stdout future (PID: %s)", self.process.pid)
+			logger.warning("(%s) Timeout on stdout future (PID: %s)", self.context, self.process.pid)
 
 
 	async def complete(self) -> None:
@@ -67,10 +70,10 @@ class ProcessWatcher:
 
 
 	async def terminate(self, reason: str) -> None:
-		logger.info("Terminating subprocess (PID: %s, Reason: '%s')", self.process.pid, reason)
+		logger.info("(%s) Terminating subprocess (PID: %s, Reason: '%s')", self.context, self.process.pid, reason)
 
 		if self.is_running():
-			logger.info("Requesting subprocess termination (PID: %s)", self.process.pid)
+			logger.info("(%s) Requesting subprocess termination (PID: %s)", self.context, self.process.pid)
 			self.process.send_signal(self.termination_signal)
 
 			try:
@@ -79,7 +82,7 @@ class ProcessWatcher:
 				pass
 
 		if self.is_running():
-			logger.error("Forcing subprocess termination (PID: %s)", self.process.pid)
+			logger.error("(%s) Forcing subprocess termination (PID: %s)", self.context, self.process.pid)
 			self.process.kill()
 
 			try:
@@ -91,13 +94,13 @@ class ProcessWatcher:
 			try:
 				await asyncio.wait_for(self.output_future, 1)
 			except asyncio.TimeoutError:
-				logger.warning("Timeout on stdout future (PID: %s)", self.process.pid)
+				logger.warning("(%s) Timeout on stdout future (PID: %s)", self.context, self.process.pid)
 
 		if self.is_running():
-			logger.error("Terminating subprocess failed (PID: %s)", self.process.pid)
+			logger.error("(%s) Terminating subprocess failed (PID: %s)", self.context, self.process.pid)
 
 		if not self.is_running():
-			logger.info("Terminating subprocess succeeded (PID: %s)", self.process.pid)
+			logger.info("(%s) Terminating subprocess succeeded (PID: %s)", self.context, self.process.pid)
 
 
 	def is_running(self) -> bool:

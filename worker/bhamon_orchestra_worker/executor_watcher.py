@@ -19,8 +19,8 @@ class ExecutorWatcher:
 		self.synchronization = None
 
 
-	async def start(self, command: List[str]) -> None:
-		await self.process_watcher.start(command)
+	async def start(self, context: str, command: List[str]) -> None:
+		await self.process_watcher.start(context, command)
 
 
 	async def update(self, messenger: Messenger) -> None:
@@ -69,6 +69,6 @@ class ExecutorWatcher:
 			}
 
 		if status["status"] in [ "pending", "running", "unknown" ]:
-			logger.error("(%s) Run terminated before completion", self.run_identifier)
+			logger.error("Run '%s' terminated before completion", self.run_identifier)
 			status["status"] = "exception"
 			self._storage.save_status(self.run_identifier, status)
