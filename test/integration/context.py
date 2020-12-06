@@ -21,6 +21,7 @@ from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.schedule_provider import ScheduleProvider
 from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
+from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 from . import environment
 from . import factory
@@ -174,16 +175,18 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 		)
 
 
-	def invoke_executor(self, worker_identifier, run_identifier):
+	def invoke_executor(self, worker_identifier, run_request):
 		worker_directory = os.path.join(self.temporary_directory, worker_identifier)
-		executor_run_directory = os.path.join(worker_directory, "runs", run_identifier)
+		file_data_storage_instance = FileDataStorage(worker_directory)
+		worker_storage_instance = WorkerStorage(file_data_storage_instance)
 
-		os.makedirs(executor_run_directory)
+		worker_storage_instance.create_run(run_request["run_identifier"])
+		worker_storage_instance.save_request(run_request["run_identifier"], run_request)
 
 		return self.invoke(
 			identifier = worker_identifier + "_" + "executor",
 			script = "executor_main.py",
-			arguments = [ run_identifier ],
+			arguments = [ run_request["run_identifier"] ],
 			workspace = worker_directory,
 		)
 

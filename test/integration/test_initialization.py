@@ -63,12 +63,23 @@ def test_worker(tmpdir, database_type):
 def test_executor(tmpdir):
 	""" Test if the executor starts successfully """
 
+	run_request = {
+		"project_identifier": "my_project",
+		"job_identifier": "my_job",
+		"run_identifier": "my_run",
+
+		"job_definition": {
+			"commands": [],
+		},
+
+		"parameters": {},
+	}
+
 	with context.OrchestraContext(tmpdir, None) as context_instance:
-		run_identifier = "00000000-0000-0000-0000-000000000000"
-		executor_process = context_instance.invoke_executor("worker", run_identifier)
+		executor_process = context_instance.invoke_executor("worker", run_request)
 
 	assert_extensions.assert_multi_process([
-		{ "process": executor_process, "expected_result_code": 1, "log_format": log_format, "expected_messages": [] },
+		{ "process": executor_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": [] },
 	])
 
 
