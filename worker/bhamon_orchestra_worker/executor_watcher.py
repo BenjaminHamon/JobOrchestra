@@ -2,6 +2,7 @@ import logging
 from typing import List
 
 from bhamon_orchestra_model.network.messenger import Messenger
+from bhamon_orchestra_worker.process_exception import ProcessException
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 
@@ -60,6 +61,11 @@ class ExecutorWatcher:
 		if self.process_watcher is not None:
 			await self.process_watcher.wait()
 
+			try:
+				await self.process_watcher.complete()
+			except ProcessException:
+				logger.error("Run '%s' exited with an error", self.run_identifier, exc_info = True)
+
 		status = self._storage.load_status(self.run_identifier)
 
 		if status is None:
@@ -69,6 +75,6 @@ class ExecutorWatcher:
 			}
 
 		if status["status"] in [ "pending", "running", "unknown" ]:
-			logger.error("Run '%s' terminated before completion", self.run_identifier)
+			logger.error("Run '%s' exited before completion", self.run_identifier)
 			status["status"] = "exception"
 			self._storage.save_status(self.run_identifier, status)

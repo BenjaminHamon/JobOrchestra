@@ -50,7 +50,7 @@ class ProcessWatcher:
 		self.process = await asyncio.create_subprocess_exec(*command,
 				stdout = subprocess.PIPE, stderr = subprocess.STDOUT, env = process_environment, creationflags = self.subprocess_flags)
 
-		logger.info("(%s) New subprocess (PID: %s)", self.context, self.process.pid)
+		logger.info("(%s) Subprocess started (PID: %s)", self.context, self.process.pid)
 
 		self.output_future = asyncio.ensure_future(self._watch_output())
 
@@ -65,6 +65,11 @@ class ProcessWatcher:
 
 
 	async def complete(self) -> None:
+		if self.is_running():
+			raise RuntimeError("Subprocess is still active")
+
+		logger.info("(%s) Subprocess exited (PID: %s, ExitCode: %s)", self.context, self.process.pid, self.process.returncode)
+
 		if self.process.returncode != 0:
 			raise ProcessException("Subprocess failed (ExitCode: %s)" % self.process.returncode, self.process.returncode)
 
