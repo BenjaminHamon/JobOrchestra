@@ -3,6 +3,7 @@ import json
 import logging
 
 from bhamon_orchestra_worker.controller import Controller
+from bhamon_orchestra_worker.service_client import ServiceClient
 
 import environment
 
@@ -18,12 +19,19 @@ def main():
 	with open(arguments.authentication, mode = "r", encoding = "utf-8") as authentication_file:
 		authentication = json.load(authentication_file)
 
-	controller_instance = Controller(arguments.service_url, (authentication["user"], authentication["secret"]))
+	service_client_instance = ServiceClient(arguments.service_url, (authentication["user"], authentication["secret"]))
+	controller_instance = Controller(service_client_instance, None, arguments.results)
 
 	# Rapid requests to reduce delays in tests
 	controller_instance.wait_delay_seconds = 1
 
-	arguments.func(controller_instance, arguments)
+	controller_instance.reload()
+
+	if arguments.command == "trigger":
+		controller_instance.trigger_source = { "type": "run", "project": arguments.source_project, "identifier": arguments.source_run }
+		controller_instance.trigger(arguments.project, arguments.job, arguments.parameters)
+	if arguments.command == "wait":
+		controller_instance.wait()
 
 
 def parse_arguments():
@@ -39,7 +47,7 @@ def parse_arguments():
 	main_parser.add_argument("--authentication", required = True, help = "set the file path containing credentials to communicate with the service")
 	main_parser.add_argument("--results", required = True, help = "set the file path where to store the run results")
 
-	subparsers = main_parser.add_subparsers(title = "commands", metavar = "<command>")
+	subparsers = main_parser.add_subparsers(title = "commands", dest = "command", metavar = "<command>")
 	subparsers.required = True
 
 	command_parser = subparsers.add_parser("trigger", help = "trigger a run")
@@ -49,24 +57,14 @@ def parse_arguments():
 	command_parser.add_argument("--source-run", required = True, help = "set the run serving as the trigger source")
 	command_parser.add_argument("--parameters", nargs = "*", type = parse_key_value_parameter, default = [],
 		metavar = "<key=value>", help = "set parameters for the job")
-	command_parser.set_defaults(func = trigger_run)
 
 	command_parser = subparsers.add_parser("wait", help = "wait for triggered runs")
-	command_parser.set_defaults(func = wait_run)
 
 	arguments = main_parser.parse_args()
 	if hasattr(arguments, "parameters"):
 		arguments.parameters = dict(arguments.parameters)
 
 	return arguments
-
-
-def trigger_run(controller_instance, arguments):
-	controller_instance.trigger_run(arguments.results, arguments.project, arguments.job, arguments.parameters, arguments.source_project, arguments.source_run)
-
-
-def wait_run(controller_instance, arguments):
-	controller_instance.wait_run(arguments.results)
 
 
 if __name__ == "__main__":
