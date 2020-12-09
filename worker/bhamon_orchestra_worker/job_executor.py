@@ -45,7 +45,7 @@ class JobExecutor(Executor):
 
 	async def execute_command(self, command: List[str]) -> bool:
 		process_watcher_instance = ProcessWatcher()
-		process_watcher_instance.output_handler = lambda line: self.run_logging_handler.stream.write(line + "\n")
+		process_watcher_instance.output_handler = self._log_process_output
 
 		command = self.format_command(command)
 		logger.info("(%s) + %s", self.run_identifier, " ".join(("'" + x + "'") if " " in x else x for x in command))
@@ -96,3 +96,8 @@ class JobExecutor(Executor):
 		}
 
 		return [ argument.format(**format_parameters) for argument in command ]
+
+
+	def _log_process_output(self, line: str) -> None: # pylint: disable = no-self-use
+		self.run_logging_handler.stream.write(line + "\n")
+		self.run_logging_handler.flush()

@@ -235,3 +235,4 @@ class Worker: # pylint: disable = too-few-public-methods
 	def _log_executor_output(self, line: str) -> None: # pylint: disable = no-self-use
 		for log_handler in logging.root.handlers:
 			log_handler.stream.write(line + "\n")
+			log_handler.flush()
