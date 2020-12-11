@@ -53,9 +53,7 @@ class AsyncioApplication:
 	def run(self, main: Any) -> None:
 		""" Run synchronously """
 
-		asyncio_loop = asyncio.get_event_loop()
-		asyncio_loop.run_until_complete(self.run_async(main))
-		asyncio_loop.close()
+		asyncio.run(self.run_async(main))
 
 
 	async def run_async(self, main: Any) -> None:
