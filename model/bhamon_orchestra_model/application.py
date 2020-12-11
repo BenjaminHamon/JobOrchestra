@@ -53,9 +53,7 @@ class AsyncioApplication:
 	def run(self, main: Any) -> None:
 		""" Run synchronously """
 
-		asyncio_loop = asyncio.get_event_loop()
-		asyncio_loop.run_until_complete(self.run_async(main))
-		asyncio_loop.close()
+		asyncio.run(self.run_async(main))
 
 
 	async def run_async(self, main: Any) -> None:
@@ -63,11 +61,13 @@ class AsyncioApplication:
 
 		main_future = asyncio.ensure_future(main)
 
-		while not self.should_shutdown and not main_future.done():
-			await asyncio.sleep(1)
+		try:
+			while not self.should_shutdown and not main_future.done():
+				await asyncio.sleep(1)
 
-		if not main_future.done():
-			main_future.cancel()
+		finally:
+			if not main_future.done():
+				main_future.cancel()
 
 			try:
 				await asyncio.wait_for(main_future, timeout = self.shutdown_timeout_seconds)
