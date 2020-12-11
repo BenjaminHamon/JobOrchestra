@@ -15,4 +15,4 @@ class AsyncMock(MagicMock):
 class CancellableAsyncMock(AsyncMock): # pylint: disable = too-many-ancestors
 	async def __call__(self, *args, **kwargs):
 		await asyncio.sleep(1)
-		return super().__call__(*args, **kwargs)
+		return await super().__call__(*args, **kwargs)
