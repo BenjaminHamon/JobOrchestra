@@ -118,8 +118,8 @@ class Worker: # pylint: disable = too-few-public-methods
 				logger.error("Unhandled exception from executor termination", exc_info = True)
 
 		for executor in self._active_executors:
-			if executor.is_running():
-				logger.warning("Run '%s' is still active (Process: %s)", executor.run_identifier, executor.process.pid)
+			if executor.process_watcher is not None and executor.process_watcher.is_running():
+				logger.warning("Run '%s' is still active (Process: %s)", executor.run_identifier, executor.process_watcher.process.pid)
 
 
 	async def _execute_command(self, command: str, parameters: dict) -> Optional[Any]: # pylint: disable=too-many-return-statements
