@@ -60,7 +60,8 @@ def test_worker(tmpdir, database_type):
 	])
 
 
-def test_executor(tmpdir):
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_executor(tmpdir, database_type):
 	""" Test if the executor starts successfully """
 
 	run_request = {
@@ -69,13 +70,15 @@ def test_executor(tmpdir):
 		"run_identifier": "my_run",
 
 		"job_definition": {
+			"type": "job",
 			"commands": [],
 		},
 
 		"parameters": {},
 	}
 
-	with context.OrchestraContext(tmpdir, None) as context_instance:
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker" ])
 		executor_process = context_instance.invoke_executor("worker", run_request)
 
 	assert_extensions.assert_multi_process([
