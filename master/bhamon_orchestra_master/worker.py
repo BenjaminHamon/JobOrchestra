@@ -190,7 +190,7 @@ class Worker:
 	async def _recover_execution(self, database_client: DatabaseClient, run_identifier: str) -> dict:
 		""" Recover the state for an executor from the remote worker """
 
-		logger.info("(%s) Recovering run %s", self.identifier, run_identifier)
+		logger.info("(%s) Recovering run '%s'", self.identifier, run_identifier)
 		run_request = await self._retrieve_request(run_identifier)
 		run = self._run_provider.get(database_client, run_request["project_identifier"], run_identifier)
 
@@ -207,7 +207,7 @@ class Worker:
 	async def _start_execution(self, run: dict, job: dict) -> None:
 		""" Trigger a run execution on the remote worker """
 
-		logger.info("(%s) Starting run %s", self.identifier, run["identifier"])
+		logger.info("(%s) Starting run '%s'", self.identifier, run["identifier"])
 		execute_request = { "run_identifier": run["identifier"], "job": job, "parameters": run["parameters"] }
 		await self._execute_remote_command("execute", execute_request)
 
@@ -215,7 +215,7 @@ class Worker:
 	async def _abort_execution(self, run: dict) -> None:
 		""" Request a run to be aborted on the remote worker """
 
-		logger.info("(%s) Aborting run %s", self.identifier, run["identifier"])
+		logger.info("(%s) Aborting run '%s'", self.identifier, run["identifier"])
 		abort_request = { "run_identifier": run["identifier"] }
 		await self._execute_remote_command("abort", abort_request)
 
@@ -225,7 +225,7 @@ class Worker:
 
 		clean_request = { "run_identifier": run["identifier"] }
 		await self._execute_remote_command("clean", clean_request)
-		logger.info("(%s) Completed run %s with status %s", self.identifier, run["identifier"], run["status"])
+		logger.info("(%s) Completed run '%s' with status %s", self.identifier, run["identifier"], run["status"])
 
 
 	async def _resynchronize(self, run: dict) -> None:

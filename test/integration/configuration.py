@@ -47,7 +47,7 @@ def success():
 
 		"definition": {
 			"commands": [
-				[ "{environment[python3_executable]}", "-c", "pass" ],
+				[ "{environment[python3_executable]}", "-c", "print('hello')" ],
 			]
 		},
 

@@ -1,8 +1,5 @@
 """ Integration tests for connection between master and workers """
 
-import os
-import time
-
 import pytest
 
 from .. import assert_extensions
@@ -23,7 +20,7 @@ def test_worker_disconnection(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		os.kill(worker_process["process"].pid, context.shutdown_signal)
+		context_instance.terminate(worker_process["identifier"], worker_process["process"], "Shutdown")
 
 		with context_instance.database_client_factory() as database_client:
 			condition_function = lambda: not context_instance.worker_provider.get(database_client, "worker_01")["is_active"]
@@ -57,13 +54,11 @@ def test_master_disconnection(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
-		os.kill(master_process["process"].pid, context.shutdown_signal)
+		context_instance.terminate(master_process["identifier"], master_process["process"], "Shutdown")
 
 		with context_instance.database_client_factory() as database_client:
 			condition_function = lambda: not context_instance.worker_provider.get(database_client, "worker_01")["is_active"]
 			assert_extensions.wait_for_condition(condition_function)
-
-		time.sleep(1)
 
 	master_expected_messages = [
 		{ "level": "Info", "logger": "Supervisor", "message": "Worker 'worker_01' connected (User: 'worker', RemoteAddress: '127.0.0.1')" },

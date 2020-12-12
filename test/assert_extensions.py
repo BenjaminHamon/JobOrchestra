@@ -15,6 +15,8 @@ def get_flask_exit_code():
 
 
 def wait_for_condition(condition_function, timeout_seconds = 10, delay_seconds = 0.1):
+	__tracebackhide__ = True # pylint: disable = unused-variable
+
 	start_time = time.time()
 
 	while not condition_function():

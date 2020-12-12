@@ -7,8 +7,8 @@ from bhamon_orchestra_model.network.connection import NetworkConnection
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_worker.executor_watcher import ExecutorWatcher
 from bhamon_orchestra_worker.master_client import MasterClient
+from bhamon_orchestra_worker.process_watcher import ProcessWatcher
 from bhamon_orchestra_worker.synchronization import Synchronization
-import bhamon_orchestra_worker.worker_logging as worker_logging
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 
@@ -35,8 +35,6 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	async def run(self) -> None:
-		worker_logging.configure_logging_handlers()
-
 		self._recover()
 
 		executors_future = asyncio.ensure_future(self._run_executors())
@@ -69,7 +67,7 @@ class Worker: # pylint: disable = too-few-public-methods
 	async def _run_executors(self) -> None:
 		while True:
 			for executor in self._active_executors:
-				executor.update(self._messenger)
+				await executor.update(self._messenger)
 			await asyncio.sleep(1)
 
 
@@ -97,7 +95,7 @@ class Worker: # pylint: disable = too-few-public-methods
 	def _recover(self) -> None:
 		all_runs = self._storage.list_runs()
 		for run_identifier in all_runs:
-			logger.info("Recovering run %s", run_identifier)
+			logger.info("Recovering run '%s'", run_identifier)
 			for executor in self._active_executors:
 				if executor.run_identifier == run_identifier:
 					continue
@@ -108,7 +106,7 @@ class Worker: # pylint: disable = too-few-public-methods
 	async def _terminate(self) -> None:
 		all_futures = []
 		for executor in self._active_executors:
-			all_futures.append(asyncio.ensure_future(executor.terminate(self.termination_timeout_seconds)))
+			all_futures.append(asyncio.ensure_future(executor.terminate("Worker shutdown")))
 
 		if len(all_futures) > 0:
 			await asyncio.wait(all_futures, return_when = asyncio.ALL_COMPLETED)
@@ -121,7 +119,7 @@ class Worker: # pylint: disable = too-few-public-methods
 
 		for executor in self._active_executors:
 			if executor.is_running():
-				logger.warning("Run %s is still active (Process: %s)", executor.run_identifier, executor.process.pid)
+				logger.warning("Run '%s' is still active (Process: %s)", executor.run_identifier, executor.process.pid)
 
 
 	async def _execute_command(self, command: str, parameters: dict) -> Optional[Any]: # pylint: disable=too-many-return-statements
@@ -143,14 +141,16 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	def _instantiate_executor(self, run_identifier: str) -> ExecutorWatcher:
-		return ExecutorWatcher(self._storage, run_identifier)
+		executor = ExecutorWatcher(self._storage, run_identifier)
+		executor.termination_timeout_seconds = self.termination_timeout_seconds
+		return executor
 
 
 	def _find_executor(self, run_identifier: str) -> ExecutorWatcher:
 		for executor in self._active_executors:
 			if executor.run_identifier == run_identifier:
 				return executor
-		raise KeyError("Executor not found for %s" % run_identifier)
+		raise KeyError("Executor not found for run '%s'" % run_identifier)
 
 
 	def _describe(self) -> dict:
@@ -168,7 +168,7 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	async def _execute(self, run_identifier: str, job: dict, parameters: dict) -> None:
-		logger.info("Executing run %s", run_identifier)
+		logger.info("Executing run '%s'", run_identifier)
 
 		run_request = {
 			"project_identifier": job["project"],
@@ -182,18 +182,21 @@ class Worker: # pylint: disable = too-few-public-methods
 		self._storage.save_request(run_identifier, run_request)
 
 		executor = self._instantiate_executor(run_identifier)
+		executor.process_watcher = ProcessWatcher()
+		executor.process_watcher.output_handler = self._log_executor_output
+
 		executor_command = [ sys.executable, self._executor_script, run_identifier ]
 
 		try:
-			await executor.start(executor_command)
+			await executor.start("Worker", executor_command)
 		except OSError:
-			logger.error("Failed to start run %s", run_identifier, exc_info = True)
+			logger.error("Failed to start run '%s'", run_identifier, exc_info = True)
 
 		self._active_executors.append(executor)
 
 
 	async def _clean(self, run_identifier: str) -> None:
-		logger.info("Cleaning run %s", run_identifier)
+		logger.info("Cleaning run '%s'", run_identifier)
 		executor = self._find_executor(run_identifier)
 		await executor.complete()
 
@@ -206,7 +209,7 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	def _abort(self, run_identifier: str) -> None:
-		logger.info("Aborting run %s", run_identifier)
+		logger.info("Aborting run '%s'", run_identifier)
 		executor = self._find_executor(run_identifier)
 		if executor.is_running():
 			executor.abort()
@@ -227,3 +230,9 @@ class Worker: # pylint: disable = too-few-public-methods
 		executor.synchronization = Synchronization(self._storage, run_request)
 		executor.synchronization.reset(log_cursor)
 		executor.synchronization.resume()
+
+
+	def _log_executor_output(self, line: str) -> None: # pylint: disable = no-self-use
+		for log_handler in logging.root.handlers:
+			log_handler.stream.write(line + "\n")
+			log_handler.flush()

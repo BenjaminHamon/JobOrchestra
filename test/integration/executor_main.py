@@ -4,6 +4,9 @@ import os
 
 import filelock
 
+import bhamon_orchestra_worker
+
+from bhamon_orchestra_model.application import AsyncioApplication
 from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_worker.job_executor import JobExecutor
@@ -22,9 +25,13 @@ def main():
 	environment_instance["orchestra_worker_authentication"] = os.path.join(os.getcwd(), "authentication.json")
 	environment.configure_logging(environment_instance, arguments)
 
+	application_title = bhamon_orchestra_worker.__product__ + " " + "Executor"
+	application_version = bhamon_orchestra_worker.__version__
+
 	with filelock.FileLock(os.path.join("runs", arguments.run_identifier, "executor.lock"), 5):
-		executor_instance = create_application()
-		executor_instance.run(arguments.run_identifier, environment_instance)
+		executor_application = create_application()
+		asyncio_application = AsyncioApplication(application_title, application_version)
+		asyncio_application.run_as_standalone(executor_application.run(arguments.run_identifier, environment_instance))
 
 
 def parse_arguments():

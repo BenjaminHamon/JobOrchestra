@@ -29,15 +29,15 @@ def test_job_success(tmpdir, database_type):
 			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status succeeded" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run '%s' with status succeeded" % run["identifier"] },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Executing run '%s'" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status succeeded" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Cleaning run '%s'" % run["identifier"] },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -65,15 +65,15 @@ def test_job_failure(tmpdir, database_type):
 			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status failed" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run '%s' with status failed" % run["identifier"] },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Executing run '%s'" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status failed" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Cleaning run '%s'" % run["identifier"] },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -101,16 +101,16 @@ def test_job_exception(tmpdir, database_type):
 			run = run_and_wait(context_instance.run_provider, database_client, project_identifier, job_identifier)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status exception" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run '%s' with status exception" % run["identifier"] },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Executing run '%s'" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Error", "logger": "Executor", "message": "(%s) Run raised an exception" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status exception" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Cleaning run '%s'" % run["identifier"] },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -176,17 +176,116 @@ def test_run_abort(tmpdir, database_type):
 			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Aborting run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run %s with status aborted" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Aborting run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run '%s' with status aborted" % run["identifier"] },
 	]
 
 	worker_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Executing run '%s'" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
-		{ "level": "Error", "logger": "Executor", "message": "(%s) Run was aborted" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status aborted" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Cleaning run '%s'" % run["identifier"] },
+	]
+
+	assert_extensions.assert_multi_process([
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": worker_expected_messages },
+	])
+
+	assert run["status"] == "aborted"
+
+
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_run_recovery_on_master(tmpdir, database_type):
+	""" Test recovering a run """
+
+	project_identifier = "examples"
+	job_identifier = "sleep"
+
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker_01" ])
+
+		master_process = context_instance.invoke_master()
+		worker_process = context_instance.invoke_worker("worker_01")
+
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+
+			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] == "running"
+			assert_extensions.wait_for_condition(condition_function)
+
+		context_instance.terminate(master_process["identifier"], master_process["process"], "Shutdown")
+		master_process = context_instance.invoke_master()
+
+		with context_instance.database_client_factory() as database_client:
+			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
+			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
+			time.sleep(2)
+
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+
+	master_expected_messages = [
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Recovering run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run '%s' with status succeeded" % run["identifier"] },
+	]
+
+	worker_expected_messages = [
+		{ "level": "Info", "logger": "Worker", "message": "Executing run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status succeeded" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Cleaning run '%s'" % run["identifier"] },
+	]
+
+	assert_extensions.assert_multi_process([
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": worker_expected_messages },
+	])
+
+	assert run["status"] == "succeeded"
+
+
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_run_recovery_on_worker(tmpdir, database_type):
+	""" Test recovering a run """
+
+	project_identifier = "examples"
+	job_identifier = "sleep"
+
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker_01" ])
+
+		master_process = context_instance.invoke_master()
+		worker_process = context_instance.invoke_worker("worker_01")
+
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+
+			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] == "running"
+			assert_extensions.wait_for_condition(condition_function)
+
+		context_instance.terminate(worker_process["identifier"], worker_process["process"], "Shutdown")
+		worker_process = context_instance.invoke_worker("worker_01")
+
+		with context_instance.database_client_factory() as database_client:
+			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
+			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
+			time.sleep(2)
+
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+
+	master_expected_messages = [
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Recovering run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Completed run '%s' with status aborted" % run["identifier"] },
+	]
+
+	worker_expected_messages = [
+		{ "level": "Info", "logger": "Worker", "message": "Executing run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status aborted" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Cleaning run '%s'" % run["identifier"] },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -218,15 +317,15 @@ def test_job_controller_success(tmpdir, database_type):
 			all_runs = context_instance.run_provider.get_list(database_client)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "(controller) Completed run %s with status succeeded" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(controller) Completed run '%s' with status succeeded" % run["identifier"] },
 	]
 
 	controller_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Executing run '%s'" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status succeeded" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Cleaning run '%s'" % run["identifier"] },
 	]
 
 	assert_extensions.assert_multi_process([
@@ -262,15 +361,15 @@ def test_job_controller_failure(tmpdir, database_type):
 			all_runs = context_instance.run_provider.get_list(database_client)
 
 	master_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting run %s" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "(controller) Completed run %s with status failed" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(controller) Completed run '%s' with status failed" % run["identifier"] },
 	]
 
 	controller_expected_messages = [
-		{ "level": "Info", "logger": "Worker", "message": "Executing run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Executing run '%s'" % run["identifier"] },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
 		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status failed" % run["identifier"] },
-		{ "level": "Info", "logger": "Worker", "message": "Cleaning run %s" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Cleaning run '%s'" % run["identifier"] },
 	]
 
 	assert_extensions.assert_multi_process([

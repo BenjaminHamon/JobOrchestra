@@ -1,21 +1,16 @@
 import json
 import logging
 import os
-import platform
-import signal
-import subprocess
-import time
 from typing import List
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_worker.executor import Executor
+from bhamon_orchestra_worker.process_exception import ProcessException
+from bhamon_orchestra_worker.process_watcher import ProcessWatcher
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 
 logger = logging.getLogger("Executor")
-
-shutdown_signal = signal.CTRL_BREAK_EVENT if platform.system() == "Windows" else signal.SIGTERM # pylint: disable = no-member
-subprocess_flags = subprocess.CREATE_NEW_PROCESS_GROUP if platform.system() == "Windows" else 0
 
 
 class JobExecutor(Executor):
@@ -29,17 +24,17 @@ class JobExecutor(Executor):
 		self.termination_timeout_seconds = 30
 
 
-	def initialize(self, environment: dict) -> None:
-		super().initialize(environment)
+	async def initialize(self, environment: dict) -> None:
+		await super().initialize(environment)
 
 		self.result_file_path = os.path.join(self.workspace, ".orchestra", "runs", self.run_identifier, "results.json")
 
 
-	def execute_implementation(self) -> None:
+	async def execute_implementation(self) -> None:
 		overall_success = True
 
 		for command in self.job_definition["commands"]:
-			success = self.execute_command(command)
+			success = await self.execute_command(command)
 
 			if not success:
 				overall_success = False
@@ -48,34 +43,40 @@ class JobExecutor(Executor):
 		self.run_status = "succeeded" if overall_success else "failed"
 
 
-	def execute_command(self, command: List[str]):
+	async def execute_command(self, command: List[str]) -> bool:
+		process_watcher_instance = ProcessWatcher()
+		process_watcher_instance.output_handler = self._log_process_output
+
 		command = self.format_command(command)
 		logger.info("(%s) + %s", self.run_identifier, " ".join(("'" + x + "'") if " " in x else x for x in command))
 
-		with open(self.log_file_path, mode = "a", encoding = "utf-8") as log_file:
-			log_file.write("(orchestra) + %s\n" % " ".join(("'" + x + "'") if " " in x else x for x in command))
-			log_file.write("\n")
-			log_file.flush()
+		self.run_logger.info("+ %s", " ".join(("'" + x + "'") if " " in x else x for x in command))
+		self.run_logging_handler.stream.write("\n")
+		self.run_logging_handler.stream.write("-" * 80 + "\n")
+		self.run_logging_handler.stream.write("\n")
+		self.run_logging_handler.flush()
 
-			executor_directory = os.getcwd()
-			os.chdir(self.workspace)
+		executor_directory = os.getcwd()
+		os.chdir(self.workspace)
 
-			try:
-				child_process = subprocess.Popen(command, stdout = log_file, stderr = subprocess.STDOUT, creationflags = subprocess_flags)
-			finally:
-				os.chdir(executor_directory)
+		try:
+			await process_watcher_instance.run(self.run_identifier, command)
+		except ProcessException:
+			pass
+		finally:
+			os.chdir(executor_directory)
 
-			try:
-				success = self._wait_process(child_process)
-			finally:
-				log_file.write("\n")
+			self.run_logging_handler.stream.write("\n")
+			self.run_logging_handler.stream.write("-" * 80 + "\n")
+			self.run_logging_handler.stream.write("\n")
+			self.run_logging_handler.flush()
 
 		if os.path.isfile(self.result_file_path):
 			with open(self.result_file_path, mode = "r", encoding = "utf-8") as result_file:
 				results = json.load(result_file)
 			self._storage.save_results(self.run_identifier, results)
 
-		return success
+		return process_watcher_instance.process.returncode == 0
 
 
 	def format_command(self, command: List[str]) -> List[str]:
@@ -97,18 +98,6 @@ class JobExecutor(Executor):
 		return [ argument.format(**format_parameters) for argument in command ]
 
 
-	def _wait_process(self, child_process: subprocess.Popen) -> bool:
-		result = None
-		while result is None:
-			if self._should_shutdown:
-				logger.info("(%s) Terminating child process", self.run_identifier)
-				os.kill(child_process.pid, shutdown_signal)
-				try:
-					result = child_process.wait(timeout = self.termination_timeout_seconds)
-				except subprocess.TimeoutExpired:
-					logger.warning("(%s) Terminating child process (force)", self.run_identifier)
-					child_process.kill()
-				raise KeyboardInterrupt
-			time.sleep(1)
-			result = child_process.poll()
-		return result == 0
+	def _log_process_output(self, line: str) -> None: # pylint: disable = no-self-use
+		self.run_logging_handler.stream.write(line + "\n")
+		self.run_logging_handler.flush()
