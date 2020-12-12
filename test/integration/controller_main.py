@@ -3,7 +3,7 @@ import json
 import logging
 
 from bhamon_orchestra_worker.controller import Controller
-from bhamon_orchestra_worker.service_client import ServiceClient
+from bhamon_orchestra_worker.web_service_client import WebServiceClient
 
 import environment
 
@@ -19,7 +19,7 @@ def main():
 	with open(arguments.authentication, mode = "r", encoding = "utf-8") as authentication_file:
 		authentication = json.load(authentication_file)
 
-	service_client_instance = ServiceClient(arguments.service_url, (authentication["user"], authentication["secret"]))
+	service_client_instance = WebServiceClient(arguments.service_url, (authentication["user"], authentication["secret"]))
 	controller_instance = Controller(service_client_instance, None, arguments.results)
 
 	# Rapid requests to reduce delays in tests

@@ -12,7 +12,7 @@ from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_worker.job_executor import JobExecutor
 from bhamon_orchestra_worker.pipeline_executor import PipelineExecutor
-from bhamon_orchestra_worker.service_client import ServiceClient
+from bhamon_orchestra_worker.web_service_client import WebServiceClient
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 import environment
@@ -54,7 +54,7 @@ def create_application(run_identifier, configuration, authentication):
 	data_storage_instance = FileDataStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 	worker_storage_instance = WorkerStorage(data_storage_instance)
-	service_client_instance = ServiceClient(configuration["orchestra_service_url"], authorization = (authentication["user"], authentication["secret"]))
+	service_client_instance = WebServiceClient(configuration["orchestra_service_url"], authorization = (authentication["user"], authentication["secret"]))
 
 	request = worker_storage_instance.load_request(run_identifier)
 
