@@ -63,7 +63,6 @@ class Synchronization:
 				logger.warning("(%s) Failed to send updates", self.run_identifier, exc_info = True)
 
 			if self.run_status in [ "succeeded", "failed", "aborted", "exception" ] and self.log_file is None:
-				messenger.send_update({ "run": self.run_identifier, "event": "synchronization_completed" })
 				self.internal_status = "done"
 
 

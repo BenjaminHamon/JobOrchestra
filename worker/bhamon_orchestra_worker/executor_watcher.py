@@ -37,6 +37,11 @@ class ExecutorWatcher:
 		if self.synchronization is not None:
 			self.synchronization.update(messenger)
 
+			if not self.is_running and self.synchronization.internal_status == "done":
+				messenger.send_update({ "run": self.run_identifier, "event": "synchronization_completed" })
+				self.synchronization.dispose()
+				self.synchronization = None
+
 
 	async def terminate(self, reason: str) -> None:
 		if self.process_watcher is not None:

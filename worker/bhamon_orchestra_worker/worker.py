@@ -200,12 +200,8 @@ class Worker: # pylint: disable = too-few-public-methods
 		logger.info("Cleaning run '%s'", run_identifier)
 		executor = self._find_executor(run_identifier)
 
-		if executor.is_running:
+		if executor.is_running or executor.synchronization is not None:
 			raise RuntimeError("Run '%s' is still active" % run_identifier)
-
-		if executor.synchronization is not None:
-			executor.synchronization.dispose()
-			executor.synchronization = None
 
 		self._active_executors.remove(executor)
 		self._storage.delete_run(run_identifier)
