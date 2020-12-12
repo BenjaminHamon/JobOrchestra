@@ -100,6 +100,7 @@ class Worker: # pylint: disable = too-few-public-methods
 				if executor.run_identifier == run_identifier:
 					continue
 			executor = self._instantiate_executor(run_identifier)
+			executor.recover()
 			self._active_executors.append(executor)
 
 
@@ -198,7 +199,9 @@ class Worker: # pylint: disable = too-few-public-methods
 	async def _clean(self, run_identifier: str) -> None:
 		logger.info("Cleaning run '%s'", run_identifier)
 		executor = self._find_executor(run_identifier)
-		await executor.complete()
+
+		if executor.is_running:
+			raise RuntimeError("Run '%s' is still active" % run_identifier)
 
 		if executor.synchronization is not None:
 			executor.synchronization.dispose()
@@ -211,7 +214,7 @@ class Worker: # pylint: disable = too-few-public-methods
 	def _abort(self, run_identifier: str) -> None:
 		logger.info("Aborting run '%s'", run_identifier)
 		executor = self._find_executor(run_identifier)
-		if executor.is_running():
+		if executor.is_running:
 			executor.abort()
 
 

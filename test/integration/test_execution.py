@@ -197,6 +197,50 @@ def test_run_abort(tmpdir, database_type):
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_run_without_master(tmpdir, database_type):
+	""" Test executing a run without being connected to the master """
+
+	project_identifier = "examples"
+	job_identifier = "sleep"
+
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "worker_01" ])
+
+		master_process = context_instance.invoke_master()
+		worker_process = context_instance.invoke_worker("worker_01")
+
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+
+			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] == "running"
+			assert_extensions.wait_for_condition(condition_function)
+			time.sleep(2)
+
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+
+		context_instance.terminate(master_process["identifier"], master_process["process"], "Shutdown")
+
+		time.sleep(5)
+
+	master_expected_messages = [
+		{ "level": "Info", "logger": "Worker", "message": "(worker_01) Starting run '%s'" % run["identifier"] },
+	]
+
+	worker_expected_messages = [
+		{ "level": "Info", "logger": "Worker", "message": "Executing run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status succeeded" % run["identifier"] },
+	]
+
+	assert_extensions.assert_multi_process([
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": worker_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": worker_expected_messages },
+	])
+
+	assert run["status"] == "running"
+
+
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
 def test_run_recovery_on_master(tmpdir, database_type):
 	""" Test recovering a run """
 

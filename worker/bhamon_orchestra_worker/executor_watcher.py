@@ -16,28 +16,31 @@ class ExecutorWatcher:
 		self._storage = storage
 		self.run_identifier = run_identifier
 
+		self.is_running = False
 		self.process_watcher = None
 		self.synchronization = None
 
 
 	async def start(self, context: str, command: List[str]) -> None:
+		self.is_running = True
 		await self.process_watcher.start(context, command)
 
 
+	def recover(self) -> None:
+		self.is_running = True
+
+
 	async def update(self, messenger: Messenger) -> None:
-		await self._check_termination()
+		if self.is_running:
+			await self._check_completion()
 
 		if self.synchronization is not None:
 			self.synchronization.update(messenger)
 
 
-	async def complete(self) -> None:
-		if self.is_running():
-			raise RuntimeError("Run '%s' is still active" % self.run_identifier)
-
-
 	async def terminate(self, reason: str) -> None:
-		await self.process_watcher.terminate(reason)
+		if self.process_watcher is not None:
+			await self.process_watcher.terminate(reason)
 
 
 	def abort(self) -> None:
@@ -45,36 +48,31 @@ class ExecutorWatcher:
 		self.process_watcher.process.send_signal(self.process_watcher.termination_signal)
 
 
-	def is_running(self) -> bool:
+	async def _check_completion(self) -> None:
 		if self.process_watcher is not None:
-			return self.process_watcher.is_running()
+			if not self.process_watcher.is_running():
+				await self.process_watcher.wait()
 
-		status = self._storage.load_status(self.run_identifier)
+				try:
+					await self.process_watcher.complete()
+				except ProcessException:
+					logger.error("Run '%s' exited with an error", self.run_identifier, exc_info = True)
 
-		return status is not None and status["status"] in [ "pending", "running" ]
+				self.is_running = False
 
+		else:
+			status = self._storage.load_status(self.run_identifier)
 
-	async def _check_termination(self) -> None:
-		if self.is_running():
-			return
+			if status is None:
+				status = {
+					"run_identifier": self.run_identifier,
+					"status": "unknown",
+				}
 
-		if self.process_watcher is not None:
-			await self.process_watcher.wait()
+			if status["status"] in [ "pending", "running", "unknown" ]:
+				logger.error("Run '%s' exited before completion", self.run_identifier)
+				status["status"] = "exception"
+				self._storage.save_status(self.run_identifier, status)
 
-			try:
-				await self.process_watcher.complete()
-			except ProcessException:
-				logger.error("Run '%s' exited with an error", self.run_identifier, exc_info = True)
-
-		status = self._storage.load_status(self.run_identifier)
-
-		if status is None:
-			status = {
-				"run_identifier": self.run_identifier,
-				"status": "unknown",
-			}
-
-		if status["status"] in [ "pending", "running", "unknown" ]:
-			logger.error("Run '%s' exited before completion", self.run_identifier)
-			status["status"] = "exception"
-			self._storage.save_status(self.run_identifier, status)
+			if status["status"] in [ "succeeded", "failed", "aborted", "exception" ]:
+				self.is_running = False
