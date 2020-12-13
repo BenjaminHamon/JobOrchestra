@@ -48,7 +48,10 @@ async def execute_runs(service_client: FakeServiceClient) -> None:
 	while True:
 		for run in service_client.all_runs:
 			if run["status"] == "pending":
-				run["status"] = "succeeded"
+				if run["job"] == "success":
+					run["status"] = "succeeded"
+				if run["job"] == "failure":
+					run["status"] = "failed"
 		await asyncio.sleep(0.1)
 
 
@@ -98,6 +101,10 @@ async def test_empty(tmpdir):
 	assert executor_instance.start_date is not None
 	assert executor_instance.completion_date is not None
 
+	assert len(executor_instance.all_inner_runs) == len(request["job_definition"]["elements"])
+	for inner_run in executor_instance.all_inner_runs:
+		assert inner_run["status"] == "succeeded"
+
 	await executor_instance.dispose()
 
 	service_future.cancel()
@@ -123,9 +130,9 @@ async def test_parallel(tmpdir):
 
 		"job_definition": {
 			"elements": [
-				{ "identifier": "my_job_1", "job": "my_job" },
-				{ "identifier": "my_job_2", "job": "my_job" },
-				{ "identifier": "my_job_3", "job": "my_job" },
+				{ "identifier": "stage_1_job_1", "job": "success" },
+				{ "identifier": "stage_1_job_2", "job": "success" },
+				{ "identifier": "stage_1_job_3", "job": "success" },
 			],
 		},
 
@@ -151,6 +158,10 @@ async def test_parallel(tmpdir):
 	assert executor_instance.run_status == "succeeded"
 	assert executor_instance.start_date is not None
 	assert executor_instance.completion_date is not None
+
+	assert len(executor_instance.all_inner_runs) == len(request["job_definition"]["elements"])
+	for inner_run in executor_instance.all_inner_runs:
+		assert inner_run["status"] == "succeeded"
 
 	await executor_instance.dispose()
 
@@ -177,9 +188,9 @@ async def test_sequential(tmpdir):
 
 		"job_definition": {
 			"elements": [
-				{ "identifier": "my_job_1", "job": "my_job" },
-				{ "identifier": "my_job_2", "job": "my_job", "after": [ { "element": "my_job_1", "status": "succeeded" } ] },
-				{ "identifier": "my_job_3", "job": "my_job", "after": [ { "element": "my_job_2", "status": "succeeded" } ] },
+				{ "identifier": "stage_1_job_1", "job": "success" },
+				{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
+				{ "identifier": "stage_3_job_1", "job": "success", "after": [ { "element": "stage_2_job_1", "status": "succeeded" } ] },
 			],
 		},
 
@@ -205,6 +216,10 @@ async def test_sequential(tmpdir):
 	assert executor_instance.run_status == "succeeded"
 	assert executor_instance.start_date is not None
 	assert executor_instance.completion_date is not None
+
+	assert len(executor_instance.all_inner_runs) == len(request["job_definition"]["elements"])
+	for inner_run in executor_instance.all_inner_runs:
+		assert inner_run["status"] == "succeeded"
 
 	await executor_instance.dispose()
 
@@ -231,17 +246,17 @@ async def test_complex(tmpdir):
 
 		"job_definition": {
 			"elements": [
-				{ "identifier": "stage_1_job_1", "job": "my_job" },
-				{ "identifier": "stage_1_job_2", "job": "my_job" },
-				{ "identifier": "stage_1_job_3", "job": "my_job" },
+				{ "identifier": "stage_1_job_1", "job": "success" },
+				{ "identifier": "stage_1_job_2", "job": "success" },
+				{ "identifier": "stage_1_job_3", "job": "success" },
 
-				{ "identifier": "stage_2_job_1", "job": "my_job", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
-				{ "identifier": "stage_2_job_2", "job": "my_job", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
-				{ "identifier": "stage_2_job_3", "job": "my_job", "after": [ { "element": "stage_1_job_3", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_3", "job": "success", "after": [ { "element": "stage_1_job_3", "status": "succeeded" } ] },
 
-				{ "identifier": "stage_3_job_1", "job": "my_job", "after": [ { "element": "stage_2_job_1", "status": "succeeded" } ] },
-				{ "identifier": "stage_3_job_2", "job": "my_job", "after": [ { "element": "stage_2_job_2", "status": "succeeded" } ] },
-				{ "identifier": "stage_3_job_3", "job": "my_job", "after": [ { "element": "stage_2_job_3", "status": "succeeded" } ] },
+				{ "identifier": "stage_3_job_1", "job": "success", "after": [ { "element": "stage_2_job_1", "status": "succeeded" } ] },
+				{ "identifier": "stage_3_job_2", "job": "success", "after": [ { "element": "stage_2_job_2", "status": "succeeded" } ] },
+				{ "identifier": "stage_3_job_3", "job": "success", "after": [ { "element": "stage_2_job_3", "status": "succeeded" } ] },
 			],
 		},
 
@@ -267,6 +282,69 @@ async def test_complex(tmpdir):
 	assert executor_instance.run_status == "succeeded"
 	assert executor_instance.start_date is not None
 	assert executor_instance.completion_date is not None
+
+	assert len(executor_instance.all_inner_runs) == len(request["job_definition"]["elements"])
+	for inner_run in executor_instance.all_inner_runs:
+		assert inner_run["status"] == "succeeded"
+
+	await executor_instance.dispose()
+
+	service_future.cancel()
+
+
+@pytest.mark.asyncio
+async def test_failure(tmpdir):
+	""" Test executing a pipeline which fails """
+
+	log_file_path = os.path.join(str(tmpdir), "run.log")
+
+	worker_storage_mock = Mock(spec = WorkerStorage)
+	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	service_client_mock = FakeServiceClient()
+
+	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
+	executor_instance.update_interval_seconds = 0.1
+
+	request = {
+		"project_identifier": "my_project",
+		"job_identifier": "my_pipeline",
+		"run_identifier": "my_run",
+
+		"job_definition": {
+			"elements": [
+				{ "identifier": "stage_1_job_1", "job": "success" },
+				{ "identifier": "stage_2_job_1", "job": "failure", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
+				{ "identifier": "stage_3_job_1", "job": "success", "after": [ { "element": "stage_2_job_1", "status": "succeeded" } ] },
+			],
+		},
+
+		"parameters": {},
+	}
+
+	worker_storage_mock.get_log_path.return_value = log_file_path
+	worker_storage_mock.load_request.return_value = request
+	worker_storage_mock.load_results.return_value = {}
+
+	service_future = asyncio.ensure_future(execute_runs(service_client_mock))
+
+	executor_instance.run_identifier = request["run_identifier"]
+
+	await executor_instance.initialize({})
+
+	assert executor_instance.run_status == "pending"
+	assert executor_instance.start_date is None
+	assert executor_instance.completion_date is None
+
+	await asyncio.wait_for(executor_instance.execute(), 1)
+
+	assert executor_instance.run_status == "failed"
+	assert executor_instance.start_date is not None
+	assert executor_instance.completion_date is not None
+
+	assert len(executor_instance.all_inner_runs) == len(request["job_definition"]["elements"])
+	assert executor_instance.all_inner_runs[0]["status"] == "succeeded"
+	assert executor_instance.all_inner_runs[1]["status"] == "failed"
+	assert executor_instance.all_inner_runs[2]["status"] == "skipped"
 
 	await executor_instance.dispose()
 

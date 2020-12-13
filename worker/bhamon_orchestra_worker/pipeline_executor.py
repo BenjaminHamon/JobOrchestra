@@ -1,4 +1,5 @@
 import asyncio
+import enum
 import logging
 
 import requests
@@ -10,6 +11,12 @@ from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 
 logger = logging.getLogger("Executor")
+
+
+class TriggerStatus(enum.Enum):
+	Ready = 0
+	Wait = 1
+	Impossible = 2
 
 
 class PipelineExecutor(Executor):
@@ -65,8 +72,7 @@ class PipelineExecutor(Executor):
 	async def update(self) -> None:
 		for inner_run in self.all_inner_runs:
 			if inner_run["identifier"] is None:
-				if self._can_trigger_inner_run(inner_run):
-					self._trigger_inner_run(inner_run)
+				self._try_trigger_inner_run(inner_run)
 
 		for inner_run in self.all_inner_runs:
 			if inner_run["identifier"] is not None:
@@ -76,7 +82,7 @@ class PipelineExecutor(Executor):
 
 
 	def is_completed(self) -> bool:
-		return all(inner_run["status"] in [ "succeeded", "failed", "exception", "aborted", "cancelled" ] for inner_run in self.all_inner_runs)
+		return all(inner_run["status"] in [ "succeeded", "failed", "exception", "aborted", "skipped", "cancelled" ] for inner_run in self.all_inner_runs)
 
 
 	def compute_status(self) -> str:
@@ -89,15 +95,28 @@ class PipelineExecutor(Executor):
 		return "succeeded"
 
 
-	def _can_trigger_inner_run(self, inner_run: dict) -> bool:
+	def _try_trigger_inner_run(self, inner_run: dict) -> None:
+		trigger_status = self._can_trigger_inner_run(inner_run)
+
+		if trigger_status == TriggerStatus.Ready:
+			self._trigger_inner_run(inner_run)
+
+		if trigger_status == TriggerStatus.Impossible:
+			logger.info("(%s) Skipping '%s': trigger conditions cannot be satisfied", self.run_identifier, inner_run["element"])
+			inner_run["status"] = "skipped"
+
+
+	def _can_trigger_inner_run(self, inner_run: dict) -> TriggerStatus:
 		element_definition = next(element for element in self.job_definition["elements"] if element["identifier"] == inner_run["element"])
 
 		for after_option in element_definition["after"]:
 			predecessor = next(r for r in self.all_inner_runs if r["element"] == after_option["element"])
 			if predecessor["status"] not in after_option["status"]:
-				return False
+				if predecessor["status"] in [ "succeeded", "failed", "aborted", "cancelled", "skipped", "exception" ]:
+					return TriggerStatus.Impossible
+				return TriggerStatus.Wait
 
-		return True
+		return TriggerStatus.Ready
 
 
 	def _trigger_inner_run(self, inner_run: dict) -> None:
