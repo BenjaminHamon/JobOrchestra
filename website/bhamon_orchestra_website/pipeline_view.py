@@ -6,15 +6,15 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 	# The further a node is from the start, the further to the right it is, and thus edges go from left to right.
 
 
-	def __init__(self, pipeline_definition):
-		self.pipeline_definition = pipeline_definition
+	def __init__(self, pipeline):
+		self.pipeline = pipeline
 
 		self.all_nodes = []
 		self.all_edges = []
 		self.navigation = []
 
 		self.cell_width = 200
-		self.cell_height = 40
+		self.cell_height = 50
 		self.cell_padding = 20
 
 		# self.colors = [ "black" ]
@@ -59,10 +59,19 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		self.all_nodes = []
 		self.all_edges = []
 
-		for element in self.pipeline_definition["elements"]:
-			self.all_nodes.append({ "identifier": element["identifier"], "predecessors": [], "successors": [] })
+		for element in self.pipeline["elements"]:
+			inner_run = next(run for run in self.pipeline["inner_runs"] if run["element"] == element["identifier"])
 
-		for element in self.pipeline_definition["elements"]:
+			node = {
+				"identifier": element["identifier"],
+				"predecessors": [],
+				"successors": [],
+				"run": inner_run,
+			}
+
+			self.all_nodes.append(node)
+
+		for element in self.pipeline["elements"]:
 			for after_option in element.get("after", []):
 				edge_start = next(node for node in self.all_nodes if node["identifier"] == after_option["element"])
 				edge_end = next(node for node in self.all_nodes if node["identifier"] == element["identifier"])

@@ -73,9 +73,14 @@
 
 		.node-border
 		{
-			fill: none;
+			fill: transparent;
 			stroke: black;
 			rx: 4;
+		}
+
+		.has-link > .node-border:hover
+		{
+			fill: #f0f8ff;
 		}
 
 		.node-text
@@ -83,6 +88,21 @@
 			dominant-baseline: middle;
 			font-size: small;
 		}
+
+		.status-indicator
+		{
+			fill: none;
+			stroke: gray;
+		}
+
+		.status-indicator.pending { fill: lightblue; }
+		.status-indicator.running { fill: yellow; }
+		.status-indicator.cancelled { fill: gray; }
+		.status-indicator.skipped { fill: gray; }
+		.status-indicator.succeeded { fill: green; }
+		.status-indicator.failed { fill: red; }
+		.status-indicator.aborted { fill: purple; }
+		.status-indicator.exception { fill: purple; }
 
 		.edge
 		{
@@ -94,9 +114,16 @@
 		{% set cell_x = cell_width * node['column'] %}
 		{% set cell_y = cell_height * node['row'] %}
 	<!-- Node '{{ node['identifier'] }}' -->
-	<rect class="cell-border" x="{{ cell_x }}" y="{{ cell_y }}" width="{{ cell_width }}" height="{{ cell_height }}"/>
-	<rect class="node-border" x="{{ cell_x + cell_padding }}" y="{{ (cell_y + cell_padding / 2) | int }}" width="{{ cell_width - cell_padding * 2 }}" height="{{ cell_height - cell_padding }}"/>
-	<text class="node-text" x="{{ cell_x + cell_padding + 10 }}" y="{{ (cell_y + cell_height / 2) | int }}">{{ node['identifier'] }}</text>
+	{% if node['run']['identifier'] != None %}
+	<a class="has-link" href="{{ url_for('run_controller.show', project_identifier = node['run']['project'], run_identifier = node['run']['identifier']) }}">
+	{% else %}
+	<a>
+	{% endif %}
+		<rect class="cell-border" x="{{ cell_x }}" y="{{ cell_y }}" width="{{ cell_width }}" height="{{ cell_height }}"/>
+		<rect class="node-border" x="{{ cell_x + cell_padding }}" y="{{ (cell_y + cell_padding / 2) | int }}" width="{{ cell_width - cell_padding * 2 }}" height="{{ cell_height - cell_padding }}"/>
+		<text class="node-text" x="{{ cell_x + cell_padding + 10 }}" y="{{ (cell_y + cell_height / 2) | int }}">{{ node['identifier'] }}</text>
+		<circle class="status-indicator {{ node['run']['status'] }}" cx="{{ (cell_x + cell_width - cell_padding - 15) | int }}" cy="{{ (cell_y + cell_height / 2) | int }}" r="8"/>
+	</a>
 	{% endfor %}
 
 	{% for edge in pipeline['edges'] %}
