@@ -121,7 +121,7 @@
 	{% endif %}
 		<rect class="cell-border" x="{{ cell_x }}" y="{{ cell_y }}" width="{{ cell_width }}" height="{{ cell_height }}"/>
 		<rect class="node-border" x="{{ cell_x + cell_padding }}" y="{{ (cell_y + cell_padding / 2) | int }}" width="{{ cell_width - cell_padding * 2 }}" height="{{ cell_height - cell_padding }}"/>
-		<text class="node-text" x="{{ cell_x + cell_padding + 10 }}" y="{{ (cell_y + cell_height / 2) | int }}">{{ node['identifier'] }}</text>
+		<text class="node-text" x="{{ cell_x + cell_padding + 10 }}" y="{{ (cell_y + cell_height / 2 + 1) | int }}">{{ node['identifier'] }}</text>
 		<circle class="status-indicator {{ node['run']['status'] }}" cx="{{ (cell_x + cell_width - cell_padding - 15) | int }}" cy="{{ (cell_y + cell_height / 2) | int }}" r="8"/>
 	</a>
 	{% endfor %}
