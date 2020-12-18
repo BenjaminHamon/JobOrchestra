@@ -152,35 +152,38 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 				all_paths.append({ "source": node, "destination": successor })
 
 		all_offsets = {}
-
 		for path in all_paths:
 			path["offsets"] = {}
 
-			# Add an offset to go between the nodes
+		# Traversing, for multi-column paths
+		for path in all_paths:
 			if path["destination"]["column"] - path["source"]["column"] > 1:
 				path["row"] = max(path["source"]["row"], path["destination"]["row"]) + 0.5
 
-				# Traversing row
 				area = ("middle-row", None, path["row"])
 				all_offsets[area] = (all_offsets.get(area, -1) + 1)
 				path["offsets"]["middle-row"] = all_offsets[area]
 
-			# Start point
+		# Start points
+		for path in sorted(all_paths, key = lambda x: (x["source"]["column"], x["source"]["row"], max(x.get("row", 0), x["source"]["row"], x["destination"]["row"]))):
 			area = ("start", path["source"]["column"], path["source"]["row"])
 			all_offsets[area] = all_offsets.get(area, -1) + 1
 			path["offsets"]["start"] = all_offsets[area]
 
-			# Column area around start point
+		# Column areas around start points
+		for path in sorted(all_paths, key = lambda x: (x["source"]["column"], x["source"]["row"], abs(x.get("row", x["destination"]["row"]) - x["source"]["row"]))):
 			area = ("start-column", path["source"]["column"], None)
 			all_offsets[area] = all_offsets.get(area, 0) + 1
 			path["offsets"]["start-column"] = all_offsets[area]
 
-			# Column area around end point
+		# Column areas around end points
+		for path in sorted(all_paths, key = lambda x: (x["destination"]["column"], x["destination"]["row"], abs(x["destination"]["row"] - x.get("row", x["source"]["row"])))):
 			area = ("end-column", path["destination"]["column"], None)
 			all_offsets[area] = all_offsets.get(area, 0) + 1
 			path["offsets"]["end-column"] = all_offsets[area]
 
-			# End point
+		# End points
+		for path in sorted(all_paths, key = lambda x: (x["destination"]["column"], x["destination"]["row"], max(x.get("row", 0), x["source"]["row"], x["destination"]["row"]))):
 			area = ("end", path["destination"]["column"], path["destination"]["row"])
 			all_offsets[area] = all_offsets.get(area, -1) + 1
 			path["offsets"]["end"] = all_offsets[area]
