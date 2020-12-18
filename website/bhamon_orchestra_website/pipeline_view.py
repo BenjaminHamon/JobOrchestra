@@ -16,6 +16,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		self.cell_width = 200
 		self.cell_height = 50
 		self.cell_padding = 20
+		self.offset_multiplier = 2
 
 		# self.colors = [ "black" ]
 		self.colors = [ "red", "blue", "orange", "green", "purple" ] #, "yellow" ]
@@ -30,7 +31,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 			path["color"] = self.colors[index % len(self.colors)]
 
 		for edge in self.all_edges:
-			navigation_path = next(x for x in self.navigation if edge["start"] in x["sources"] and edge["end"] == x["destination"])
+			navigation_path = next(x for x in self.navigation if edge["start"] == x["source"] and edge["end"] == x["destination"])
 			edge["path"] = self._generate_edge_path(edge, navigation_path)
 			edge["path_svg"] = self._convert_path_to_svg(edge["path"])
 			edge["color"] = navigation_path["color"]
@@ -138,61 +139,49 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 
 
 	def _generate_navigation(self):
-		""" Create unique paths for the edges to use by regrouping them based on their destinations and adding offsets. """
+		""" Create unique paths for the edges to use. """
 
-		merged_paths = []
+		all_paths = []
 
 		for node in self.all_nodes:
-			if len(node["predecessors"]) == 0:
-				continue
-
-			path = next((x for x in merged_paths if x["destination"] == node), None)
-
-			if path is None:
-				path = { "sources": [], "destination": node }
-				merged_paths.append(path)
-
-			path["sources"].extend(node["predecessors"])
+			for successor in node["successors"]:
+				all_paths.append({ "source": node, "destination": successor })
 
 		all_offsets = {}
 
-		for path in merged_paths:
-			# Select the row the path will use by going under all the path nodes
-			path["row"] = max(x["row"] for x in path["sources"] + [ path["destination"] ])
-			is_multi_column = path["destination"]["column"] - min(x["column"] for x in path["sources"]) > 1
-
-			# Add an offset to go between the nodes
-			if is_multi_column:
-				path["row"] += 0.5
-
+		for path in all_paths:
 			path["offsets"] = {}
 
-			# Path traversing row
-			position = ("row", None, path["row"])
-			area = ("row", None, path["row"])
-			all_offsets[area] = (all_offsets.get(area, -1) + 1) if is_multi_column else 0
-			path["offsets"][position] = all_offsets[position]
+			# Add an offset to go between the nodes
+			if path["destination"]["column"] - path["source"]["column"] > 1:
+				path["row"] = max(path["source"]["row"], path["destination"]["row"]) + 0.5
 
-			for source in path["sources"]:
-				# Start points
-				position = ("start", source["column"], source["row"])
-				area = ("start", source["column"], source["row"])
-				all_offsets[area] = all_offsets.get(area, -1) + 1
-				path["offsets"][position] = all_offsets[area]
+				# Traversing row
+				area = ("middle-row", None, path["row"])
+				all_offsets[area] = (all_offsets.get(area, -1) + 1)
+				path["offsets"]["middle-row"] = all_offsets[area]
 
-				# Merging points into the path (column area around start points)
-				position = ("merge", source["column"], source["row"])
-				area = ("merge", source["column"], None)
-				all_offsets[area] = all_offsets.get(area, 0) + 1
-				path["offsets"][position] = all_offsets[area]
+			# Start point
+			area = ("start", path["source"]["column"], path["source"]["row"])
+			all_offsets[area] = all_offsets.get(area, -1) + 1
+			path["offsets"]["start"] = all_offsets[area]
 
-			# Last turn point into destination (column area around end point)
-			position = ("last-turn", path["destination"]["column"], path["destination"]["row"])
-			area = ("last-turn", path["destination"]["column"], None)
+			# Column area around start point
+			area = ("start-column", path["source"]["column"], None)
 			all_offsets[area] = all_offsets.get(area, 0) + 1
-			path["offsets"][position] = all_offsets[area]
+			path["offsets"]["start-column"] = all_offsets[area]
 
-		self.navigation = merged_paths
+			# Column area around end point
+			area = ("end-column", path["destination"]["column"], None)
+			all_offsets[area] = all_offsets.get(area, 0) + 1
+			path["offsets"]["end-column"] = all_offsets[area]
+
+			# End point
+			area = ("end", path["destination"]["column"], path["destination"]["row"])
+			all_offsets[area] = all_offsets.get(area, -1) + 1
+			path["offsets"]["end"] = all_offsets[area]
+
+		self.navigation = all_paths
 
 
 	def _generate_edge_path(self, edge, navigation_path):
@@ -203,22 +192,21 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		start_point = ((edge["start"]["column"] + 1) * self.cell_width - self.cell_padding, (edge["start"]["row"] + 0.5) * self.cell_height)
 		end_point = ((edge["end"]["column"]) * self.cell_width + self.cell_padding, (edge["end"]["row"] + 0.5) * self.cell_height)
 
-		offset_multiplier = 2
-		start_position = ("start", edge["start"]["column"], edge["start"]["row"])
-		start_position_offset = navigation_path["offsets"][start_position] * offset_multiplier
-		merge_position = ("merge", edge["start"]["column"], edge["start"]["row"])
-		merge_position_offset = navigation_path["offsets"][merge_position] * offset_multiplier
-		last_turn_position = ("last-turn", edge["end"]["column"], edge["end"]["row"])
-		last_turn_position_offset = navigation_path["offsets"][last_turn_position] * offset_multiplier
-		row_position = ("row", None, navigation_path["row"])
-		row_position_offset = navigation_path["offsets"][row_position] * offset_multiplier
+		start_position_offset = navigation_path["offsets"]["start"] * self.offset_multiplier
+		start_column_offset = navigation_path["offsets"]["start-column"] * self.offset_multiplier
+		end_column_offset = navigation_path["offsets"]["end-column"] * self.offset_multiplier
+		end_position_offset = navigation_path["offsets"]["end"] * self.offset_multiplier
 
 		path.append((start_point[0], start_point[1] + start_position_offset))
-		path.append((start_point[0] + self.cell_padding - merge_position_offset, start_point[1] + start_position_offset))
-		path.append(((edge["start"]["column"] + 1) * self.cell_width - merge_position_offset, int((navigation_path["row"] + 0.5) * self.cell_height + row_position_offset)))
-		path.append(((edge["end"]["column"]) * self.cell_width + last_turn_position_offset, int((navigation_path["row"] + 0.5) * self.cell_height + row_position_offset)))
-		path.append((end_point[0] - self.cell_padding + last_turn_position_offset, end_point[1]))
-		path.append(end_point)
+		path.append((start_point[0] + self.cell_padding - start_column_offset, start_point[1] + start_position_offset))
+
+		if "row" in navigation_path:
+			middle_row_offset = navigation_path["offsets"]["middle-row"] * self.offset_multiplier
+			path.append(((edge["start"]["column"] + 1) * self.cell_width + start_column_offset, int((navigation_path["row"] + 0.5) * self.cell_height + middle_row_offset)))
+			path.append(((edge["end"]["column"]) * self.cell_width - end_column_offset, int((navigation_path["row"] + 0.5) * self.cell_height + middle_row_offset)))
+
+		path.append((end_point[0] - self.cell_padding + end_column_offset, end_point[1] + end_position_offset))
+		path.append((end_point[0], end_point[1] + end_position_offset))
 
 		return path
 
