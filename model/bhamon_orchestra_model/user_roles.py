@@ -140,6 +140,10 @@ class Worker:
 			return True
 		if method == "POST" and route == "/project/<project_identifier>/job/<job_identifier>/trigger":
 			return True
+		if method == "POST" and route == "/project/<project_identifier>/run/<run_identifier>/cancel":
+			return True
+		if method == "POST" and route == "/project/<project_identifier>/run/<run_identifier>/abort":
+			return True
 		return False
 
 
