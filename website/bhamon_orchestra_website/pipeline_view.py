@@ -83,6 +83,8 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 
 				self.all_edges.append({ "start": edge_start, "end": edge_end })
 
+		self.all_edges.sort(key = lambda x: (self.all_nodes.index(x["start"]), self.all_nodes.index(x["end"])))
+
 
 	def _generate_node_layout(self):
 		""" Create the graph layout for nodes by assigning each node a position in a grid. """
