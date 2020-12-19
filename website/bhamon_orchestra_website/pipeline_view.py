@@ -191,8 +191,8 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 
 		path = []
 
-		start_point = ((edge["start"]["column"] + 1) * self.cell_width - self.cell_padding_horizontal, (edge["start"]["row"] + 0.5) * self.cell_height)
-		end_point = ((edge["end"]["column"]) * self.cell_width + self.cell_padding_horizontal, (edge["end"]["row"] + 0.5) * self.cell_height)
+		start_point = ((edge["start"]["column"] + 1) * self.cell_width - self.cell_padding_horizontal, int((edge["start"]["row"] + 0.5) * self.cell_height))
+		end_point = ((edge["end"]["column"]) * self.cell_width + self.cell_padding_horizontal, int((edge["end"]["row"] + 0.5) * self.cell_height))
 
 		start_position_offset = navigation_path["offsets"]["start"] * self.offset_multiplier
 		start_column_offset = navigation_path["offsets"]["start-column"] * self.offset_multiplier
