@@ -470,6 +470,7 @@ def test_job_pipeline_success(tmpdir, database_type):
 
 	assert run["status"] == "succeeded"
 	assert len(all_runs) == 5
+	assert all(x["status"] == "succeeded" for x in all_runs if x["job"] != run["job"])
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
@@ -514,6 +515,7 @@ def test_job_pipeline_failure(tmpdir, database_type):
 
 	assert run["status"] == "failed"
 	assert len(all_runs) == 5
+	assert all(x["status"] in [ "succeeded", "failed" ] for x in all_runs if x["job"] != run["job"])
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
@@ -563,6 +565,59 @@ def test_job_pipeline_exception(tmpdir, database_type): # pylint: disable = too-
 
 	assert run["status"] == "exception"
 	assert len(all_runs) == 3
+	assert all(x["status"] == "succeeded" for x in all_runs if x["job"] != run["job"])
+
+
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_job_pipeline_abort(tmpdir, database_type): # pylint: disable = too-many-locals
+	""" Test executing a pipeline which gets aborted """
+
+	project_identifier = "examples"
+	job_identifier = "pipeline_sleep"
+
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
+		context_instance.configure_worker_authentication([ "controller", "worker_01", "worker_02" ])
+
+		master_process = context_instance.invoke_master()
+		service_process = context_instance.invoke_service()
+		controller_process = context_instance.invoke_worker("controller")
+		worker_01_process = context_instance.invoke_worker("worker_01")
+		worker_02_process = context_instance.invoke_worker("worker_02")
+
+		with context_instance.database_client_factory() as database_client:
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+			context_instance.run_provider.update_status(database_client, run, should_abort = True)
+
+			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
+			assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
+			time.sleep(2)
+
+			run = context_instance.run_provider.get(database_client, run["project"], run["identifier"])
+			all_runs = context_instance.run_provider.get_list(database_client)
+
+	master_expected_messages = [
+		{ "level": "Info", "logger": "Worker", "message": "(controller) Starting run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "(controller) Completed run '%s' with status aborted" % run["identifier"] },
+	]
+
+	controller_expected_messages = [
+		{ "level": "Info", "logger": "Worker", "message": "Executing run '%s'" % run["identifier"] },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Run is starting for project '%s' and job '%s'" % (run["identifier"], project_identifier, job_identifier) },
+		{ "level": "Info", "logger": "Executor", "message": "(%s) Run completed with status aborted" % run["identifier"] },
+		{ "level": "Info", "logger": "Worker", "message": "Cleaning run '%s'" % run["identifier"] },
+	]
+
+	assert_extensions.assert_multi_process([
+		{ "process": master_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": master_expected_messages },
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
+		{ "process": controller_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": controller_expected_messages },
+		{ "process": worker_01_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": [] },
+		{ "process": worker_02_process, "expected_result_code": 0, "log_format": log_format, "expected_messages": [] },
+	])
+
+	assert run["status"] == "aborted"
+	assert len(all_runs) == 3
+	assert all(x["status"] in [ "aborted", "cancelled" ] for x in all_runs if x["job"] != run["job"])
 
 
 def run_and_wait(run_provider, database_client, project_identifier, job_identifier):

@@ -25,6 +25,7 @@ def configure_jobs():
 		pipeline_success(),
 		pipeline_failure(),
 		pipeline_exception(),
+		pipeline_sleep(),
 	]
 
 
@@ -256,6 +257,31 @@ def pipeline_exception():
 				{ "identifier": "stage_1_job_2", "job": "success" },
 				{ "identifier": "stage_2_job_1", "job": "unknown", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
 				{ "identifier": "stage_2_job_2", "job": "unknown", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+			],
+		},
+
+		"parameters": [],
+
+		"properties": {
+			"is_controller": True,
+		},
+	}
+
+
+def pipeline_sleep():
+	return {
+		"identifier": "pipeline_sleep",
+		"display_name": "Pipeline Sleep",
+		"description": "Run a pipeline of jobs.",
+
+		"definition": {
+			"type": "pipeline",
+
+			"elements": [
+				{ "identifier": "stage_1_job_1", "job": "sleep" },
+				{ "identifier": "stage_1_job_2", "job": "sleep" },
+				{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
 			],
 		},
 
