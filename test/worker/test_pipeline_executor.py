@@ -36,6 +36,8 @@ class FakeServiceClient(ServiceClient):
 			"parameters": parameters,
 			"source": source,
 			"status": "pending",
+			"should_cancel": False,
+			"should_abort": False,
 		}
 
 		self.all_runs.append(new_run)
@@ -43,15 +45,36 @@ class FakeServiceClient(ServiceClient):
 		return { "run_identifier": new_run["identifier"] }
 
 
+	def cancel_run(self, project_identifier: str, run_identifier: str) -> None:
+		run = self.get_run(project_identifier, run_identifier)
+		run["should_cancel"] = True
+
+
+	def abort_run(self, project_identifier: str, run_identifier: str) -> None:
+		run = self.get_run(project_identifier, run_identifier)
+		run["should_abort"] = True
+
+
 
 async def execute_runs(service_client: FakeServiceClient) -> None:
 	while True:
 		for run in service_client.all_runs:
 			if run["status"] == "pending":
+				if run["should_cancel"]:
+					run["status"] = "cancelled"
+
+			if run["status"] == "pending":
 				if run["job"] == "success":
 					run["status"] = "succeeded"
 				if run["job"] == "failure":
 					run["status"] = "failed"
+				if run["job"] == "infinite":
+					run["status"] = "running"
+
+			if run["status"] == "running":
+				if run["should_abort"]:
+					run["status"] = "aborted"
+
 		await asyncio.sleep(0.1)
 
 
@@ -67,7 +90,8 @@ async def test_empty(tmpdir):
 	service_client_mock = FakeServiceClient()
 
 	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
-	executor_instance.update_interval_seconds = 0.1
+	executor_instance.running_update_interval_seconds = 0.1
+	executor_instance.aborting_update_interval_seconds = 0.1
 
 	request = {
 		"project_identifier": "my_project",
@@ -121,7 +145,8 @@ async def test_parallel(tmpdir):
 	service_client_mock = FakeServiceClient()
 
 	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
-	executor_instance.update_interval_seconds = 0.1
+	executor_instance.running_update_interval_seconds = 0.1
+	executor_instance.aborting_update_interval_seconds = 0.1
 
 	request = {
 		"project_identifier": "my_project",
@@ -179,7 +204,8 @@ async def test_sequential(tmpdir):
 	service_client_mock = FakeServiceClient()
 
 	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
-	executor_instance.update_interval_seconds = 0.1
+	executor_instance.running_update_interval_seconds = 0.1
+	executor_instance.aborting_update_interval_seconds = 0.1
 
 	request = {
 		"project_identifier": "my_project",
@@ -237,7 +263,8 @@ async def test_complex(tmpdir):
 	service_client_mock = FakeServiceClient()
 
 	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
-	executor_instance.update_interval_seconds = 0.1
+	executor_instance.running_update_interval_seconds = 0.1
+	executor_instance.aborting_update_interval_seconds = 0.1
 
 	request = {
 		"project_identifier": "my_project",
@@ -303,7 +330,8 @@ async def test_failure(tmpdir):
 	service_client_mock = FakeServiceClient()
 
 	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
-	executor_instance.update_interval_seconds = 0.1
+	executor_instance.running_update_interval_seconds = 0.1
+	executor_instance.aborting_update_interval_seconds = 0.1
 
 	request = {
 		"project_identifier": "my_project",
@@ -344,6 +372,76 @@ async def test_failure(tmpdir):
 	assert len(executor_instance.all_inner_runs) == len(request["job_definition"]["elements"])
 	assert executor_instance.all_inner_runs[0]["status"] == "succeeded"
 	assert executor_instance.all_inner_runs[1]["status"] == "failed"
+	assert executor_instance.all_inner_runs[2]["status"] == "skipped"
+
+	await executor_instance.dispose()
+
+	service_future.cancel()
+
+
+@pytest.mark.asyncio
+async def test_abort(tmpdir):
+	""" Test executing a pipeline which gets aborted """
+
+	log_file_path = os.path.join(str(tmpdir), "run.log")
+
+	worker_storage_mock = Mock(spec = WorkerStorage)
+	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	service_client_mock = FakeServiceClient()
+
+	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
+	executor_instance.running_update_interval_seconds = 0.1
+	executor_instance.aborting_update_interval_seconds = 0.1
+
+	request = {
+		"project_identifier": "my_project",
+		"job_identifier": "my_pipeline",
+		"run_identifier": "my_run",
+
+		"job_definition": {
+			"elements": [
+				{ "identifier": "stage_1_job_1", "job": "infinite" },
+				{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
+				{ "identifier": "stage_3_job_1", "job": "success", "after": [ { "element": "stage_2_job_1", "status": "succeeded" } ] },
+			],
+		},
+
+		"parameters": {},
+	}
+
+	worker_storage_mock.get_log_path.return_value = log_file_path
+	worker_storage_mock.load_request.return_value = request
+	worker_storage_mock.load_results.return_value = {}
+
+	service_future = asyncio.ensure_future(execute_runs(service_client_mock))
+
+	executor_instance.run_identifier = request["run_identifier"]
+
+	await executor_instance.initialize({})
+
+	assert executor_instance.run_status == "pending"
+	assert executor_instance.start_date is None
+	assert executor_instance.completion_date is None
+
+	execute_future = asyncio.ensure_future(executor_instance.execute())
+
+	await asyncio.sleep(0.2)
+
+	assert executor_instance.run_status == "running"
+	assert executor_instance.all_inner_runs[0]["status"] == "running"
+
+	execute_future.cancel()
+
+	with pytest.raises(asyncio.CancelledError):
+		await asyncio.wait_for(execute_future, 1)
+
+	assert executor_instance.run_status == "aborted"
+	assert executor_instance.start_date is not None
+	assert executor_instance.completion_date is not None
+
+	assert len(executor_instance.all_inner_runs) == len(request["job_definition"]["elements"])
+	assert executor_instance.all_inner_runs[0]["status"] == "aborted"
+	assert executor_instance.all_inner_runs[1]["status"] == "skipped"
 	assert executor_instance.all_inner_runs[2]["status"] == "skipped"
 
 	await executor_instance.dispose()

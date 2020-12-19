@@ -13,3 +13,13 @@ class ServiceClient(abc.ABC):
 	@abc.abstractmethod
 	def trigger_job(self, project_identifier: str, job_identifier: str, parameters: dict, source: dict) -> dict:
 		pass
+
+
+	@abc.abstractmethod
+	def cancel_run(self, project_identifier: str, run_identifier: str) -> None:
+		pass
+
+
+	@abc.abstractmethod
+	def abort_run(self, project_identifier: str, run_identifier: str) -> None:
+		pass

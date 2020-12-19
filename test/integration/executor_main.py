@@ -72,7 +72,8 @@ def create_application(run_identifier, configuration, authentication):
 		)
 
 		# Rapid updates to reduce delays in tests
-		executor_instance.update_interval_seconds = 1
+		executor_instance.running_update_interval_seconds = 1
+		executor_instance.aborting_update_interval_seconds = 1
 
 	else:
 		raise RuntimeError("Unsupported job definition")

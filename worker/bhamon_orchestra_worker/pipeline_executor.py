@@ -28,8 +28,11 @@ class PipelineExecutor(Executor):
 		self.service_client = service_client
 
 		self.all_inner_runs = []
+		self.state = None
 
-		self.update_interval_seconds = 10
+		self.running_update_interval_seconds = 10
+		self.aborting_update_interval_seconds = 1
+		self.abort_timeout_seconds = 20
 
 
 	async def initialize(self, environment: dict) -> None:
@@ -56,20 +59,51 @@ class PipelineExecutor(Executor):
 
 	async def execute_implementation(self) -> None:
 		try:
-			while not self.is_completed():
-				try:
-					await asyncio.gather(self.update(), asyncio.sleep(self.update_interval_seconds))
-				except requests.ConnectionError:
-					logger.warning("(%s) Connection error during update", self.run_identifier, exc_info = True)
-					self.run_logger.warning("Connection error during update", exc_info = True)
-					await asyncio.sleep(60)
+			try:
+				await self.run_pipeline()
+			finally:
+				await asyncio.wait_for(self.abort_pipeline(), self.abort_timeout_seconds)
+
 		finally:
 			self.run_logging_handler.stream.write("\n")
 
 		self.run_status = self.compute_status()
 
 
+	async def run_pipeline(self) -> None:
+		self.state = "running"
+
+		while not self.is_completed():
+			try:
+				await asyncio.gather(self.update(), asyncio.sleep(self.running_update_interval_seconds))
+			except requests.ConnectionError:
+				logger.warning("(%s) Connection error during update", self.run_identifier, exc_info = True)
+				self.run_logger.warning("Connection error during update", exc_info = True)
+				await asyncio.sleep(60)
+
+		self.state = "completed"
+
+
+	async def abort_pipeline(self) -> None:
+		self.state = "aborting"
+
+		while not self.is_completed():
+			try:
+				await asyncio.gather(self.update(), asyncio.sleep(self.aborting_update_interval_seconds))
+			except requests.ConnectionError:
+				logger.warning("(%s) Connection error during update", self.run_identifier, exc_info = True)
+				self.run_logger.warning("Connection error during update", exc_info = True)
+				await asyncio.sleep(1)
+
+		self.state = "completed"
+
+
 	async def update(self) -> None:
+		if self.state == "aborting":
+			for inner_run in self.all_inner_runs:
+				if inner_run["identifier"] is not None:
+					self._try_abort_inner_run(inner_run)
+
 		for inner_run in self.all_inner_runs:
 			if inner_run["identifier"] is None:
 				self._try_trigger_inner_run(inner_run)
@@ -131,6 +165,20 @@ class PipelineExecutor(Executor):
 
 		logger.info("(%s) Triggered '%s' as run '%s'", self.run_identifier, inner_run["element"], inner_run["identifier"])
 		self.run_logger.info("Triggered '%s' as run '%s'", inner_run["element"], inner_run["identifier"])
+
+
+	def _try_abort_inner_run(self, inner_run: dict) -> None:
+		if inner_run["status"] in [ "pending", "running" ]:
+			run_record = self.service_client.get_run(inner_run["project"], inner_run["identifier"])
+			inner_run["status"] = run_record["status"]
+
+			if inner_run["status"] == "pending" and not run_record["should_cancel"]:
+				logger.info("(%s) Cancelling '%s'", self.run_identifier, inner_run["element"])
+				self.service_client.cancel_run(inner_run["project"], inner_run["identifier"])
+
+			if inner_run["status"] == "running" and not run_record["should_abort"]:
+				logger.info("(%s) Aborting '%s'", self.run_identifier, inner_run["element"])
+				self.service_client.abort_run(inner_run["project"], inner_run["identifier"])
 
 
 	def _update_inner_run(self, inner_run: dict) -> None:

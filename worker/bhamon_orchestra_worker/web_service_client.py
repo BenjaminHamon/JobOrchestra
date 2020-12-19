@@ -29,6 +29,16 @@ class WebServiceClient(ServiceClient):
 		return self.send_request("POST", route, data = trigger_data)
 
 
+	def cancel_run(self, project_identifier: str, run_identifier: str) -> None: # pylint: disable = unused-argument
+		route = "/project/{project_identifier}/run/{run_identifier}/cancel".format(**locals())
+		self.send_request("POST", route)
+
+
+	def abort_run(self, project_identifier: str, run_identifier: str) -> None: # pylint: disable = unused-argument
+		route = "/project/{project_identifier}/run/{run_identifier}/abort".format(**locals())
+		self.send_request("POST", route)
+
+
 	def send_request(self, method: str, route: str, parameters: Optional[dict] = None, data: Optional[dict] = None) -> Any:
 		logger.debug("%s %s", method, self.service_url + route)
 
