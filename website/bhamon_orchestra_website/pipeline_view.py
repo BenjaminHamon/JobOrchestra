@@ -142,7 +142,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		return all_distances
 
 
-	def _generate_navigation(self):
+	def _generate_navigation(self): # pylint: disable = too-many-branches
 		""" Create unique paths for the edges to use. """
 
 		all_paths = []
@@ -157,7 +157,9 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 
 		# Traversing, for multi-column paths
 		for path in all_paths:
-			if path["destination"]["column"] - path["source"]["column"] > 1:
+			path["is_multi_column"] = path["destination"]["column"] - path["source"]["column"] > 1
+
+			if path["is_multi_column"]:
 				path["row"] = max(path["source"]["row"], path["destination"]["row"]) + 0.5
 
 				area = ("middle-row", None, path["row"])
@@ -171,16 +173,28 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 			path["offsets"]["start"] = all_offsets[area]
 
 		# Column areas around start points
-		for path in sorted(all_paths, key = lambda x: (x["source"]["column"], x["source"]["row"], abs(x.get("row", x["destination"]["row"]) - x["source"]["row"]))):
-			area = ("start-column", path["source"]["column"], None)
-			all_offsets[area] = all_offsets.get(area, 0) + 1
-			path["offsets"]["start-column"] = all_offsets[area]
+		for column in range(max((node["column"] for node in self.all_nodes), default = 0)):
+			column_paths = [ path for path in all_paths if path["source"]["column"] == column or (path["is_multi_column"] and path["destination"]["column"] == column + 1) ]
+			for path in sorted(column_paths, key = lambda x: (x["source"]["row"], - x["source"]["column"], abs(x.get("row", x["destination"]["row"]) - x["source"]["row"]))):
+				area = ("start-column", column, None)
+				all_offsets[area] = all_offsets.get(area, 0) + 1
+
+				if path["source"]["column"] == column:
+					path["offsets"]["start-column"] = all_offsets[area]
+				if path["is_multi_column"] and path["destination"]["column"] == column + 1:
+					path["offsets"]["middle-row-end-column"] = all_offsets[area]
 
 		# Column areas around end points
-		for path in sorted(all_paths, key = lambda x: (x["destination"]["column"], x["destination"]["row"], abs(x["destination"]["row"] - x.get("row", x["source"]["row"])))):
-			area = ("end-column", path["destination"]["column"], None)
-			all_offsets[area] = all_offsets.get(area, 0) + 1
-			path["offsets"]["end-column"] = all_offsets[area]
+		for column in range(max((node["column"] for node in self.all_nodes), default = 0)):
+			column_paths = [ path for path in all_paths if path["destination"]["column"] == column + 1 or (path["is_multi_column"] and path["source"]["column"] == column) ]
+			for path in sorted(column_paths, key = lambda x: (x["destination"]["row"], x["destination"]["column"], abs(x.get("row", x["source"]["row"]) - x["destination"]["row"]))):
+				area = ("end-column", column, None)
+				all_offsets[area] = all_offsets.get(area, 0) + 1
+
+				if path["destination"]["column"] == column + 1:
+					path["offsets"]["end-column"] = all_offsets[area]
+				if path["is_multi_column"] and path["source"]["column"] == column:
+					path["offsets"]["middle-row-start-column"] = all_offsets[area]
 
 		# End points
 		for path in sorted(all_paths, key = lambda x: (x["destination"]["column"], x["destination"]["row"], max(x.get("row", 0), x["source"]["row"], x["destination"]["row"]))):
@@ -207,10 +221,13 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		path.append((start_point[0], start_point[1] + start_position_offset))
 		path.append((start_point[0] + self.cell_padding_horizontal - start_column_offset, start_point[1] + start_position_offset))
 
-		if "row" in navigation_path:
+		if navigation_path["is_multi_column"]:
+			middle_row_start_column_offset = navigation_path["offsets"]["middle-row-start-column"] * self.offset_multiplier
 			middle_row_offset = navigation_path["offsets"]["middle-row"] * self.offset_multiplier
-			path.append(((edge["start"]["column"] + 1) * self.cell_width + start_column_offset, int((navigation_path["row"] + 0.5) * self.cell_height + middle_row_offset)))
-			path.append(((edge["end"]["column"]) * self.cell_width - end_column_offset, int((navigation_path["row"] + 0.5) * self.cell_height + middle_row_offset)))
+			middle_row_end_column_offset = navigation_path["offsets"]["middle-row-end-column"] * self.offset_multiplier
+
+			path.append(((edge["start"]["column"] + 1) * self.cell_width + middle_row_start_column_offset, int((navigation_path["row"] + 0.5) * self.cell_height + middle_row_offset)))
+			path.append(((edge["end"]["column"]) * self.cell_width - middle_row_end_column_offset, int((navigation_path["row"] + 0.5) * self.cell_height + middle_row_offset)))
 
 		path.append((end_point[0] - self.cell_padding_horizontal + end_column_offset, end_point[1] + end_position_offset))
 		path.append((end_point[0], end_point[1] + end_position_offset))
