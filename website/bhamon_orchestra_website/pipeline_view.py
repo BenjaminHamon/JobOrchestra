@@ -13,9 +13,10 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		self.all_edges = []
 		self.navigation = []
 
-		self.cell_width = 200
+		self.cell_width = 280
 		self.cell_height = 50
-		self.cell_padding = 20
+		self.cell_padding_horizontal = 40
+		self.cell_padding_vertical = 20
 		self.offset_multiplier = 2
 
 		# self.colors = [ "black" ]
@@ -50,7 +51,8 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 			"grid_height": int(self.cell_height * row_count),
 			"cell_width": self.cell_width,
 			"cell_height": self.cell_height,
-			"cell_padding": self.cell_padding,
+			"cell_padding_horizontal": self.cell_padding_horizontal,
+			"cell_padding_vertical": self.cell_padding_vertical,
 		}
 
 
@@ -189,8 +191,8 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 
 		path = []
 
-		start_point = ((edge["start"]["column"] + 1) * self.cell_width - self.cell_padding, (edge["start"]["row"] + 0.5) * self.cell_height)
-		end_point = ((edge["end"]["column"]) * self.cell_width + self.cell_padding, (edge["end"]["row"] + 0.5) * self.cell_height)
+		start_point = ((edge["start"]["column"] + 1) * self.cell_width - self.cell_padding_horizontal, (edge["start"]["row"] + 0.5) * self.cell_height)
+		end_point = ((edge["end"]["column"]) * self.cell_width + self.cell_padding_horizontal, (edge["end"]["row"] + 0.5) * self.cell_height)
 
 		start_position_offset = navigation_path["offsets"]["start"] * self.offset_multiplier
 		start_column_offset = navigation_path["offsets"]["start-column"] * self.offset_multiplier
@@ -198,14 +200,14 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		end_position_offset = navigation_path["offsets"]["end"] * self.offset_multiplier
 
 		path.append((start_point[0], start_point[1] + start_position_offset))
-		path.append((start_point[0] + self.cell_padding - start_column_offset, start_point[1] + start_position_offset))
+		path.append((start_point[0] + self.cell_padding_horizontal - start_column_offset, start_point[1] + start_position_offset))
 
 		if "row" in navigation_path:
 			middle_row_offset = navigation_path["offsets"]["middle-row"] * self.offset_multiplier
 			path.append(((edge["start"]["column"] + 1) * self.cell_width + start_column_offset, int((navigation_path["row"] + 0.5) * self.cell_height + middle_row_offset)))
 			path.append(((edge["end"]["column"]) * self.cell_width - end_column_offset, int((navigation_path["row"] + 0.5) * self.cell_height + middle_row_offset)))
 
-		path.append((end_point[0] - self.cell_padding + end_column_offset, end_point[1] + end_position_offset))
+		path.append((end_point[0] - self.cell_padding_horizontal + end_column_offset, end_point[1] + end_position_offset))
 		path.append((end_point[0], end_point[1] + end_position_offset))
 
 		return path
