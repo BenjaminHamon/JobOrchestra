@@ -185,3 +185,66 @@ def test_website_pages(tmpdir, database_type, user_identifier, user_roles): # py
 		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 	])
+
+
+def test_website_pipeline_view(tmpdir): # pylint: disable = too-many-locals
+	""" Test if website successfully generates a pipeline view """
+
+	database_type = "json"
+	user_identifier = "viewer"
+	user_roles = [ "Viewer" ]
+
+	pipeline = {
+		"elements": [
+			{ "identifier": "stage_1_job_1", "job": "success" },
+			{ "identifier": "stage_1_job_2", "job": "success" },
+			{ "identifier": "stage_1_job_3", "job": "success" },
+
+			{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
+			{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+			{ "identifier": "stage_2_job_3", "job": "success", "after": [ { "element": "stage_1_job_3", "status": "succeeded" } ] },
+
+			{ "identifier": "stage_3_job_1", "job": "success", "after": [ { "element": "stage_2_job_1", "status": "succeeded" } ] },
+			{ "identifier": "stage_3_job_2", "job": "success", "after": [ { "element": "stage_2_job_2", "status": "succeeded" } ] },
+			{ "identifier": "stage_3_job_3", "job": "success", "after": [ { "element": "stage_2_job_3", "status": "succeeded" } ] },
+		],
+	}
+
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
+		authentication = context_instance.configure_website_authentication(user_identifier, user_roles)
+
+		with context_instance.database_client_factory() as database_client:
+			project = context_instance.project_provider.create_or_update(database_client, "examples", "Examples", {})
+			run = context_instance.run_provider.create(database_client, "examples", "pipeline", {}, { "type": None })
+
+			pipeline["inner_runs"] = []
+			for element in pipeline["elements"]:
+				source = { "type": "run", "project": run["project"], "identifier": run["identifier"] }
+				inner_run = context_instance.run_provider.create(database_client, run["project"], element["job"], {}, source)
+
+				pipeline["inner_runs"].append({
+					"identifier": inner_run["identifier"],
+					"project": run["project"],
+					"element": element["identifier"],
+					"status": "succeeded",
+				})
+
+			context_instance.run_provider.set_results(database_client, run, { "pipeline": pipeline })
+
+		service_process = context_instance.invoke_service()
+		website_process = context_instance.invoke_website()
+
+		session = requests.Session()
+		response = session.post(context_instance.get_website_uri() + "/me/login", { "user": authentication[0], "password": authentication[1] }, timeout = 10)
+		response.raise_for_status()
+
+		route = "/project/" + project["identifier"] + "/run/" + run["identifier"]
+		response = session.get(context_instance.get_website_uri() + route, timeout = 10)
+		response.raise_for_status()
+
+		assert "<svg class=\"pipeline\"" in response.text
+
+	assert_extensions.assert_multi_process([
+		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
+		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
+	])
