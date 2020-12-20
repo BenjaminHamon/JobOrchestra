@@ -60,6 +60,23 @@ def get_error_message(status_code): # pylint: disable = too-many-return-statemen
 	return "Unknown error"
 
 
+def get_file_extension(content_type):
+	content_type = content_type.split(";")[0]
+
+	if content_type == "application/javascript":
+		return ".js"
+	if content_type == "application/json":
+		return ".json"
+	if content_type == "application/zip":
+		return ".zip"
+	if content_type == "text/html":
+		return ".html"
+	if content_type == "text/plain":
+		return ".txt"
+
+	raise ValueError("Unsupported content type: '%s'" % content_type)
+
+
 def add_display_names(project_collection, job_collection, run_collection, schedule_collection, worker_collection):
 	for job in job_collection:
 		project = next((x for x in project_collection if x["identifier"] == job["project"]), {})

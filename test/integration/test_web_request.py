@@ -1,7 +1,11 @@
 """ Integration tests for web requests """
 
+import os
+
 import pytest
 import requests
+
+from bhamon_orchestra_website import helpers as website_helpers
 
 from .. import assert_extensions
 from . import context
@@ -93,6 +97,7 @@ def test_service_routes(tmpdir, database_type, user_identifier, user_roles): # p
 			route = route.replace("<worker_identifier>", worker["identifier"])
 
 			response = requests.get(context_instance.get_service_uri() + route, auth = authentication, timeout = 10)
+			save_response(os.path.join(str(tmpdir), "service_responses"), route, response)
 			response.raise_for_status()
 
 	assert_extensions.assert_multi_process([
@@ -179,6 +184,7 @@ def test_website_pages(tmpdir, database_type, user_identifier, user_roles): # py
 			route = route.replace("<path:route>", "help")
 
 			response = session.get(context_instance.get_website_uri() + route, timeout = 10)
+			save_response(os.path.join(str(tmpdir), "website_responses"), route, response)
 			response.raise_for_status()
 
 	assert_extensions.assert_multi_process([
@@ -240,6 +246,7 @@ def test_website_pipeline_view(tmpdir): # pylint: disable = too-many-locals
 
 		route = "/project/" + project["identifier"] + "/run/" + run["identifier"]
 		response = session.get(context_instance.get_website_uri() + route, timeout = 10)
+		save_response(os.path.join(str(tmpdir), "website_responses"), route, response)
 		response.raise_for_status()
 
 		assert "<svg class=\"pipeline\"" in response.text
@@ -248,3 +255,12 @@ def test_website_pipeline_view(tmpdir): # pylint: disable = too-many-locals
 		{ "process": service_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 		{ "process": website_process, "expected_result_code": assert_extensions.get_flask_exit_code(), "log_format": log_format, "expected_messages": [] },
 	])
+
+
+def save_response(output_directory: str, route: str, response: requests.Response) -> None:
+	route_as_path = os.path.normpath(route.strip("/")) if route != "/" else "root"
+	output_file_path = os.path.join(output_directory, route_as_path + website_helpers.get_file_extension(response.headers["content-type"]))
+	os.makedirs(os.path.dirname(output_file_path), exist_ok = True)
+
+	with open(output_file_path, mode = "wb") as output_file:
+		output_file.write(response.content)
