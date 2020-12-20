@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import socket
+from typing import Optional
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
@@ -120,6 +121,24 @@ class Executor: # pylint: disable = too-many-instance-attributes
 	async def dispose(self) -> None:
 		self.run_logger.handlers.remove(self.run_logging_handler)
 		self.run_logging_handler.close()
+
+
+	def format_value(self, value: str, extra_parameters: Optional[dict] = None) -> str:
+		results = self._storage.load_results(self.run_identifier)
+
+		format_parameters = {
+			"project_identifier": self.project_identifier,
+			"job_identifier": self.job_identifier,
+			"run_identifier": self.run_identifier,
+			"environment": self.environment,
+			"parameters": self.parameters,
+			"results": results,
+		}
+
+		if extra_parameters is not None:
+			format_parameters.update(extra_parameters)
+
+		return value.format(**format_parameters)
 
 
 	def _save_status(self) -> None:

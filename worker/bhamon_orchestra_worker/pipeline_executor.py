@@ -160,7 +160,8 @@ class PipelineExecutor(Executor):
 		element_definition = next(element for element in self.job_definition["elements"] if element["identifier"] == inner_run["element"])
 		source = { "type": "run", "project": self.project_identifier, "identifier": self.run_identifier }
 
-		trigger_response = self.service_client.trigger_job(element_definition["project"], element_definition["job"], element_definition["parameters"], source)
+		parameters = { key: self.format_value(value) for key, value in element_definition["parameters"].items() }
+		trigger_response = self.service_client.trigger_job(element_definition["project"], element_definition["job"], parameters, source)
 		inner_run["identifier"] = trigger_response["run_identifier"]
 
 		logger.info("(%s) Triggered '%s' as run '%s'", self.run_identifier, inner_run["element"], inner_run["identifier"])

@@ -80,22 +80,11 @@ class JobExecutor(Executor):
 
 
 	def format_command(self, command: List[str]) -> List[str]:
-		results = {}
-		if os.path.isfile(self.result_file_path):
-			with open(self.result_file_path, mode = "r", encoding = "utf-8") as results_file:
-				results = json.load(results_file)
-
-		format_parameters = {
-			"project_identifier": self.project_identifier,
-			"job_identifier": self.job_identifier,
-			"run_identifier": self.run_identifier,
-			"environment": self.environment,
-			"parameters": self.parameters,
-			"results": results,
+		extra_parameters = {
 			"result_file_path": os.path.relpath(self.result_file_path, self.workspace),
 		}
 
-		return [ argument.format(**format_parameters) for argument in command ]
+		return [ self.format_value(argument, extra_parameters) for argument in command ]
 
 
 	def _log_process_output(self, line: str) -> None: # pylint: disable = no-self-use
