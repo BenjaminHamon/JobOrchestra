@@ -28,6 +28,10 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		self._generate_node_layout()
 		self._generate_navigation()
 
+		if self.pipeline.get("inner_runs", None) is not None:
+			for node in self.all_nodes:
+				node["run"] = next(run for run in self.pipeline["inner_runs"] if run["element"] == node["identifier"])
+
 		for index, path in enumerate(self.navigation):
 			path["color"] = self.colors[index % len(self.colors)]
 
@@ -63,13 +67,10 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		self.all_edges = []
 
 		for element in self.pipeline["elements"]:
-			inner_run = next(run for run in self.pipeline["inner_runs"] if run["element"] == element["identifier"])
-
 			node = {
 				"identifier": element["identifier"],
 				"predecessors": [],
 				"successors": [],
-				"run": inner_run,
 			}
 
 			self.all_nodes.append(node)
