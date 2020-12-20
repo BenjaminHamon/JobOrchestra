@@ -1,35 +1,38 @@
-""" Unit tests for Executor """
+""" Unit tests for JobExecutor """
 
+import asyncio
 import os
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
-from bhamon_orchestra_worker.executor import Executor
+from bhamon_orchestra_worker.job_executor import JobExecutor
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
+
+from ..mock_extensions import AsyncMock
 
 
 @pytest.mark.asyncio
-async def test_success(tmpdir):
-	""" Test a run which succeeds """
-
-	class DummyExecutor(Executor):
-		async def execute_implementation(self):
-			self.run_status = "succeeded"
+async def test_empty(tmpdir):
+	""" Test executing a job with no commands """
 
 	log_file_path = os.path.join(str(tmpdir), "run.log")
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
 
-	executor_instance = DummyExecutor(worker_storage_mock, date_time_provider_mock)
+	executor_instance = JobExecutor(worker_storage_mock, date_time_provider_mock)
 
 	request = {
 		"project_identifier": "my_project",
-		"job_identifier": "my_job",
+		"job_identifier": "my_pipeline",
 		"run_identifier": "my_run",
-		"job_definition": {},
+
+		"job_definition": {
+			"commands": [],
+		},
+
 		"parameters": {},
 	}
 
@@ -45,7 +48,8 @@ async def test_success(tmpdir):
 	assert executor_instance.start_date is None
 	assert executor_instance.completion_date is None
 
-	await executor_instance.execute()
+	with patch("bhamon_orchestra_worker.job_executor.ProcessWatcher"):
+		await asyncio.wait_for(executor_instance.execute(), 1)
 
 	assert executor_instance.run_status == "succeeded"
 	assert executor_instance.start_date is not None
@@ -55,25 +59,27 @@ async def test_success(tmpdir):
 
 
 @pytest.mark.asyncio
-async def test_exception(tmpdir):
-	""" Test a run which raises an exception """
-
-	class DummyExecutor(Executor):
-		async def execute_implementation(self):
-			raise RuntimeError
+async def test_simple(tmpdir):
+	""" Test executing a job with a simple command """
 
 	log_file_path = os.path.join(str(tmpdir), "run.log")
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
 
-	executor_instance = DummyExecutor(worker_storage_mock, date_time_provider_mock)
+	executor_instance = JobExecutor(worker_storage_mock, date_time_provider_mock)
 
 	request = {
 		"project_identifier": "my_project",
-		"job_identifier": "my_job",
+		"job_identifier": "my_pipeline",
 		"run_identifier": "my_run",
-		"job_definition": {},
+
+		"job_definition": {
+			"commands": [
+				[ "my_command" ],
+			],
+		},
+
 		"parameters": {},
 	}
 
@@ -89,9 +95,14 @@ async def test_exception(tmpdir):
 	assert executor_instance.start_date is None
 	assert executor_instance.completion_date is None
 
-	await executor_instance.execute()
+	with patch("bhamon_orchestra_worker.job_executor.ProcessWatcher") as process_watcher_class_mock:
+		process_watcher_mock = process_watcher_class_mock.return_value
+		process_watcher_mock.run = AsyncMock()
+		process_watcher_mock.process.returncode = 0
 
-	assert executor_instance.run_status == "exception"
+		await asyncio.wait_for(executor_instance.execute(), 1)
+
+	assert executor_instance.run_status == "succeeded"
 	assert executor_instance.start_date is not None
 	assert executor_instance.completion_date is not None
 

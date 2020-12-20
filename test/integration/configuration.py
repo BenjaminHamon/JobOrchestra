@@ -22,6 +22,10 @@ def configure_jobs():
 		exception(),
 		controller_success(),
 		controller_failure(),
+		pipeline_success(),
+		pipeline_failure(),
+		pipeline_exception(),
+		pipeline_sleep(),
 	]
 
 
@@ -46,6 +50,8 @@ def success():
 		"description": "Test job which succeeds.",
 
 		"definition": {
+			"type": "job",
+
 			"commands": [
 				[ "{environment[python3_executable]}", "-c", "print('hello')" ],
 			]
@@ -66,6 +72,8 @@ def sleep():
 		"description": "Test job which succeeds after several seconds.",
 
 		"definition": {
+			"type": "job",
+
 			"commands": [
 				[ "{environment[python3_executable]}", "-c", "import time; time.sleep(5)" ],
 			]
@@ -86,6 +94,8 @@ def failure():
 		"description": "Test job which fails.",
 
 		"definition": {
+			"type": "job",
+
 			"commands": [
 				[ "{environment[python3_executable]}", "-c", "raise RuntimeError" ],
 			]
@@ -106,6 +116,8 @@ def exception():
 		"description": "Test job with mistakes in its definition.",
 
 		"definition": {
+			"type": "job",
+
 			"commands": [
 				[ "{environment[python3_executable]}", "-c", "print('{undefined}')" ],
 			]
@@ -130,9 +142,11 @@ def controller_success():
 	return {
 		"identifier": "controller_success",
 		"display_name": "Controller Success",
-		"description": "Trigger all test jobs.",
+		"description": "Trigger and wait other jobs.",
 
 		"definition": {
+			"type": "job",
+
 			"commands": [
 				controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters,
 				controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters,
@@ -159,14 +173,116 @@ def controller_failure():
 	return {
 		"identifier": "controller_failure",
 		"display_name": "Controller Failure",
-		"description": "Trigger all test jobs.",
+		"description": "Trigger and wait other jobs.",
 
 		"definition": {
+			"type": "job",
+
 			"commands": [
 				controller_entry_point + [ "trigger", "--project", "examples", "--job", "success" ] + trigger_source_parameters,
 				controller_entry_point + [ "trigger", "--project", "examples", "--job", "failure" ] + trigger_source_parameters,
 				controller_entry_point + [ "wait" ],
 			]
+		},
+
+		"parameters": [],
+
+		"properties": {
+			"is_controller": True,
+		},
+	}
+
+
+def pipeline_success():
+	return {
+		"identifier": "pipeline_success",
+		"display_name": "Pipeline Success",
+		"description": "Run a pipeline of jobs.",
+
+		"definition": {
+			"type": "pipeline",
+
+			"elements": [
+				{ "identifier": "stage_1_job_1", "job": "success" },
+				{ "identifier": "stage_1_job_2", "job": "success" },
+				{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+			],
+		},
+
+		"parameters": [],
+
+		"properties": {
+			"is_controller": True,
+		},
+	}
+
+
+def pipeline_failure():
+	return {
+		"identifier": "pipeline_failure",
+		"display_name": "Pipeline Failure",
+		"description": "Run a pipeline of jobs.",
+
+		"definition": {
+			"type": "pipeline",
+
+			"elements": [
+				{ "identifier": "stage_1_job_1", "job": "success" },
+				{ "identifier": "stage_1_job_2", "job": "success" },
+				{ "identifier": "stage_2_job_1", "job": "failure", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_2", "job": "failure", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+			],
+		},
+
+		"parameters": [],
+
+		"properties": {
+			"is_controller": True,
+		},
+	}
+
+
+def pipeline_exception():
+	return {
+		"identifier": "pipeline_exception",
+		"display_name": "Pipeline Exception",
+		"description": "Run a pipeline of jobs.",
+
+		"definition": {
+			"type": "pipeline",
+
+			"elements": [
+				{ "identifier": "stage_1_job_1", "job": "success" },
+				{ "identifier": "stage_1_job_2", "job": "success" },
+				{ "identifier": "stage_2_job_1", "job": "unknown", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_2", "job": "unknown", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+			],
+		},
+
+		"parameters": [],
+
+		"properties": {
+			"is_controller": True,
+		},
+	}
+
+
+def pipeline_sleep():
+	return {
+		"identifier": "pipeline_sleep",
+		"display_name": "Pipeline Sleep",
+		"description": "Run a pipeline of jobs.",
+
+		"definition": {
+			"type": "pipeline",
+
+			"elements": [
+				{ "identifier": "stage_1_job_1", "job": "sleep" },
+				{ "identifier": "stage_1_job_2", "job": "sleep" },
+				{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+			],
 		},
 
 		"parameters": [],
