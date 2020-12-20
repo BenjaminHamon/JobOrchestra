@@ -9,6 +9,7 @@ import werkzeug
 
 import bhamon_orchestra_website
 import bhamon_orchestra_website.helpers as helpers
+import bhamon_orchestra_website.pipeline_view as pipeline_view
 import bhamon_orchestra_website.service_client as service_client
 
 import bhamon_orchestra_website.admin_controller as admin_controller
@@ -34,6 +35,7 @@ def configure(application, title = None, copyright = None, version = None, date 
 	application.jinja_env.undefined = jinja2.StrictUndefined()
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True
+	application.jinja_env.filters["build_pipeline_view"] = pipeline_view.build_pipeline_view
 	application.jinja_env.filters["describe_cron_expression"] = helpers.describe_cron_expression
 	application.jinja_env.globals["authorize_view"] = authorize_view
 	application.permanent_session_lifetime = datetime.timedelta(days = 7)
