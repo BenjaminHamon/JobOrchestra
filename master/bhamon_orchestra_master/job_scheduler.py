@@ -37,6 +37,7 @@ class JobScheduler:
 
 		self.update_interval_seconds = 10
 		self.run_expiration = datetime.timedelta(days = 1)
+		self.pending_order_by = [ ("creation_date", "ascending") ]
 
 
 	async def run(self) -> None:
@@ -98,7 +99,7 @@ class JobScheduler:
 
 	def _list_pending_runs(self, database_client: DatabaseClient) -> List[dict]:
 		""" Retrieve all pending runs from the database """
-		all_runs = self._run_provider.get_list(database_client, status = "pending")
+		all_runs = self._run_provider.get_list(database_client, status = "pending", order_by = self.pending_order_by)
 		all_runs = [ run for run in all_runs if run["worker"] is None ]
 		return all_runs
 
