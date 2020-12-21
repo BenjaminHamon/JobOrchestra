@@ -57,12 +57,18 @@ class RunProvider:
 		return self.convert_to_public(run) if run is not None else None
 
 
+	def create_identifier(self, database_client: DatabaseClient) -> str: # pylint: disable = no-self-use, unused-argument
+		return str(uuid.uuid4())
+
+
 	def create(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
 			project: str, job: str, parameters: dict, source: dict) -> dict:
+
+		identifier = self.create_identifier(database_client)
 		now = self.date_time_provider.now()
 
 		run = {
-			"identifier": str(uuid.uuid4()),
+			"identifier": identifier,
 			"project": project,
 			"job": job,
 			"parameters": parameters,
