@@ -1,4 +1,5 @@
 import contextlib
+import functools
 import json
 import logging
 import os
@@ -174,13 +175,15 @@ class JsonDatabaseClient(DatabaseClient):
 		if expression is None:
 			return row_collection
 
+		def item_to_key(row, self, key):
+			value = self._get_value(row, key)
+			return value is not None, value
+
 		for key, direction in reversed(self._normalize_order_by_expression(expression)):
 			if direction in [ "asc", "ascending" ]:
-				reverse = False
+				row_collection = sorted(row_collection, key = functools.partial(item_to_key, self = self, key = key), reverse = False)
 			elif direction in [ "desc", "descending" ]:
-				reverse = True
-			sort_lambda = lambda x: (self._get_value(x, key) is not None, self._get_value(x, key)) # pylint: disable = cell-var-from-loop
-			row_collection = sorted(row_collection, key = sort_lambda, reverse = reverse)
+				row_collection = sorted(row_collection, key = functools.partial(item_to_key, self = self, key = key), reverse = True)
 		return row_collection
 
 

@@ -1,3 +1,4 @@
+import functools
 import logging
 from typing import List, Optional, Tuple
 
@@ -96,10 +97,12 @@ class MemoryDatabaseClient(DatabaseClient):
 		if expression is None:
 			return row_collection
 
+		def item_to_key(row, key):
+			return row[key] is not None, row[key]
+
 		for key, direction in reversed(self._normalize_order_by_expression(expression)):
 			if direction in [ "asc", "ascending" ]:
-				reverse = False
+				row_collection = sorted(row_collection, key = functools.partial(item_to_key, key = key), reverse = False)
 			elif direction in [ "desc", "descending" ]:
-				reverse = True
-			row_collection = sorted(row_collection, key = lambda x: x[key], reverse = reverse) # pylint: disable = cell-var-from-loop
+				row_collection = sorted(row_collection, key = functools.partial(item_to_key, key = key), reverse = True)
 		return row_collection
