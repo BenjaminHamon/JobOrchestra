@@ -5,7 +5,7 @@ import logging
 import requests
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
-from bhamon_orchestra_worker.executor import Executor
+from bhamon_orchestra_worker.job_executor import JobExecutor
 from bhamon_orchestra_worker.service_client import ServiceClient
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
@@ -19,7 +19,7 @@ class TriggerStatus(enum.Enum):
 	Impossible = 2
 
 
-class PipelineExecutor(Executor):
+class PipelineExecutor(JobExecutor):
 
 
 	def __init__(self, storage: WorkerStorage, date_time_provider: DateTimeProvider, service_client: ServiceClient) -> None:
@@ -58,6 +58,8 @@ class PipelineExecutor(Executor):
 
 
 	async def execute_implementation(self) -> None:
+		await self.execute_setup()
+
 		try:
 			try:
 				await self.run_pipeline()
@@ -66,6 +68,8 @@ class PipelineExecutor(Executor):
 
 		finally:
 			self.run_logging_handler.stream.write("\n")
+
+			await self.execute_teardown()
 
 		self.run_status = self.compute_status()
 

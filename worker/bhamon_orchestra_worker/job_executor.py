@@ -31,16 +31,36 @@ class JobExecutor(Executor):
 
 
 	async def execute_implementation(self) -> None:
-		overall_success = True
+		await self.execute_setup()
+		try:
+			success = await self.execute_all_commands()
+		finally:
+			await self.execute_teardown()
 
-		for command in self.job_definition["commands"]:
+		self.run_status = "succeeded" if success else "failed"
+
+
+	async def execute_setup(self) -> None:
+		for command in self.job_definition.get("setup_commands", []):
 			success = await self.execute_command(command)
-
 			if not success:
-				overall_success = False
-				break
+				raise RuntimeError("Setup failed")
 
-		self.run_status = "succeeded" if overall_success else "failed"
+
+	async def execute_all_commands(self) -> bool:
+		for command in self.job_definition.get("commands", []):
+			success = await self.execute_command(command)
+			if not success:
+				return False
+
+		return True
+
+
+	async def execute_teardown(self) -> None:
+		for command in self.job_definition.get("teardown_commands", []):
+			success = await self.execute_command(command)
+			if not success:
+				raise RuntimeError("Teardown failed")
 
 
 	async def execute_command(self, command: List[str]) -> bool:
