@@ -25,7 +25,7 @@ class ScheduleProvider:
 
 	def get_list(self, database_client: DatabaseClient, # pylint: disable = too-many-arguments
 			project: Optional[str] = None, job: Optional[str] = None,
-			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[List[Tuple[str,str]]] = None) -> List[dict]:
 
 		filter = { "project": project, "job": job } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }

@@ -26,7 +26,7 @@ class UserProvider:
 
 
 	def get_list(self, database_client: DatabaseClient,
-			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[List[Tuple[str,str]]] = None) -> List[dict]:
 		return database_client.find_many(self.table, {}, skip = skip, limit = limit, order_by = order_by)
 
 

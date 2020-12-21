@@ -1,5 +1,4 @@
 import abc
-
 from typing import List, Optional, Tuple
 
 
@@ -23,7 +22,7 @@ class DatabaseClient(abc.ABC):
 	@abc.abstractmethod
 	def find_many(self, # pylint: disable = too-many-arguments
 			table: str, filter: dict, # pylint: disable = redefined-builtin
-			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[List[Tuple[str,str]]] = None) -> List[dict]:
 		""" Return a list of items from a table, after applying a filter, with options for limiting and sorting results """
 
 

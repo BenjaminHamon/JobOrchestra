@@ -90,7 +90,7 @@ class AuthenticationProvider:
 
 	def get_token_list(self, # pylint: disable = too-many-arguments
 			database_client: DatabaseClient, user: Optional[str] = None,
-			skip: int = 0, limit: Optional[int] = None, order_by: Optional[Tuple[str,str]] = None) -> List[dict]:
+			skip: int = 0, limit: Optional[int] = None, order_by: Optional[List[Tuple[str,str]]] = None) -> List[dict]:
 
 		filter = { "user": user, "type": "token" } # pylint: disable = redefined-builtin
 		filter = { key: value for key, value in filter.items() if value is not None }
