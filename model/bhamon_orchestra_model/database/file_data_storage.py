@@ -2,7 +2,7 @@ import contextlib
 import glob
 import logging
 import os
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 import filelock
 
@@ -99,7 +99,7 @@ class FileDataStorage(DataStorage):
 
 
 	@contextlib.contextmanager
-	def lock(self, key: str, timeout = 5) -> None:
+	def lock(self, key: str, timeout: Union[int,float] = 5) -> None:
 		""" Lock for the provided key """
 
 		with filelock.FileLock(self.get_file_path(key) + ".lock", timeout = timeout):
