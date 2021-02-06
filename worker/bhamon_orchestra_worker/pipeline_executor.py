@@ -109,7 +109,7 @@ class PipelineExecutor(JobExecutor):
 					self._try_abort_inner_run(inner_run)
 
 		for inner_run in self.all_inner_runs:
-			if inner_run["identifier"] is None:
+			if inner_run["identifier"] is None and inner_run["status"] == "pending":
 				self._try_trigger_inner_run(inner_run)
 
 		for inner_run in self.all_inner_runs:
