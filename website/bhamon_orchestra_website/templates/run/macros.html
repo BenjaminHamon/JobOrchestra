@@ -79,7 +79,7 @@
 			rx: 4;
 		}
 
-		.has-link > .node-border:hover
+		a[href] > .node-border:hover
 		{
 			fill: #f0f8ff;
 		}
@@ -87,6 +87,7 @@
 		.node-text
 		{
 			dominant-baseline: middle;
+			font-family: monospace;
 			font-size: small;
 		}
 
@@ -114,19 +115,24 @@
 	{% for node in pipeline['nodes'] %}
 		{% set cell_x = cell_width * node['column'] %}
 		{% set cell_y = cell_height * node['row'] %}
+		{% set character_width = 6 %}
+		{% set text_length_limit = ((cell_width - cell_padding_horizontal * 2 - 30) / (character_width + 1)) | int %}
 	<!-- Node '{{ node['identifier'] }}' -->
 	{% if node['run']['identifier'] != None %}
 	<a class="has-link" href="{{ url_for('run_controller.show', project_identifier = node['run']['project'], run_identifier = node['run']['identifier']) }}">
 	{% else %}
 	<a>
 	{% endif %}
+		<title>{{ node['identifier'] }}</title>
 		<rect class="cell-border"
 				x="{{ cell_x }}" y="{{ cell_y }}"
 				width="{{ cell_width }}" height="{{ cell_height }}"/>
 		<rect class="node-border"
 				x="{{ cell_x + cell_padding_horizontal }}" y="{{ (cell_y + cell_padding_vertical / 2) | int }}"
 				width="{{ cell_width - cell_padding_horizontal * 2 }}" height="{{ cell_height - cell_padding_vertical }}"/>
-		<text class="node-text" x="{{ cell_x + cell_padding_horizontal + 10 }}" y="{{ (cell_y + cell_height / 2 + 1) | int }}">{{ node['identifier'] }}</text>
+		<text class="node-text" x="{{ cell_x + cell_padding_horizontal + 10 }}" y="{{ (cell_y + cell_height / 2 + 1) | int }}">
+			{{ node['identifier'] | truncate_text(text_length_limit) }}
+		</text>
 		<circle class="status-indicator {{ node['run']['status'] }}"
 				cx="{{ (cell_x + cell_width - cell_padding_horizontal - 15) | int }}" cy="{{ (cell_y + cell_height / 2) | int }}" r="8"/>
 	</a>

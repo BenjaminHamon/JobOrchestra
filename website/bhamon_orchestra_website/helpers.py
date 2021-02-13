@@ -14,6 +14,29 @@ def none_if_empty(value):
 	return value
 
 
+def describe_cron_expression(expression):
+	return cron_descriptor.get_description(expression, cron_descriptor_options)
+
+
+def truncate_text(value, length_limit):
+	if len(value) <= length_limit:
+		return value
+
+	ellipsis_mark = "..."
+	truncated_value = value
+	length_limit -= len(ellipsis_mark)
+
+	for separator in [ " ", "_", "-" ]:
+		while len(truncated_value) > length_limit and separator in truncated_value:
+			truncated_value = truncated_value[:truncated_value.rfind(separator)]
+	if len(truncated_value) > length_limit:
+		truncated_value = truncated_value[:length_limit]
+
+	if len(truncated_value) < len(value):
+		return truncated_value + ellipsis_mark
+	return truncated_value
+
+
 def get_pagination(item_total, url_arguments):
 	item_count = max(min(flask.request.args.get("item_count", default = 100, type = int), 1000), 10)
 	page_total = max(int(math.ceil(item_total / item_count)), 1)
@@ -31,9 +54,6 @@ def get_pagination(item_total, url_arguments):
 def get_run_status_collection():
 	return [ "pending", "running", "succeeded", "failed", "exception", "aborted", "cancelled" ]
 
-
-def describe_cron_expression(expression):
-	return cron_descriptor.get_description(expression, cron_descriptor_options)
 
 
 def get_error_message(status_code): # pylint: disable = too-many-return-statements
