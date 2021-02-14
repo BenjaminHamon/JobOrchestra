@@ -49,7 +49,15 @@ def show_status(project_identifier): # pylint: disable = unused-argument
 	project = service_client.get("/project/{project_identifier}".format(**locals()))
 	branch_collection = project["services"]["revision_control"]["branches_for_status"]
 	job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
-	context = { "filter_collection": [ { "identifier": job["identifier"], "display_name": job["display_name"], "job": job["identifier"] } for job in job_collection ] }
+
+	context = { "filter_collection": [] }
+	for job in job_collection:
+		if job["properties"]["include_in_status"]:
+			context["filter_collection"].append({
+				"identifier": job["identifier"],
+			 	"display_name": job["display_name"],
+				"job": job["identifier"],
+			})
 
 	if branch is None:
 		branch = branch_collection[0]
