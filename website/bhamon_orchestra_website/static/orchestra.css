@@ -93,6 +93,11 @@ td > .action-group button
 	white-space: normal;
 }
 
+.project-status-column-run
+{
+	min-width: 200px;
+}
+
 .revision-header > a
 {
 	text-align: center;
