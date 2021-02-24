@@ -14,9 +14,9 @@ logger = logging.getLogger("Executor")
 
 
 class TriggerStatus(enum.Enum):
-	Ready = 0
-	Wait = 1
-	Impossible = 2
+	Ready = 0 # pylint: disable = invalid-name
+	Wait = 1 # pylint: disable = invalid-name
+	Impossible = 2 # pylint: disable = invalid-name
 
 
 class PipelineExecutor(JobExecutor):
