@@ -27,7 +27,7 @@ async def test_run(caplog):
 		master_client = master_client_mock,
 		display_name = None,
 		properties = None,
-		executor_script = None,
+		executor_command_factory = None,
 	)
 
 	await worker_instance.run()
@@ -51,7 +51,7 @@ async def test_run_cancel(caplog):
 		master_client = master_client_mock,
 		display_name = None,
 		properties = None,
-		executor_script = None,
+		executor_command_factory = None,
 	)
 
 	run_future = asyncio.ensure_future(worker_instance.run())
@@ -82,7 +82,7 @@ async def test_run_exception(caplog):
 		master_client = master_client_mock,
 		display_name = None,
 		properties = None,
-		executor_script = None,
+		executor_command_factory = None,
 	)
 
 	exception = MockException()

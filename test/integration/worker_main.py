@@ -1,7 +1,7 @@
 import argparse
 import json
 import logging
-import os
+import sys
 
 import filelock
 
@@ -13,7 +13,7 @@ from bhamon_orchestra_worker.master_client import MasterClient
 from bhamon_orchestra_worker.worker import Worker
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
-import environment
+from . import environment
 
 
 logger = logging.getLogger("Main")
@@ -26,13 +26,12 @@ def main():
 
 	application_title = bhamon_orchestra_worker.__product__ + " " + "Worker"
 	application_version = bhamon_orchestra_worker.__version__
-	executor_script = os.path.join(os.path.dirname(__file__), "executor_main.py")
 
 	with open("authentication.json", mode = "r", encoding = "utf-8") as authentication_file:
 		authentication = json.load(authentication_file)
 
 	with filelock.FileLock("worker.lock", 5):
-		worker_application = create_application(arguments, authentication, executor_script)
+		worker_application = create_application(arguments, authentication)
 		asyncio_application = AsyncioApplication(application_title, application_version)
 		asyncio_application.run_as_standalone(worker_application.run())
 
@@ -44,7 +43,7 @@ def parse_arguments():
 	return argument_parser.parse_args()
 
 
-def create_application(arguments, authentication, executor_script):
+def create_application(arguments, authentication):
 	properties = {
 		"project": [ "examples" ],
 		"is_controller": arguments.identifier == "controller",
@@ -62,12 +61,14 @@ def create_application(arguments, authentication, executor_script):
 		secret = authentication["secret"],
 	)
 
+	executor_command_factory = lambda run_request: [ sys.executable, "-m", "test.integration.executor_main", run_request["run_identifier"] ]
+
 	worker_instance = Worker(
 		storage = worker_storage_instance,
 		master_client = master_client_instance,
 		display_name = arguments.identifier,
 		properties = properties,
-		executor_script = executor_script,
+		executor_command_factory = executor_command_factory,
 	)
 
 	return worker_instance

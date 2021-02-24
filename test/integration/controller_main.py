@@ -5,7 +5,7 @@ import logging
 from bhamon_orchestra_worker.controller import Controller
 from bhamon_orchestra_worker.web_service_client import WebServiceClient
 
-import environment
+from . import environment
 
 
 logger = logging.getLogger("Main")

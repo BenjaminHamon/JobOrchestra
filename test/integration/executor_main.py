@@ -15,7 +15,7 @@ from bhamon_orchestra_worker.pipeline_executor import PipelineExecutor
 from bhamon_orchestra_worker.web_service_client import WebServiceClient
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
-import environment
+from . import environment
 
 
 logger = logging.getLogger("Main")
@@ -24,7 +24,6 @@ logger = logging.getLogger("Main")
 def main():
 	arguments = parse_arguments()
 	environment_instance = environment.load_environment()
-	environment_instance["script_root"] = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
 	environment_instance["orchestra_worker_authentication"] = os.path.join(os.getcwd(), "authentication.json")
 	environment.configure_logging(environment_instance, arguments)
 

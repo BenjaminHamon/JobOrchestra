@@ -8,7 +8,7 @@ from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 
 import bhamon_orchestra_website.website as website
 
-import environment
+from . import environment
 
 
 logger = logging.getLogger("Main")

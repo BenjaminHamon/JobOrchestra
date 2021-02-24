@@ -159,7 +159,7 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 	def invoke_master(self):
 		return self.invoke(
 			identifier = "master",
-			script = "master_main.py",
+			module = "test.integration.master_main",
 			arguments = [ "--address", self.master_address, "--port", str(self.master_port), "--database", self.database_uri ],
 			workspace = os.path.join(self.temporary_directory, "master"),
 		)
@@ -168,7 +168,7 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 	def invoke_worker(self, worker_identifier):
 		return self.invoke(
 			identifier = worker_identifier,
-			script = "worker_main.py",
+			module = "test.integration.worker_main",
 			arguments = [ "--identifier", worker_identifier, "--master-uri", "ws://%s:%s" % (self.master_address, self.master_port) ],
 			workspace = os.path.join(self.temporary_directory, worker_identifier),
 		)
@@ -184,7 +184,7 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 		return self.invoke(
 			identifier = worker_identifier + "_" + "executor",
-			script = "executor_main.py",
+			module = "test.integration.executor_main",
 			arguments = [ run_request["run_identifier"] ],
 			workspace = worker_directory,
 		)
@@ -193,7 +193,7 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 	def invoke_service(self):
 		return self.invoke(
 			identifier = "service",
-			script = "service_main.py",
+			module = "test.integration.service_main",
 			arguments = [ "--address", self.service_address, "--port", str(self.service_port), "--database", self.database_uri ],
 			workspace = os.path.join(self.temporary_directory, "master"),
 		)
@@ -202,23 +202,25 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 	def invoke_website(self):
 		return self.invoke(
 			identifier = "website",
-			script = "website_main.py",
+			module = "test.integration.website_main",
 			arguments = [ "--address", self.website_address, "--port", str(self.website_port) ],
 			workspace = os.path.join(self.temporary_directory, "website"),
 		)
 
 
-	def invoke(self, identifier, script, arguments, workspace):
+	def invoke(self, identifier, module, arguments, workspace):
 		logger.info("Invoking subprocess '%s'", identifier)
 
-		script_root = os.path.dirname(os.path.realpath(__file__))
-		command = [ sys.executable, os.path.join(script_root, script) ] + arguments
+		command = [ sys.executable, "-m", module ] + arguments
+
+		process_environment = os.environ.copy()
+		process_environment["PYTHONPATH"] = os.getcwd()
 
 		os.makedirs(workspace, exist_ok = True)
 
 		with open(os.path.join(self.temporary_directory, identifier + "_" + "stdout.log"), mode = "a", encoding = "utf-8") as stdout_file:
 			with open(os.path.join(self.temporary_directory, identifier + "_" + "stderr.log"), mode = "a", encoding = "utf-8") as stderr_file:
-				process = subprocess.Popen(command, cwd = workspace, stdout = stdout_file, stderr = stderr_file, creationflags = subprocess_flags)
+				process = subprocess.Popen(command, cwd = workspace, env = process_environment, stdout = stdout_file, stderr = stderr_file, creationflags = subprocess_flags)
 
 		logger.info("New subprocess '%s' (PID: %s)", identifier, process.pid)
 

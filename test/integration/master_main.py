@@ -24,9 +24,9 @@ from bhamon_orchestra_model.schedule_provider import ScheduleProvider
 from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
-import configuration
-import environment
-import factory
+from . import configuration
+from . import environment
+from . import factory
 
 
 logger = logging.getLogger("Main")

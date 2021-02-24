@@ -17,8 +17,8 @@ from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 import bhamon_orchestra_service.service as service
 
-import environment
-import factory
+from . import environment
+from . import factory
 
 
 logger = logging.getLogger("Main")

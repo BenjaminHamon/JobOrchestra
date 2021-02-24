@@ -1,7 +1,6 @@
 import asyncio
 import logging
-import sys
-from typing import Any, List, Optional
+from typing import Any, Callable, List, Optional
 
 from bhamon_orchestra_model.network.connection import NetworkConnection
 from bhamon_orchestra_model.network.messenger import Messenger
@@ -20,13 +19,13 @@ class Worker: # pylint: disable = too-few-public-methods
 
 	def __init__(self, # pylint: disable = too-many-arguments
 			storage: WorkerStorage, master_client: MasterClient,
-			display_name: str, properties: dict, executor_script: str) -> None:
+			display_name: str, properties: dict, executor_command_factory: Callable[[dict],List[str]]) -> None:
 
 		self._storage = storage
 		self._master_client = master_client
 		self._display_name = display_name
 		self._properties = properties
-		self._executor_script = executor_script
+		self._executor_command_factory = executor_command_factory
 
 		self._active_executors = []
 		self._messenger = None
@@ -186,7 +185,7 @@ class Worker: # pylint: disable = too-few-public-methods
 		executor.process_watcher = ProcessWatcher()
 		executor.process_watcher.output_handler = self._log_executor_output
 
-		executor_command = [ sys.executable, self._executor_script, run_identifier ]
+		executor_command = self._executor_command_factory(run_request)
 
 		try:
 			await executor.start("Worker", executor_command)

@@ -18,8 +18,8 @@ from bhamon_orchestra_model.worker_provider import WorkerProvider
 import bhamon_orchestra_cli.admin_controller as admin_controller
 import bhamon_orchestra_cli.database_controller as database_controller
 
-import environment
-import factory
+from . import environment
+from . import factory
 
 
 logger = logging.getLogger("Main")

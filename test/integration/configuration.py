@@ -132,7 +132,7 @@ def exception():
 
 
 def controller_success():
-	controller_entry_point = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
+	controller_entry_point = [ "{environment[python3_executable]}", "-m", "test.integration.controller_main" ]
 	controller_entry_point += [ "--service-url", "{environment[orchestra_service_url]}", ]
 	controller_entry_point += [ "--authentication", "{environment[orchestra_worker_authentication]}" ]
 	controller_entry_point += [ "--results", "{result_file_path}" ]
@@ -163,7 +163,7 @@ def controller_success():
 
 
 def controller_failure():
-	controller_entry_point = [ "{environment[python3_executable]}", "{environment[script_root]}/controller_main.py" ]
+	controller_entry_point = [ "{environment[python3_executable]}", "-m", "test.integration.controller_main" ]
 	controller_entry_point += [ "--service-url", "{environment[orchestra_service_url]}", ]
 	controller_entry_point += [ "--authentication", "{environment[orchestra_worker_authentication]}" ]
 	controller_entry_point += [ "--results", "{result_file_path}" ]
