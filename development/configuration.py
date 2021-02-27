@@ -18,7 +18,7 @@ def load_configuration(environment):
 	configuration["author_email"] = "hamon.benjamin@gmail.com"
 	configuration["project_url"] = "https://github.com/BenjaminHamon/JobOrchestra"
 	configuration["project_license"] = "MIT License"
-	configuration["project_copyright"] = "Copyright (c) 2020 Benjamin Hamon"
+	configuration["project_copyright"] = "Copyright (c) 2021 Benjamin Hamon"
 
 	configuration["development_toolkit"] = "git+https://github.com/BenjaminHamon/DevelopmentToolkit@{revision}#subdirectory=toolkit"
 	configuration["development_toolkit_revision"] = "5e12ab4651373b0399201075ea9e78cb0015b091"
