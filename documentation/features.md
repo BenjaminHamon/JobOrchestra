@@ -8,7 +8,7 @@ This page lists features currently available in Job Orchestra.
 * Architecture with several separated applications: website, service, master, worker.
 * Implementation can be modified and extended by customizing dependency initialization and injection.
 * Master and workers communicate over WebSocket.
-* MongoDB is the only currently supported database.
+* Support for MongoDB and SQL databases.
 
 
 ## Data organization
@@ -25,7 +25,8 @@ This page lists features currently available in Job Orchestra.
 
 ## Execution
 
-* Job commands are constructed using Python string formatted and data available from the worker environment and the run current results.
+* Pipeline jobs schedule other jobs based on dependency rules.
+* Job commands are constructed using Python string formatting and data available from the worker environment and the run current results.
 * Runs can be distributed selectively to workers from code by matching properties between jobs and workers.
 * Workers execute runs independently from the master after receiving the initial request.
 * Workers continue executing active runs when disconnected from the master, with recovery on reconnection.
@@ -49,6 +50,7 @@ This page lists features currently available in Job Orchestra.
 * Website can be customized by overriding Jinja page templates and static files.
 * Status for projects using revision control.
 * Run log view for updates continuously until completion.
+* Visualization for pipelines.
 * Website pages are very lightweight (and barebone).
 * Pagination, filtering and sort.
 * Minimal JavaScript and not required.

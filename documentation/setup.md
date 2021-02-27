@@ -14,7 +14,7 @@ The [integration tests](../test/integration) use basic scripts and configuration
 
 ## Database
 
-The project currently supports MongoDB, as well as a custom JSON database meant for development only. You can implement custom providers if you wish to use another database. To use MongoDB, ensure you have a running and reachable MongoDB instance and configure the master and service entry points to connect to it.
+The project currently supports MongoDB and SQL databases, as well as a custom JSON database meant for development only. You can implement custom providers if you wish to use another database. To use MongoDB or a SQL database service, ensure you have a running and reachable instance and configure the master and service entry points to connect to it.
 
 
 ## Development

@@ -29,17 +29,9 @@ Controller jobs should be assigned to dedicated controller workers, which would 
 
 ## Pipeline
 
-A job pipeline is a concept where jobs are executed in sequence or parallel, so that from a single trigger several runs are scheduled, with dependencies, and distributed to several workers. Job Orchestra does not support pipelines by themselves but it includes the necessary features to set them up.
+Pipeline is the concept of running several jobs together based on various rules in order to split and distribute a workload.
 
-The idea is to have controller jobs which role is to trigger other jobs then wait for them and check their status. The project includes a basic Controller class which is enough to create pipelines with stages. More complex logic would likely require a custom implementation.
-
-An example, for a build pipeline:
-* Controller job triggers a check job
-* Controller job waits for the check job to complete
-* Controller job triggers several build jobs
-* Controller job waits for all build jobs to complete
-* Controller job triggers several test jobs
-* Controller job waits for all test jobs to complete
+A pipeline job triggers and monitors other jobs, defined as a list of arbitrary jobs with relationships which results in a dependency graph. It is useful to perform several job runs from a single trigger, with dependencies, and distributed to several workers. There is a specific executor implementation for this feature, but it is also possible to use a traditional job and its commands to perform a similar function.
 
 
 ## Multiprocessing

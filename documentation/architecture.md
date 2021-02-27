@@ -16,7 +16,7 @@ The project is structured with a python package for each component as each one h
 
 The database stores information used by the various applications. It is accessed directly only by the master and the service.
 
-Currently, the project supports only MongoDB, with the hope to support more databases in the future.
+Currently, the project supports MongoDB and SQL databases.
 
 See [Data Model](data_model.md) for more information on the data itself.
 
@@ -62,4 +62,4 @@ The communication uses a bidirectional websocket connection, and may be interrup
 
 Depending on the nature of the jobs the worker executes, a worker may support one or many executors. For example, some workers can run jobs with intensive resource or which do not support concurrent executions, while others can be dedicated to lightweight jobs which delegates to another system or watches over some remote process.
 
-The executor implements a basic flow for a job execution. Depending on the use case, it can be appropriate to extend the executor capabilities or instead to define the logic in the job commands themselves.
+The executor implements a basic flow for a job execution. Depending on the use case, it can be appropriate to have a custom executor or to delegate the logic to the job itself, through its definition and possible commands which are executed.
