@@ -22,8 +22,10 @@ def load_configuration(environment):
 
 	configuration["development_toolkit"] = "git+https://github.com/BenjaminHamon/DevelopmentToolkit@{revision}#subdirectory=toolkit"
 	configuration["development_toolkit_revision"] = "5e12ab4651373b0399201075ea9e78cb0015b091"
-	configuration["development_dependencies"] = [ "pylint", "pytest", "pytest-asyncio", "pytest-json", "wheel" ]
-	configuration["development_dependencies"] += [ "pymongo", "psycopg2", "SQLAlchemy", "SQLAlchemy-Utils == 0.36.7" ]
+
+	configuration["development_dependencies"] = [ "wheel" ]
+	configuration["development_dependencies"] += [ "pylint ~= 2.7.1", "pytest ~= 6.2.2", "pytest-asyncio ~= 0.14.0", "pytest-json ~= 0.4.0" ]
+	configuration["development_dependencies"] += [ "pymongo ~= 3.11.3", "psycopg2 ~= 2.8.6", "SQLAlchemy ~= 1.3.23", "SQLAlchemy-Utils == 0.36.7" ]
 
 	configuration["components"] = [
 		{ "name": "bhamon-orchestra-cli", "path": "cli" },
