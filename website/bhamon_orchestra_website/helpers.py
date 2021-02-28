@@ -52,7 +52,7 @@ def get_pagination(item_total, url_arguments):
 
 
 def get_run_status_collection():
-	return [ "pending", "running", "succeeded", "failed", "exception", "aborted", "cancelled" ]
+	return [ "pending", "running", "succeeded", "failed", "exception", "aborted", "skipped", "cancelled" ]
 
 
 
