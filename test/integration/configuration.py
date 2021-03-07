@@ -205,8 +205,8 @@ def pipeline_success():
 			"elements": [
 				{ "identifier": "stage_1_job_1", "job": "success" },
 				{ "identifier": "stage_1_job_2", "job": "success" },
-				{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
-				{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": [ "succeeded" ] } ] },
+				{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": [ "succeeded" ] } ] },
 			],
 		},
 
@@ -230,8 +230,8 @@ def pipeline_failure():
 			"elements": [
 				{ "identifier": "stage_1_job_1", "job": "success" },
 				{ "identifier": "stage_1_job_2", "job": "success" },
-				{ "identifier": "stage_2_job_1", "job": "failure", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
-				{ "identifier": "stage_2_job_2", "job": "failure", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_1", "job": "failure", "after": [ { "element": "stage_1_job_1", "status": [ "succeeded" ] } ] },
+				{ "identifier": "stage_2_job_2", "job": "failure", "after": [ { "element": "stage_1_job_2", "status": [ "succeeded" ] } ] },
 			],
 		},
 
@@ -255,8 +255,8 @@ def pipeline_exception():
 			"elements": [
 				{ "identifier": "stage_1_job_1", "job": "success" },
 				{ "identifier": "stage_1_job_2", "job": "success" },
-				{ "identifier": "stage_2_job_1", "job": "unknown", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
-				{ "identifier": "stage_2_job_2", "job": "unknown", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_1", "job": "unknown", "after": [ { "element": "stage_1_job_1", "status": [ "succeeded" ] } ] },
+				{ "identifier": "stage_2_job_2", "job": "unknown", "after": [ { "element": "stage_1_job_2", "status": [ "succeeded" ] } ] },
 			],
 		},
 
@@ -280,8 +280,8 @@ def pipeline_sleep():
 			"elements": [
 				{ "identifier": "stage_1_job_1", "job": "sleep" },
 				{ "identifier": "stage_1_job_2", "job": "sleep" },
-				{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
-				{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
+				{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": [ "succeeded" ] } ] },
+				{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": [ "succeeded" ] } ] },
 			],
 		},
 

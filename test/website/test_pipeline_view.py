@@ -43,8 +43,8 @@ def test_sequential():
 	pipeline = {
 		"elements": [
 			{ "identifier": "stage_1_job_1", "job": "success" },
-			{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
-			{ "identifier": "stage_3_job_1", "job": "success", "after": [ { "element": "stage_2_job_1", "status": "succeeded" } ] },
+			{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": [ "succeeded" ] } ] },
+			{ "identifier": "stage_3_job_1", "job": "success", "after": [ { "element": "stage_2_job_1", "status": [ "succeeded" ] } ] },
 		],
 	}
 
@@ -65,13 +65,13 @@ def test_complex():
 			{ "identifier": "stage_1_job_2", "job": "success" },
 			{ "identifier": "stage_1_job_3", "job": "success" },
 
-			{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": "succeeded" } ] },
-			{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": "succeeded" } ] },
-			{ "identifier": "stage_2_job_3", "job": "success", "after": [ { "element": "stage_1_job_3", "status": "succeeded" } ] },
+			{ "identifier": "stage_2_job_1", "job": "success", "after": [ { "element": "stage_1_job_1", "status": [ "succeeded" ] } ] },
+			{ "identifier": "stage_2_job_2", "job": "success", "after": [ { "element": "stage_1_job_2", "status": [ "succeeded" ] } ] },
+			{ "identifier": "stage_2_job_3", "job": "success", "after": [ { "element": "stage_1_job_3", "status": [ "succeeded" ] } ] },
 
-			{ "identifier": "stage_3_job_1", "job": "success", "after": [ { "element": "stage_2_job_1", "status": "succeeded" } ] },
-			{ "identifier": "stage_3_job_2", "job": "success", "after": [ { "element": "stage_2_job_2", "status": "succeeded" } ] },
-			{ "identifier": "stage_3_job_3", "job": "success", "after": [ { "element": "stage_2_job_3", "status": "succeeded" } ] },
+			{ "identifier": "stage_3_job_1", "job": "success", "after": [ { "element": "stage_2_job_1", "status": [ "succeeded" ] } ] },
+			{ "identifier": "stage_3_job_2", "job": "success", "after": [ { "element": "stage_2_job_2", "status": [ "succeeded" ] } ] },
+			{ "identifier": "stage_3_job_3", "job": "success", "after": [ { "element": "stage_2_job_3", "status": [ "succeeded" ] } ] },
 		],
 	}
 
