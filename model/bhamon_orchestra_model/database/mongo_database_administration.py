@@ -83,6 +83,15 @@ class MongoDatabaseAdministration:
 		if not simulate:
 			self.mongo_client.get_database()["worker"].update_many({ "should_disconnect": { "$exists": False } }, { "$set": { "should_disconnect": False } })
 
+		logger.info("Remove steps from runs")
+		if not simulate:
+			self.mongo_client.get_database()["run"].update_many({ "steps": { "$exists": True } }, { "$unset": { "steps": None } })
+
+		logger.info("Remove steps and workspace from jobs")
+		if not simulate:
+			self.mongo_client.get_database()["job"].update_many({ "steps": { "$exists": True } }, { "$unset": { "steps": None } })
+			self.mongo_client.get_database()["job"].update_many({ "workspace": { "$exists": True } }, { "$unset": { "workspace": None } })
+
 
 	def create_index(self, table: str, identifier: str, field_collection: List[Tuple[str,str]], is_unique: bool = False) -> None:
 		mongo_field_collection = []
