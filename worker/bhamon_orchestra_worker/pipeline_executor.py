@@ -141,6 +141,7 @@ class PipelineExecutor(JobExecutor):
 
 		if trigger_status == TriggerStatus.Impossible:
 			logger.info("(%s) Skipping '%s': trigger conditions cannot be satisfied", self.run_identifier, inner_run["element"])
+			self.run_logger.info("Skipping '%s': trigger conditions cannot be satisfied", inner_run["element"])
 			inner_run["status"] = "skipped"
 
 
