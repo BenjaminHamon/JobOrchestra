@@ -11,7 +11,7 @@ def load_configuration(environment):
 	configuration = {
 		"project_identifier": "bhamon-orchestra",
 		"project_name": "Job Orchestra",
-		"project_version": load_project_version(environment["git_executable"], "3.0"),
+		"project_version": load_project_version(environment["git_executable"], "4.0"),
 	}
 
 	configuration["author"] = "Benjamin Hamon"
