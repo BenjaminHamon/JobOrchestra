@@ -104,9 +104,9 @@ class WorkerProvider:
 		if worker_record["is_active"]:
 			raise ValueError("Worker '%s' is active" % worker_identifier)
 
-		if run_provider.count(worker = worker_identifier, status = "pending") > 0:
+		if run_provider.count(database_client, worker = worker_identifier, status = "pending") > 0:
 			raise ValueError("Worker '%s' has pending runs" % worker_identifier)
-		if run_provider.count(worker = worker_identifier, status = "running") > 0:
+		if run_provider.count(database_client, worker = worker_identifier, status = "running") > 0:
 			raise ValueError("Worker '%s' has running runs" % worker_identifier)
 
 		database_client.delete_one(self.table, { "identifier": worker_identifier })
