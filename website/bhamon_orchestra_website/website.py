@@ -124,6 +124,8 @@ def log_request():
 
 
 def refresh_session():
+	flask.request.user = None
+
 	if "token" in flask.session:
 		now = flask.current_app.date_time_provider.now()
 		last_refresh = flask.session.get("last_refresh", None)
@@ -138,6 +140,7 @@ def refresh_session():
 			except requests.HTTPError as exception:
 				if exception.response.status_code == 403:
 					flask.session.clear()
+				raise
 
 	flask.request.user = flask.session.get("user", None)
 
