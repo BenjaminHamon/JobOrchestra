@@ -9,6 +9,7 @@ import pytest
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_worker.pipeline_executor import PipelineExecutor
+from bhamon_orchestra_worker.pipeline_executor import TriggerStatus
 from bhamon_orchestra_worker.service_client import ServiceClient
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
@@ -447,3 +448,70 @@ async def test_abort(tmpdir):
 	await executor_instance.dispose()
 
 	service_future.cancel()
+
+
+@pytest.mark.asyncio
+async def test_can_trigger_inner_run(tmpdir):
+
+	log_file_path = os.path.join(str(tmpdir), "run.log")
+
+	worker_storage_mock = Mock(spec = WorkerStorage)
+	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	service_client_mock = FakeServiceClient()
+
+	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
+	executor_instance.running_update_interval_seconds = 0.1
+	executor_instance.aborting_update_interval_seconds = 0.1
+
+	request = {
+		"project_identifier": "my_project",
+		"job_identifier": "my_pipeline",
+		"run_identifier": "my_run",
+
+		"job_definition": {
+			"elements": [
+				{ "identifier": "stage_1_job_1", "job": "success" },
+				{ "identifier": "stage_1_job_2", "job": "success" },
+				{ "identifier": "stage_1_job_3", "job": "success" },
+
+				{
+					"identifier": "stage_2_job_1",
+					"after": [
+						{ "element": "stage_1_job_1", "status": [ "succeeded" ] },
+						{ "element": "stage_1_job_2", "status": [ "succeeded" ] },
+						{ "element": "stage_1_job_3", "status": [ "succeeded" ] },
+					]
+				},
+			],
+		},
+
+		"parameters": {},
+	}
+
+	worker_storage_mock.get_log_path.return_value = log_file_path
+	worker_storage_mock.load_request.return_value = request
+	worker_storage_mock.load_results.return_value = {}
+
+	executor_instance.run_identifier = request["run_identifier"]
+
+	await executor_instance.initialize({})
+
+	inner_run = executor_instance.all_inner_runs[-1]
+
+	executor_instance.all_inner_runs[0]["status"] = "pending"
+	executor_instance.all_inner_runs[1]["status"] = "pending"
+	executor_instance.all_inner_runs[2]["status"] = "pending"
+
+	assert executor_instance._can_trigger_inner_run(inner_run) == TriggerStatus.Wait # pylint: disable = protected-access
+
+	executor_instance.all_inner_runs[0]["status"] = "succeeded"
+	executor_instance.all_inner_runs[1]["status"] = "succeeded"
+	executor_instance.all_inner_runs[2]["status"] = "succeeded"
+
+	assert executor_instance._can_trigger_inner_run(inner_run) == TriggerStatus.Ready # pylint: disable = protected-access
+
+	executor_instance.all_inner_runs[0]["status"] = "succeeded"
+	executor_instance.all_inner_runs[1]["status"] = "pending"
+	executor_instance.all_inner_runs[2]["status"] = "failed"
+
+	assert executor_instance._can_trigger_inner_run(inner_run) == TriggerStatus.Impossible # pylint: disable = protected-access

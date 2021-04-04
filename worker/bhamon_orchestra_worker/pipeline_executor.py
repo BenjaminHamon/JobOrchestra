@@ -153,6 +153,10 @@ class PipelineExecutor(JobExecutor):
 			if predecessor["status"] not in after_option["status"]:
 				if predecessor["status"] in [ "succeeded", "failed", "aborted", "cancelled", "skipped", "exception" ]:
 					return TriggerStatus.Impossible
+
+		for after_option in element_definition["after"]:
+			predecessor = next(r for r in self.all_inner_runs if r["element"] == after_option["element"])
+			if predecessor["status"] not in after_option["status"]:
 				return TriggerStatus.Wait
 
 		return TriggerStatus.Ready
