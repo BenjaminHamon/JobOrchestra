@@ -5,7 +5,6 @@ from typing import Any, List
 import flask
 import requests
 
-import bhamon_orchestra_website
 import bhamon_orchestra_website.helpers as helpers
 import bhamon_orchestra_website.service_client as service_client
 
@@ -43,8 +42,8 @@ def index() -> Any:
 def _get_website_information() -> dict:
 	return {
 		"python_version": platform.python_version() + "+" + platform.python_revision(),
-		"website_version": bhamon_orchestra_website.__version__,
-		"website_version_date": bhamon_orchestra_website.__date__,
+		"website_version": flask.current_app.config["WEBSITE_VERSION"],
+		"website_date": flask.current_app.config["WEBSITE_DATE"],
 	}
 
 

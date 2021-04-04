@@ -3,8 +3,6 @@ import platform
 
 import flask
 
-import bhamon_orchestra_service
-
 
 logger = logging.getLogger("AdminController")
 
@@ -12,8 +10,8 @@ logger = logging.getLogger("AdminController")
 def information():
 	return flask.jsonify({
 		"python_version": platform.python_version() + "+" + platform.python_revision(),
-		"service_version": bhamon_orchestra_service.__version__,
-		"service_version_date": bhamon_orchestra_service.__date__,
+		"service_version": flask.current_app.config["SERVICE_VERSION"],
+		"service_date": flask.current_app.config["SERVICE_DATE"],
 	})
 
 
