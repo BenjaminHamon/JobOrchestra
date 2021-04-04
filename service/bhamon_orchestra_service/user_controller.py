@@ -2,7 +2,7 @@ import logging
 
 import flask
 
-import bhamon_orchestra_service.helpers as helpers
+import bhamon_orchestra_model.datetime_extensions as datetime_extensions
 
 
 logger = logging.getLogger("UserController")
@@ -96,7 +96,7 @@ def create_token(user_identifier):
 	expiration = parameters.get("expiration", None)
 
 	if expiration is not None:
-		expiration = helpers.parse_timedelta(expiration)
+		expiration = datetime_extensions.parse_timedelta(expiration)
 
 	database_client = flask.request.database_client()
 	token = flask.current_app.authentication_provider.create_token(database_client, user_identifier, description, expiration)
@@ -105,7 +105,7 @@ def create_token(user_identifier):
 
 def set_token_expiration(user_identifier, token_identifier):
 	parameters = flask.request.get_json()
-	expiration = helpers.parse_timedelta(parameters["expiration"])
+	expiration = datetime_extensions.parse_timedelta(parameters["expiration"])
 	database_client = flask.request.database_client()
 	flask.current_app.authentication_provider.set_token_expiration(database_client, user_identifier, token_identifier, expiration)
 	return flask.jsonify({})
