@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import flask
 import requests
@@ -9,12 +10,12 @@ from bhamon_orchestra_model.revision_control.github import GitHubClient
 logger = logging.getLogger("ProjectController")
 
 
-def get_count():
+def get_count() -> Any:
 	database_client = flask.request.database_client()
 	return flask.jsonify(flask.current_app.project_provider.count(database_client))
 
 
-def get_collection():
+def get_collection() -> Any:
 	query_parameters = {
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
 		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),
@@ -25,12 +26,12 @@ def get_collection():
 	return flask.jsonify(flask.current_app.project_provider.get_list(database_client, **query_parameters))
 
 
-def get(project_identifier):
+def get(project_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	return flask.jsonify(flask.current_app.project_provider.get(database_client, project_identifier))
 
 
-def get_repository(project_identifier):
+def get_repository(project_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
@@ -43,7 +44,7 @@ def get_repository(project_identifier):
 
 
 
-def get_branch_collection(project_identifier):
+def get_branch_collection(project_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
@@ -55,7 +56,7 @@ def get_branch_collection(project_identifier):
 	return flask.jsonify(revision_control_client.get_branch_list(**query_parameters))
 
 
-def get_revision_collection(project_identifier):
+def get_revision_collection(project_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
@@ -69,7 +70,7 @@ def get_revision_collection(project_identifier):
 	return flask.jsonify(revision_control_client.get_revision_list(**query_parameters))
 
 
-def get_revision(project_identifier, revision_reference):
+def get_revision(project_identifier: str, revision_reference: str) -> Any:
 	database_client = flask.request.database_client()
 	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	revision_control_client = _create_revision_control_client(project["services"]["revision_control"])
@@ -82,7 +83,7 @@ def get_revision(project_identifier, revision_reference):
 	return flask.jsonify(revision_control_client.get_revision(**query_parameters))
 
 
-def get_revision_status(project_identifier, revision_reference):
+def get_revision_status(project_identifier: str, revision_reference: str) -> Any:
 	database_client = flask.request.database_client()
 	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	repository = project["services"]["revision_control"]["repository"]
@@ -134,7 +135,7 @@ def get_revision_status(project_identifier, revision_reference):
 	return flask.jsonify(result)
 
 
-def get_project_status(project_identifier):
+def get_project_status(project_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	project = flask.current_app.project_provider.get(database_client, project_identifier)
 	repository = project["services"]["revision_control"]["repository"]
@@ -178,7 +179,7 @@ def get_project_status(project_identifier):
 	return flask.jsonify(revision_collection)
 
 
-def _create_revision_control_client(service):
+def _create_revision_control_client(service: str) -> GitHubClient:
 	if service["type"] == "github":
 		return GitHubClient(flask.current_app.config.get("GITHUB_ACCESS_TOKEN", None))
 	raise ValueError("Unsupported service '%s'" % service["type"])

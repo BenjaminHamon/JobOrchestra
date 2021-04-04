@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import flask
 
@@ -6,12 +7,12 @@ import flask
 logger = logging.getLogger("WorkerController")
 
 
-def get_count():
+def get_count() -> Any:
 	database_client = flask.request.database_client()
 	return flask.jsonify(flask.current_app.worker_provider.count(database_client))
 
 
-def get_collection():
+def get_collection() -> Any:
 	query_parameters = {
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
 		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),
@@ -22,12 +23,12 @@ def get_collection():
 	return flask.jsonify(flask.current_app.worker_provider.get_list(database_client, **query_parameters))
 
 
-def get(worker_identifier):
+def get(worker_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	return flask.jsonify(flask.current_app.worker_provider.get(database_client, worker_identifier))
 
 
-def get_job_collection(worker_identifier): # pylint: disable = unused-argument
+def get_job_collection(worker_identifier: str) -> Any: # pylint: disable = unused-argument
 	query_parameters = {
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
 		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),
@@ -38,7 +39,7 @@ def get_job_collection(worker_identifier): # pylint: disable = unused-argument
 	return flask.jsonify(flask.current_app.job_provider.get_list(database_client, **query_parameters))
 
 
-def get_run_count(worker_identifier):
+def get_run_count(worker_identifier: str) -> Any:
 	query_parameters = {
 		"worker": worker_identifier,
 		"project": flask.request.args.get("project", default = None),
@@ -49,7 +50,7 @@ def get_run_count(worker_identifier):
 	return flask.jsonify(flask.current_app.run_provider.count(database_client, **query_parameters))
 
 
-def get_run_collection(worker_identifier):
+def get_run_collection(worker_identifier: str) -> Any:
 	query_parameters = {
 		"worker": worker_identifier,
 		"project": flask.request.args.get("project", default = None),
@@ -63,19 +64,19 @@ def get_run_collection(worker_identifier):
 	return flask.jsonify(flask.current_app.run_provider.get_list(database_client, **query_parameters))
 
 
-def disconnect(worker_identifier):
+def disconnect(worker_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	flask.current_app.worker_provider.update_status(database_client, { "identifier": worker_identifier }, should_disconnect = True)
 	return flask.jsonify({})
 
 
-def enable(worker_identifier):
+def enable(worker_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	flask.current_app.worker_provider.update_status(database_client, { "identifier": worker_identifier }, is_enabled = True)
 	return flask.jsonify({})
 
 
-def disable(worker_identifier):
+def disable(worker_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	flask.current_app.worker_provider.update_status(database_client, { "identifier": worker_identifier }, is_enabled = False)
 	return flask.jsonify({})

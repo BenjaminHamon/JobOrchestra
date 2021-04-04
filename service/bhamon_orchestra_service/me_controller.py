@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import flask
 
@@ -8,12 +9,12 @@ import bhamon_orchestra_service.user_controller as user_controller
 logger = logging.getLogger("MeController")
 
 
-def get_user():
+def get_user() -> Any:
 	database_client = flask.request.database_client()
 	return flask.jsonify(flask.current_app.user_provider.get(database_client, flask.request.authorization.username))
 
 
-def login():
+def login() -> Any:
 	parameters = flask.request.get_json()
 	database_client = flask.request.database_client()
 
@@ -30,7 +31,7 @@ def login():
 	return flask.jsonify({ "user_identifier": session_token["user"], "token_identifier": session_token["identifier"], "secret": session_token["secret"] })
 
 
-def logout():
+def logout() -> Any:
 	if flask.request.authorization is not None:
 		parameters = flask.request.get_json()
 		database_client = flask.request.database_client()
@@ -39,7 +40,7 @@ def logout():
 	return flask.jsonify({})
 
 
-def refresh_session():
+def refresh_session() -> Any:
 	parameters = flask.request.get_json()
 	database_client = flask.request.database_client()
 
@@ -53,7 +54,7 @@ def refresh_session():
 	return flask.jsonify({})
 
 
-def change_password():
+def change_password() -> Any:
 	parameters = flask.request.get_json()
 	database_client = flask.request.database_client()
 
@@ -64,13 +65,13 @@ def change_password():
 	return flask.jsonify({})
 
 
-def get_token_list():
+def get_token_list() -> Any:
 	return user_controller.get_token_list(flask.request.authorization.username)
 
 
-def create_token():
+def create_token() -> Any:
 	return user_controller.create_token(flask.request.authorization.username)
 
 
-def delete_token(token_identifier):
+def delete_token(token_identifier: str) -> Any:
 	return user_controller.delete_token(flask.request.authorization.username, token_identifier)

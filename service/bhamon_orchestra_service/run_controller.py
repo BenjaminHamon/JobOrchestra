@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import flask
 
@@ -6,7 +7,7 @@ import flask
 logger = logging.getLogger("RunController")
 
 
-def get_count(project_identifier):
+def get_count(project_identifier: str) -> Any:
 	query_parameters = {
 		"project": project_identifier,
 		"job": flask.request.args.get("job", default = None),
@@ -18,7 +19,7 @@ def get_count(project_identifier):
 	return flask.jsonify(flask.current_app.run_provider.count(database_client, **query_parameters))
 
 
-def get_collection(project_identifier):
+def get_collection(project_identifier: str) -> Any:
 	query_parameters = {
 		"project": project_identifier,
 		"job": flask.request.args.get("job", default = None),
@@ -33,17 +34,17 @@ def get_collection(project_identifier):
 	return flask.jsonify(flask.current_app.run_provider.get_list(database_client, **query_parameters))
 
 
-def get(project_identifier, run_identifier):
+def get(project_identifier: str, run_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	return flask.jsonify(flask.current_app.run_provider.get(database_client, project_identifier, run_identifier))
 
 
-def get_log(project_identifier, run_identifier):
+def get_log(project_identifier: str, run_identifier: str) -> Any:
 	log_text, log_cursor = flask.current_app.run_provider.get_log(project_identifier, run_identifier)
 	return flask.Response(log_text, mimetype = "text/plain", headers = { "X-Orchestra-FileCursor": log_cursor })
 
 
-def get_log_chunk(project_identifier, run_identifier):
+def get_log_chunk(project_identifier: str, run_identifier: str) -> Any:
 	query_parameters = {
 		"project": project_identifier,
 		"run_identifier": run_identifier,
@@ -55,26 +56,26 @@ def get_log_chunk(project_identifier, run_identifier):
 	return flask.Response(log_text, mimetype = "text/plain", headers = { "X-Orchestra-FileCursor": log_cursor })
 
 
-def get_results(project_identifier, run_identifier):
+def get_results(project_identifier: str, run_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	run_results = flask.current_app.run_provider.get_results(database_client, project_identifier, run_identifier)
 	run_results = flask.current_app.run_result_transformer(project_identifier, run_identifier, run_results)
 	return flask.jsonify(run_results)
 
 
-def cancel(project_identifier, run_identifier):
+def cancel(project_identifier: str, run_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	flask.current_app.run_provider.update_status(database_client, { "project": project_identifier, "identifier": run_identifier }, should_cancel = True)
 	return flask.jsonify({})
 
 
-def abort(project_identifier, run_identifier):
+def abort(project_identifier: str, run_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	flask.current_app.run_provider.update_status(database_client, { "project": project_identifier, "identifier": run_identifier }, should_abort = True)
 	return flask.jsonify({})
 
 
-def download_archive(project_identifier, run_identifier):
+def download_archive(project_identifier: str, run_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	archive = flask.current_app.run_provider.get_archive(database_client, project_identifier, run_identifier)
 	headers = { "Content-Disposition": "attachment;filename=" + '"' + archive["file_name"] + '"' }

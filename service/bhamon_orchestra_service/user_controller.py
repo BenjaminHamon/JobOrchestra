@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import flask
 
@@ -8,12 +9,12 @@ import bhamon_orchestra_model.datetime_extensions as datetime_extensions
 logger = logging.getLogger("UserController")
 
 
-def get_count():
+def get_count() -> Any:
 	database_client = flask.request.database_client()
 	return flask.jsonify(flask.current_app.user_provider.count(database_client))
 
 
-def get_collection():
+def get_collection() -> Any:
 	query_parameters = {
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
 		"limit": max(min(flask.request.args.get("limit", default = 100, type = int), 1000), 0),
@@ -24,19 +25,19 @@ def get_collection():
 	return flask.jsonify(flask.current_app.user_provider.get_list(database_client, **query_parameters))
 
 
-def get(user_identifier):
+def get(user_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	return flask.jsonify(flask.current_app.user_provider.get(database_client, user_identifier))
 
 
-def create(user_identifier):
+def create(user_identifier: str) -> Any:
 	parameters = flask.request.get_json()
 	database_client = flask.request.database_client()
 	user = flask.current_app.user_provider.create(database_client, user_identifier, parameters["display_name"])
 	return flask.jsonify(user)
 
 
-def update_identity(user_identifier):
+def update_identity(user_identifier: str) -> Any:
 	parameters = flask.request.get_json()
 	database_client = flask.request.database_client()
 	user = flask.current_app.user_provider.get(database_client, user_identifier)
@@ -44,7 +45,7 @@ def update_identity(user_identifier):
 	return flask.jsonify(user)
 
 
-def update_roles(user_identifier):
+def update_roles(user_identifier: str) -> Any:
 	parameters = flask.request.get_json()
 	database_client = flask.request.database_client()
 	user = flask.current_app.user_provider.get(database_client, user_identifier)
@@ -52,33 +53,33 @@ def update_roles(user_identifier):
 	return flask.jsonify(user)
 
 
-def reset_password(user_identifier):
+def reset_password(user_identifier: str) -> Any:
 	parameters = flask.request.get_json()
 	database_client = flask.request.database_client()
 	flask.current_app.authentication_provider.set_password(database_client, user_identifier, parameters["password"])
 	return flask.jsonify({})
 
 
-def enable(user_identifier):
+def enable(user_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	user = flask.current_app.user_provider.get(database_client, user_identifier)
 	flask.current_app.user_provider.update_status(database_client, user, is_enabled = True)
 	return flask.jsonify(user)
 
 
-def disable(user_identifier):
+def disable(user_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	user = flask.current_app.user_provider.get(database_client, user_identifier)
 	flask.current_app.user_provider.update_status(database_client, user, is_enabled = False)
 	return flask.jsonify(user)
 
 
-def get_token_count(user_identifier):
+def get_token_count(user_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	return flask.jsonify(flask.current_app.authentication_provider.count_tokens(database_client, user = user_identifier))
 
 
-def get_token_list(user_identifier):
+def get_token_list(user_identifier: str) -> Any:
 	query_parameters = {
 		"user": user_identifier,
 		"skip": max(flask.request.args.get("skip", default = 0, type = int), 0),
@@ -90,7 +91,7 @@ def get_token_list(user_identifier):
 	return flask.jsonify(flask.current_app.authentication_provider.get_token_list(database_client, **query_parameters))
 
 
-def create_token(user_identifier):
+def create_token(user_identifier: str) -> Any:
 	parameters = flask.request.get_json()
 	description = parameters.get("description", None)
 	expiration = parameters.get("expiration", None)
@@ -103,7 +104,7 @@ def create_token(user_identifier):
 	return flask.jsonify({ "token_identifier": token["identifier"], "secret": token["secret"] })
 
 
-def set_token_expiration(user_identifier, token_identifier):
+def set_token_expiration(user_identifier: str, token_identifier: str) -> Any:
 	parameters = flask.request.get_json()
 	expiration = datetime_extensions.parse_timedelta(parameters["expiration"])
 	database_client = flask.request.database_client()
@@ -111,7 +112,7 @@ def set_token_expiration(user_identifier, token_identifier):
 	return flask.jsonify({})
 
 
-def delete_token(user_identifier, token_identifier):
+def delete_token(user_identifier: str, token_identifier: str) -> Any:
 	database_client = flask.request.database_client()
 	flask.current_app.authentication_provider.delete_token(database_client, user_identifier, token_identifier)
 	return flask.jsonify({})

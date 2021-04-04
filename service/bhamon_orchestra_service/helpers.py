@@ -1,4 +1,4 @@
-def get_error_message(status_code): # pylint: disable = too-many-return-statements
+def get_error_message(status_code: int) -> str: # pylint: disable = too-many-return-statements
 	if status_code == 400:
 		return "Bad request"
 	if status_code == 401:
