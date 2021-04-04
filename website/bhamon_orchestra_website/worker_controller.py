@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import flask
 
@@ -9,7 +10,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("WorkerController")
 
 
-def show_collection():
+def show_collection() -> Any:
 	item_total = service_client.get("/worker_count")
 	pagination = helpers.get_pagination(item_total, {})
 
@@ -27,7 +28,7 @@ def show_collection():
 	return flask.render_template("worker/collection.html", title = "Workers", **view_data)
 
 
-def show(worker_identifier):
+def show(worker_identifier: str) -> Any:
 	view_data = {
 		"worker": service_client.get("/worker/{worker_identifier}".format(**locals())),
 		"project_collection": service_client.get("/project_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
@@ -43,7 +44,7 @@ def show(worker_identifier):
 	return flask.render_template("worker/index.html", title = "Worker " + worker_identifier, **view_data)
 
 
-def show_runs(worker_identifier):
+def show_runs(worker_identifier: str) -> Any:
 	query_parameters = {
 		"worker": worker_identifier,
 		"project": helpers.none_if_empty(flask.request.args.get("project", default = None)),
@@ -74,17 +75,17 @@ def show_runs(worker_identifier):
 
 
 
-def disconnect(worker_identifier): # pylint: disable = unused-argument
+def disconnect(worker_identifier: str) -> Any: # pylint: disable = unused-argument
 	parameters = flask.request.form
 	service_client.post("/worker/{worker_identifier}/disconnect".format(**locals()), parameters)
 	return flask.redirect(flask.request.referrer or flask.url_for("worker_controller.show_collection"))
 
 
-def enable(worker_identifier): # pylint: disable = unused-argument
+def enable(worker_identifier: str) -> Any: # pylint: disable = unused-argument
 	service_client.post("/worker/{worker_identifier}/enable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("worker_controller.show_collection"))
 
 
-def disable(worker_identifier): # pylint: disable = unused-argument
+def disable(worker_identifier: str) -> Any: # pylint: disable = unused-argument
 	service_client.post("/worker/{worker_identifier}/disable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("worker_controller.show_collection"))

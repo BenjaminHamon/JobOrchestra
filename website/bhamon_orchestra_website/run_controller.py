@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import flask
 
@@ -9,7 +10,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("RunController")
 
 
-def show_collection(project_identifier):
+def show_collection(project_identifier: str) -> Any:
 	query_parameters = {
 		"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
 		"worker": helpers.none_if_empty(flask.request.args.get("worker", default = None)),
@@ -39,7 +40,7 @@ def show_collection(project_identifier):
 	return flask.render_template("run/collection.html", title = "Runs", **view_data)
 
 
-def show(project_identifier, run_identifier): # pylint: disable = unused-argument
+def show(project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
 	project = service_client.get("/project/{project_identifier}".format(**locals()))
 	run = service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals()))
 	run_results = service_client.get("/project/{project_identifier}/run/{run_identifier}/results".format(**locals()))
@@ -70,7 +71,7 @@ def show(project_identifier, run_identifier): # pylint: disable = unused-argumen
 	return flask.render_template("run/index.html", title = "Run " + run_identifier[:18], **view_data)
 
 
-def show_log(project_identifier, run_identifier): # pylint: disable = unused-argument
+def show_log(project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
 	view_data = {
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
 		"run": service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals())),
@@ -79,25 +80,25 @@ def show_log(project_identifier, run_identifier): # pylint: disable = unused-arg
 	return flask.render_template("run/log.html", title = "Run " + run_identifier[:18], **view_data)
 
 
-def show_log_raw(project_identifier, run_identifier): # pylint: disable = unused-argument
+def show_log_raw(project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
 	log_text = service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/log".format(**locals())).text
 	content_disposition = "inline; filename=\"%s.log\"" % run_identifier
 	return flask.Response(log_text, headers = { "Content-Disposition": content_disposition }, mimetype = "text/plain")
 
 
-def cancel(project_identifier, run_identifier): # pylint: disable = unused-argument
+def cancel(project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
 	parameters = flask.request.form
 	service_client.post("/project/{project_identifier}/run/{run_identifier}/cancel".format(**locals()), parameters)
 	return flask.redirect(flask.request.referrer or flask.url_for("run_controller.show_collection", project_identifier = project_identifier))
 
 
-def abort(project_identifier, run_identifier): # pylint: disable = unused-argument
+def abort(project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
 	parameters = flask.request.form
 	service_client.post("/project/{project_identifier}/run/{run_identifier}/abort".format(**locals()), parameters)
 	return flask.redirect(flask.request.referrer or flask.url_for("run_controller.show_collection", project_identifier = project_identifier))
 
 
-def download_archive(project_identifier, run_identifier): # pylint: disable = unused-argument
+def download_archive(project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
 	archive_response = service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/download".format(**locals()))
 	return flask.Response(archive_response.content,
 		headers = { "Content-Disposition": archive_response.headers["Content-Disposition"] },

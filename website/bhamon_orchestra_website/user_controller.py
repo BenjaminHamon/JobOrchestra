@@ -1,4 +1,5 @@
 import logging
+from typing import Any, Optional
 
 import flask
 import requests
@@ -10,7 +11,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("UserController")
 
 
-def show_collection():
+def show_collection() -> Any:
 	item_total = service_client.get("/user_count")
 	pagination = helpers.get_pagination(item_total, {})
 
@@ -28,7 +29,7 @@ def show_collection():
 	return flask.render_template("user/collection.html", title = "Users", **view_data)
 
 
-def show(user_identifier): # pylint: disable = unused-argument
+def show(user_identifier: str) -> Any: # pylint: disable = unused-argument
 	user = service_client.get("/user/{user_identifier}".format(**locals()))
 
 	view_data = {
@@ -48,7 +49,7 @@ def show(user_identifier): # pylint: disable = unused-argument
 	return flask.render_template("user/index.html", title = "User " + user["display_name"], **view_data)
 
 
-def create():
+def create() -> Any:
 	if flask.request.method == "GET":
 		return flask.render_template("user/create.html", title = "Create User")
 
@@ -67,7 +68,7 @@ def create():
 	return flask.abort(405)
 
 
-def edit(user_identifier, local_parameters = None): # pylint: disable = unused-argument
+def edit(user_identifier: str, local_parameters: Optional[dict] = None) -> Any: # pylint: disable = unused-argument
 	if local_parameters is None:
 		local_parameters = {}
 
@@ -79,7 +80,7 @@ def edit(user_identifier, local_parameters = None): # pylint: disable = unused-a
 	return flask.render_template("user/edit.html", title = "Edit User", user = user)
 
 
-def update_identity(user_identifier):
+def update_identity(user_identifier: str) -> Any:
 	parameters = { "display_name": flask.request.form["display_name"] }
 
 	try:
@@ -90,7 +91,7 @@ def update_identity(user_identifier):
 	return edit(user_identifier, parameters)
 
 
-def update_roles(user_identifier):
+def update_roles(user_identifier: str) -> Any:
 	parameters = { "roles": [ role.strip() for role in flask.request.form["roles"].splitlines() ] }
 
 	try:
@@ -101,17 +102,17 @@ def update_roles(user_identifier):
 	return edit(user_identifier, parameters)
 
 
-def enable(user_identifier): # pylint: disable = unused-argument
+def enable(user_identifier: str) -> Any: # pylint: disable = unused-argument
 	service_client.post("/user/{user_identifier}/enable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("user_controller.show_collection"))
 
 
-def disable(user_identifier): # pylint: disable = unused-argument
+def disable(user_identifier: str) -> Any: # pylint: disable = unused-argument
 	service_client.post("/user/{user_identifier}/disable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("user_controller.show_collection"))
 
 
-def reset_password(user_identifier):
+def reset_password(user_identifier: str) -> Any:
 	if flask.request.method == "GET":
 		user = service_client.get("/user/{user_identifier}".format(**locals()))
 		return flask.render_template("user/reset_password.html", title = "Reset User Password", user = user)
@@ -131,7 +132,7 @@ def reset_password(user_identifier):
 	return flask.abort(405)
 
 
-def create_token(user_identifier):
+def create_token(user_identifier: str) -> Any:
 	if flask.request.method == "GET":
 		user = service_client.get("/user/{user_identifier}".format(**locals()))
 		return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user = user)
@@ -154,7 +155,7 @@ def create_token(user_identifier):
 	return flask.abort(405)
 
 
-def delete_token(user_identifier, token_identifier):
+def delete_token(user_identifier: str, token_identifier: str) -> Any:
 	try:
 		service_client.post("/user/{user_identifier}/token/{token_identifier}/delete".format(**locals()))
 		flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")

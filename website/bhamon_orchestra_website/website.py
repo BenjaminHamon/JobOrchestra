@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+from typing import Any, Callable, List, Optional
 
 import flask
 import jinja2
@@ -26,7 +27,10 @@ main_logger = logging.getLogger("Website")
 request_logger = logging.getLogger("Request")
 
 
-def configure(application, title = None, copyright = None, version = None, date = None): # pylint: disable = redefined-builtin
+def configure( # pylint: disable = redefined-builtin
+		application: flask.Flask, title: Optional[str] = None,
+		copyright: Optional[str] = None, version: Optional[str] = None, date: Optional[str] = None) -> None:
+
 	application.config["WEBSITE_TITLE"] = title if title is not None else "Job Orchestra"
 	application.config["WEBSITE_COPYRIGHT"] = copyright if copyright is not None else bhamon_orchestra_website.__copyright__
 	application.config["WEBSITE_VERSION"] = version if version is not None else bhamon_orchestra_website.__version__
@@ -43,7 +47,7 @@ def configure(application, title = None, copyright = None, version = None, date 
 	application.session_refresh_interval = datetime.timedelta(days = 1)
 
 
-def register_handlers(application):
+def register_handlers(application: flask.Flask) -> None:
 	application.log_exception = lambda exc_info: None
 	application.before_request(log_request)
 	application.before_request(refresh_session)
@@ -52,7 +56,7 @@ def register_handlers(application):
 		application.register_error_handler(exception, handle_error)
 
 
-def register_routes(application):
+def register_routes(application: flask.Flask) -> None:
 	add_url_rule(application, "/", [ "GET" ], home)
 	add_url_rule(application, "/admin", [ "GET" ], admin_controller.index)
 	add_url_rule(application, "/me", [ "GET" ], me_controller.show_profile)
@@ -102,12 +106,12 @@ def register_routes(application):
 	add_url_rule(application, "/service_proxy/<path:route>", [ "GET", "POST" ], proxy_to_service)
 
 
-def add_url_rule(application, path, methods, handler, **kwargs):
+def add_url_rule(application: flask.Flask, path: str, methods: List[str], handler: Callable, **kwargs) -> None:
 	endpoint = ".".join(handler.__module__.split(".")[1:]) + "." + handler.__name__
 	application.add_url_rule(path, methods = methods, endpoint = endpoint, view_func = handler, **kwargs)
 
 
-def register_resources(application, path_collection = None):
+def register_resources(application: flask.Flask, path_collection: Optional[List[str]] = None) -> None:
 	if application.static_folder is not None:
 		raise ValueError("Flask application should be initialized with static_folder set to None")
 
@@ -119,11 +123,11 @@ def register_resources(application, path_collection = None):
 	application.jinja_loader = jinja2.ChoiceLoader([ jinja2.FileSystemLoader(os.path.join(path, "templates")) for path in path_collection ])
 
 
-def log_request():
+def log_request() -> None:
 	request_logger.info("(%s) %s %s", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url)
 
 
-def refresh_session():
+def refresh_session() -> None:
 	flask.request.user = None
 
 	if "token" in flask.session:
@@ -145,18 +149,18 @@ def refresh_session():
 	flask.request.user = flask.session.get("user", None)
 
 
-def authorize_request():
+def authorize_request() -> None:
 	if flask.request.url_rule is None:
 		return
 	if not flask.current_app.authorization_provider.authorize_request(flask.request.user, flask.request.method, flask.request.url_rule.rule):
 		flask.abort(403)
 
 
-def authorize_view(view):
+def authorize_view(view: str) -> bool:
 	return flask.current_app.authorization_provider.authorize_view(flask.request.user, view)
 
 
-def handle_error(exception):
+def handle_error(exception: Exception) -> Any:
 	status_code = exception.code if isinstance(exception, werkzeug.exceptions.HTTPException) else 500
 	status_message = helpers.get_error_message(status_code)
 	request_logger.error("(%s) %s %s (StatusCode: %s)", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url, status_code, exc_info = True)
@@ -166,9 +170,9 @@ def handle_error(exception):
 
 
 # Override Flask send_static_file to support several static directories
-def send_static_file(filename):
+def send_static_file(filename: str) -> Any:
 	if not flask.current_app.static_directories:
-		raise RuntimeError('Flask application has no static directory')
+		raise RuntimeError("Flask application has no static directory")
 
 	# Ensure get_send_file_max_age is called in all cases.
 	# Here, we ensure get_send_file_max_age is called for Blueprints.
@@ -183,11 +187,11 @@ def send_static_file(filename):
 	raise werkzeug.exceptions.NotFound
 
 
-def home():
+def home() -> Any:
 	return flask.render_template("home.html", title = "Home")
 
 
-def proxy_to_service(route):
+def proxy_to_service(route: str) -> flask.Response:
 	service_response = service_client.proxy("/" + route)
 
 	response = flask.Response(service_response.content, service_response.status_code)

@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import flask
 import requests
@@ -10,7 +11,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("MeController")
 
 
-def login():
+def login() -> Any:
 	if flask.request.method == "GET":
 		if "token" in flask.session:
 			return flask.redirect(flask.url_for("website.home"))
@@ -36,7 +37,7 @@ def login():
 	return flask.abort(405)
 
 
-def logout():
+def logout() -> Any:
 	if flask.request.method == "GET":
 		if "token" not in flask.session:
 			return flask.redirect(flask.url_for("website.home"))
@@ -58,7 +59,7 @@ def logout():
 	return flask.abort(405)
 
 
-def refresh_session():
+def refresh_session() -> Any:
 	now = flask.current_app.date_time_provider.now()
 
 	try:
@@ -72,7 +73,7 @@ def refresh_session():
 	return flask.redirect(flask.url_for("me_controller.show_profile"))
 
 
-def show_profile():
+def show_profile() -> Any:
 	user = service_client.get("/me")
 	user_tokens = service_client.get("/me/token_collection", { "order_by": [ "update_date descending" ] })
 	user_tokens.sort(key = lambda token: token["expiration_date"] is not None)
@@ -84,7 +85,7 @@ def show_profile():
 	return flask.render_template("me/profile.html", title = "Profile", user = user, user_tokens = user_tokens)
 
 
-def change_password():
+def change_password() -> Any:
 	if flask.request.method == "GET":
 		return flask.render_template("me/change_password.html", title = "Change Password")
 
@@ -106,7 +107,7 @@ def change_password():
 	return flask.abort(405)
 
 
-def create_token():
+def create_token() -> Any:
 	if flask.request.method == "GET":
 		return flask.render_template("me/create_token.html", title = "Create Authentication Token")
 
@@ -127,7 +128,7 @@ def create_token():
 	return flask.abort(405)
 
 
-def delete_token(token_identifier):
+def delete_token(token_identifier: str) -> Any:
 	try:
 		service_client.post("/me/token/{token_identifier}/delete".format(**locals()))
 		flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")

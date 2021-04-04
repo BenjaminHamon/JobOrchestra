@@ -1,8 +1,10 @@
+from typing import Any, Optional, Tuple
+
 import flask
 import requests
 
 
-def proxy(route):
+def proxy(route: str) -> requests.Response:
 	method = flask.request.method
 	url = flask.current_app.service_url + route
 
@@ -18,7 +20,7 @@ def proxy(route):
 	return requests.request(method, url, auth = authentication, headers = headers, params = parameters, data = data)
 
 
-def get_or_default(route, parameters = None, default_value = None):
+def get_or_default(route: str, parameters: Optional[dict] = None, default_value: Optional[Any] = None) -> Optional[Any]:
 	try:
 		result = get(route, parameters = parameters)
 		if result is not None:
@@ -29,15 +31,17 @@ def get_or_default(route, parameters = None, default_value = None):
 	return default_value
 
 
-def get(route, parameters = None):
+def get(route: str, parameters: Optional[dict] = None) -> Optional[Any]:
 	return send_request("GET", route, headers = { "Accept": "application/json" }, parameters = parameters).json()
 
 
-def post(route, data = None):
+def post(route: str, data: Optional[Any] = None) -> Optional[Any]:
 	return send_request("POST", route, headers = { "Accept": "application/json" }, data = data).json()
 
 
-def send_request(method, route, headers = None, parameters = None, data = None):
+def send_request(method: str, route: str, headers: Optional[dict] = None,
+		parameters: Optional[dict] = None, data: Optional[dict] = None) -> requests.Response:
+
 	authentication = _get_authentication()
 	if parameters is None:
 		parameters = {}
@@ -47,7 +51,7 @@ def send_request(method, route, headers = None, parameters = None, data = None):
 	return response
 
 
-def _get_authentication():
+def _get_authentication() -> Optional[Tuple[str,str]]:
 	if "token" not in flask.session:
 		return None
 	return flask.session["token"]["user_identifier"], flask.session["token"]["secret"]

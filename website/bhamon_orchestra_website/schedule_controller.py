@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import flask
 
@@ -9,7 +10,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("ScheduleController")
 
 
-def show_collection(project_identifier):
+def show_collection(project_identifier: str) -> Any:
 	query_parameters = {
 		"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
 	}
@@ -35,7 +36,7 @@ def show_collection(project_identifier):
 	return flask.render_template("schedule/collection.html", title = "Schedules", **view_data)
 
 
-def show(project_identifier, schedule_identifier): # pylint: disable = unused-argument
+def show(project_identifier: str, schedule_identifier: str) -> Any: # pylint: disable = unused-argument
 	view_data = {
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
 		"schedule": service_client.get("/project/{project_identifier}/schedule/{schedule_identifier}".format(**locals())),
@@ -50,11 +51,11 @@ def show(project_identifier, schedule_identifier): # pylint: disable = unused-ar
 	return flask.render_template("schedule/index.html", title = "Schedule " + schedule_identifier, **view_data)
 
 
-def enable(project_identifier, schedule_identifier): # pylint: disable = unused-argument
+def enable(project_identifier: str, schedule_identifier: str) -> Any: # pylint: disable = unused-argument
 	service_client.post("/project/{project_identifier}/schedule/{schedule_identifier}/enable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("schedule_controller.show_collection", project_identifier = project_identifier))
 
 
-def disable(project_identifier, schedule_identifier): # pylint: disable = unused-argument
+def disable(project_identifier: str, schedule_identifier: str) -> Any: # pylint: disable = unused-argument
 	service_client.post("/project/{project_identifier}/schedule/{schedule_identifier}/disable".format(**locals()))
 	return flask.redirect(flask.request.referrer or flask.url_for("schedule_controller.show_collection", project_identifier = project_identifier))

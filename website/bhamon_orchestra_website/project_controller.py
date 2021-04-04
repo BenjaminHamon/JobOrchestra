@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import flask
 
@@ -9,7 +10,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("ProjectController")
 
 
-def show_collection():
+def show_collection() -> Any:
 	item_total = service_client.get("/project_count")
 	pagination = helpers.get_pagination(item_total, {})
 
@@ -23,7 +24,7 @@ def show_collection():
 	return flask.render_template("project/collection.html", title = "Projects", project_collection = project_collection, pagination = pagination)
 
 
-def show(project_identifier): # pylint: disable = unused-argument
+def show(project_identifier: str) -> Any: # pylint: disable = unused-argument
 	view_data = {
 		"project": service_client.get("/project/{project_identifier}".format(**locals())),
 		"run_collection": service_client.get("/project/{project_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
@@ -42,7 +43,7 @@ def show(project_identifier): # pylint: disable = unused-argument
 	return flask.render_template("project/index.html", title = "Project " + view_data["project"]["display_name"], **view_data)
 
 
-def show_status(project_identifier): # pylint: disable = unused-argument
+def show_status(project_identifier: str) -> Any: # pylint: disable = unused-argument
 	branch = flask.request.args.get("branch", default = None)
 	status_limit = max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1)
 

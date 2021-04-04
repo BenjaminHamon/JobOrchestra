@@ -1,5 +1,6 @@
 import logging
 import platform
+from typing import Any, List
 
 import flask
 import requests
@@ -12,7 +13,7 @@ import bhamon_orchestra_website.service_client as service_client
 logger = logging.getLogger("AdminController")
 
 
-def index():
+def index() -> Any:
 	view_data = {
 		"website_information": _get_website_information(),
 		"service_information": None,
@@ -39,7 +40,7 @@ def index():
 	return flask.render_template("admin/index.html", title = "Administration", **view_data)
 
 
-def _get_website_information():
+def _get_website_information() -> dict:
 	return {
 		"python_version": platform.python_version() + "+" + platform.python_revision(),
 		"website_version": bhamon_orchestra_website.__version__,
@@ -47,7 +48,7 @@ def _get_website_information():
 	}
 
 
-def _get_status_for_external_services():
+def _get_status_for_external_services() -> List[dict]:
 	external_services = service_client.get("/admin/service_collection")
 
 	status_collection = []
