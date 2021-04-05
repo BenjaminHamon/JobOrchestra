@@ -1,6 +1,7 @@
 import argparse
 import importlib
 import logging
+from typing import Any
 
 import flask
 
@@ -15,7 +16,16 @@ from bhamon_orchestra_model.schedule_provider import ScheduleProvider
 from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
-import bhamon_orchestra_service.service as service
+import bhamon_orchestra_service.service_setup as service_setup
+from bhamon_orchestra_service.admin_controller import AdminController
+from bhamon_orchestra_service.job_controller import JobController
+from bhamon_orchestra_service.me_controller import MeController
+from bhamon_orchestra_service.project_controller import ProjectController
+from bhamon_orchestra_service.run_controller import RunController
+from bhamon_orchestra_service.schedule_controller import ScheduleController
+from bhamon_orchestra_service.user_controller import UserController
+from bhamon_orchestra_service.service import Service
+from bhamon_orchestra_service.worker_controller import WorkerController
 
 from . import environment
 from . import factory
@@ -41,7 +51,11 @@ def parse_arguments():
 	return argument_parser.parse_args()
 
 
-def create_application(arguments):
+def create_application(arguments): # pylint: disable = too-many-locals
+	application = flask.Flask(__name__)
+
+	external_services = {}
+
 	database_metadata = None
 	if arguments.database.startswith("postgresql://"):
 		database_metadata = importlib.import_module("bhamon_orchestra_model.database.sql_database_model").metadata
@@ -50,39 +64,51 @@ def create_application(arguments):
 	data_storage_instance = FileDataStorage(".")
 	date_time_provider_instance = DateTimeProvider()
 
-	application = flask.Flask(__name__)
-	application.database_client_factory = database_client_factory
-	application.authentication_provider = AuthenticationProvider(date_time_provider_instance)
-	application.authorization_provider = AuthorizationProvider()
-	application.job_provider = JobProvider(date_time_provider_instance)
-	application.project_provider = ProjectProvider(date_time_provider_instance)
-	application.run_provider = RunProvider(data_storage_instance, date_time_provider_instance)
-	application.schedule_provider = ScheduleProvider(date_time_provider_instance)
-	application.user_provider = UserProvider(date_time_provider_instance)
-	application.worker_provider = WorkerProvider(date_time_provider_instance)
+	authentication_provider_instance = AuthenticationProvider(date_time_provider_instance)
+	authorization_provider_instance = AuthorizationProvider()
+	job_provider_instance = JobProvider(date_time_provider_instance)
+	project_provider_instance = ProjectProvider(date_time_provider_instance)
+	run_provider_instance = RunProvider(data_storage_instance, date_time_provider_instance)
+	schedule_provider_instance = ScheduleProvider(date_time_provider_instance)
+	user_provider_instance = UserProvider(date_time_provider_instance)
+	worker_provider_instance = WorkerProvider(date_time_provider_instance)
 
-	application.run_result_transformer = transform_run_results
+	service_instance = Service(application, database_client_factory, authentication_provider_instance, authorization_provider_instance, user_provider_instance)
+	admin_controller_instance = AdminController(external_services)
+	job_controller_instance = JobController(job_provider_instance, run_provider_instance)
+	project_controller_instance = ProjectController(application, project_provider_instance, run_provider_instance)
+	run_controller_instance = RunController(run_provider_instance)
+	schedule_controller_instance = ScheduleController(schedule_provider_instance)
+	user_controller_instance = UserController(authentication_provider_instance, user_provider_instance)
+	worker_controller_instance = WorkerController(job_provider_instance, run_provider_instance, worker_provider_instance)
+	me_controller_instance = MeController(authentication_provider_instance, user_provider_instance, user_controller_instance)
 
-	application.external_services = {}
+	service_setup.configure(application)
+	service_setup.register_handlers(application, service_instance)
 
-	service.configure(application)
-	service.register_handlers(application)
-	service.register_routes(application)
+	service_setup.register_routes(
+		application = application,
+		service = service_instance,
+		admin_controller = admin_controller_instance,
+		job_controller = job_controller_instance,
+		me_controller = me_controller_instance,
+		project_controller = project_controller_instance,
+		run_controller = run_controller_instance,
+		schedule_controller = schedule_controller_instance,
+		user_controller = user_controller_instance,
+		worker_controller = worker_controller_instance,
+	)
 
-	application.add_url_rule("/me/routes", methods = [ "GET" ], view_func = list_routes)
+	application.add_url_rule("/me/routes", methods = [ "GET" ], view_func = lambda: list_routes(authorization_provider_instance))
 
 	return application
 
 
-def transform_run_results(project_identifier, run_identifier, run_results): # pylint: disable = unused-argument
-	return run_results
-
-
-def list_routes():
+def list_routes(authorization_provider: AuthorizationProvider) -> Any:
 	route_collection = []
 	for rule in flask.current_app.url_map.iter_rules():
 		if "GET" in rule.methods and not rule.rule.startswith("/static/"):
-			if flask.current_app.authorization_provider.authorize_request(flask.request.user, "GET", rule.rule):
+			if authorization_provider.authorize_request(flask.request.user, "GET", rule.rule):
 				route_collection.append(rule.rule)
 
 	route_collection.sort()
