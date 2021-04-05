@@ -28,7 +28,7 @@ class WorkerController:
 		}
 
 		view_data = {
-			"worker_collection": self._service_client.get("/worker_collection", query_parameters),
+			"worker_collection": self._service_client.get("/worker_collection", parameters =  query_parameters),
 			"pagination": pagination,
 		}
 
@@ -36,11 +36,15 @@ class WorkerController:
 
 
 	def show(self, worker_identifier: str) -> Any:
+		project_query_parameters = { "limit": 1000, "order_by": [ "identifier ascending" ] }
+		job_query_parameters = { "limit": 1000, "order_by": [ "identifier ascending" ] }
+		run_query_parameters = { "limit": 10, "order_by": [ "update_date descending" ] }
+
 		view_data = {
 			"worker": self._service_client.get("/worker/{worker_identifier}".format(**locals())),
-			"project_collection": self._service_client.get("/project_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
-			"job_collection": self._service_client.get("/worker/{worker_identifier}/job_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
-			"run_collection": self._service_client.get("/worker/{worker_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+			"project_collection": self._service_client.get("/project_collection".format(**locals()), parameters = project_query_parameters),
+			"job_collection": self._service_client.get("/worker/{worker_identifier}/job_collection".format(**locals()), parameters = job_query_parameters),
+			"run_collection": self._service_client.get("/worker/{worker_identifier}/run_collection".format(**locals()), parameters = run_query_parameters),
 		}
 
 		owner = self._service_client.get("/user/{user_identifier}".format(user_identifier = view_data["worker"]["owner"]))
@@ -58,7 +62,7 @@ class WorkerController:
 			"status": helpers.none_if_empty(flask.request.args.get("status", default = None)),
 		}
 
-		item_total = self._service_client.get("/worker/{worker_identifier}/run_count".format(**locals()), query_parameters)
+		item_total = self._service_client.get("/worker/{worker_identifier}/run_count".format(**locals()), parameters = query_parameters)
 		pagination = helpers.get_pagination(item_total, { "worker_identifier": worker_identifier, **query_parameters })
 
 		query_parameters.update({
@@ -67,12 +71,15 @@ class WorkerController:
 			"order_by": [ "update_date descending" ],
 		})
 
+		project_query_parameters = { "limit": 1000, "order_by": [ "identifier ascending" ] }
+		job_query_parameters = { "limit": 1000, "order_by": [ "identifier ascending" ] }
+
 		view_data = {
 			"worker": self._service_client.get("/worker/{worker_identifier}".format(**locals())),
-			"project_collection": self._service_client.get("/project_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
-			"job_collection": self._service_client.get("/worker/{worker_identifier}/job_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
+			"project_collection": self._service_client.get("/project_collection".format(**locals()), parameters = project_query_parameters),
+			"job_collection": self._service_client.get("/worker/{worker_identifier}/job_collection".format(**locals()), parameters = job_query_parameters),
 			"status_collection": helpers.get_run_status_collection(),
-			"run_collection": self._service_client.get("/worker/{worker_identifier}/run_collection".format(**locals()), query_parameters),
+			"run_collection": self._service_client.get("/worker/{worker_identifier}/run_collection".format(**locals()), parameters = query_parameters),
 			"pagination": pagination,
 		}
 
@@ -83,8 +90,8 @@ class WorkerController:
 
 
 	def disconnect(self, worker_identifier: str) -> Any: # pylint: disable = unused-argument
-		parameters = flask.request.form
-		self._service_client.post("/worker/{worker_identifier}/disconnect".format(**locals()), parameters)
+		request_data = flask.request.form
+		self._service_client.post("/worker/{worker_identifier}/disconnect".format(**locals()), data = request_data)
 		return flask.redirect(flask.request.referrer or flask.url_for("worker_controller.show_collection"))
 
 

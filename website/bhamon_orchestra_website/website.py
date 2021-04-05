@@ -43,8 +43,10 @@ class Website:
 				last_refresh = self._date_time_provider.deserialize(last_refresh)
 
 			if last_refresh is None or now > last_refresh + self.session_refresh_interval:
+				request_data = { "token_identifier": flask.session["token"]["token_identifier"] }
+
 				try:
-					self._service_client.post("/me/refresh_session", { "token_identifier": flask.session["token"]["token_identifier"] })
+					self._service_client.post("/me/refresh_session", data = request_data)
 					flask.session["user"] = self._service_client.get("/me")
 					flask.session["last_refresh"] = self._date_time_provider.serialize(now)
 				except requests.HTTPError as exception:

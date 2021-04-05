@@ -29,10 +29,10 @@ class MeController:
 
 		if flask.request.method == "POST":
 			now = self._date_time_provider.now()
-			parameters = { "user": flask.request.form["user"], "password": flask.request.form["password"] }
+			request_data = { "user": flask.request.form["user"], "password": flask.request.form["password"] }
 
 			try:
-				flask.session["token"] = self._service_client.post("/me/login", data = parameters)
+				flask.session["token"] = self._service_client.post("/me/login", data = request_data)
 				flask.session["user"] = self._service_client.get("/me")
 				flask.session["last_refresh"] = self._date_time_provider.serialize(now)
 				flask.session.permanent = True
@@ -57,8 +57,10 @@ class MeController:
 			if "token" not in flask.session:
 				return flask.redirect(flask.url_for("website.home"))
 
+			request_data = { "token_identifier": flask.session["token"]["token_identifier"] }
+
 			try:
-				self._service_client.post("/me/logout", { "token_identifier": flask.session["token"]["token_identifier"] })
+				self._service_client.post("/me/logout", data = request_data)
 				flask.flash("Logout succeeded.", "success")
 				flask.session.clear()
 				return flask.redirect(flask.url_for("website.home"))
@@ -71,9 +73,10 @@ class MeController:
 
 	def refresh_session(self) -> Any:
 		now = self._date_time_provider.now()
+		request_data = { "token_identifier": flask.session["token"]["token_identifier"] }
 
 		try:
-			self._service_client.post("/me/refresh_session", { "token_identifier": flask.session["token"]["token_identifier"] })
+			self._service_client.post("/me/refresh_session", data = request_data)
 			flask.session["user"] = self._service_client.get("/me")
 			flask.session["last_refresh"] = self._date_time_provider.serialize(now)
 		except requests.HTTPError as exception:
@@ -84,8 +87,10 @@ class MeController:
 
 
 	def show_profile(self) -> Any:
+		token_query_parameters = { "order_by": [ "update_date descending" ] }
+
 		user = self._service_client.get("/me")
-		user_tokens = self._service_client.get("/me/token_collection", { "order_by": [ "update_date descending" ] })
+		user_tokens = self._service_client.get("/me/token_collection", parameters = token_query_parameters)
 		user_tokens.sort(key = lambda token: token["expiration_date"] is not None)
 
 		now = self._date_time_provider.serialize(self._date_time_provider.now())
@@ -104,10 +109,10 @@ class MeController:
 				flask.flash("Password change failed: new passwords do not match.", "error")
 				return flask.render_template("me/change_password.html", title = "Change Password")
 
-			parameters = { "old_password": flask.request.form["old-password"], "new_password": flask.request.form["new-password"] }
+			request_data = { "old_password": flask.request.form["old-password"], "new_password": flask.request.form["new-password"] }
 
 			try:
-				self._service_client.post("/me/change_password", data = parameters)
+				self._service_client.post("/me/change_password", data = request_data)
 				flask.flash("Password change succeeded.", "success")
 				return flask.redirect(flask.url_for("me_controller.show_profile"))
 			except requests.HTTPError as exception:
@@ -122,12 +127,12 @@ class MeController:
 			return flask.render_template("me/create_token.html", title = "Create Authentication Token")
 
 		if flask.request.method == "POST":
-			parameters = { "description": flask.request.form["description"] }
+			request_data = { "description": flask.request.form["description"] }
 			if flask.request.form["expiration"]:
-				parameters["expiration"]  = flask.request.form["expiration"]
+				request_data["expiration"]  = flask.request.form["expiration"]
 
 			try:
-				token = self._service_client.post("/me/token_create", data = parameters)
+				token = self._service_client.post("/me/token_create", data = request_data)
 				flask.flash("Token '%s' was created successfully." % token["token_identifier"], "success")
 				flask.flash("Token secret: '%s'." % token["secret"], "info")
 				return flask.redirect(flask.url_for("me_controller.show_profile"))

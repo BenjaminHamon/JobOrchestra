@@ -24,7 +24,7 @@ class RunController:
 			"status": helpers.none_if_empty(flask.request.args.get("status", default = None)),
 		}
 
-		item_total = self._service_client.get("/project/{project_identifier}/run_count".format(**locals()), query_parameters)
+		item_total = self._service_client.get("/project/{project_identifier}/run_count".format(**locals()), parameters = query_parameters)
 		pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier, **query_parameters })
 
 		query_parameters.update({
@@ -33,12 +33,15 @@ class RunController:
 			"order_by": [ "update_date descending" ],
 		})
 
+		job_query_parameters = { "limit": 1000, "order_by": [ "identifier ascending" ] }
+		worker_query_parameters = { "limit": 1000, "order_by": [ "identifier ascending" ] }
+
 		view_data = {
 			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
-			"job_collection": self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
-			"worker_collection": self._service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
+			"job_collection": self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), parameters = job_query_parameters),
+			"worker_collection": self._service_client.get("/worker_collection", parameters = worker_query_parameters),
 			"status_collection": helpers.get_run_status_collection(),
-			"run_collection": self._service_client.get("/project/{project_identifier}/run_collection".format(**locals()), query_parameters),
+			"run_collection": self._service_client.get("/project/{project_identifier}/run_collection".format(**locals()), parameters = query_parameters),
 			"pagination": pagination,
 		}
 
@@ -88,25 +91,25 @@ class RunController:
 
 
 	def show_log_raw(self, project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
-		log_text = self._service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/log".format(**locals())).text
+		log_text = self._service_client.get("/project/{project_identifier}/run/{run_identifier}/log".format(**locals()))
 		content_disposition = "inline; filename=\"%s.log\"" % run_identifier
 		return flask.Response(log_text, headers = { "Content-Disposition": content_disposition }, mimetype = "text/plain")
 
 
 	def cancel(self, project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
-		parameters = flask.request.form
-		self._service_client.post("/project/{project_identifier}/run/{run_identifier}/cancel".format(**locals()), parameters)
+		request_data = flask.request.form
+		self._service_client.post("/project/{project_identifier}/run/{run_identifier}/cancel".format(**locals()), data = request_data)
 		return flask.redirect(flask.request.referrer or flask.url_for("run_controller.show_collection", project_identifier = project_identifier))
 
 
 	def abort(self, project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
-		parameters = flask.request.form
-		self._service_client.post("/project/{project_identifier}/run/{run_identifier}/abort".format(**locals()), parameters)
+		request_data = flask.request.form
+		self._service_client.post("/project/{project_identifier}/run/{run_identifier}/abort".format(**locals()), data = request_data)
 		return flask.redirect(flask.request.referrer or flask.url_for("run_controller.show_collection", project_identifier = project_identifier))
 
 
 	def download_archive(self, project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
-		archive_response = self._service_client.send_request("GET", "/project/{project_identifier}/run/{run_identifier}/download".format(**locals()))
-		return flask.Response(archive_response.content,
-			headers = { "Content-Disposition": archive_response.headers["Content-Disposition"] },
-			mimetype = archive_response.headers["Content-Type"])
+		archive_response = self._service_client.download("/project/{project_identifier}/run/{run_identifier}/download".format(**locals()))
+		headers = { "Content-Disposition": archive_response.headers["Content-Disposition"] }
+		mimetype = archive_response.headers["Content-Type"]
+		return flask.Response(archive_response.content, headers = headers, mimetype = mimetype)

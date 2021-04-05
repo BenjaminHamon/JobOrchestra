@@ -27,14 +27,16 @@ class ProjectController:
 			"order_by": [ "identifier ascending" ],
 		}
 
-		project_collection = self._service_client.get("/project_collection", query_parameters)
+		project_collection = self._service_client.get("/project_collection", parameters = query_parameters)
 		return flask.render_template("project/collection.html", title = "Projects", project_collection = project_collection, pagination = pagination)
 
 
 	def show(self, project_identifier: str) -> Any: # pylint: disable = unused-argument
+		run_query_parameters = { "limit": 10, "order_by": [ "update_date descending" ] }
+
 		view_data = {
 			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
-			"run_collection": self._service_client.get("/project/{project_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+			"run_collection": self._service_client.get("/project/{project_identifier}/run_collection".format(**locals()), parameters = run_query_parameters),
 		}
 
 		if "revision_control" in view_data["project"]["services"]:
@@ -43,20 +45,25 @@ class ProjectController:
 				branch_status = self._service_client.get("/project/{project_identifier}/repository/revision/{branch}/status".format(**locals()))
 				view_data["revision_collection"].append(branch_status)
 
-		job_collection = self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
-		worker_collection = self._service_client.get("/worker_collection", { "order_by": [ "identifier ascending" ] })
+		job_query_parameters = { "order_by": [ "identifier ascending" ] }
+		worker_query_parameters = { "order_by": [ "identifier ascending" ] }
+
+		job_collection = self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), parameters = job_query_parameters)
+		worker_collection = self._service_client.get("/worker_collection", parameters = worker_query_parameters)
 		helpers.add_display_names([ view_data["project"] ], job_collection, view_data["run_collection"], [], worker_collection)
 
 		return flask.render_template("project/index.html", title = "Project " + view_data["project"]["display_name"], **view_data)
 
 
-	def show_status(self, project_identifier: str) -> Any: # pylint: disable = unused-argument
+	def show_status(self, project_identifier: str) -> Any: # pylint: disable = too-many-locals, unused-argument
 		branch = flask.request.args.get("branch", default = None)
 		status_limit = max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1)
 
+		job_query_parameters = { "order_by": [ "identifier ascending" ] }
+
 		project = self._service_client.get("/project/{project_identifier}".format(**locals()))
 		branch_collection = project["services"]["revision_control"]["branches_for_status"]
-		job_collection = self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
+		job_collection = self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), parameters = job_query_parameters)
 
 		context = { "filter_collection": [] }
 		for job in job_collection:
@@ -76,7 +83,7 @@ class ProjectController:
 			"run_limit": 1000,
 		}
 
-		status = self._service_client.get("/project/{project_identifier}/status".format(**locals()), status_parameters)
+		status = self._service_client.get("/project/{project_identifier}/status".format(**locals()), parameters = status_parameters)
 		status = [ revision for index, revision in enumerate(status) if index == 0 or len(revision["runs"]) > 0 ][ : status_limit ]
 
 		for revision in status:

@@ -29,7 +29,7 @@ class JobController:
 
 		view_data = {
 			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
-			"job_collection": self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), query_parameters),
+			"job_collection": self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), parameters = query_parameters),
 			"pagination": pagination,
 		}
 
@@ -39,11 +39,14 @@ class JobController:
 
 
 	def show(self, project_identifier: str, job_identifier: str) -> Any: # pylint: disable = unused-argument
+		run_query_parameters = { "limit": 10, "order_by": [ "update_date descending" ] }
+		worker_query_parameters = { "limit": 1000, "order_by": [ "identifier ascending" ] }
+
 		view_data = {
 			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
 			"job": self._service_client.get("/project/{project_identifier}/job/{job_identifier}".format(**locals())),
-			"run_collection": self._service_client.get("/project/{project_identifier}/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
-			"worker_collection": self._service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
+			"run_collection": self._service_client.get("/project/{project_identifier}/job/{job_identifier}/runs".format(**locals()), parameters = run_query_parameters),
+			"worker_collection": self._service_client.get("/worker_collection", parameters = worker_query_parameters),
 		}
 
 		view_data["job"]["project_display_name"] = view_data["project"]["display_name"]
@@ -53,11 +56,11 @@ class JobController:
 
 
 	def trigger(self, project_identifier: str, job_identifier: str) -> Any: # pylint: disable = unused-argument
-		trigger_data = { "parameters": {}, "source": { "type": "user", "identifier": flask.session["user"]["identifier"] } }
+		request_data = { "parameters": {}, "source": { "type": "user", "identifier": flask.session["user"]["identifier"] } }
 		for key, value in flask.request.form.items():
 			if key.startswith("parameter-"):
-				trigger_data["parameters"][key[len("parameter-"):]] = value
-		self._service_client.post("/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals()), trigger_data)
+				request_data["parameters"][key[len("parameter-"):]] = value
+		self._service_client.post("/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals()), data = request_data)
 		return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection", project_identifier = project_identifier))
 
 

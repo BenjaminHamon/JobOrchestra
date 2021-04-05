@@ -22,7 +22,7 @@ class ScheduleController:
 			"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
 		}
 
-		item_total = self._service_client.get("/project/{project_identifier}/schedule_count".format(**locals()), query_parameters)
+		item_total = self._service_client.get("/project/{project_identifier}/schedule_count".format(**locals()), parameters = query_parameters)
 		pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier, **query_parameters })
 
 		query_parameters.update({
@@ -31,10 +31,12 @@ class ScheduleController:
 			"order_by": [ "identifier ascending" ],
 		})
 
+		job_query_parameters = { "limit": 1000, "order_by": [ "identifier ascending" ] }
+
 		view_data = {
 			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
-			"job_collection": self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
-			"schedule_collection": self._service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), query_parameters),
+			"job_collection": self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), parameters = job_query_parameters),
+			"schedule_collection": self._service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), parameters = query_parameters),
 			"pagination": pagination,
 		}
 
