@@ -4,7 +4,7 @@ from typing import Any
 import flask
 
 import bhamon_orchestra_website.helpers as helpers
-import bhamon_orchestra_website.service_client as service_client
+from bhamon_orchestra_website.service_client import ServiceClient
 
 
 logger = logging.getLogger("ProjectController")
@@ -13,8 +13,12 @@ logger = logging.getLogger("ProjectController")
 class ProjectController:
 
 
+	def __init__(self, service_client: ServiceClient) -> None:
+		self._service_client = service_client
+
+
 	def show_collection(self) -> Any:
-		item_total = service_client.get("/project_count")
+		item_total = self._service_client.get("/project_count")
 		pagination = helpers.get_pagination(item_total, {})
 
 		query_parameters = {
@@ -23,24 +27,24 @@ class ProjectController:
 			"order_by": [ "identifier ascending" ],
 		}
 
-		project_collection = service_client.get("/project_collection", query_parameters)
+		project_collection = self._service_client.get("/project_collection", query_parameters)
 		return flask.render_template("project/collection.html", title = "Projects", project_collection = project_collection, pagination = pagination)
 
 
 	def show(self, project_identifier: str) -> Any: # pylint: disable = unused-argument
 		view_data = {
-			"project": service_client.get("/project/{project_identifier}".format(**locals())),
-			"run_collection": service_client.get("/project/{project_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
+			"run_collection": self._service_client.get("/project/{project_identifier}/run_collection".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
 		}
 
 		if "revision_control" in view_data["project"]["services"]:
 			view_data["revision_collection"] = []
 			for branch in view_data["project"]["services"]["revision_control"]["branches_for_status"]: # pylint: disable = possibly-unused-variable
-				branch_status = service_client.get("/project/{project_identifier}/repository/revision/{branch}/status".format(**locals()))
+				branch_status = self._service_client.get("/project/{project_identifier}/repository/revision/{branch}/status".format(**locals()))
 				view_data["revision_collection"].append(branch_status)
 
-		job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
-		worker_collection = service_client.get("/worker_collection", { "order_by": [ "identifier ascending" ] })
+		job_collection = self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
+		worker_collection = self._service_client.get("/worker_collection", { "order_by": [ "identifier ascending" ] })
 		helpers.add_display_names([ view_data["project"] ], job_collection, view_data["run_collection"], [], worker_collection)
 
 		return flask.render_template("project/index.html", title = "Project " + view_data["project"]["display_name"], **view_data)
@@ -50,9 +54,9 @@ class ProjectController:
 		branch = flask.request.args.get("branch", default = None)
 		status_limit = max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1)
 
-		project = service_client.get("/project/{project_identifier}".format(**locals()))
+		project = self._service_client.get("/project/{project_identifier}".format(**locals()))
 		branch_collection = project["services"]["revision_control"]["branches_for_status"]
-		job_collection = service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
+		job_collection = self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "order_by": [ "identifier ascending" ] })
 
 		context = { "filter_collection": [] }
 		for job in job_collection:
@@ -72,7 +76,7 @@ class ProjectController:
 			"run_limit": 1000,
 		}
 
-		status = service_client.get("/project/{project_identifier}/status".format(**locals()), status_parameters)
+		status = self._service_client.get("/project/{project_identifier}/status".format(**locals()), status_parameters)
 		status = [ revision for index, revision in enumerate(status) if index == 0 or len(revision["runs"]) > 0 ][ : status_limit ]
 
 		for revision in status:

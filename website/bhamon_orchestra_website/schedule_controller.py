@@ -4,7 +4,7 @@ from typing import Any
 import flask
 
 import bhamon_orchestra_website.helpers as helpers
-import bhamon_orchestra_website.service_client as service_client
+from bhamon_orchestra_website.service_client import ServiceClient
 
 
 logger = logging.getLogger("ScheduleController")
@@ -13,12 +13,16 @@ logger = logging.getLogger("ScheduleController")
 class ScheduleController:
 
 
+	def __init__(self, service_client: ServiceClient) -> None:
+		self._service_client = service_client
+
+
 	def show_collection(self, project_identifier: str) -> Any:
 		query_parameters = {
 			"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
 		}
 
-		item_total = service_client.get("/project/{project_identifier}/schedule_count".format(**locals()), query_parameters)
+		item_total = self._service_client.get("/project/{project_identifier}/schedule_count".format(**locals()), query_parameters)
 		pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier, **query_parameters })
 
 		query_parameters.update({
@@ -28,9 +32,9 @@ class ScheduleController:
 		})
 
 		view_data = {
-			"project": service_client.get("/project/{project_identifier}".format(**locals())),
-			"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
-			"schedule_collection": service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), query_parameters),
+			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
+			"job_collection": self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), { "limit": 1000, "order_by": [ "identifier ascending" ] }),
+			"schedule_collection": self._service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), query_parameters),
 			"pagination": pagination,
 		}
 
@@ -41,24 +45,24 @@ class ScheduleController:
 
 	def show(self, project_identifier: str, schedule_identifier: str) -> Any: # pylint: disable = unused-argument
 		view_data = {
-			"project": service_client.get("/project/{project_identifier}".format(**locals())),
-			"schedule": service_client.get("/project/{project_identifier}/schedule/{schedule_identifier}".format(**locals())),
+			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
+			"schedule": self._service_client.get("/project/{project_identifier}/schedule/{schedule_identifier}".format(**locals())),
 		}
 
 		view_data["schedule"]["project_display_name"] = view_data["project"]["display_name"]
 
 		job_route = "/project/{project_identifier}/job/{job_identifier}".format(project_identifier = project_identifier, job_identifier = view_data["schedule"]["job"])
-		job = service_client.get_or_default(job_route, default_value = {})
+		job = self._service_client.get_or_default(job_route, default_value = {})
 		view_data["schedule"]["job_display_name"] = job.get("display_name", view_data["schedule"]["job"])
 
 		return flask.render_template("schedule/index.html", title = "Schedule " + schedule_identifier, **view_data)
 
 
 	def enable(self, project_identifier: str, schedule_identifier: str) -> Any: # pylint: disable = unused-argument
-		service_client.post("/project/{project_identifier}/schedule/{schedule_identifier}/enable".format(**locals()))
+		self._service_client.post("/project/{project_identifier}/schedule/{schedule_identifier}/enable".format(**locals()))
 		return flask.redirect(flask.request.referrer or flask.url_for("schedule_controller.show_collection", project_identifier = project_identifier))
 
 
 	def disable(self, project_identifier: str, schedule_identifier: str) -> Any: # pylint: disable = unused-argument
-		service_client.post("/project/{project_identifier}/schedule/{schedule_identifier}/disable".format(**locals()))
+		self._service_client.post("/project/{project_identifier}/schedule/{schedule_identifier}/disable".format(**locals()))
 		return flask.redirect(flask.request.referrer or flask.url_for("schedule_controller.show_collection", project_identifier = project_identifier))

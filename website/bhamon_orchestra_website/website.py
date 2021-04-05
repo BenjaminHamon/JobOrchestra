@@ -9,7 +9,7 @@ import werkzeug
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 import bhamon_orchestra_website.helpers as helpers
-import bhamon_orchestra_website.service_client as service_client
+from bhamon_orchestra_website.service_client import ServiceClient
 
 
 main_logger = logging.getLogger("Website")
@@ -19,9 +19,12 @@ request_logger = logging.getLogger("Request")
 class Website:
 
 
-	def __init__(self, date_time_provider: DateTimeProvider, authorization_provider: AuthorizationProvider) -> None:
+	def __init__(self, date_time_provider: DateTimeProvider,
+			authorization_provider: AuthorizationProvider, service_client: ServiceClient) -> None:
+
 		self._date_time_provider = date_time_provider
 		self._authorization_provider = authorization_provider
+		self._service_client = service_client
 
 		self.session_refresh_interval = datetime.timedelta(days = 1)
 
@@ -41,8 +44,8 @@ class Website:
 
 			if last_refresh is None or now > last_refresh + self.session_refresh_interval:
 				try:
-					service_client.post("/me/refresh_session", { "token_identifier": flask.session["token"]["token_identifier"] })
-					flask.session["user"] = service_client.get("/me")
+					self._service_client.post("/me/refresh_session", { "token_identifier": flask.session["token"]["token_identifier"] })
+					flask.session["user"] = self._service_client.get("/me")
 					flask.session["last_refresh"] = self._date_time_provider.serialize(now)
 				except requests.HTTPError as exception:
 					if exception.response.status_code == 403:
@@ -77,7 +80,7 @@ class Website:
 
 
 	def proxy_to_service(self, route: str) -> flask.Response:
-		service_response = service_client.proxy("/" + route)
+		service_response = self._service_client.proxy("/" + route)
 
 		response = flask.Response(service_response.content, service_response.status_code)
 		for header_key in service_response.headers:

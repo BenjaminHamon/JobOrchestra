@@ -4,7 +4,7 @@ from typing import Any
 import flask
 
 import bhamon_orchestra_website.helpers as helpers
-import bhamon_orchestra_website.service_client as service_client
+from bhamon_orchestra_website.service_client import ServiceClient
 
 
 logger = logging.getLogger("JobController")
@@ -13,8 +13,12 @@ logger = logging.getLogger("JobController")
 class JobController:
 
 
+	def __init__(self, service_client: ServiceClient) -> None:
+		self._service_client = service_client
+
+
 	def show_collection(self, project_identifier: str) -> Any:
-		item_total = service_client.get("/project/{project_identifier}/job_count".format(**locals()))
+		item_total = self._service_client.get("/project/{project_identifier}/job_count".format(**locals()))
 		pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier })
 
 		query_parameters = {
@@ -24,8 +28,8 @@ class JobController:
 		}
 
 		view_data = {
-			"project": service_client.get("/project/{project_identifier}".format(**locals())),
-			"job_collection": service_client.get("/project/{project_identifier}/job_collection".format(**locals()), query_parameters),
+			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
+			"job_collection": self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), query_parameters),
 			"pagination": pagination,
 		}
 
@@ -36,10 +40,10 @@ class JobController:
 
 	def show(self, project_identifier: str, job_identifier: str) -> Any: # pylint: disable = unused-argument
 		view_data = {
-			"project": service_client.get("/project/{project_identifier}".format(**locals())),
-			"job": service_client.get("/project/{project_identifier}/job/{job_identifier}".format(**locals())),
-			"run_collection": service_client.get("/project/{project_identifier}/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
-			"worker_collection": service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
+			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
+			"job": self._service_client.get("/project/{project_identifier}/job/{job_identifier}".format(**locals())),
+			"run_collection": self._service_client.get("/project/{project_identifier}/job/{job_identifier}/runs".format(**locals()), { "limit": 10, "order_by": [ "update_date descending" ] }),
+			"worker_collection": self._service_client.get("/worker_collection", { "limit": 1000, "order_by": [ "identifier ascending" ] }),
 		}
 
 		view_data["job"]["project_display_name"] = view_data["project"]["display_name"]
@@ -53,15 +57,15 @@ class JobController:
 		for key, value in flask.request.form.items():
 			if key.startswith("parameter-"):
 				trigger_data["parameters"][key[len("parameter-"):]] = value
-		service_client.post("/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals()), trigger_data)
+		self._service_client.post("/project/{project_identifier}/job/{job_identifier}/trigger".format(**locals()), trigger_data)
 		return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection", project_identifier = project_identifier))
 
 
 	def enable(self, project_identifier: str, job_identifier: str) -> Any: # pylint: disable = unused-argument
-		service_client.post("/project/{project_identifier}/job/{job_identifier}/enable".format(**locals()))
+		self._service_client.post("/project/{project_identifier}/job/{job_identifier}/enable".format(**locals()))
 		return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection", project_identifier = project_identifier))
 
 
 	def disable(self, project_identifier: str, job_identifier: str) -> Any: # pylint: disable = unused-argument
-		service_client.post("/project/{project_identifier}/job/{job_identifier}/disable".format(**locals()))
+		self._service_client.post("/project/{project_identifier}/job/{job_identifier}/disable".format(**locals()))
 		return flask.redirect(flask.request.referrer or flask.url_for("job_controller.show_collection", project_identifier = project_identifier))

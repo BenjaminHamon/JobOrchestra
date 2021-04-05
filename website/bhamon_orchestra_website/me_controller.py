@@ -7,7 +7,7 @@ import requests
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 
 import bhamon_orchestra_website.helpers as helpers
-import bhamon_orchestra_website.service_client as service_client
+from bhamon_orchestra_website.service_client import ServiceClient
 
 
 logger = logging.getLogger("MeController")
@@ -16,8 +16,9 @@ logger = logging.getLogger("MeController")
 class MeController:
 
 
-	def __init__(self, date_time_provider: DateTimeProvider) -> None:
+	def __init__(self, date_time_provider: DateTimeProvider, service_client: ServiceClient) -> None:
 		self._date_time_provider = date_time_provider
+		self._service_client = service_client
 
 
 	def login(self) -> Any:
@@ -31,8 +32,8 @@ class MeController:
 			parameters = { "user": flask.request.form["user"], "password": flask.request.form["password"] }
 
 			try:
-				flask.session["token"] = service_client.post("/me/login", data = parameters)
-				flask.session["user"] = service_client.get("/me")
+				flask.session["token"] = self._service_client.post("/me/login", data = parameters)
+				flask.session["user"] = self._service_client.get("/me")
 				flask.session["last_refresh"] = self._date_time_provider.serialize(now)
 				flask.session.permanent = True
 				flask.flash("Login succeeded.", "success")
@@ -57,7 +58,7 @@ class MeController:
 				return flask.redirect(flask.url_for("website.home"))
 
 			try:
-				service_client.post("/me/logout", { "token_identifier": flask.session["token"]["token_identifier"] })
+				self._service_client.post("/me/logout", { "token_identifier": flask.session["token"]["token_identifier"] })
 				flask.flash("Logout succeeded.", "success")
 				flask.session.clear()
 				return flask.redirect(flask.url_for("website.home"))
@@ -72,8 +73,8 @@ class MeController:
 		now = self._date_time_provider.now()
 
 		try:
-			service_client.post("/me/refresh_session", { "token_identifier": flask.session["token"]["token_identifier"] })
-			flask.session["user"] = service_client.get("/me")
+			self._service_client.post("/me/refresh_session", { "token_identifier": flask.session["token"]["token_identifier"] })
+			flask.session["user"] = self._service_client.get("/me")
 			flask.session["last_refresh"] = self._date_time_provider.serialize(now)
 		except requests.HTTPError as exception:
 			if exception.response.status_code == 403:
@@ -83,8 +84,8 @@ class MeController:
 
 
 	def show_profile(self) -> Any:
-		user = service_client.get("/me")
-		user_tokens = service_client.get("/me/token_collection", { "order_by": [ "update_date descending" ] })
+		user = self._service_client.get("/me")
+		user_tokens = self._service_client.get("/me/token_collection", { "order_by": [ "update_date descending" ] })
 		user_tokens.sort(key = lambda token: token["expiration_date"] is not None)
 
 		now = self._date_time_provider.serialize(self._date_time_provider.now())
@@ -106,7 +107,7 @@ class MeController:
 			parameters = { "old_password": flask.request.form["old-password"], "new_password": flask.request.form["new-password"] }
 
 			try:
-				service_client.post("/me/change_password", data = parameters)
+				self._service_client.post("/me/change_password", data = parameters)
 				flask.flash("Password change succeeded.", "success")
 				return flask.redirect(flask.url_for("me_controller.show_profile"))
 			except requests.HTTPError as exception:
@@ -126,7 +127,7 @@ class MeController:
 				parameters["expiration"]  = flask.request.form["expiration"]
 
 			try:
-				token = service_client.post("/me/token_create", data = parameters)
+				token = self._service_client.post("/me/token_create", data = parameters)
 				flask.flash("Token '%s' was created successfully." % token["token_identifier"], "success")
 				flask.flash("Token secret: '%s'." % token["secret"], "info")
 				return flask.redirect(flask.url_for("me_controller.show_profile"))
@@ -139,7 +140,7 @@ class MeController:
 
 	def delete_token(self, token_identifier: str) -> Any:
 		try:
-			service_client.post("/me/token/{token_identifier}/delete".format(**locals()))
+			self._service_client.post("/me/token/{token_identifier}/delete".format(**locals()))
 			flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")
 		except requests.HTTPError as exception:
 			flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, helpers.get_error_message(exception.response.status_code)), "error")

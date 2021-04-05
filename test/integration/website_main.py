@@ -14,6 +14,7 @@ from bhamon_orchestra_website.me_controller import MeController
 from bhamon_orchestra_website.project_controller import ProjectController
 from bhamon_orchestra_website.run_controller import RunController
 from bhamon_orchestra_website.schedule_controller import ScheduleController
+from bhamon_orchestra_website.service_client import ServiceClient
 from bhamon_orchestra_website.user_controller import UserController
 from bhamon_orchestra_website.website import Website
 from bhamon_orchestra_website.worker_controller import WorkerController
@@ -42,21 +43,21 @@ def parse_arguments():
 
 def create_application(environment_instance):
 	application = flask.Flask(__name__, static_folder = None)
-	application.service_url = environment_instance["orchestra_service_url"]
 	application.secret_key = "secret"
 
 	date_time_provider_instance = DateTimeProvider()
 	authorization_provider_instance = AuthorizationProvider()
+	service_client_instance = ServiceClient(environment_instance["orchestra_service_url"])
 
-	website_instance = Website(date_time_provider_instance, authorization_provider_instance)
-	admin_controller_instance = AdminController(application)
-	job_controller_instance = JobController()
-	me_controller_instance = MeController(date_time_provider_instance)
-	project_controller_instance = ProjectController()
-	run_controller_instance = RunController()
-	schedule_controller_instance = ScheduleController()
-	user_controller_instance = UserController(date_time_provider_instance, authorization_provider_instance)
-	worker_controller_instance = WorkerController()
+	website_instance = Website(date_time_provider_instance, authorization_provider_instance, service_client_instance)
+	admin_controller_instance = AdminController(application, service_client_instance)
+	job_controller_instance = JobController(service_client_instance)
+	me_controller_instance = MeController(date_time_provider_instance, service_client_instance)
+	project_controller_instance = ProjectController(service_client_instance)
+	run_controller_instance = RunController(service_client_instance)
+	schedule_controller_instance = ScheduleController(service_client_instance)
+	user_controller_instance = UserController(date_time_provider_instance, authorization_provider_instance, service_client_instance)
+	worker_controller_instance = WorkerController(service_client_instance)
 
 	website_setup.configure(application, website_instance)
 	website_setup.register_handlers(application, website_instance)
