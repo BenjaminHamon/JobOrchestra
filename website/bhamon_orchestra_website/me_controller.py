@@ -145,7 +145,7 @@ class MeController:
 
 	def delete_token(self, token_identifier: str) -> Any:
 		try:
-			self._service_client.post("/me/token/{token_identifier}/delete".format(**locals()))
+			self._service_client.post("/me/token/" + token_identifier + "/delete")
 			flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")
 		except requests.HTTPError as exception:
 			flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, helpers.get_error_message(exception.response.status_code)), "error")

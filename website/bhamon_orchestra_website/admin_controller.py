@@ -60,5 +60,5 @@ class AdminController: # pylint: disable = too-few-public-methods
 
 		status_collection = []
 		for service in external_services:
-			status_collection.append(self._service_client.get("/admin/service/{service}".format(service = service)))
+			status_collection.append(self._service_client.get("/admin/service/" + service))
 		return status_collection

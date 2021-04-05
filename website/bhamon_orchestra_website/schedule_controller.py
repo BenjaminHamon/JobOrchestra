@@ -22,7 +22,7 @@ class ScheduleController:
 			"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
 		}
 
-		item_total = self._service_client.get("/project/{project_identifier}/schedule_count".format(**locals()), parameters = query_parameters)
+		item_total = self._service_client.get("/project/" + project_identifier + "/schedule_count", parameters = query_parameters)
 		pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier, **query_parameters })
 
 		query_parameters.update({
@@ -34,9 +34,9 @@ class ScheduleController:
 		job_query_parameters = { "limit": 1000, "order_by": [ "identifier ascending" ] }
 
 		view_data = {
-			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
-			"job_collection": self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), parameters = job_query_parameters),
-			"schedule_collection": self._service_client.get("/project/{project_identifier}/schedule_collection".format(**locals()), parameters = query_parameters),
+			"project": self._service_client.get("/project/" + project_identifier),
+			"job_collection": self._service_client.get("/project/" + project_identifier + "/job_collection", parameters = job_query_parameters),
+			"schedule_collection": self._service_client.get("/project/" + project_identifier + "/schedule_collection", parameters = query_parameters),
 			"pagination": pagination,
 		}
 
@@ -45,26 +45,26 @@ class ScheduleController:
 		return flask.render_template("schedule/collection.html", title = "Schedules", **view_data)
 
 
-	def show(self, project_identifier: str, schedule_identifier: str) -> Any: # pylint: disable = unused-argument
+	def show(self, project_identifier: str, schedule_identifier: str) -> Any:
 		view_data = {
-			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
-			"schedule": self._service_client.get("/project/{project_identifier}/schedule/{schedule_identifier}".format(**locals())),
+			"project": self._service_client.get("/project/" + project_identifier),
+			"schedule": self._service_client.get("/project/" + project_identifier + "/schedule/" + schedule_identifier),
 		}
 
 		view_data["schedule"]["project_display_name"] = view_data["project"]["display_name"]
 
-		job_route = "/project/{project_identifier}/job/{job_identifier}".format(project_identifier = project_identifier, job_identifier = view_data["schedule"]["job"])
+		job_route = "/project/" + project_identifier + "/job/" + view_data["schedule"]["job"]
 		job = self._service_client.get_or_default(job_route, default_value = {})
 		view_data["schedule"]["job_display_name"] = job.get("display_name", view_data["schedule"]["job"])
 
 		return flask.render_template("schedule/index.html", title = "Schedule " + schedule_identifier, **view_data)
 
 
-	def enable(self, project_identifier: str, schedule_identifier: str) -> Any: # pylint: disable = unused-argument
-		self._service_client.post("/project/{project_identifier}/schedule/{schedule_identifier}/enable".format(**locals()))
+	def enable(self, project_identifier: str, schedule_identifier: str) -> Any:
+		self._service_client.post("/project/" + project_identifier + "/schedule/" + schedule_identifier + "/enable")
 		return flask.redirect(flask.request.referrer or flask.url_for("schedule_controller.show_collection", project_identifier = project_identifier))
 
 
-	def disable(self, project_identifier: str, schedule_identifier: str) -> Any: # pylint: disable = unused-argument
-		self._service_client.post("/project/{project_identifier}/schedule/{schedule_identifier}/disable".format(**locals()))
+	def disable(self, project_identifier: str, schedule_identifier: str) -> Any:
+		self._service_client.post("/project/" + project_identifier + "/schedule/" + schedule_identifier + "/disable")
 		return flask.redirect(flask.request.referrer or flask.url_for("schedule_controller.show_collection", project_identifier = project_identifier))

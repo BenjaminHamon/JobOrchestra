@@ -24,7 +24,7 @@ class RunController:
 			"status": helpers.none_if_empty(flask.request.args.get("status", default = None)),
 		}
 
-		item_total = self._service_client.get("/project/{project_identifier}/run_count".format(**locals()), parameters = query_parameters)
+		item_total = self._service_client.get("/project/" + project_identifier + "/run_count", parameters = query_parameters)
 		pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier, **query_parameters })
 
 		query_parameters.update({
@@ -37,11 +37,11 @@ class RunController:
 		worker_query_parameters = { "limit": 1000, "order_by": [ "identifier ascending" ] }
 
 		view_data = {
-			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
-			"job_collection": self._service_client.get("/project/{project_identifier}/job_collection".format(**locals()), parameters = job_query_parameters),
+			"project": self._service_client.get("/project/" + project_identifier),
+			"job_collection": self._service_client.get("/project/" + project_identifier + "/job_collection", parameters = job_query_parameters),
 			"worker_collection": self._service_client.get("/worker_collection", parameters = worker_query_parameters),
 			"status_collection": helpers.get_run_status_collection(),
-			"run_collection": self._service_client.get("/project/{project_identifier}/run_collection".format(**locals()), parameters = query_parameters),
+			"run_collection": self._service_client.get("/project/" + project_identifier + "/run_collection", parameters = query_parameters),
 			"pagination": pagination,
 		}
 
@@ -50,29 +50,29 @@ class RunController:
 		return flask.render_template("run/collection.html", title = "Runs", **view_data)
 
 
-	def show(self, project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
-		project = self._service_client.get("/project/{project_identifier}".format(**locals()))
-		run = self._service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals()))
-		run_results = self._service_client.get("/project/{project_identifier}/run/{run_identifier}/results".format(**locals()))
+	def show(self, project_identifier: str, run_identifier: str) -> Any:
+		project = self._service_client.get("/project/" + project_identifier)
+		run = self._service_client.get("/project/" + project_identifier + "/run/" + run_identifier)
+		run_results = self._service_client.get("/project/" + project_identifier + "/run/" + run_identifier + "/results")
 
 		run["project_display_name"] = project["display_name"]
 
-		job_route = "/project/{project}/job/{job}".format(project = project_identifier, job = run["job"])
+		job_route = "/project/" + project_identifier + "/job/" + run["job"]
 		job = self._service_client.get_or_default(job_route, default_value = {})
 		run["job_display_name"] = job.get("display_name", run["job"])
 
 		if run["source"] is not None:
 			if run["source"]["type"] == "schedule":
-				schedule_route = "/project/{project}/schedule/{schedule}".format(project = project_identifier, schedule = run["source"]["identifier"])
+				schedule_route = "/project/" + project_identifier + "/schedule/" + run["source"]["identifier"]
 				schedule = self._service_client.get_or_default(schedule_route, default_value = {})
 				run["source"]["display_name"] = schedule.get("display_name", run["source"]["identifier"])
 			if run["source"]["type"] == "user":
-				user_route = "/user/{user}".format(user = run["source"]["identifier"])
+				user_route = "/user/" + run["source"]["identifier"]
 				user = self._service_client.get_or_default(user_route, default_value = {})
 				run["source"]["display_name"] = user.get("display_name", run["source"]["identifier"])
 
 		if run["worker"] is not None:
-			worker_route = "/worker/{worker}".format(worker = run["worker"])
+			worker_route = "/worker/" + run["worker"]
 			worker = self._service_client.get_or_default(worker_route, default_value = {})
 			run["worker_display_name"] = worker.get("display_name", run["worker"])
 
@@ -81,35 +81,35 @@ class RunController:
 		return flask.render_template("run/index.html", title = "Run " + run_identifier[:18], **view_data)
 
 
-	def show_log(self, project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
+	def show_log(self, project_identifier: str, run_identifier: str) -> Any:
 		view_data = {
-			"project": self._service_client.get("/project/{project_identifier}".format(**locals())),
-			"run": self._service_client.get("/project/{project_identifier}/run/{run_identifier}".format(**locals())),
+			"project": self._service_client.get("/project/" + project_identifier),
+			"run": self._service_client.get("/project/" + project_identifier + "/run/" + run_identifier),
 		}
 
 		return flask.render_template("run/log.html", title = "Run " + run_identifier[:18], **view_data)
 
 
-	def show_log_raw(self, project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
-		log_text = self._service_client.get("/project/{project_identifier}/run/{run_identifier}/log".format(**locals()))
+	def show_log_raw(self, project_identifier: str, run_identifier: str) -> Any:
+		log_text = self._service_client.get("/project/" + project_identifier + "/run/" + run_identifier + "/log")
 		content_disposition = "inline; filename=\"%s.log\"" % run_identifier
 		return flask.Response(log_text, headers = { "Content-Disposition": content_disposition }, mimetype = "text/plain")
 
 
-	def cancel(self, project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
+	def cancel(self, project_identifier: str, run_identifier: str) -> Any:
 		request_data = flask.request.form
-		self._service_client.post("/project/{project_identifier}/run/{run_identifier}/cancel".format(**locals()), data = request_data)
+		self._service_client.post("/project/" + project_identifier + "/run/" + run_identifier + "/cancel", data = request_data)
 		return flask.redirect(flask.request.referrer or flask.url_for("run_controller.show_collection", project_identifier = project_identifier))
 
 
-	def abort(self, project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
+	def abort(self, project_identifier: str, run_identifier: str) -> Any:
 		request_data = flask.request.form
-		self._service_client.post("/project/{project_identifier}/run/{run_identifier}/abort".format(**locals()), data = request_data)
+		self._service_client.post("/project/" + project_identifier + "/run/" + run_identifier + "/abort", data = request_data)
 		return flask.redirect(flask.request.referrer or flask.url_for("run_controller.show_collection", project_identifier = project_identifier))
 
 
-	def download_archive(self, project_identifier: str, run_identifier: str) -> Any: # pylint: disable = unused-argument
-		archive_response = self._service_client.download("/project/{project_identifier}/run/{run_identifier}/download".format(**locals()))
+	def download_archive(self, project_identifier: str, run_identifier: str) -> Any:
+		archive_response = self._service_client.download("/project/" + project_identifier + "/run/" + run_identifier + "/download")
 		headers = { "Content-Disposition": archive_response.headers["Content-Disposition"] }
 		mimetype = archive_response.headers["Content-Type"]
 		return flask.Response(archive_response.content, headers = headers, mimetype = mimetype)

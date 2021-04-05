@@ -43,8 +43,8 @@ class UserController:
 		return flask.render_template("user/collection.html", title = "Users", **view_data)
 
 
-	def show(self, user_identifier: str) -> Any: # pylint: disable = unused-argument
-		user = self._service_client.get("/user/{user_identifier}".format(**locals()))
+	def show(self, user_identifier: str) -> Any:
+		user = self._service_client.get("/user/" + user_identifier)
 
 		view_data = {
 			"user": user,
@@ -52,7 +52,7 @@ class UserController:
 
 		if self._authorization_provider.authorize_view(flask.request.user, "user-security"):
 			token_query_parameters = { "order_by": [ "update_date descending" ] }
-			user_tokens = self._service_client.get("/user/{user_identifier}/token_collection".format(**locals()), parameters = token_query_parameters)
+			user_tokens = self._service_client.get("/user/" + user_identifier + "/token_collection", parameters = token_query_parameters)
 			user_tokens.sort(key = lambda token: token["expiration_date"] is not None)
 
 			now = self._date_time_provider.serialize(self._date_time_provider.now())
@@ -73,7 +73,7 @@ class UserController:
 			request_data = { "display_name": flask.request.form["display_name"] }
 
 			try:
-				self._service_client.post("/user/{user_identifier}/create".format(**locals()), data = request_data)
+				self._service_client.post("/user/" + user_identifier + "/create", data = request_data)
 				flask.flash("User '%s' was created successfully." % user_identifier, "success")
 				return flask.redirect(flask.url_for("user_controller.show_collection"))
 			except requests.HTTPError as exception:
@@ -83,11 +83,11 @@ class UserController:
 		return flask.abort(405)
 
 
-	def edit(self, user_identifier: str, form_data: Optional[dict] = None) -> Any: # pylint: disable = unused-argument
+	def edit(self, user_identifier: str, form_data: Optional[dict] = None) -> Any:
 		if form_data is None:
 			form_data = {}
 
-		user = self._service_client.get("/user/{user_identifier}".format(**locals()))
+		user = self._service_client.get("/user/" + user_identifier)
 
 		flask.request.form = user
 		flask.request.form.update(form_data)
@@ -99,7 +99,7 @@ class UserController:
 		request_data = { "display_name": flask.request.form["display_name"] }
 
 		try:
-			self._service_client.post("/user/{user_identifier}/update_identity".format(**locals()), data = request_data)
+			self._service_client.post("/user/" + user_identifier + "/update_identity", data = request_data)
 			flask.flash("Identity for user '%s' was updated successfully." % user_identifier, "success")
 		except requests.HTTPError as exception:
 			flask.flash("Identity for user '%s' could not be updated: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
@@ -110,38 +110,38 @@ class UserController:
 		request_data = { "roles": [ role.strip() for role in flask.request.form["roles"].splitlines() ] }
 
 		try:
-			self._service_client.post("/user/{user_identifier}/update_roles".format(**locals()), data = request_data)
+			self._service_client.post("/user/" + user_identifier + "/update_roles", data = request_data)
 			flask.flash("Roles for user '%s' were updated successfully." % user_identifier, "success")
 		except requests.HTTPError as exception:
 			flask.flash( "Roles for user '%s' could not be updated: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
 		return self.edit(user_identifier, request_data)
 
 
-	def enable(self, user_identifier: str) -> Any: # pylint: disable = unused-argument
-		self._service_client.post("/user/{user_identifier}/enable".format(**locals()))
+	def enable(self, user_identifier: str) -> Any:
+		self._service_client.post("/user/" + user_identifier + "/enable")
 		return flask.redirect(flask.request.referrer or flask.url_for("user_controller.show_collection"))
 
 
-	def disable(self, user_identifier: str) -> Any: # pylint: disable = unused-argument
-		self._service_client.post("/user/{user_identifier}/disable".format(**locals()))
+	def disable(self, user_identifier: str) -> Any:
+		self._service_client.post("/user/" + user_identifier + "/disable")
 		return flask.redirect(flask.request.referrer or flask.url_for("user_controller.show_collection"))
 
 
 	def reset_password(self, user_identifier: str) -> Any:
 		if flask.request.method == "GET":
-			user = self._service_client.get("/user/{user_identifier}".format(**locals()))
+			user = self._service_client.get("/user/" + user_identifier)
 			return flask.render_template("user/reset_password.html", title = "Reset User Password", user = user)
 
 		if flask.request.method == "POST":
 			request_data = { "password": flask.request.form["password"] }
 
 			try:
-				self._service_client.post("/user/{user_identifier}/reset_password".format(**locals()), data = request_data)
+				self._service_client.post("/user/" + user_identifier + "/reset_password", data = request_data)
 				flask.flash("Password for user '%s' was set successfully." % user_identifier, "success")
 				return flask.redirect(flask.url_for("user_controller.show", user_identifier = user_identifier))
 			except requests.HTTPError as exception:
 				flask.flash("Password for user '%s' could not be set: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
-				user = self._service_client.get("/user/{user_identifier}".format(**locals()))
+				user = self._service_client.get("/user/" + user_identifier)
 				return flask.render_template("user/reset_password.html", title = "Reset User Password", user = user)
 
 		return flask.abort(405)
@@ -149,7 +149,7 @@ class UserController:
 
 	def create_token(self, user_identifier: str) -> Any:
 		if flask.request.method == "GET":
-			user = self._service_client.get("/user/{user_identifier}".format(**locals()))
+			user = self._service_client.get("/user/" + user_identifier)
 			return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user = user)
 
 		if flask.request.method == "POST":
@@ -158,13 +158,13 @@ class UserController:
 				request_data["expiration"]  = flask.request.form["expiration"]
 
 			try:
-				token = self._service_client.post("/user/{user_identifier}/token_create".format(**locals()), data = request_data)
+				token = self._service_client.post("/user/" + user_identifier + "/token_create", data = request_data)
 				flask.flash("Token '%s' was created successfully." % token["token_identifier"], "success")
 				flask.flash("Token secret: '%s'." % token["secret"], "info")
 				return flask.redirect(flask.url_for("user_controller.show", user_identifier = user_identifier))
 			except requests.HTTPError as exception:
 				flask.flash("Token could not be created: %s." % helpers.get_error_message(exception.response.status_code), "error")
-				user = self._service_client.get("/user/{user_identifier}".format(**locals()))
+				user = self._service_client.get("/user/" + user_identifier)
 				return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user = user)
 
 		return flask.abort(405)
@@ -172,7 +172,7 @@ class UserController:
 
 	def delete_token(self, user_identifier: str, token_identifier: str) -> Any:
 		try:
-			self._service_client.post("/user/{user_identifier}/token/{token_identifier}/delete".format(**locals()))
+			self._service_client.post("/user/" + user_identifier + "/token/" + token_identifier + "/delete")
 			flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")
 		except requests.HTTPError as exception:
 			flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, helpers.get_error_message(exception.response.status_code)), "error")
