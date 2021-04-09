@@ -1,15 +1,16 @@
 import logging
-
 from typing import List, Tuple
 
 from sqlalchemy.engine import Connection
 from sqlalchemy.schema import MetaData
 
+from bhamon_orchestra_model.database.database_administration import DatabaseAdministration
+
 
 logger = logging.getLogger("SqlDatabaseAdministration")
 
 
-class SqlDatabaseAdministration:
+class SqlDatabaseAdministration(DatabaseAdministration):
 	""" Administration client for a SQL database. """
 
 

@@ -4,11 +4,13 @@ from typing import List, Tuple
 from bson.codec_options import CodecOptions
 import pymongo
 
+from bhamon_orchestra_model.database.database_administration import DatabaseAdministration
+
 
 logger = logging.getLogger("MongoDatabaseAdministration")
 
 
-class MongoDatabaseAdministration:
+class MongoDatabaseAdministration(DatabaseAdministration):
 	""" Administration client for a MongoDB database. """
 
 

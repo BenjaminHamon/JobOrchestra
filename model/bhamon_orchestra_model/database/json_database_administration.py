@@ -2,13 +2,14 @@ import logging
 import os
 from typing import List, Tuple
 
+from bhamon_orchestra_model.database.database_administration import DatabaseAdministration
 from bhamon_orchestra_model.serialization.serializer import Serializer
 
 
 logger = logging.getLogger("JsonDatabaseAdministration")
 
 
-class JsonDatabaseAdministration:
+class JsonDatabaseAdministration(DatabaseAdministration):
 	""" Administration client for a database storing data as json files, intended for development only. """
 
 
