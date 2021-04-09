@@ -1,7 +1,9 @@
 import json
 import logging
 import os
+import platform
 import sys
+import urllib.parse
 
 
 def create_default_environment():
@@ -111,11 +113,21 @@ def get_test_context_database_uri(temporary_directory, database_type):
 	database_name = "orchestra_test_%s" % run_identifier
 
 	if database_type == "json":
-		return "json://" + os.path.join(temporary_directory, "master")
+		data_directory = os.path.abspath(os.path.join(temporary_directory, "master"))
+
+		if platform.system() == "Windows":
+			data_directory_as_uri_path = "/" + data_directory[:2] + urllib.parse.quote(data_directory[2:].replace("\\", "/"))
+		else:
+			data_directory_as_uri_path = urllib.parse.quote(data_directory)
+
+		return "json://" + data_directory_as_uri_path
+
 	if database_type == "mongo":
 		return "mongodb://127.0.0.1:27017/" + database_name
+
 	if database_type == "postgresql":
 		return "postgresql:///" + database_name
+
 	raise ValueError("Unsupported database type '%s'" % database_type)
 
 
