@@ -10,6 +10,7 @@ from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.network.messenger import Messenger
 from bhamon_orchestra_model.network.websocket import WebSocketConnection
 from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 
@@ -159,7 +160,8 @@ class Supervisor:
 	def _instantiate_worker(self, worker_record: dict, connection: WebSocketServerProtocol) -> Worker:
 		""" Instantiate a new worker object to watch the remote worker process """
 
-		messenger_instance = Messenger(connection.remote_address[0], WebSocketConnection(connection))
+		serializer_instance = JsonSerializer()
+		messenger_instance = Messenger(serializer_instance, connection.remote_address[0], WebSocketConnection(connection))
 		worker_instance = Worker(worker_record["identifier"], messenger_instance, self._database_client_factory, self._run_provider, self._worker_provider)
 		messenger_instance.update_handler = worker_instance.receive_update
 

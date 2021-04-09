@@ -12,7 +12,7 @@ def list_implementations():
 
 def instantiate_implementation(implementation: str) -> Serializer:
 	if implementation == "json":
-		return JsonSerializer()
+		return JsonSerializer(indent = 4)
 
 	raise ValueError("Unsupported implementation '%s'" % implementation)
 

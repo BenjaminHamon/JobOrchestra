@@ -4,6 +4,7 @@ from typing import Any
 import flask
 
 from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_model.serialization.serializer import Serializer
 
 
 logger = logging.getLogger("RunController")
@@ -12,7 +13,8 @@ logger = logging.getLogger("RunController")
 class RunController:
 
 
-	def __init__(self, run_provider: RunProvider) -> None:
+	def __init__(self, serializer: Serializer, run_provider: RunProvider) -> None:
+		self._serializer = serializer
 		self._run_provider = run_provider
 
 
@@ -84,6 +86,6 @@ class RunController:
 
 	def download_archive(self, project_identifier: str, run_identifier: str) -> Any:
 		database_client = flask.request.database_client()
-		archive = self._run_provider.get_archive(database_client, project_identifier, run_identifier)
+		archive = self._run_provider.get_archive(database_client, self._serializer, project_identifier, run_identifier)
 		headers = { "Content-Disposition": "attachment;filename=" + '"' + archive["file_name"] + '"' }
 		return flask.Response(archive["data"], headers = headers, mimetype = "application/" + archive["type"])

@@ -1,8 +1,8 @@
-import json
 import logging
 import os
-
 from typing import List, Tuple
+
+from bhamon_orchestra_model.serialization.serializer import Serializer
 
 
 logger = logging.getLogger("JsonDatabaseAdministration")
@@ -12,8 +12,9 @@ class JsonDatabaseAdministration:
 	""" Administration client for a database storing data as json files, intended for development only. """
 
 
-	def __init__(self, data_directory: str) -> None:
-		self._data_directory = data_directory
+	def __init__(self, serializer: Serializer, data_directory: str) -> None:
+		self._serializer = serializer
+		self.data_directory = data_directory
 
 
 	def __enter__(self):
@@ -25,7 +26,7 @@ class JsonDatabaseAdministration:
 
 
 	def initialize(self, simulate: bool = False) -> None:
-		logger.info("Initializing (Path: '%s')" + (" (simulation)" if simulate else ""), self._data_directory) # pylint: disable = logging-not-lazy
+		logger.info("Initializing (Path: '%s')" + (" (simulation)" if simulate else ""), self.data_directory) # pylint: disable = logging-not-lazy
 
 		logger.info("Creating run index")
 		if not simulate:
@@ -78,17 +79,20 @@ class JsonDatabaseAdministration:
 
 
 	def _load(self) -> dict:
-		file_path = os.path.join(self._data_directory, "admin.json")
-		if not os.path.exists(file_path):
-			return { "indexes": [] }
-		with open(file_path, mode = "r", encoding = "utf-8") as data_file:
-			return json.load(data_file)
+		file_path = os.path.join(self.data_directory, "admin.json")
+		administration_data = None
+
+		try:
+			administration_data = self._serializer.deserialize_from_file(file_path)
+		except FileNotFoundError:
+			pass
+
+		if administration_data is None:
+			administration_data = { "indexes": [] }
+		return administration_data
 
 
 	def _save(self, administration_data: dict) -> None:
-		file_path = os.path.join(self._data_directory, "admin.json")
-		if not os.path.exists(os.path.dirname(file_path)):
-			os.makedirs(os.path.dirname(file_path))
-		with open(file_path + ".tmp", mode = "w", encoding = "utf-8") as administration_data_file:
-			json.dump(administration_data, administration_data_file, indent = 4)
-		os.replace(file_path + ".tmp", file_path)
+		file_path = os.path.join(self.data_directory, "admin.json")
+		os.makedirs(os.path.dirname(file_path), exist_ok = True)
+		self._serializer.serialize_to_file(file_path, administration_data)

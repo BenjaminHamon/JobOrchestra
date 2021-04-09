@@ -13,6 +13,7 @@ from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.project_provider import ProjectProvider
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.schedule_provider import ScheduleProvider
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
@@ -63,6 +64,7 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	database_client_factory = factory.create_database_client_factory(arguments.database, database_metadata)
 	data_storage_instance = FileDataStorage(".")
 	date_time_provider_instance = DateTimeProvider()
+	serializer_instance = JsonSerializer(indent = 4)
 
 	authentication_provider_instance = AuthenticationProvider(date_time_provider_instance)
 	authorization_provider_instance = AuthorizationProvider()
@@ -77,7 +79,7 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	admin_controller_instance = AdminController(external_services)
 	job_controller_instance = JobController(job_provider_instance, run_provider_instance)
 	project_controller_instance = ProjectController(application, project_provider_instance, run_provider_instance)
-	run_controller_instance = RunController(run_provider_instance)
+	run_controller_instance = RunController(serializer_instance, run_provider_instance)
 	schedule_controller_instance = ScheduleController(schedule_provider_instance)
 	user_controller_instance = UserController(authentication_provider_instance, user_provider_instance)
 	worker_controller_instance = WorkerController(job_provider_instance, run_provider_instance, worker_provider_instance)

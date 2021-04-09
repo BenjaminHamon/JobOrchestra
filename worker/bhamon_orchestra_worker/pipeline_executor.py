@@ -5,6 +5,7 @@ import logging
 import requests
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.serialization.serializer import Serializer
 from bhamon_orchestra_worker.job_executor import JobExecutor
 from bhamon_orchestra_worker.service_client import ServiceClient
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
@@ -22,8 +23,8 @@ class TriggerStatus(enum.Enum):
 class PipelineExecutor(JobExecutor):
 
 
-	def __init__(self, storage: WorkerStorage, date_time_provider: DateTimeProvider, service_client: ServiceClient) -> None:
-		super().__init__(storage, date_time_provider)
+	def __init__(self, storage: WorkerStorage, date_time_provider: DateTimeProvider, serializer: Serializer, service_client: ServiceClient) -> None:
+		super().__init__(storage, date_time_provider, serializer)
 
 		self.service_client = service_client
 

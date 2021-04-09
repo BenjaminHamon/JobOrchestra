@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import platform
@@ -20,6 +19,7 @@ from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.project_provider import ProjectProvider
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.schedule_provider import ScheduleProvider
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
@@ -177,7 +177,8 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 	def invoke_executor(self, worker_identifier, run_request):
 		worker_directory = os.path.join(self.temporary_directory, worker_identifier)
 		file_data_storage_instance = FileDataStorage(worker_directory)
-		worker_storage_instance = WorkerStorage(file_data_storage_instance)
+		serializer_instance = JsonSerializer(indent = 4)
+		worker_storage_instance = WorkerStorage(file_data_storage_instance, serializer_instance)
 
 		worker_storage_instance.create_run(run_request["run_identifier"])
 		worker_storage_instance.save_request(run_request["run_identifier"], run_request)
@@ -268,6 +269,8 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 
 	def configure_worker_authentication(self, worker_collection):
+		serializer_instance = JsonSerializer(indent = 4)
+
 		with self.database_client_factory() as database_client:
 			user = self.user_provider.create(database_client, "worker", "Worker")
 			self.user_provider.update_roles(database_client, user, "Worker")
@@ -276,8 +279,7 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 		for worker in worker_collection:
 			worker_directory = os.path.join(self.temporary_directory, worker)
 			os.makedirs(worker_directory, exist_ok = True)
-			with open(os.path.join(worker_directory, "authentication.json"), mode = "w", encoding = "utf-8") as authentication_file:
-				json.dump(token, authentication_file, indent = 4)
+			serializer_instance.serialize_to_file(os.path.join(worker_directory, "authentication.json"), token)
 
 
 	def configure_service_authentication(self, user_identifier, user_roles):

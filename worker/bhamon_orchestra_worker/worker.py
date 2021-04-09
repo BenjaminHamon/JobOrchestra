@@ -4,6 +4,7 @@ from typing import Any, Callable, List, Optional
 
 from bhamon_orchestra_model.network.connection import NetworkConnection
 from bhamon_orchestra_model.network.messenger import Messenger
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 from bhamon_orchestra_worker.executor_watcher import ExecutorWatcher
 from bhamon_orchestra_worker.master_client import MasterClient
 from bhamon_orchestra_worker.process_watcher import ProcessWatcher
@@ -71,7 +72,8 @@ class Worker: # pylint: disable = too-few-public-methods
 
 
 	async def _process_connection(self, connection: NetworkConnection) -> None:
-		messenger_instance = Messenger(connection.remote_address, connection)
+		serializer_instance = JsonSerializer(indent = 4)
+		messenger_instance = Messenger(serializer_instance, connection.remote_address, connection)
 		messenger_instance.request_handler = self._handle_request
 
 		self._messenger = messenger_instance

@@ -11,11 +11,14 @@ from bhamon_orchestra_model.database.mongo_database_administration import MongoD
 from bhamon_orchestra_model.database.mongo_database_client import MongoDatabaseClient
 from bhamon_orchestra_model.database.sql_database_administration import SqlDatabaseAdministration
 from bhamon_orchestra_model.database.sql_database_client import SqlDatabaseClient
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 
 
 def create_database_administration_factory(database_uri, database_metadata):
 	if database_uri.startswith("json://"):
-		return lambda: JsonDatabaseAdministration(_convert_uri_to_local_path(database_uri))
+		serializer = JsonSerializer(indent = 4)
+		data_directory = _convert_uri_to_local_path(database_uri)
+		return lambda: JsonDatabaseAdministration(serializer, data_directory)
 
 	if database_uri.startswith("mongodb://"):
 		return lambda: MongoDatabaseAdministration(pymongo.MongoClient(database_uri))
@@ -29,7 +32,9 @@ def create_database_administration_factory(database_uri, database_metadata):
 
 def create_database_client_factory(database_uri, database_metadata):
 	if database_uri.startswith("json://"):
-		return lambda: JsonDatabaseClient(_convert_uri_to_local_path(database_uri))
+		serializer = JsonSerializer(indent = 4)
+		data_directory = _convert_uri_to_local_path(database_uri)
+		return lambda: JsonDatabaseClient(serializer, data_directory)
 
 	if database_uri.startswith("mongodb://"):
 		return lambda: MongoDatabaseClient(pymongo.MongoClient(database_uri))

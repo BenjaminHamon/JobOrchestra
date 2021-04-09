@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import re
@@ -6,6 +5,7 @@ import shutil
 from typing import Any, List, Optional
 
 from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
+from bhamon_orchestra_model.serialization.serializer import Serializer
 
 
 logger = logging.getLogger("WorkerStorage")
@@ -14,14 +14,17 @@ logger = logging.getLogger("WorkerStorage")
 class WorkerStorage:
 
 
-	def __init__(self, storage: FileDataStorage) -> None:
+	def __init__(self, storage: FileDataStorage, serializer: Serializer) -> None:
 		self._storage = storage
+		self._serializer = serializer
 
 
 	def list_runs(self) -> List[str]:
+		request_file_regex = r"^runs/[a-zA-Z0-9_\-\.]+/request" + re.escape(self._serializer.get_file_extension()) + r"$"
+
 		all_runs = []
 		for key in self._storage.get_keys("runs/"):
-			if re.search(r"^runs/[a-zA-Z0-9_\-\.]+/request\.json$", key) is not None:
+			if re.search(request_file_regex, key) is not None:
 				all_runs.append(key.split("/")[1])
 		return all_runs
 
@@ -39,11 +42,11 @@ class WorkerStorage:
 
 
 	def load_request(self, run_identifier: str) -> dict:
-		return self.load_json(run_identifier, "request")
+		return self._load_data(run_identifier, "request")
 
 
 	def save_request(self, run_identifier: str, request: dict) -> None:
-		self.save_json(run_identifier, "request", request)
+		self._save_data(run_identifier, "request", request)
 
 
 	def get_status_timestamp(self, run_identifier: str) -> Optional[float]:
@@ -51,11 +54,11 @@ class WorkerStorage:
 
 
 	def load_status(self, run_identifier: str) -> dict:
-		return self.load_json(run_identifier, "status")
+		return self._load_data(run_identifier, "status")
 
 
 	def save_status(self, run_identifier: str, status: dict) -> None:
-		self.save_json(run_identifier, "status", status)
+		self._save_data(run_identifier, "status", status)
 
 
 	def get_results_timestamp(self, run_identifier: str) -> Optional[float]:
@@ -63,12 +66,12 @@ class WorkerStorage:
 
 
 	def load_results(self, run_identifier: str) -> dict:
-		results = self.load_json(run_identifier, "results")
+		results = self._load_data(run_identifier, "results")
 		return results if results is not None else {}
 
 
 	def save_results(self, run_identifier: str, results: dict) -> None:
-		self.save_json(run_identifier, "results", results)
+		self._save_data(run_identifier, "results", results)
 
 
 	def get_log_path(self, run_identifier: str) -> str:
@@ -85,15 +88,15 @@ class WorkerStorage:
 			return None
 
 
-	def load_json(self, run_identifier: str, key: str) -> dict:
-		key = "runs" + "/" + run_identifier + "/" + key + ".json"
+	def _load_data(self, run_identifier: str, key: str) -> dict:
+		key = "runs" + "/" + run_identifier + "/" + key + self._serializer.get_file_extension()
 		with self._storage.lock(key):
 			raw_data = self._storage.get(key)
-		return json.loads(raw_data.decode("utf-8")) if raw_data is not None else None
+		return self._serializer.deserialize_from_string(raw_data.decode("utf-8")) if raw_data is not None else None
 
 
-	def save_json(self, run_identifier: str, key: str, data: Any) -> None:
-		key = "runs" + "/" + run_identifier + "/" + key + ".json"
-		serialized_data = json.dumps(data, indent = 4).encode("utf-8")
+	def _save_data(self, run_identifier: str, key: str, data: Any) -> None:
+		key = "runs" + "/" + run_identifier + "/" + key + self._serializer.get_file_extension()
+		serialized_data = self._serializer.serialize_to_string(data).encode("utf-8")
 		with self._storage.lock(key):
 			self._storage.set(key, serialized_data)

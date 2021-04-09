@@ -1,6 +1,5 @@
 import contextlib
 import functools
-import json
 import logging
 import os
 from typing import Any, List, Optional, Tuple, Union
@@ -8,6 +7,7 @@ from typing import Any, List, Optional, Tuple, Union
 import filelock
 
 from bhamon_orchestra_model.database.database_client import DatabaseClient
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 
 
 logger = logging.getLogger("JsonDatabaseClient")
@@ -17,7 +17,8 @@ class JsonDatabaseClient(DatabaseClient):
 	""" Client for a database storing data as json files, intended for development only. """
 
 
-	def __init__(self, data_directory: str) -> None:
+	def __init__(self, serializer: JsonSerializer, data_directory: str) -> None:
+		self._serializer = serializer
 		self.data_directory = data_directory
 		self.lock_timeout = 5
 
@@ -127,10 +128,14 @@ class JsonDatabaseClient(DatabaseClient):
 		""" Load all items from a table """
 
 		file_path = os.path.join(self.data_directory, table + ".json")
-		if not os.path.exists(file_path):
-			return []
-		with open(file_path, mode = "r", encoding = "utf-8") as data_file:
-			return json.load(data_file)
+		table_data = None
+
+		try:
+			table_data = self._serializer.deserialize_from_file(file_path)
+		except FileNotFoundError:
+			pass
+
+		return table_data if table_data is not None else []
 
 
 	def _save(self, table: str, table_data: List[dict]) -> None:
@@ -138,21 +143,22 @@ class JsonDatabaseClient(DatabaseClient):
 
 		file_path = os.path.join(self.data_directory, table + ".json")
 		os.makedirs(os.path.dirname(file_path), exist_ok = True)
-		with open(file_path + ".tmp", mode = "w", encoding = "utf-8") as table_data_file:
-			json.dump(table_data, table_data_file, indent = 4)
-		os.replace(file_path + ".tmp", file_path)
+		self._serializer.serialize_to_file(file_path, table_data)
 
 
 	def _load_indexes(self, table: str) -> List[dict]:
 		""" Load all indexes for a table """
 
 		file_path = os.path.join(self.data_directory, "admin.json")
-		if not os.path.exists(file_path):
-			return []
-		with open(file_path, mode = "r", encoding = "utf-8") as administration_data_file:
-			administration_data = json.load(administration_data_file)
+		administration_data = None
 
-		return [ index for index in administration_data["indexes"] if index["table"] == table ]
+		try:
+			administration_data = self._serializer.deserialize_from_file(file_path)
+		except FileNotFoundError:
+			pass
+
+		all_indexes = administration_data["indexes"] if administration_data is not None else []
+		return [ index for index in all_indexes if index["table"] == table ]
 
 
 	def _match_filter(self, row: dict, filter: dict) -> bool: # pylint: disable = no-self-use, redefined-builtin
