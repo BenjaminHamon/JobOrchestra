@@ -1,3 +1,6 @@
+from typing import Dict, List, Tuple
+
+
 class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 
 	# Compute the data required to have a nice display for the pipeline.
@@ -6,7 +9,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 	# The further a node is from the start, the further to the right it is, and thus edges go from left to right.
 
 
-	def __init__(self, pipeline):
+	def __init__(self, pipeline: dict) -> None:
 		self.pipeline = pipeline
 
 		self.all_nodes = []
@@ -23,7 +26,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		self.colors = [ "red", "blue", "orange", "green", "purple" ] #, "yellow" ]
 
 
-	def build(self):
+	def build(self) -> dict:
 		self._generate_graph()
 		self._generate_node_layout()
 		self._generate_navigation()
@@ -60,7 +63,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		}
 
 
-	def _generate_graph(self):
+	def _generate_graph(self) -> None:
 		""" Instantiates data structures for the graph nodes and edges, based on the pipeline definition. """
 
 		self.all_nodes = []
@@ -87,7 +90,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		self.all_edges.sort(key = lambda x: (self.all_nodes.index(x["start"]), self.all_nodes.index(x["end"])))
 
 
-	def _generate_node_layout(self):
+	def _generate_node_layout(self) -> None:
 		""" Create the graph layout for nodes by assigning each node a position in a grid. """
 
 		all_distances = self._compute_maximum_distances()
@@ -109,7 +112,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 			current_row += 1
 
 
-	def _compute_maximum_distances(self):
+	def _compute_maximum_distances(self) -> Dict[str,int]:
 		""" Compute the maximum distances to a node from any previous node. """
 
 		# Walk through the graph from all start nodes.
@@ -143,7 +146,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		return all_distances
 
 
-	def _generate_navigation(self): # pylint: disable = too-many-branches
+	def _generate_navigation(self) -> None: # pylint: disable = too-many-branches
 		""" Create unique paths for the edges to use. """
 
 		all_paths = []
@@ -206,7 +209,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		self.navigation = all_paths
 
 
-	def _generate_edge_path(self, edge, navigation_path):
+	def _generate_edge_path(self, edge: dict, navigation_path: dict) -> List[Tuple[int,int]]:
 		""" Generate the path for a single edge based on its navigation path. """
 
 		path = []
@@ -236,7 +239,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		return path
 
 
-	def _convert_path_to_svg(self, path): # pylint: disable = no-self-use
+	def _convert_path_to_svg(self, path: List[Tuple[int,int]]) -> str: # pylint: disable = no-self-use
 		""" Convert an edge path to its SVG representation. """
 
 		svg_commands = []
@@ -248,5 +251,5 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 
 
 
-def build_pipeline_view(pipeline):
+def build_pipeline_view(pipeline: dict) -> dict:
 	return PipelineViewBuilder(pipeline).build()
