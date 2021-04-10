@@ -7,6 +7,7 @@ import requests
 from bhamon_orchestra_model.project_provider import ProjectProvider
 from bhamon_orchestra_model.revision_control.github import GitHubClient
 from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_service.response_builder import ResponseBuilder
 
 
 logger = logging.getLogger("ProjectController")
@@ -15,15 +16,19 @@ logger = logging.getLogger("ProjectController")
 class ProjectController:
 
 
-	def __init__(self, application: flask.Flask, project_provider: ProjectProvider, run_provider: RunProvider) -> None:
+	def __init__(self, application: flask.Flask, response_builder: ResponseBuilder,
+			project_provider: ProjectProvider, run_provider: RunProvider) -> None:
+
 		self._application = application
+		self._response_builder = response_builder
 		self._project_provider = project_provider
 		self._run_provider = run_provider
 
 
 	def get_count(self) -> Any:
 		database_client = flask.request.database_client()
-		return flask.jsonify(self._project_provider.count(database_client))
+		project_count = self._project_provider.count(database_client)
+		return self._response_builder.create_data_response(project_count)
 
 
 	def get_collection(self) -> Any:
@@ -34,12 +39,14 @@ class ProjectController:
 		}
 
 		database_client = flask.request.database_client()
-		return flask.jsonify(self._project_provider.get_list(database_client, **query_parameters))
+		project_collection = self._project_provider.get_list(database_client, **query_parameters)
+		return self._response_builder.create_data_response(project_collection)
 
 
 	def get(self, project_identifier: str) -> Any:
 		database_client = flask.request.database_client()
-		return flask.jsonify(self._project_provider.get(database_client, project_identifier))
+		project = self._project_provider.get(database_client, project_identifier)
+		return self._response_builder.create_data_response(project)
 
 
 	def get_repository(self, project_identifier: str) -> Any:
@@ -51,8 +58,8 @@ class ProjectController:
 			"repository": project["services"]["revision_control"]["repository"],
 		}
 
-		return flask.jsonify(revision_control_client.get_repository(**query_parameters))
-
+		repository = revision_control_client.get_repository(**query_parameters)
+		return self._response_builder.create_data_response(repository)
 
 
 	def get_branch_collection(self, project_identifier: str) -> Any:
@@ -64,7 +71,8 @@ class ProjectController:
 			"repository": project["services"]["revision_control"]["repository"],
 		}
 
-		return flask.jsonify(revision_control_client.get_branch_list(**query_parameters))
+		branch_collection = revision_control_client.get_branch_list(**query_parameters)
+		return self._response_builder.create_data_response(branch_collection)
 
 
 	def get_revision_collection(self, project_identifier: str) -> Any:
@@ -78,7 +86,8 @@ class ProjectController:
 			"limit": max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1),
 		}
 
-		return flask.jsonify(revision_control_client.get_revision_list(**query_parameters))
+		revision_collection = revision_control_client.get_revision_list(**query_parameters)
+		return self._response_builder.create_data_response(revision_collection)
 
 
 	def get_revision(self, project_identifier: str, revision_reference: str) -> Any:
@@ -91,7 +100,8 @@ class ProjectController:
 			"revision": revision_reference,
 		}
 
-		return flask.jsonify(revision_control_client.get_revision(**query_parameters))
+		revision = revision_control_client.get_revision(**query_parameters)
+		return self._response_builder.create_data_response(revision)
 
 
 	def get_revision_status(self, project_identifier: str, revision_reference: str) -> Any:
@@ -135,7 +145,7 @@ class ProjectController:
 		elif all(run["status"] in [ "succeeded" ] for run in revision_runs):
 			revision_status = "succeeded"
 
-		result = {
+		response_data = {
 			"reference": revision_reference,
 			"identifier": revision["identifier"],
 			"identifier_short": revision["identifier_short"],
@@ -143,7 +153,7 @@ class ProjectController:
 			"status": revision_status,
 		}
 
-		return flask.jsonify(result)
+		return self._response_builder.create_data_response(response_data)
 
 
 	def get_project_status(self, project_identifier: str) -> Any:
@@ -187,7 +197,7 @@ class ProjectController:
 			if revision is not None:
 				revision["runs"].append(run)
 
-		return flask.jsonify(revision_collection)
+		return self._response_builder.create_data_response(revision_collection)
 
 
 	def _create_revision_control_client(self, service: str) -> GitHubClient:

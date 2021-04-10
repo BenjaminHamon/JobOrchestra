@@ -6,6 +6,7 @@ import flask
 from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
+from bhamon_orchestra_service.response_builder import ResponseBuilder
 
 
 logger = logging.getLogger("WorkerController")
@@ -14,7 +15,10 @@ logger = logging.getLogger("WorkerController")
 class WorkerController:
 
 
-	def __init__(self, job_provider: JobProvider, run_provider: RunProvider, worker_provider: WorkerProvider) -> None:
+	def __init__(self, response_builder: ResponseBuilder,
+			job_provider: JobProvider, run_provider: RunProvider, worker_provider: WorkerProvider) -> None:
+
+		self._response_builder = response_builder
 		self._job_provider = job_provider
 		self._run_provider = run_provider
 		self._worker_provider = worker_provider
@@ -22,7 +26,8 @@ class WorkerController:
 
 	def get_count(self) -> Any:
 		database_client = flask.request.database_client()
-		return flask.jsonify(self._worker_provider.count(database_client))
+		worker_count = self._worker_provider.count(database_client)
+		return self._response_builder.create_data_response(worker_count)
 
 
 	def get_collection(self) -> Any:
@@ -33,12 +38,14 @@ class WorkerController:
 		}
 
 		database_client = flask.request.database_client()
-		return flask.jsonify(self._worker_provider.get_list(database_client, **query_parameters))
+		worker_collection = self._worker_provider.get_list(database_client, **query_parameters)
+		return self._response_builder.create_data_response(worker_collection)
 
 
 	def get(self, worker_identifier: str) -> Any:
 		database_client = flask.request.database_client()
-		return flask.jsonify(self._worker_provider.get(database_client, worker_identifier))
+		worker = self._worker_provider.get(database_client, worker_identifier)
+		return self._response_builder.create_data_response(worker)
 
 
 	def get_job_collection(self, worker_identifier: str) -> Any: # pylint: disable = unused-argument
@@ -49,7 +56,8 @@ class WorkerController:
 		}
 
 		database_client = flask.request.database_client()
-		return flask.jsonify(self._job_provider.get_list(database_client, **query_parameters))
+		job_collection = self._job_provider.get_list(database_client, **query_parameters)
+		return self._response_builder.create_data_response(job_collection)
 
 
 	def get_run_count(self, worker_identifier: str) -> Any:
@@ -60,7 +68,8 @@ class WorkerController:
 		}
 
 		database_client = flask.request.database_client()
-		return flask.jsonify(self._run_provider.count(database_client, **query_parameters))
+		run_count = self._run_provider.count(database_client, **query_parameters)
+		return self._response_builder.create_data_response(run_count)
 
 
 	def get_run_collection(self, worker_identifier: str) -> Any:
@@ -74,22 +83,23 @@ class WorkerController:
 		}
 
 		database_client = flask.request.database_client()
-		return flask.jsonify(self._run_provider.get_list(database_client, **query_parameters))
+		run_collection = self._run_provider.get_list(database_client, **query_parameters)
+		return self._response_builder.create_data_response(run_collection)
 
 
 	def disconnect(self, worker_identifier: str) -> Any:
 		database_client = flask.request.database_client()
 		self._worker_provider.update_status(database_client, { "identifier": worker_identifier }, should_disconnect = True)
-		return flask.jsonify({})
+		return self._response_builder.create_empty_response()
 
 
 	def enable(self, worker_identifier: str) -> Any:
 		database_client = flask.request.database_client()
 		self._worker_provider.update_status(database_client, { "identifier": worker_identifier }, is_enabled = True)
-		return flask.jsonify({})
+		return self._response_builder.create_empty_response()
 
 
 	def disable(self, worker_identifier: str) -> Any:
 		database_client = flask.request.database_client()
 		self._worker_provider.update_status(database_client, { "identifier": worker_identifier }, is_enabled = False)
-		return flask.jsonify({})
+		return self._response_builder.create_empty_response()
