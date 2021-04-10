@@ -1,12 +1,10 @@
 import datetime
 
-import dateutil.parser
 
-
-class DateTimeProvider:
+class DateTimeProvider: # pylint: disable = too-few-public-methods
 	""" Provider to standardize operations with datetime objects and allow overriding.
 
-	This implementation uses UTC times, ISO serialization and limits precision to the second.
+	This implementation uses UTC times and limits precision to the second.
 
 	"""
 
@@ -14,13 +12,3 @@ class DateTimeProvider:
 	def now(self) -> datetime.datetime: # pylint: disable = no-self-use
 		""" Return the current datetime """
 		return datetime.datetime.now(datetime.timezone.utc).replace(microsecond = 0)
-
-
-	def serialize(self, value: datetime.datetime) -> str: # pylint: disable = no-self-use
-		""" Serialize a datetime to its string representation """
-		return value.replace(microsecond = 0, tzinfo = None).isoformat() + "Z"
-
-
-	def deserialize(self, value: str) -> datetime.datetime: # pylint: disable = no-self-use
-		""" Deserialize a datetime from its string representation """
-		return dateutil.parser.parse(value).replace(microsecond = 0, tzinfo = datetime.timezone.utc)

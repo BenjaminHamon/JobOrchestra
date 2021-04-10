@@ -1,6 +1,7 @@
 import logging
 from typing import List, Optional, Tuple
 
+from bson.codec_options import CodecOptions
 import pymongo
 
 from bhamon_orchestra_model.database.database_client import DatabaseClient
@@ -19,7 +20,9 @@ class MongoDatabaseClient(DatabaseClient):
 
 	def count(self, table: str, filter: dict) -> int: # pylint: disable = redefined-builtin
 		""" Return how many items are in a table, after applying a filter """
-		return self.mongo_client.get_database()[table].count_documents(filter)
+
+		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))
+		return database[table].count_documents(filter)
 
 
 	def find_many(self, # pylint: disable = too-many-arguments
@@ -32,35 +35,46 @@ class MongoDatabaseClient(DatabaseClient):
 
 		limit = limit if limit is not None else 0
 		order_by = self._convert_order_by_expression(order_by)
-		return list(self.mongo_client.get_database()[table].find(filter, { "_id": False }, skip = skip, limit = limit, sort = order_by))
+		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))
+		return list(database[table].find(filter, { "_id": False }, skip = skip, limit = limit, sort = order_by))
 
 
 	def find_one(self, table: str, filter: dict) -> Optional[dict]: # pylint: disable = redefined-builtin
 		""" Return a single item (or nothing) from a table, after applying a filter """
-		return self.mongo_client.get_database()[table].find_one(filter, { "_id": False })
+
+		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))
+		return database[table].find_one(filter, { "_id": False })
 
 
 	def insert_one(self, table: str, data: dict) -> None:
 		""" Insert a new item into a table """
-		self.mongo_client.get_database()[table].insert_one(data)
+
+		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))
+		database[table].insert_one(data)
 		del data["_id"]
 
 
 	def insert_many(self, table: str, dataset: List[dict]) -> None:
 		""" Insert a list of items into a table """
-		self.mongo_client.get_database()[table].insert_many(dataset)
+
+		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))
+		database[table].insert_many(dataset)
 		for data in dataset:
 			del data["_id"]
 
 
 	def update_one(self, table: str, filter: dict, data: dict) -> None: # pylint: disable = redefined-builtin
 		""" Update a single item (or nothing) from a table, after applying a filter """
-		self.mongo_client.get_database()[table].update_one(filter, { "$set": data })
+
+		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))
+		database[table].update_one(filter, { "$set": data })
 
 
 	def delete_one(self, table: str, filter: dict) -> None: # pylint: disable = redefined-builtin
 		""" Delete a single item (or nothing) from a table, after applying a filter """
-		self.mongo_client.get_database()[table].delete_one(filter)
+
+		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))
+		database[table].delete_one(filter)
 
 
 	def close(self) -> None:

@@ -34,7 +34,7 @@ class MeController:
 			try:
 				flask.session["token"] = self._service_client.post("/me/login", data = request_data)
 				flask.session["user"] = self._service_client.get("/me")
-				flask.session["last_refresh"] = self._date_time_provider.serialize(now)
+				flask.session["last_refresh"] = now
 				flask.session.permanent = True
 				flask.flash("Login succeeded.", "success")
 				return flask.redirect(flask.url_for("website.home"))
@@ -78,7 +78,7 @@ class MeController:
 		try:
 			self._service_client.post("/me/refresh_session", data = request_data)
 			flask.session["user"] = self._service_client.get("/me")
-			flask.session["last_refresh"] = self._date_time_provider.serialize(now)
+			flask.session["last_refresh"] = now
 		except requests.HTTPError as exception:
 			if exception.response.status_code == 403:
 				flask.session.clear()
@@ -93,7 +93,7 @@ class MeController:
 		user_tokens = self._service_client.get("/me/token_collection", parameters = token_query_parameters)
 		user_tokens.sort(key = lambda token: token["expiration_date"] is not None)
 
-		now = self._date_time_provider.serialize(self._date_time_provider.now())
+		now = self._date_time_provider.now()
 		for token in user_tokens:
 			token["is_active"] = token["expiration_date"] > now if token["expiration_date"] is not None else True
 

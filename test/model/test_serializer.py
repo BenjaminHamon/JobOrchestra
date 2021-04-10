@@ -1,5 +1,8 @@
 """ Unit tests for Serializer implementations """
 
+import datetime
+
+import dateutil.tz
 import pytest
 
 from bhamon_orchestra_model.serialization.serializer import Serializer
@@ -48,3 +51,50 @@ def test_collection(implementation):
 		deserialized_value = serializer.deserialize_from_string(serialized_value)
 
 		assert deserialized_value == value
+
+
+@pytest.mark.parametrize("implementation", list_implementations())
+def test_datetime(implementation):
+	""" Test serialization with datetimes """
+
+	serializer = instantiate_implementation(implementation)
+
+	all_values = [
+		datetime.datetime(2020, 1, 1),
+		datetime.datetime(2020, 1, 1, tzinfo = datetime.timezone.utc),
+		datetime.datetime(2020, 1, 1, tzinfo = dateutil.tz.UTC),
+		datetime.datetime(2020, 1, 1, tzinfo = dateutil.tz.gettz("UTC+1")),
+		datetime.datetime(2020, 1, 1, tzinfo = dateutil.tz.gettz("UTC-1")),
+	]
+
+	for value in all_values:
+		value_as_dict = { "date": value } # The value needs to be a dict for JsonDecoder object_hook
+
+		serialized_value = serializer.serialize_to_string(value_as_dict)
+		deserialized_value = serializer.deserialize_from_string(serialized_value)
+
+		assert deserialized_value == value_as_dict
+
+
+@pytest.mark.parametrize("implementation", list_implementations())
+def test_datetime_isoformat(implementation):
+	""" Test deserialization with ISO 8601 formats """
+
+	serializer = instantiate_implementation(implementation)
+
+	all_values = [
+		{ "raw": datetime.datetime(2020, 1, 1), "isoformat": "2020-01-01T00:00:00" },
+		{ "raw": datetime.datetime(2020, 1, 1, tzinfo = datetime.timezone.utc), "isoformat": "2020-01-01T00:00:00Z" },
+		{ "raw": datetime.datetime(2020, 1, 1, tzinfo = datetime.timezone.utc), "isoformat": "2020-01-01T00:00:00+00:00" },
+		{ "raw": datetime.datetime(2020, 1, 1, tzinfo = dateutil.tz.gettz("UTC+1")), "isoformat": "2020-01-01T00:00:00+01:00" },
+		{ "raw": datetime.datetime(2020, 1, 1, tzinfo = dateutil.tz.gettz("UTC-1")), "isoformat": "2020-01-01T00:00:00-01:00" },
+	]
+
+	for value in all_values:
+		value_as_dict = { "date": value["raw"] } # The value needs to be a dict for JsonDecoder object_hook
+		isoformat_as_dict = { "date": value["isoformat"] } # The value needs to be a dict for JsonDecoder object_hook
+
+		serialized_value = serializer.serialize_to_string(isoformat_as_dict)
+		deserialized_value = serializer.deserialize_from_string(serialized_value)
+
+		assert deserialized_value == value_as_dict

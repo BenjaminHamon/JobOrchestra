@@ -80,8 +80,8 @@ class RunProvider:
 			"results": None,
 			"should_cancel": False,
 			"should_abort": False,
-			"creation_date": self.date_time_provider.serialize(now),
-			"update_date": self.date_time_provider.serialize(now),
+			"creation_date": now,
+			"update_date": now,
 		}
 
 		database_client.insert_one(self.table, run)
@@ -102,7 +102,7 @@ class RunProvider:
 			"completion_date": completion_date,
 			"should_cancel": should_cancel,
 			"should_abort": should_abort,
-			"update_date": self.date_time_provider.serialize(now),
+			"update_date": now,
 		}
 
 		update_data = { key: value for key, value in update_data.items() if value is not None }
@@ -139,7 +139,7 @@ class RunProvider:
 
 		update_data = {
 			"results": results,
-			"update_date": self.date_time_provider.serialize(now),
+			"update_date": now,
 		}
 
 		run.update(update_data)

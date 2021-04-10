@@ -3,7 +3,7 @@ import datetime
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 
 
-class FakeDateTimeProvider(DateTimeProvider):
+class FakeDateTimeProvider(DateTimeProvider): # pylint: disable = too-few-public-methods
 	""" Fake datetime provider for unit tests """
 
 
