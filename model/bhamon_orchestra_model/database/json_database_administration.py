@@ -40,6 +40,9 @@ class JsonDatabaseAdministration(DatabaseAdministration):
 
 		logger.info("Initializing (Path: '%s')" + (" (simulation)" if simulate else ""), self.data_directory) # pylint: disable = logging-not-lazy
 
+		if self.get_metadata() is not None:
+			raise RuntimeError("Database is already initialized")
+
 		metadata = {
 			"product": product if product is not None else bhamon_orchestra_model.__product__,
 			"copyright": copyright if copyright is not None else bhamon_orchestra_model.__copyright__,

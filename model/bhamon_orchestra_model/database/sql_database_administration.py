@@ -31,8 +31,8 @@ class SqlDatabaseAdministration(DatabaseAdministration):
 
 	def get_metadata(self) -> dict:
 		try:
-		schema_metadata_query = self.metadata.tables["__metadata__"].select()
-		schema_metadata_rows = self.connection.execute(schema_metadata_query).fetchall()
+			schema_metadata_query = self.metadata.tables["__metadata__"].select()
+			schema_metadata_rows = self.connection.execute(schema_metadata_query).fetchall()
 		except SQLAlchemyError:
 			return None
 
@@ -54,6 +54,9 @@ class SqlDatabaseAdministration(DatabaseAdministration):
 			simulate: bool = False) -> None:
 
 		logger.info("Initializing" + (" (simulation)" if simulate else "")) # pylint: disable = logging-not-lazy
+
+		if self.get_metadata() is not None:
+			raise RuntimeError("Database is already initialized")
 
 		schema_metadata = {
 			"product": product if product is not None else bhamon_orchestra_model.__product__,
