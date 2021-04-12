@@ -1,10 +1,15 @@
+import glob
+import importlib
 import logging
+import os
+import types
 from typing import List, Optional, Tuple
 
 from bson.codec_options import CodecOptions
 import pymongo
 
 import bhamon_orchestra_model
+import bhamon_orchestra_model.database.migrations.mongo
 from bhamon_orchestra_model.database.database_administration import DatabaseAdministration
 
 
@@ -83,48 +88,59 @@ class MongoDatabaseAdministration(DatabaseAdministration):
 
 		logger.info("Upgrading" + (" (simulation)" if simulate else "")) # pylint: disable = logging-not-lazy
 
+		schema_metadata = self.get_metadata()
+		if schema_metadata is None:
+			raise RuntimeError("Database is not initialized")
+
+		current_version = schema_metadata["version"].split("+")[0]
+		target_version = target_version.split("+")[0]
+
+		if current_version == target_version:
+			logger.info("Database is already at target version %s", target_version)
+			return
+
+		logger.info("Upgrading from version %s to version %s", current_version, target_version)
+
+		all_migrations = self.list_migrations()
+		current_migration = next(migration for migration in all_migrations if migration.version.split("+")[0] == current_version)
+		current_migration_index = all_migrations.index(current_migration)
+		migrations_to_apply = all_migrations[current_migration_index + 1 :]
+
+		for migration in migrations_to_apply:
+			self.apply_migration(migration, simulate = simulate)
+
+
+	def list_migrations(self) -> List[types.ModuleType]: # pylint: disable = no-self-use
+		migration_module_base = bhamon_orchestra_model.database.migrations.mongo
+		migration_directory = os.path.dirname(migration_module_base.__file__)
+
+		all_migrations = []
+		for file_path in glob.glob(os.path.join(migration_directory, "migration_*.py")):
+			module_name = migration_module_base.__name__ + "." + os.path.basename(file_path)[:-3]
+			all_migrations.append(importlib.import_module(module_name))
+
+		all_migrations.sort(key = lambda migration: [ int(version_number) for version_number in migration.version.split("+")[0].split(".")])
+
+		return all_migrations
+
+
+	def apply_migration(self, migration: types.ModuleType, simulate: bool = False) -> None:
+		logger.info("Applying migration to version %s", migration.version)
+
+		migration.upgrade(self.mongo_client, simulate = simulate)
+
+		logger.info("Saving metadata")
+
 		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))
+		metadata_entry = database["__metadata__"].find_one()
 
-		logger.info("Renaming build table to run")
-		if "build" in database.collection_names():
-			if not simulate:
-				database["build"].rename("run")
+		metadata_update_data = {
+			"version": migration.version,
+			"date": migration.date,
+		}
 
-		logger.info("Updating run project and job fields")
-		for run in database["run"].find():
-			if "project" not in run:
-				project, job = run["job"].split("_", 1)
-				logger.info("Run %s: Job %s => Project %s, Job %s", run["identifier"], run["job"], project, job)
-				if not simulate:
-					database["run"].update_one({ "identifier": run["identifier"] }, { "$set": { "project": project, "job": job } })
-
-		logger.info("Fix missing fields for user authentications")
 		if not simulate:
-			database["user_authentication"].update_many({ "hash_function_salt": { "$exists": False } }, { "$set": { "hash_function_salt": None } })
-			database["user_authentication"].update_many({ "expiration_date": { "$exists": False } }, { "$set": { "expiration_date": None } })
-
-		logger.info("Fix missing fields for runs")
-		if not simulate:
-			database["run"].update_many({ "source": { "$exists": False } }, { "$set": { "source": None } })
-			database["run"].update_many({ "worker": { "$exists": False } }, { "$set": { "worker": None } })
-			database["run"].update_many({ "start_date": { "$exists": False } }, { "$set": { "start_date": None } })
-			database["run"].update_many({ "completion_date": { "$exists": False } }, { "$set": { "completion_date": None } })
-			database["run"].update_many({ "results": { "$exists": False } }, { "$set": { "results": None } })
-			database["run"].update_many({ "should_abort": { "$exists": False } }, { "$set": { "should_abort": False } })
-			database["run"].update_many({ "should_cancel": { "$exists": False } }, { "$set": { "should_cancel": False } })
-
-		logger.info("Fix missing fields for workers")
-		if not simulate:
-			database["worker"].update_many({ "should_disconnect": { "$exists": False } }, { "$set": { "should_disconnect": False } })
-
-		logger.info("Remove steps from runs")
-		if not simulate:
-			database["run"].update_many({ "steps": { "$exists": True } }, { "$unset": { "steps": None } })
-
-		logger.info("Remove steps and workspace from jobs")
-		if not simulate:
-			database["job"].update_many({ "steps": { "$exists": True } }, { "$unset": { "steps": None } })
-			database["job"].update_many({ "workspace": { "$exists": True } }, { "$unset": { "workspace": None } })
+			database["__metadata__"].update_one({ "_id": metadata_entry["_id"] }, { "$set": metadata_update_data })
 
 
 	def create_index(self, table: str, identifier: str, field_collection: List[Tuple[str,str]], is_unique: bool = False) -> None:
