@@ -70,6 +70,7 @@ def load_development_dependencies():
 		"pytest-asyncio ~= 0.14.0",
 		"pytest-json ~= 0.4.0",
 
+		"alembic ~= 1.5.8",
 		"pymongo ~= 3.11.3",
 		"psycopg2 ~= 2.8.6",
 		"SQLAlchemy ~= 1.3.23",
