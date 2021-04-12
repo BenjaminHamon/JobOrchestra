@@ -28,7 +28,7 @@ def configure( # pylint: disable = redefined-builtin, too-many-arguments
 		application: flask.Flask, website: Website, title: Optional[str] = None,
 		copyright: Optional[str] = None, version: Optional[str] = None, date: Optional[str] = None) -> None:
 
-	application.config["WEBSITE_TITLE"] = title if title is not None else "Job Orchestra"
+	application.config["WEBSITE_TITLE"] = title if title is not None else bhamon_orchestra_website.__product__
 	application.config["WEBSITE_COPYRIGHT"] = copyright if copyright is not None else bhamon_orchestra_website.__copyright__
 	application.config["WEBSITE_VERSION"] = version if version is not None else bhamon_orchestra_website.__version__
 	application.config["WEBSITE_DATE"] = date if date is not None else bhamon_orchestra_website.__date__

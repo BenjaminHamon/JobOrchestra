@@ -24,7 +24,7 @@ def configure( # pylint: disable = redefined-builtin
 		application: flask.Flask, title: Optional[str] = None,
 		copyright: Optional[str] = None, version: Optional[str] = None, date: Optional[str] = None) -> None:
 
-	application.config["SERVICE_TITLE"] = title if title is not None else "Job Orchestra"
+	application.config["SERVICE_TITLE"] = title if title is not None else bhamon_orchestra_service.__product__
 	application.config["SERVICE_COPYRIGHT"] = copyright if copyright is not None else bhamon_orchestra_service.__copyright__
 	application.config["SERVICE_VERSION"] = version if version is not None else bhamon_orchestra_service.__version__
 	application.config["SERVICE_DATE"] = date if date is not None else bhamon_orchestra_service.__date__
