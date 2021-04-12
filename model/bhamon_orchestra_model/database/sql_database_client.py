@@ -70,7 +70,7 @@ class SqlDatabaseClient(DatabaseClient):
 		""" Update a single item (or nothing) from a table, after applying a filter """
 
 		# It is not possible to use limit on a update query with SqlAlchemy,
-		# so, in cases the filter matches several rows, we first find the row to delete then use its primary key to update it.
+		# so, in cases the filter matches several rows, we first find the row to update then use its primary key to update it.
 
 		row = self.find_one(table, filter)
 		if row is None:
