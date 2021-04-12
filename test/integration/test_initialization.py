@@ -35,16 +35,6 @@ def test_database(tmpdir, database_type):
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
-def test_database_reinitialization(tmpdir, database_type):
-	""" Test if the database initialization fails for an already initialized database """
-
-	with context.OrchestraContext(tmpdir, database_type) as context_instance:
-		with context_instance.database_administration_factory() as database_administration:
-			with pytest.raises(RuntimeError):
-				database_administration.initialize()
-
-
-@pytest.mark.parametrize("database_type", environment.get_all_database_types())
 def test_master(tmpdir, database_type):
 	""" Test if the master starts successfully """
 
