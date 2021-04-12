@@ -1,4 +1,5 @@
 import abc
+from typing import Optional
 
 
 class DatabaseAdministration(abc.ABC):
@@ -14,7 +15,17 @@ class DatabaseAdministration(abc.ABC):
 
 
 	@abc.abstractmethod
-	def initialize(self, simulate: bool = False) -> None:
+	def get_metadata(self) -> dict:
+		""" Retrieve the database metadata """
+
+
+	@abc.abstractmethod
+	def initialize(self, # pylint: disable = too-many-arguments
+			product: Optional[str] = None,
+			copyright: Optional[str] = None, # pylint: disable = redefined-builtin
+			version: Optional[str] = None,
+			date: Optional[str] = None,
+			simulate: bool = False) -> None:
 		""" Initialize the database """
 
 

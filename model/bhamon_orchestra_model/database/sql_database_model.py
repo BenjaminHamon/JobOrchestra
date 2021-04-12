@@ -7,6 +7,12 @@ from bhamon_orchestra_model.database.sql_types import UtcDateTime
 
 metadata = MetaData()
 
+Table("__metadata__", metadata,
+	Column("key", String, nullable = False),
+	Column("value", String, nullable = True),
+	PrimaryKeyConstraint("key"),
+)
+
 project = Table("project", metadata,
 	Column("identifier", String, nullable = False),
 	Column("display_name", String, nullable = False),

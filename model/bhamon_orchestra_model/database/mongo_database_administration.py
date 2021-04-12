@@ -1,9 +1,10 @@
 import logging
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from bson.codec_options import CodecOptions
 import pymongo
 
+import bhamon_orchestra_model
 from bhamon_orchestra_model.database.database_administration import DatabaseAdministration
 
 
@@ -26,8 +27,32 @@ class MongoDatabaseAdministration(DatabaseAdministration):
 		self.close()
 
 
-	def initialize(self, simulate: bool = False) -> None:
+	def get_metadata(self) -> dict:
+		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))
+		return database["__metadata__"].find_one({}, { "_id": False })
+
+
+	def initialize(self, # pylint: disable = too-many-arguments
+			product: Optional[str] = None,
+			copyright: Optional[str] = None, # pylint: disable = redefined-builtin
+			version: Optional[str] = None,
+			date: Optional[str] = None,
+			simulate: bool = False) -> None:
+
 		logger.info("Initializing" + (" (simulation)" if simulate else "")) # pylint: disable = logging-not-lazy
+
+		metadata = {
+			"product": product if product is not None else bhamon_orchestra_model.__product__,
+			"copyright": copyright if copyright is not None else bhamon_orchestra_model.__copyright__,
+			"version": version if version is not None else bhamon_orchestra_model.__version__,
+			"date": date if date is not None else bhamon_orchestra_model.__date__,
+		}
+
+		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))
+
+		logger.info("Saving metadata")
+		if not simulate:
+			database["__metadata__"].insert_one(metadata)
 
 		logger.info("Creating run index")
 		if not simulate:

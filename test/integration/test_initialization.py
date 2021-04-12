@@ -5,6 +5,7 @@ import time
 import pytest
 
 import bhamon_orchestra_master
+import bhamon_orchestra_model
 import bhamon_orchestra_worker
 
 from .. import assert_extensions
@@ -13,6 +14,24 @@ from . import environment
 
 
 log_format = environment.load_environment()["logging_stream_format"]
+
+
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_database(tmpdir, database_type):
+	""" Test if the database is initialized successfully """
+
+	metadata_expected = {
+		"product": bhamon_orchestra_model.__product__,
+		"copyright": bhamon_orchestra_model.__copyright__,
+		"version": bhamon_orchestra_model.__version__,
+		"date": bhamon_orchestra_model.__date__,
+	}
+
+	with context.OrchestraContext(tmpdir, database_type) as context_instance:
+		with context_instance.database_administration_factory() as database_administration:
+			metadata_actual = database_administration.get_metadata()
+
+	assert metadata_actual == metadata_expected
 
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
