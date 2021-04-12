@@ -78,7 +78,9 @@ class MongoDatabaseAdministration(DatabaseAdministration):
 			self.create_index("worker", "identifier_unique", [ ("identifier", "ascending") ], is_unique = True)
 
 
-	def upgrade(self, simulate: bool = False) -> None:
+	def upgrade(self, target_version: Optional[str] = None, simulate: bool = False) -> None:
+		target_version = target_version if target_version is not None else bhamon_orchestra_model.__version__
+
 		logger.info("Upgrading" + (" (simulation)" if simulate else "")) # pylint: disable = logging-not-lazy
 
 		database = self.mongo_client.get_database(codec_options = CodecOptions(tz_aware = True))

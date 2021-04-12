@@ -30,7 +30,7 @@ class DatabaseAdministration(abc.ABC):
 
 
 	@abc.abstractmethod
-	def upgrade(self, simulate: bool = False) -> None:
+	def upgrade(self, target_version: Optional[str] = None, simulate: bool = False) -> None:
 		""" Upgrade the database """
 
 
