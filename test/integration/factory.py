@@ -1,10 +1,13 @@
 import os
 import platform
 import re
+from typing import Callable, Optional
 
 import pymongo
 import sqlalchemy
 
+from bhamon_orchestra_model.database.database_administration import DatabaseAdministration
+from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.database.json_database_administration import JsonDatabaseAdministration
 from bhamon_orchestra_model.database.json_database_client import JsonDatabaseClient
 from bhamon_orchestra_model.database.mongo_database_administration import MongoDatabaseAdministration
@@ -14,7 +17,9 @@ from bhamon_orchestra_model.database.sql_database_client import SqlDatabaseClien
 from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 
 
-def create_database_administration_factory(database_uri, database_metadata):
+def create_database_administration_factory(
+		database_uri: str, database_metadata: Optional[sqlalchemy.schema.MetaData]) -> Callable[[],DatabaseAdministration]:
+
 	if database_uri.startswith("json://"):
 		serializer = JsonSerializer(indent = 4)
 		data_directory = _convert_uri_to_local_path(database_uri)
@@ -30,7 +35,9 @@ def create_database_administration_factory(database_uri, database_metadata):
 	raise ValueError("Unsupported database uri '%s'" % database_uri)
 
 
-def create_database_client_factory(database_uri, database_metadata):
+def create_database_client_factory(
+		database_uri: str, database_metadata: Optional[sqlalchemy.schema.MetaData]) -> Callable[[],DatabaseClient]:
+
 	if database_uri.startswith("json://"):
 		serializer = JsonSerializer(indent = 4)
 		data_directory = _convert_uri_to_local_path(database_uri)
@@ -46,7 +53,7 @@ def create_database_client_factory(database_uri, database_metadata):
 	raise ValueError("Unsupported database uri '%s'" % database_uri)
 
 
-def _convert_uri_to_local_path(database_uri):
+def _convert_uri_to_local_path(database_uri: str) -> str:
 	database_uri_regex = re.compile(r"^json://(?P<path>/[a-zA-Z0-9_\-\./%]+)$")
 	if platform.system() == "Windows":
 		database_uri_regex = re.compile(r"^json:///(?P<path>[a-zA-Z]:[a-zA-Z0-9_\-\./%]+)$")
