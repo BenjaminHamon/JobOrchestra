@@ -9,6 +9,7 @@ from bhamon_orchestra_website import helpers as website_helpers
 
 from .. import assert_extensions
 from . import context
+from . import dataset
 from . import environment
 
 
@@ -55,20 +56,16 @@ def test_service_response_with_authorization(tmpdir, database_type, user_identif
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
 @pytest.mark.parametrize("user_identifier, user_roles", get_all_user_parameters())
-def test_service_routes(tmpdir, database_type, user_identifier, user_roles): # pylint: disable = too-many-locals
+def test_service_routes(tmpdir, database_type, user_identifier, user_roles):
 	""" Test if service responds successfully for accessible routes """
+
+	dataset_instance = dataset.simple_dataset
 
 	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		authentication = context_instance.configure_service_authentication(user_identifier, user_roles)
 
 		with context_instance.database_client_factory() as database_client:
-			user = context_instance.user_provider.create(database_client, "my_user", "MyUser")
-			project = context_instance.project_provider.create_or_update(database_client, "examples", "Examples", {})
-			job = context_instance.job_provider.create_or_update(database_client, "empty", "examples", "Empty", "", [], [], {})
-			schedule = context_instance.schedule_provider.create_or_update(database_client, "empty_nightly", "examples", "Empty Nightly", "empty", {}, "0 0 * * *")
-			worker = context_instance.worker_provider.create(database_client, "my_worker", "my_user", "0.0.0", "MyWorker")
-			run = context_instance.run_provider.create(database_client, "examples", "empty", {}, { "type": "user", "identifier": "my_user" })
-			context_instance.run_provider.update_status(database_client, run, worker = "my_worker")
+			dataset.import_dataset(database_client, dataset_instance)
 
 		service_process = context_instance.invoke_service()
 
@@ -89,12 +86,12 @@ def test_service_routes(tmpdir, database_type, user_identifier, user_roles): # p
 			if route == "/project/<project_identifier>/status":
 				continue
 
-			route = route.replace("<job_identifier>", job["identifier"])
-			route = route.replace("<project_identifier>", project["identifier"])
-			route = route.replace("<run_identifier>", run["identifier"])
-			route = route.replace("<schedule_identifier>", schedule["identifier"])
-			route = route.replace("<user_identifier>", user["identifier"])
-			route = route.replace("<worker_identifier>", worker["identifier"])
+			route = route.replace("<job_identifier>", dataset_instance["job"][0]["identifier"])
+			route = route.replace("<project_identifier>", dataset_instance["project"][0]["identifier"])
+			route = route.replace("<run_identifier>", dataset_instance["run"][0]["identifier"])
+			route = route.replace("<schedule_identifier>", dataset_instance["schedule"][0]["identifier"])
+			route = route.replace("<user_identifier>", dataset_instance["user"][0]["identifier"])
+			route = route.replace("<worker_identifier>", dataset_instance["worker"][0]["identifier"])
 
 			response = requests.get(context_instance.get_service_uri() + route, auth = authentication, timeout = 10)
 			save_response(os.path.join(str(tmpdir), "service_responses"), route, response)
@@ -143,20 +140,16 @@ def test_website_response_with_authorization(tmpdir, database_type, user_identif
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
 @pytest.mark.parametrize("user_identifier, user_roles", get_all_user_parameters())
-def test_website_pages(tmpdir, database_type, user_identifier, user_roles): # pylint: disable = too-many-locals
+def test_website_pages(tmpdir, database_type, user_identifier, user_roles):
 	""" Test if website responds successfully for accessible pages """
+
+	dataset_instance = dataset.simple_dataset
 
 	with context.OrchestraContext(tmpdir, database_type) as context_instance:
 		authentication = context_instance.configure_website_authentication(user_identifier, user_roles)
 
 		with context_instance.database_client_factory() as database_client:
-			user = context_instance.user_provider.create(database_client, "my_user", "MyUser")
-			project = context_instance.project_provider.create_or_update(database_client, "examples", "Examples", {})
-			job = context_instance.job_provider.create_or_update(database_client, "empty", "examples", "Empty", "", [], [], {})
-			schedule = context_instance.schedule_provider.create_or_update(database_client, "empty_nightly", "examples", "Empty Nightly", "empty", {}, "0 0 * * *")
-			worker = context_instance.worker_provider.create(database_client, "my_worker", "my_user", "0.0.0", "MyWorker")
-			run = context_instance.run_provider.create(database_client, "examples", "empty", {}, { "type": "user", "identifier": "my_user" })
-			context_instance.run_provider.update_status(database_client, run, worker = "my_worker")
+			dataset.import_dataset(database_client, dataset_instance)
 
 		service_process = context_instance.invoke_service()
 		website_process = context_instance.invoke_website()
@@ -175,12 +168,12 @@ def test_website_pages(tmpdir, database_type, user_identifier, user_roles): # py
 			if route == "/project/<project_identifier>/status":
 				continue
 
-			route = route.replace("<job_identifier>", job["identifier"])
-			route = route.replace("<project_identifier>", project["identifier"])
-			route = route.replace("<run_identifier>", run["identifier"])
-			route = route.replace("<schedule_identifier>", schedule["identifier"])
-			route = route.replace("<user_identifier>", user["identifier"])
-			route = route.replace("<worker_identifier>", worker["identifier"])
+			route = route.replace("<job_identifier>", dataset_instance["job"][0]["identifier"])
+			route = route.replace("<project_identifier>", dataset_instance["project"][0]["identifier"])
+			route = route.replace("<run_identifier>", dataset_instance["run"][0]["identifier"])
+			route = route.replace("<schedule_identifier>", dataset_instance["schedule"][0]["identifier"])
+			route = route.replace("<user_identifier>", dataset_instance["user"][0]["identifier"])
+			route = route.replace("<worker_identifier>", dataset_instance["worker"][0]["identifier"])
 			route = route.replace("<path:route>", "help")
 
 			response = session.get(context_instance.get_website_uri() + route, timeout = 10)
