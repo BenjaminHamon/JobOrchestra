@@ -27,9 +27,10 @@ def test_reinitialization(tmpdir, database_type):
 				database_administration.initialize()
 
 
-@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+@pytest.mark.parametrize("simulate", [ False, True ], ids = [ "actual", "simulation" ])
 @pytest.mark.parametrize("base_version", [ "3.0" ])
-def test_upgrade(tmpdir, database_type, base_version):
+@pytest.mark.parametrize("database_type", environment.get_all_database_types())
+def test_upgrade(tmpdir, database_type, base_version, simulate):
 	""" Test upgrading a database """
 
 	if database_type == "json":
@@ -42,14 +43,19 @@ def test_upgrade(tmpdir, database_type, base_version):
 		model_module = importlib.import_module(model_module_name)
 		metadata_factory = lambda: model_module.metadata
 
+	dataset_instance = getattr(dataset, "simple_dataset_%s" % base_version.replace(".", "_"))
+
 	with context.DatabaseContext(tmpdir, database_type, metadata_factory = metadata_factory) as context_instance:
 		with context_instance.database_administration_factory() as database_administration:
 			database_administration.initialize(version = base_version)
-			database_administration.upgrade()
+		with context_instance.database_client_factory() as database_client:
+			dataset.import_dataset(database_client, dataset_instance)
+		with context_instance.database_administration_factory() as database_administration:
+			database_administration.upgrade(simulate = simulate)
 
 
-@pytest.mark.parametrize("database_type_source", environment.get_all_database_types())
 @pytest.mark.parametrize("database_type_target", environment.get_all_database_types())
+@pytest.mark.parametrize("database_type_source", environment.get_all_database_types())
 def test_import_export(tmpdir, database_type_source, database_type_target):
 	""" Test exporting and re-importing a database """
 

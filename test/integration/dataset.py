@@ -115,3 +115,95 @@ simple_dataset = {
 	],
 
 }
+
+
+simple_dataset_3_0 = {
+
+	"user": [
+		{
+			"identifier": "my_user",
+			"display_name": "My User",
+			"roles": [],
+			"is_enabled": True,
+			"creation_date": "2020-01-01T00:00:00Z",
+			"update_date": "2020-01-01T00:00:00Z",
+		},
+	],
+
+	"user_authentication" : [],
+
+	"project": [
+		{
+			"identifier": "my_project",
+			"display_name": "My Project",
+			"services": {},
+			"creation_date": "2020-01-01T00:00:00Z",
+			"update_date": "2020-01-01T00:00:00Z",
+		},
+	],
+
+	"job": [
+		{
+			"project": "my_project",
+			"identifier": "my_job",
+			"display_name": "My Job",
+			"description": "My job description",
+			"definition": {},
+			"parameters": [],
+			"properties": {},
+			"is_enabled": True,
+			"creation_date": "2020-01-01T00:00:00Z",
+			"update_date": "2020-01-01T00:00:00Z",
+		},
+	],
+
+	"run": [
+		{
+			"identifier": "my_run",
+			"project": "my_project",
+			"job": "my_job",
+			"parameters": {},
+			"source": { "type": "user", "identifier": "my_user" },
+			"worker": "my_worker",
+			"status": "succeeded",
+			"start_date": "2020-01-01T00:00:00Z",
+			"completion_date": "2020-01-01T00:00:00Z",
+			"results": {},
+			"should_cancel": False,
+			"should_abort": False,
+			"creation_date": "2020-01-01T00:00:00Z",
+			"update_date": "2020-01-01T00:00:00Z",
+		},
+	],
+
+	"schedule": [
+		{
+			"project": "my_project",
+			"identifier": "my_schedule",
+			"display_name": "My Schedule",
+			"job": "my_job",
+			"parameters": {},
+			"expression": "* * * * *",
+			"is_enabled": False,
+			"last_run": None,
+			"creation_date": "2020-01-01T00:00:00Z",
+			"update_date": "2020-01-01T00:00:00Z",
+		},
+	],
+
+	"worker": [
+		{
+			"identifier": "worker",
+			"owner": "my_user",
+			"version": "0.0.0",
+			"display_name": "My Worker",
+			"properties": {},
+			"is_enabled": False,
+			"is_active": False,
+			"should_disconnect": False,
+			"creation_date": "2020-01-01T00:00:00Z",
+			"update_date": "2020-01-01T00:00:00Z",
+		},
+	],
+
+}
