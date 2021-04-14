@@ -6,12 +6,9 @@ max-attributes = 10
 
 [FORMAT]
 indent-string = '\t'
-max-line-length = 200
+max-line-length = 160
 
 [MESSAGES CONTROL]
 disable =
-	bad-continuation,
-	bad-whitespace,
 	duplicate-code,
-	len-as-condition,
 	missing-docstring,

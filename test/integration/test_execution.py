@@ -1,3 +1,5 @@
+# pylint: disable = line-too-long
+
 """ Integration tests for job execution """
 
 import time
