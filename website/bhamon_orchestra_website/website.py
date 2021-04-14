@@ -2,6 +2,7 @@ import datetime
 import logging
 from typing import Any
 
+import dateutil.parser
 import flask
 import requests
 import werkzeug
@@ -40,6 +41,8 @@ class Website:
 			now = self._date_time_provider.now()
 			last_refresh = flask.session.get("last_refresh", None)
 			if last_refresh is not None:
+				if isinstance(last_refresh, str):
+					last_refresh = dateutil.parser.parse(last_refresh)
 				last_refresh = last_refresh.replace(tzinfo = datetime.timezone.utc)
 
 			if last_refresh is None or now > last_refresh + self.session_refresh_interval:
