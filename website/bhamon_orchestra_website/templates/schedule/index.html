@@ -35,8 +35,8 @@
 		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = schedule['project']) }}">{{ schedule['project_display_name'] }}</a></li>
 		<li>Job: <a href="{{ url_for('job_controller.show', project_identifier = schedule['project'], job_identifier = schedule['job']) }}">{{ schedule['job_display_name'] }}</a></li>
 		<li>Expression: {{ schedule['expression'] }} ({{ schedule['expression'] | describe_cron_expression }})</li>
-		<li>Creation date: {{ schedule['creation_date'] }}</li>
-		<li>Update date: {{ schedule['update_date'] }}</li>
+		<li>Creation date: {{ schedule['creation_date'] | format_date }}</li>
+		<li>Update date: {{ schedule['update_date'] | format_date }}</li>
 	</ul>
 </section>
 {% endblock %}

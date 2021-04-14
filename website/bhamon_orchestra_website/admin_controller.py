@@ -2,6 +2,7 @@ import logging
 import platform
 from typing import Any, List
 
+import dateutil.parser
 import flask
 import requests
 
@@ -51,7 +52,7 @@ class AdminController: # pylint: disable = too-few-public-methods
 		return {
 			"python_version": platform.python_version() + "+" + platform.python_revision(),
 			"website_version": self._application.config["WEBSITE_VERSION"],
-			"website_date": self._application.config["WEBSITE_DATE"],
+			"website_date": dateutil.parser.parse(self._application.config["WEBSITE_DATE"]),
 		}
 
 

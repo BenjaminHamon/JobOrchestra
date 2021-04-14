@@ -38,10 +38,10 @@
 			{% endif %}
 		{% endif %}
 		<li>Worker: {% if run['worker'] != None %}<a href="{{ url_for('worker_controller.show', worker_identifier = run['worker']) }}">{{ run['worker_display_name'] }}</a>{% endif %}</li>
-		<li>Creation date: {{ run['creation_date'] }}</li>
-		<li>Update date: {{ run['update_date'] }}</li>
-		<li>Start date: {% if run['start_date'] != None %}{{ run['start_date'] }}{% endif %}</li>
-		<li>Completion date: {% if run['completion_date'] != None %}{{ run['completion_date'] }}{% endif %}</li>
+		<li>Creation date: {{ run['creation_date'] | format_date }}</li>
+		<li>Update date: {{ run['update_date'] | format_date }}</li>
+		<li>Start date: {{ run['start_date'] | format_date }}</li>
+		<li>Completion date: {{ run['completion_date'] | format_date }}</li>
 	</ul>
 </section>
 

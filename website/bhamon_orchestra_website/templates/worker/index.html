@@ -57,8 +57,8 @@
 	<ul>
 		<li>Owner: <a href="{{ url_for('user_controller.show', user_identifier = worker['owner']) }}">{{ worker['owner_display_name'] }}</a></li>
 		<li>Version: {{ worker['version'] }}</li>
-		<li>Creation date: {{ worker['creation_date'] }}</li>
-		<li>Update date: {{ worker['update_date'] }}</li>
+		<li>Creation date: {{ worker['creation_date'] | format_date }}</li>
+		<li>Update date: {{ worker['update_date'] | format_date }}</li>
 	</ul>
 </section>
 

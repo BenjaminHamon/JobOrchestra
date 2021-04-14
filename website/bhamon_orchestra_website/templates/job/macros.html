@@ -41,7 +41,7 @@
 				</form>
 			</td>
 			{% endif %}
-			<td>{{ job['update_date'] }}</td>
+			<td>{{ job['update_date'] | format_date }}</td>
 		</tr>
 		{% endfor %}
 	</tbody>

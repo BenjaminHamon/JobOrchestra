@@ -63,7 +63,7 @@
 			</td>
 			{% endif %}
 			<td>{{ worker['version'] }}</td>
-			<td>{{ worker['update_date'] }}</td>
+			<td>{{ worker['update_date'] | format_date }}</td>
 		</tr>
 		{% endfor %}
 	</tbody>

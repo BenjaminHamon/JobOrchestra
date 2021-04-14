@@ -38,7 +38,7 @@
 				</form>
 			</td>
 			{% endif %}
-			<td>{{ user['update_date'] }}</td>
+			<td>{{ user['update_date'] | format_date }}</td>
 		</tr>
 		{% endfor %}
 	</tbody>
@@ -75,17 +75,17 @@
 				{% if token['is_active'] %}
 				<div class="status-group">
 					<div class="status-indicator active"></div>
-					<div class="status-text">{{ token['expiration_date'] if token['expiration_date'] != None else 'Never' }}</div>
+					<div class="status-text">{{ token['expiration_date'] | format_date if token['expiration_date'] != None else 'Never' }}</div>
 				</div>
 				{% else %}
 				<div class="status-group">
 					<div class="status-indicator inactive"></div>
-					<div class="status-text">{{ token['expiration_date'] if token['expiration_date'] != None else 'Never' }}</div>
+					<div class="status-text">{{ token['expiration_date'] | format_date if token['expiration_date'] != None else 'Never' }}</div>
 				</div>
 				{% endif %}
 			</td>
-			<td>{{ token['creation_date'] }}</td>
-			<td>{{ token['update_date'] }}</td>
+			<td>{{ token['creation_date'] | format_date }}</td>
+			<td>{{ token['update_date'] | format_date }}</td>
 		</tr>
 		{% endfor %}
 	</tbody>
@@ -122,17 +122,17 @@
 				{% if token['is_active'] %}
 				<div class="status-group">
 					<div class="status-indicator active"></div>
-					<div class="status-text">{{ token['expiration_date'] if token['expiration_date'] != None else 'Never' }}</div>
+					<div class="status-text">{{ token['expiration_date'] | format_date if token['expiration_date'] != None else 'Never' }}</div>
 				</div>
 				{% else %}
 				<div class="status-group">
 					<div class="status-indicator inactive"></div>
-					<div class="status-text">{{ token['expiration_date'] if token['expiration_date'] != None else 'Never' }}</div>
+					<div class="status-text">{{ token['expiration_date'] | format_date if token['expiration_date'] != None else 'Never' }}</div>
 				</div>
 				{% endif %}
 			</td>
-			<td>{{ token['creation_date'] }}</td>
-			<td>{{ token['update_date'] }}</td>
+			<td>{{ token['creation_date'] | format_date }}</td>
+			<td>{{ token['update_date'] | format_date }}</td>
 		</tr>
 		{% endfor %}
 	</tbody>

@@ -58,8 +58,8 @@
 		{% endif %}
 	</div>
 	<ul>
-		<li>Creation date: {{ user['creation_date'] }}</li>
-		<li>Update date: {{ user['update_date'] }}</li>
+		<li>Creation date: {{ user['creation_date'] | format_date }}</li>
+		<li>Update date: {{ user['update_date'] | format_date }}</li>
 	</ul>
 </section>
 

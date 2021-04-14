@@ -44,7 +44,7 @@
 				</form>
 			</td>
 			{% endif %}
-			<td>{{ schedule['update_date'] }}</td>
+			<td>{{ schedule['update_date'] | format_date }}</td>
 		</tr>
 		{% endfor %}
 	</tbody>

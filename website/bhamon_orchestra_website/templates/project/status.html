@@ -35,7 +35,7 @@
 					<td>
 						<div class="revision-header">
 							<a href="{{ revision['url'] }}">{{ revision['identifier_short'] }}</a>
-							<p class="date">{{ revision['date'] }}</p>
+							<p class="date">{{ revision['date'] | format_date }}</p>
 						</div>
 					</td>
 					{% for run_filter in project_context['filter_collection'] %}

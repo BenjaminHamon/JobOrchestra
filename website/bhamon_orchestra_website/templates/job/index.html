@@ -39,8 +39,8 @@
 	</div>
 	<ul>
 		<li>Project: <a href="{{ url_for('project_controller.show', project_identifier = job['project']) }}">{{ job['project_display_name'] }}</a></li>
-		<li>Creation date: {{ job['creation_date'] }}</li>
-		<li>Update date: {{ job['update_date'] }}</li>
+		<li>Creation date: {{ job['creation_date'] | format_date }}</li>
+		<li>Update date: {{ job['update_date'] | format_date }}</li>
 	</ul>
 </section>
 

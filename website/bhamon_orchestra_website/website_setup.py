@@ -37,6 +37,7 @@ def configure( # pylint: disable = redefined-builtin, too-many-arguments
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True
 	application.jinja_env.filters["build_pipeline_view"] = pipeline_view.build_pipeline_view
+	application.jinja_env.filters["format_date"] = helpers.format_date
 	application.jinja_env.filters["describe_cron_expression"] = helpers.describe_cron_expression
 	application.jinja_env.filters["truncate_text"] = helpers.truncate_text
 	application.jinja_env.globals["authorize_view"] = website.authorize_view

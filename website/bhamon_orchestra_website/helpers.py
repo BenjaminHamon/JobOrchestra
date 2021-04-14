@@ -1,7 +1,9 @@
+import datetime
 import math
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import cron_descriptor
+import dateutil.parser
 import flask
 
 
@@ -13,6 +15,16 @@ def none_if_empty(value: str) -> Optional[str]:
 	if value == "":
 		return None
 	return value
+
+
+def format_date(date: Optional[Union[datetime.datetime,str]], isoformat = False) -> Optional[str]:
+	if date is None:
+		return ""
+	if isinstance(date, str):
+		date = dateutil.parser.parse(date)
+	if isoformat:
+		return date.astimezone(datetime.timezone.utc).replace(tzinfo = None).isoformat() + "Z"
+	return date.astimezone(datetime.timezone.utc).strftime("%d-%b-%Y %H:%M:%S UTC")
 
 
 def describe_cron_expression(expression: str) -> str:

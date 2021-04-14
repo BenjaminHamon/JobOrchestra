@@ -10,7 +10,7 @@
 		{% for project in project_collection %}
 		<tr>
 			<td><a href="{{ url_for('project_controller.show', project_identifier = project['identifier']) }}">{{ project['display_name'] }}</a></td>
-			<td>{{ project['update_date'] }}</td>
+			<td>{{ project['update_date'] | format_date }}</td>
 		</tr>
 		{% endfor %}
 	</tbody>
