@@ -1,14 +1,16 @@
 import logging
 import os
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
+import bhamon_orchestra_model
+from bhamon_orchestra_model.database.database_administration import DatabaseAdministration
 from bhamon_orchestra_model.serialization.serializer import Serializer
 
 
 logger = logging.getLogger("JsonDatabaseAdministration")
 
 
-class JsonDatabaseAdministration:
+class JsonDatabaseAdministration(DatabaseAdministration):
 	""" Administration client for a database storing data as json files, intended for development only. """
 
 
@@ -25,8 +27,33 @@ class JsonDatabaseAdministration:
 		self.close()
 
 
-	def initialize(self, simulate: bool = False) -> None:
+	def get_metadata(self) -> dict:
+		return self._load()["metadata"]
+
+
+	def initialize(self, # pylint: disable = too-many-arguments
+			product: Optional[str] = None,
+			copyright: Optional[str] = None, # pylint: disable = redefined-builtin
+			version: Optional[str] = None,
+			date: Optional[str] = None,
+			simulate: bool = False) -> None:
+
 		logger.info("Initializing (Path: '%s')" + (" (simulation)" if simulate else ""), self.data_directory) # pylint: disable = logging-not-lazy
+
+		if self.get_metadata() is not None:
+			raise RuntimeError("Database is already initialized")
+
+		metadata = {
+			"product": product if product is not None else bhamon_orchestra_model.__product__,
+			"copyright": copyright if copyright is not None else bhamon_orchestra_model.__copyright__,
+			"version": version if version is not None else bhamon_orchestra_model.__version__,
+			"date": date if date is not None else bhamon_orchestra_model.__date__,
+		}
+
+		logger.info("Creating admin data")
+		administration_data = { "metadata": metadata, "indexes": [] }
+		if not simulate:
+			self._save(administration_data)
 
 		logger.info("Creating run index")
 		if not simulate:
@@ -88,7 +115,14 @@ class JsonDatabaseAdministration:
 			pass
 
 		if administration_data is None:
-			administration_data = { "indexes": [] }
+			administration_data = {
+				"metadata": None,
+				"indexes": [],
+			}
+
+		if administration_data["metadata"] is not None:
+			administration_data["metadata"]["date"] = administration_data["metadata"]["date"].replace(tzinfo = None).isoformat() + "Z"
+
 		return administration_data
 
 
