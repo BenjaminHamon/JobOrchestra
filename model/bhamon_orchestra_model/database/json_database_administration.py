@@ -76,7 +76,7 @@ class JsonDatabaseAdministration(DatabaseAdministration):
 			self.create_index("worker", "identifier_unique", [ ("identifier", "ascending") ], is_unique = True)
 
 
-	def upgrade(self, simulate: bool = False) -> None:
+	def upgrade(self, target_version: Optional[str] = None, simulate: bool = False) -> None:
 		raise NotImplementedError("Upgrading a JSON database is not supported")
 
 
