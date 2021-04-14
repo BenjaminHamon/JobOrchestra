@@ -51,7 +51,12 @@ class AuthenticationProvider:
 			"update_date": now,
 		})
 
-		authentication["secret"] = self.hash_password(password, authentication["hash_function_salt"], authentication["hash_function"], authentication["hash_function_parameters"])
+		authentication["secret"] = self.hash_password(
+			password = password,
+			salt = authentication["hash_function_salt"],
+			function = authentication["hash_function"],
+			parameters = authentication["hash_function_parameters"],
+		)
 
 		database_client.update_one(self.table, { "identifier": authentication["identifier"] }, authentication)
 		return self.convert_to_public(authentication)
@@ -65,7 +70,14 @@ class AuthenticationProvider:
 		authentication = database_client.find_one(self.table, { "user": user_identifier, "type": "password" })
 		if authentication is None:
 			return False
-		hashed_password = self.hash_password(password, authentication["hash_function_salt"], authentication["hash_function"], authentication["hash_function_parameters"])
+
+		hashed_password = self.hash_password(
+			password = password,
+			salt = authentication["hash_function_salt"],
+			function = authentication["hash_function"],
+			parameters = authentication["hash_function_parameters"],
+		)
+
 		return secrets.compare_digest(hashed_password, authentication["secret"])
 
 

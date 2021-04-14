@@ -72,9 +72,10 @@ class Website:
 
 
 	def handle_error(self, exception: Exception) -> Any: # pylint: disable = no-self-use
+		remote_address = flask.request.environ["REMOTE_ADDR"]
 		status_code = exception.code if isinstance(exception, werkzeug.exceptions.HTTPException) else 500
 		status_message = helpers.get_error_message(status_code)
-		request_logger.error("(%s) %s %s (StatusCode: %s)", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url, status_code, exc_info = True)
+		request_logger.error("(%s) %s %s (StatusCode: %s)", remote_address, flask.request.method, flask.request.base_url, status_code, exc_info = True)
 		if flask.request.headers.get("Accept") == "application/json":
 			return flask.jsonify({ "status_code": status_code, "status_message": status_message }), status_code
 		return flask.render_template("error.html", title = "Error", status_message = status_message, status_code = status_code), status_code

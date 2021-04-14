@@ -70,8 +70,9 @@ class Service:
 
 
 	def handle_error(self, exception: Exception) -> None:
+		remote_address = flask.request.environ["REMOTE_ADDR"]
 		status_code = exception.code if isinstance(exception, werkzeug.exceptions.HTTPException) else 500
-		request_logger.error("(%s) %s %s (StatusCode: %s)", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url, status_code, exc_info = True)
+		request_logger.error("(%s) %s %s (StatusCode: %s)", remote_address, flask.request.method, flask.request.base_url, status_code, exc_info = True)
 		return self._response_builder.create_error_response(status_code)
 
 

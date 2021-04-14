@@ -20,7 +20,16 @@ def test_abort_run_pending():
 	date_time_provider_instance = FakeDateTimeProvider()
 	run_provider_instance = RunProvider(None, date_time_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(lambda: database_client_instance, None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
+
+	job_scheduler_instance = JobScheduler(
+		database_client_factory = lambda: database_client_instance,
+		job_provider = None,
+		run_provider = run_provider_instance,
+		schedule_provider = None,
+		supervisor = supervisor_instance,
+		worker_selector = None,
+		date_time_provider = date_time_provider_instance,
+	)
 
 	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
@@ -42,7 +51,16 @@ def test_abort_run_running_connected():
 	run_provider_instance = RunProvider(None, date_time_provider_instance)
 	worker_instance = Worker("worker_test", None, lambda: database_client_instance, run_provider_instance, None)
 	supervisor_instance = Supervisor(None, None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(lambda: database_client_instance, None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
+
+	job_scheduler_instance = JobScheduler(
+		database_client_factory = lambda: database_client_instance,
+		job_provider = None,
+		run_provider = run_provider_instance,
+		schedule_provider = None,
+		supervisor = supervisor_instance,
+		worker_selector = None,
+		date_time_provider = date_time_provider_instance,
+	)
 
 	supervisor_instance._active_workers[worker_instance.identifier] = worker_instance
 
@@ -71,7 +89,16 @@ def test_abort_run_running_disconnected():
 	run_provider_instance = RunProvider(None, date_time_provider_instance)
 	worker_instance = Worker("worker_test", None, lambda: database_client_instance, run_provider_instance, None)
 	supervisor_instance = Supervisor(None, None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(lambda: database_client_instance, None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
+
+	job_scheduler_instance = JobScheduler(
+		database_client_factory = lambda: database_client_instance,
+		job_provider = None,
+		run_provider = run_provider_instance,
+		schedule_provider = None,
+		supervisor = supervisor_instance,
+		worker_selector = None,
+		date_time_provider = date_time_provider_instance,
+	)
 
 	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)
@@ -97,7 +124,16 @@ def test_abort_run_completed():
 	date_time_provider_instance = FakeDateTimeProvider()
 	run_provider_instance = RunProvider(None, date_time_provider_instance)
 	supervisor_instance = Supervisor(None, None, None, None, None, None)
-	job_scheduler_instance = JobScheduler(lambda: database_client_instance, None, run_provider_instance, None, supervisor_instance, None, date_time_provider_instance)
+
+	job_scheduler_instance = JobScheduler(
+		database_client_factory = lambda: database_client_instance,
+		job_provider = None,
+		run_provider = run_provider_instance,
+		schedule_provider = None,
+		supervisor = supervisor_instance,
+		worker_selector = None,
+		date_time_provider = date_time_provider_instance,
+	)
 
 	job = { "project": "examples", "identifier": "empty" }
 	run = run_provider_instance.create(database_client_instance, job["project"], job["identifier"], {}, None)

@@ -217,11 +217,15 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 		process_environment = os.environ.copy()
 		process_environment["PYTHONPATH"] = os.getcwd()
 
+		output_log_file_path = os.path.join(self.temporary_directory, identifier + "_" + "stdout.log")
+		error_log_file_path = os.path.join(self.temporary_directory, identifier + "_" + "stderr.log")
+
 		os.makedirs(workspace, exist_ok = True)
 
-		with open(os.path.join(self.temporary_directory, identifier + "_" + "stdout.log"), mode = "a", encoding = "utf-8") as stdout_file:
-			with open(os.path.join(self.temporary_directory, identifier + "_" + "stderr.log"), mode = "a", encoding = "utf-8") as stderr_file:
-				process = subprocess.Popen(command, cwd = workspace, env = process_environment, stdout = stdout_file, stderr = stderr_file, creationflags = subprocess_flags)
+		with open(output_log_file_path, mode = "a", encoding = "utf-8") as stdout_file:
+			with open(error_log_file_path, mode = "a", encoding = "utf-8") as stderr_file:
+				process = subprocess.Popen(command, cwd = workspace, env = process_environment,
+						stdout = stdout_file, stderr = stderr_file, creationflags = subprocess_flags)
 
 		logger.info("New subprocess '%s' (PID: %s)", identifier, process.pid)
 
