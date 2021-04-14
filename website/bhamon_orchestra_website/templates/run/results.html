@@ -17,7 +17,7 @@
 			<ul>
 				<li>
 					<span>
-						{% if run_results['revision_control'].get('url', none) %}
+						{% if run_results['revision_control'].get('url', None) %}
 						<a href="{{ run_results['revision_control']['url'] }}">
 							{{ run_results['revision_control']['revision'] }}
 						</a>
@@ -55,7 +55,7 @@
 					<span>
 						{{ test_run['run_type'] }} {{ 'succeeded' if test_run['success'] else 'failed ' }}
 					</span>
-					{% if test_run.get('summary_text', none) %}
+					{% if test_run.get('summary_text', None) %}
 					<span>
 						({{ test_run['summary_text'] }})
 					</span>
