@@ -8,6 +8,7 @@ import uuid
 import pytest
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.serialization.serializer import Serializer
 from bhamon_orchestra_worker.pipeline_executor import PipelineExecutor
 from bhamon_orchestra_worker.pipeline_executor import TriggerStatus
 from bhamon_orchestra_worker.service_client import ServiceClient
@@ -88,9 +89,10 @@ async def test_empty(tmpdir):
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	serializer_mock = Mock(spec = Serializer)
 	service_client_mock = FakeServiceClient()
 
-	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
+	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, serializer_mock, service_client_mock)
 	executor_instance.running_update_interval_seconds = 0.1
 	executor_instance.aborting_update_interval_seconds = 0.1
 
@@ -143,9 +145,10 @@ async def test_parallel(tmpdir):
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	serializer_mock = Mock(spec = Serializer)
 	service_client_mock = FakeServiceClient()
 
-	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
+	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, serializer_mock, service_client_mock)
 	executor_instance.running_update_interval_seconds = 0.1
 	executor_instance.aborting_update_interval_seconds = 0.1
 
@@ -202,9 +205,10 @@ async def test_sequential(tmpdir):
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	serializer_mock = Mock(spec = Serializer)
 	service_client_mock = FakeServiceClient()
 
-	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
+	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, serializer_mock, service_client_mock)
 	executor_instance.running_update_interval_seconds = 0.1
 	executor_instance.aborting_update_interval_seconds = 0.1
 
@@ -261,9 +265,10 @@ async def test_complex(tmpdir):
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	serializer_mock = Mock(spec = Serializer)
 	service_client_mock = FakeServiceClient()
 
-	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
+	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, serializer_mock, service_client_mock)
 	executor_instance.running_update_interval_seconds = 0.1
 	executor_instance.aborting_update_interval_seconds = 0.1
 
@@ -328,9 +333,10 @@ async def test_failure(tmpdir):
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	serializer_mock = Mock(spec = Serializer)
 	service_client_mock = FakeServiceClient()
 
-	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
+	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, serializer_mock, service_client_mock)
 	executor_instance.running_update_interval_seconds = 0.1
 	executor_instance.aborting_update_interval_seconds = 0.1
 
@@ -388,9 +394,10 @@ async def test_abort(tmpdir):
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	serializer_mock = Mock(spec = Serializer)
 	service_client_mock = FakeServiceClient()
 
-	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
+	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, serializer_mock, service_client_mock)
 	executor_instance.running_update_interval_seconds = 0.1
 	executor_instance.aborting_update_interval_seconds = 0.1
 
@@ -457,9 +464,10 @@ async def test_can_trigger_inner_run(tmpdir):
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	serializer_mock = Mock(spec = Serializer)
 	service_client_mock = FakeServiceClient()
 
-	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, service_client_mock)
+	executor_instance = PipelineExecutor(worker_storage_mock, date_time_provider_mock, serializer_mock, service_client_mock)
 	executor_instance.running_update_interval_seconds = 0.1
 	executor_instance.aborting_update_interval_seconds = 0.1
 

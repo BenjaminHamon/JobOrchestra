@@ -1,6 +1,7 @@
 """ Unit tests for WorkerStorage """
 
 from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 
@@ -8,7 +9,8 @@ def test_list_runs(tmpdir):
 	""" Test listing runs """
 
 	data_storage_instance = FileDataStorage(str(tmpdir))
-	worker_storage_instance = WorkerStorage(data_storage_instance)
+	serializer_instance = JsonSerializer(indent = 4)
+	worker_storage_instance = WorkerStorage(data_storage_instance, serializer_instance)
 
 	uuid_run_identifier = "2152bd45-dd77-4cbb-998a-af21a52e4cea"
 	arbitrary_run_identifier = "my_run"

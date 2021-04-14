@@ -1,7 +1,7 @@
 import argparse
-import json
 import logging
 
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 from bhamon_orchestra_worker.controller import Controller
 from bhamon_orchestra_worker.web_service_client import WebServiceClient
 
@@ -16,10 +16,10 @@ def main():
 	environment_instance = environment.load_environment()
 	environment.configure_logging(environment_instance, arguments)
 
-	with open(arguments.authentication, mode = "r", encoding = "utf-8") as authentication_file:
-		authentication = json.load(authentication_file)
-
-	service_client_instance = WebServiceClient(arguments.service_url, (authentication["user"], authentication["secret"]))
+	serializer_instance = JsonSerializer(indent = 4)
+	authentication = serializer_instance.deserialize_from_file(arguments.authentication)
+	service_authorization = (authentication["user"], authentication["secret"])
+	service_client_instance = WebServiceClient(serializer_instance, arguments.service_url, authorization = service_authorization)
 	controller_instance = Controller(service_client_instance, None, arguments.results)
 
 	# Rapid requests to reduce delays in tests

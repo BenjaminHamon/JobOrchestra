@@ -1,9 +1,9 @@
-import json
 import logging
 import os
 from typing import List
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.serialization.serializer import Serializer
 from bhamon_orchestra_worker.executor import Executor
 from bhamon_orchestra_worker.process_exception import ProcessException
 from bhamon_orchestra_worker.process_watcher import ProcessWatcher
@@ -16,8 +16,10 @@ logger = logging.getLogger("Executor")
 class JobExecutor(Executor):
 
 
-	def __init__(self, storage: WorkerStorage, date_time_provider: DateTimeProvider) -> None:
+	def __init__(self, storage: WorkerStorage, date_time_provider: DateTimeProvider, serializer: Serializer) -> None:
 		super().__init__(storage, date_time_provider)
+
+		self._serializer = serializer
 
 		self.result_file_path = None
 
@@ -92,8 +94,7 @@ class JobExecutor(Executor):
 			self.run_logging_handler.flush()
 
 		if os.path.isfile(self.result_file_path):
-			with open(self.result_file_path, mode = "r", encoding = "utf-8") as result_file:
-				results = json.load(result_file)
+			results = self._serializer.deserialize_from_file(self.result_file_path)
 			self._storage.save_results(self.run_identifier, results)
 
 		return process_watcher_instance.process.returncode == 0

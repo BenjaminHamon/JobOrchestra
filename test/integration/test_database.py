@@ -7,6 +7,7 @@ import sqlalchemy.schema
 import sqlalchemy.types
 
 import bhamon_orchestra_model.database.import_export as database_import_export
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 
 from . import context
 from . import environment
@@ -241,6 +242,8 @@ def test_index(tmpdir, database_type):
 def test_import_export(tmpdir, database_type_source, database_type_target):
 	""" Test exporting and re-importing a database """
 
+	serializer = JsonSerializer(indent = 4)
+
 	intermediate_directory = os.path.join(str(tmpdir), "export")
 
 	with context.OrchestraContext(tmpdir, database_type_source, database_suffix = "source") as context_instance:
@@ -249,11 +252,11 @@ def test_import_export(tmpdir, database_type_source, database_type_target):
 			context_instance.job_provider.create_or_update(database_client, "my-job", "my-project", "My Job", "", [], [], {})
 			run = context_instance.run_provider.create(database_client, "my-project", "my-job", {}, {})
 
-			database_import_export.export_database(database_client, intermediate_directory)
+			database_import_export.export_database(database_client, serializer, intermediate_directory)
 
 	with context.OrchestraContext(tmpdir, database_type_target, database_suffix = "target") as context_instance:
 		with context_instance.database_client_factory() as database_client:
-			database_import_export.import_database(database_client, intermediate_directory)
+			database_import_export.import_database(database_client, serializer, intermediate_directory)
 
 			assert len(context_instance.project_provider.get_list(database_client)) == 1
 			assert context_instance.project_provider.get_list(database_client)[0]["identifier"] == "my-project"

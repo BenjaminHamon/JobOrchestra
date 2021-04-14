@@ -1,6 +1,5 @@
 import argparse
 import importlib
-import json
 import logging
 import types
 
@@ -12,6 +11,7 @@ from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.project_provider import ProjectProvider
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.schedule_provider import ScheduleProvider
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 from bhamon_orchestra_model.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
@@ -30,9 +30,13 @@ def main():
 	environment_instance = environment.load_environment()
 	environment.configure_logging(environment_instance, arguments)
 
+	serializer = JsonSerializer(indent = 4)
 	application = create_application(arguments)
+
 	result = arguments.handler(application, arguments)
-	print(json.dumps(result, indent = 4))
+
+	if result is not None:
+		print(serializer.serialize_to_string(result))
 
 
 def parse_arguments():

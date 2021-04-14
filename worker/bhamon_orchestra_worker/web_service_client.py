@@ -1,9 +1,9 @@
-import json
 import logging
 from typing import Any, Optional, Tuple
 
 import requests
 
+from bhamon_orchestra_model.serialization.serializer import Serializer
 from bhamon_orchestra_worker.service_client import ServiceClient
 
 
@@ -14,7 +14,8 @@ class WebServiceClient(ServiceClient):
 	""" Implementation of ServiceClient for a web service """
 
 
-	def __init__(self, service_url: str, authorization: Optional[Tuple[str,str]]) -> None:
+	def __init__(self, serializer: Serializer, service_url: str, authorization: Optional[Tuple[str,str]]) -> None:
+		self._serializer = serializer
 		self.service_url = service_url
 		self.authorization = authorization
 
@@ -43,12 +44,12 @@ class WebServiceClient(ServiceClient):
 	def send_request(self, method: str, route: str, parameters: Optional[dict] = None, data: Optional[Any] = None) -> Optional[Any]:
 		logger.debug("%s %s", method, self.service_url + route)
 
-		headers = { "Accept": "application/json" }
+		headers = { "Accept": self._serializer.get_content_type() }
 
 		serialized_data = None
 		if data is not None:
-			headers["Content-Type"] = "application/json"
-			serialized_data = json.dumps(data)
+			headers["Content-Type"] = self._serializer.get_content_type()
+			serialized_data = self._serializer.serialize_to_string(data)
 
 		response = requests.request(method, self.service_url + route, auth = self.authorization, headers = headers, params = parameters, data = serialized_data)
 
@@ -57,7 +58,7 @@ class WebServiceClient(ServiceClient):
 		if response.status_code == 204:
 			return None
 
-		if response.headers["Content-Type"].split(";")[0] == "application/json":
-			return json.loads(response.text)
+		if response.headers["Content-Type"].split(";")[0] == self._serializer.get_content_type():
+			return self._serializer.deserialize_from_string(response.text)
 
 		raise RuntimeError("Unsupported response content-type '%s'" % response.headers["Content-Type"])

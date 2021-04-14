@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.serialization.serializer import Serializer
 from bhamon_orchestra_worker.job_executor import JobExecutor
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
@@ -21,8 +22,9 @@ async def test_empty(tmpdir):
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	serializer_mock = Mock(spec = Serializer)
 
-	executor_instance = JobExecutor(worker_storage_mock, date_time_provider_mock)
+	executor_instance = JobExecutor(worker_storage_mock, date_time_provider_mock, serializer_mock)
 
 	request = {
 		"project_identifier": "my_project",
@@ -66,8 +68,9 @@ async def test_simple(tmpdir):
 
 	worker_storage_mock = Mock(spec = WorkerStorage)
 	date_time_provider_mock = Mock(spec = DateTimeProvider)
+	serializer_mock = Mock(spec = Serializer)
 
-	executor_instance = JobExecutor(worker_storage_mock, date_time_provider_mock)
+	executor_instance = JobExecutor(worker_storage_mock, date_time_provider_mock, serializer_mock)
 
 	request = {
 		"project_identifier": "my_project",

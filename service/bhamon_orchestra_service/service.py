@@ -8,7 +8,7 @@ from bhamon_orchestra_model.authentication_provider import AuthenticationProvide
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.user_provider import UserProvider
-import bhamon_orchestra_service.helpers as helpers
+from bhamon_orchestra_service.response_builder import ResponseBuilder
 
 
 main_logger = logging.getLogger("Service")
@@ -19,11 +19,12 @@ class Service:
 
 
 	def __init__(self, # pylint: disable = too-many-arguments
-			application: flask.Flask, database_client_factory: Callable[[], DatabaseClient],
+			application: flask.Flask, response_builder: ResponseBuilder, database_client_factory: Callable[[], DatabaseClient],
 			authentication_provider: AuthenticationProvider, authorization_provider: AuthorizationProvider,
 			user_provider: UserProvider) -> None:
 
 		self._application = application
+		self._response_builder = response_builder
 		self._database_client_factory = database_client_factory
 		self._authentication_provider = authentication_provider
 		self._authorization_provider = authorization_provider
@@ -68,20 +69,21 @@ class Service:
 			flask.abort(403)
 
 
-	def handle_error(self, exception: Exception) -> None: # pylint: disable = no-self-use
+	def handle_error(self, exception: Exception) -> None:
 		status_code = exception.code if isinstance(exception, werkzeug.exceptions.HTTPException) else 500
-		status_message = helpers.get_error_message(status_code)
 		request_logger.error("(%s) %s %s (StatusCode: %s)", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url, status_code, exc_info = True)
-		return flask.jsonify({ "status_code": status_code, "status_message": status_message }), status_code
+		return self._response_builder.create_error_response(status_code)
 
 
 	def home(self) -> Any:
-		return flask.jsonify({
+		response_data = {
 			"title": self._application.config["SERVICE_TITLE"],
 			"copyright": self._application.config["SERVICE_COPYRIGHT"],
 			"version": self._application.config["SERVICE_VERSION"],
 			"date": self._application.config["SERVICE_DATE"],
-		})
+		}
+
+		return self._response_builder.create_data_response(response_data)
 
 
 	def help(self) -> Any: # pylint: disable = redefined-builtin
@@ -90,4 +92,5 @@ class Service:
 			if not rule.rule.startswith("/static/"):
 				route_collection.append(rule.rule)
 		route_collection.sort()
-		return flask.jsonify(route_collection)
+
+		return self._response_builder.create_data_response(route_collection)

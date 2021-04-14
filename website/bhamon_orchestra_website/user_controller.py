@@ -55,7 +55,7 @@ class UserController:
 			user_tokens = self._service_client.get("/user/" + user_identifier + "/token_collection", parameters = token_query_parameters)
 			user_tokens.sort(key = lambda token: token["expiration_date"] is not None)
 
-			now = self._date_time_provider.serialize(self._date_time_provider.now())
+			now = self._date_time_provider.now()
 			for token in user_tokens:
 				token["is_active"] = token["expiration_date"] > now if token["expiration_date"] is not None else True
 

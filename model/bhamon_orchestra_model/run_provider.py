@@ -1,5 +1,4 @@
 import io
-import json
 import logging
 import os
 import time
@@ -11,6 +10,7 @@ from typing import List, Optional, Tuple
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.database.data_storage import DataStorage
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.serialization.serializer import Serializer
 
 
 logger = logging.getLogger("RunProvider")
@@ -80,8 +80,8 @@ class RunProvider:
 			"results": None,
 			"should_cancel": False,
 			"should_abort": False,
-			"creation_date": self.date_time_provider.serialize(now),
-			"update_date": self.date_time_provider.serialize(now),
+			"creation_date": now,
+			"update_date": now,
 		}
 
 		database_client.insert_one(self.table, run)
@@ -102,7 +102,7 @@ class RunProvider:
 			"completion_date": completion_date,
 			"should_cancel": should_cancel,
 			"should_abort": should_abort,
-			"update_date": self.date_time_provider.serialize(now),
+			"update_date": now,
 		}
 
 		update_data = { key: value for key, value in update_data.items() if value is not None }
@@ -139,14 +139,14 @@ class RunProvider:
 
 		update_data = {
 			"results": results,
-			"update_date": self.date_time_provider.serialize(now),
+			"update_date": now,
 		}
 
 		run.update(update_data)
 		database_client.update_one(self.table, { "project": run["project"], "identifier": run["identifier"] }, update_data)
 
 
-	def get_archive(self, database_client: DatabaseClient, project: str, run_identifier: str) -> dict:
+	def get_archive(self, database_client: DatabaseClient, serializer: Serializer, project: str, run_identifier: str) -> dict:
 		run = database_client.find_one(self.table, { "project": project, "identifier": run_identifier })
 		if run is None:
 			return None
@@ -156,9 +156,9 @@ class RunProvider:
 
 		with io.BytesIO() as file_object:
 			with zipfile.ZipFile(file_object, mode = "w", compression = zipfile.ZIP_DEFLATED) as archive:
-				entry_info = zipfile.ZipInfo("run.json", now[0:6])
+				entry_info = zipfile.ZipInfo("run" + serializer.get_file_extension(), now[0:6])
 				entry_info.external_attr = 0o644 << 16
-				archive.writestr(entry_info, json.dumps(run, indent = 4))
+				archive.writestr(entry_info, serializer.serialize_to_string(run))
 
 				entry_info = zipfile.ZipInfo("run.log", now[0:6])
 				entry_info.external_attr = 0o644 << 16

@@ -6,6 +6,7 @@ import flask
 
 from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 
 import bhamon_orchestra_website.website_setup as website_setup
 from bhamon_orchestra_website.admin_controller import AdminController
@@ -46,8 +47,9 @@ def create_application(environment_instance):
 	application.secret_key = "secret"
 
 	date_time_provider_instance = DateTimeProvider()
+	serializer_instance = JsonSerializer(indent = 4)
 	authorization_provider_instance = AuthorizationProvider()
-	service_client_instance = ServiceClient(environment_instance["orchestra_service_url"])
+	service_client_instance = ServiceClient(serializer_instance, environment_instance["orchestra_service_url"])
 
 	website_instance = Website(date_time_provider_instance, authorization_provider_instance, service_client_instance)
 	admin_controller_instance = AdminController(application, service_client_instance)

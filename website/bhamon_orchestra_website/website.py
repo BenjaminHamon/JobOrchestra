@@ -2,6 +2,7 @@ import datetime
 import logging
 from typing import Any
 
+import dateutil.parser
 import flask
 import requests
 import werkzeug
@@ -40,7 +41,9 @@ class Website:
 			now = self._date_time_provider.now()
 			last_refresh = flask.session.get("last_refresh", None)
 			if last_refresh is not None:
-				last_refresh = self._date_time_provider.deserialize(last_refresh)
+				if isinstance(last_refresh, str):
+					last_refresh = dateutil.parser.parse(last_refresh)
+				last_refresh = last_refresh.replace(tzinfo = datetime.timezone.utc)
 
 			if last_refresh is None or now > last_refresh + self.session_refresh_interval:
 				request_data = { "token_identifier": flask.session["token"]["token_identifier"] }
@@ -48,7 +51,7 @@ class Website:
 				try:
 					self._service_client.post("/me/refresh_session", data = request_data)
 					flask.session["user"] = self._service_client.get("/me")
-					flask.session["last_refresh"] = self._date_time_provider.serialize(now)
+					flask.session["last_refresh"] = now
 				except requests.HTTPError as exception:
 					if exception.response.status_code == 403:
 						flask.session.clear()

@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import sys
 
@@ -9,6 +8,7 @@ import bhamon_orchestra_worker
 
 from bhamon_orchestra_model.application import AsyncioApplication
 from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 from bhamon_orchestra_worker.master_client import MasterClient
 from bhamon_orchestra_worker.worker import Worker
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
@@ -27,8 +27,8 @@ def main():
 	application_title = bhamon_orchestra_worker.__product__ + " " + "Worker"
 	application_version = bhamon_orchestra_worker.__version__
 
-	with open("authentication.json", mode = "r", encoding = "utf-8") as authentication_file:
-		authentication = json.load(authentication_file)
+	serializer_instance = JsonSerializer(indent = 4)
+	authentication = serializer_instance.deserialize_from_file("authentication.json")
 
 	with filelock.FileLock("worker.lock", 5):
 		worker_application = create_application(arguments, authentication)
@@ -51,7 +51,8 @@ def create_application(arguments, authentication):
 	}
 
 	data_storage_instance = FileDataStorage(".")
-	worker_storage_instance = WorkerStorage(data_storage_instance)
+	serializer_instance = JsonSerializer(indent = 4)
+	worker_storage_instance = WorkerStorage(data_storage_instance, serializer_instance)
 
 	master_client_instance = MasterClient(
 		master_uri = arguments.master_uri,

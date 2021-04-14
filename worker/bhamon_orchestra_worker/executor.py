@@ -77,7 +77,7 @@ class Executor: # pylint: disable = too-many-instance-attributes
 
 		try:
 			self.run_status = "running"
-			self.start_date = self._date_time_provider.serialize(self._date_time_provider.now())
+			self.start_date = self._date_time_provider.now()
 			self._save_status()
 
 			self._log_executor_information()
@@ -90,13 +90,13 @@ class Executor: # pylint: disable = too-many-instance-attributes
 			if self.run_status == "running":
 				raise RuntimeError("Unexpected status 'running' after execution")
 
-			self.completion_date = self._date_time_provider.serialize(self._date_time_provider.now())
+			self.completion_date = self._date_time_provider.now()
 			self.run_logger.info("Run completed with status %s", self.run_status)
 			self._save_status()
 
 		except asyncio.CancelledError:
 			self.run_status = "aborted"
-			self.completion_date = self._date_time_provider.serialize(self._date_time_provider.now())
+			self.completion_date = self._date_time_provider.now()
 			self.run_logger.info("Run completed with status %s", self.run_status)
 			self._save_status()
 
@@ -105,7 +105,7 @@ class Executor: # pylint: disable = too-many-instance-attributes
 		except Exception: # pylint: disable = broad-except
 			logger.error("(%s) Run raised an exception", self.run_identifier, exc_info = True)
 			self.run_status = "exception"
-			self.completion_date = self._date_time_provider.serialize(self._date_time_provider.now())
+			self.completion_date = self._date_time_provider.now()
 			self.run_logger.info("Run completed with status %s", self.run_status)
 			self.run_logger.error("Exception", exc_info = True)
 			self._save_status()

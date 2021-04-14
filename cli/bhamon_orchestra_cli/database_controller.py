@@ -1,6 +1,7 @@
 import logging
 
 import bhamon_orchestra_model.database.import_export as database_import_export
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 
 
 logger = logging.getLogger("DatabaseController")
@@ -37,10 +38,12 @@ def upgrade_database(application, arguments):
 
 
 def import_database(application, arguments):
+	serializer = JsonSerializer(indent = 4)
 	with application.database_client_factory() as database_client:
-		database_import_export.import_database(database_client, arguments.source, simulate = arguments.simulate)
+		database_import_export.import_database(database_client, serializer, arguments.source, simulate = arguments.simulate)
 
 
 def export_database(application, arguments):
+	serializer = JsonSerializer(indent = 4)
 	with application.database_client_factory() as database_client:
-		database_import_export.export_database(database_client, arguments.output, simulate = arguments.simulate)
+		database_import_export.export_database(database_client, serializer, arguments.output, simulate = arguments.simulate)
