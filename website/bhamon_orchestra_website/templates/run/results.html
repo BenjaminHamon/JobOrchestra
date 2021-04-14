@@ -17,9 +17,13 @@
 			<ul>
 				<li>
 					<span>
+						{% if run_results['revision_control'].get('url', none) %}
 						<a href="{{ run_results['revision_control']['url'] }}">
 							{{ run_results['revision_control']['revision'] }}
 						</a>
+						{% else %}
+						{{ run_results['revision_control']['revision'] }}
+						{% endif %}
 					</span>
 					<span>
 						({{ run_results['revision_control']['date'] | format_date }})
