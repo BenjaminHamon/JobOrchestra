@@ -73,7 +73,7 @@ def load_development_dependencies():
 		"alembic ~= 1.5.8",
 		"pymongo ~= 3.11.3",
 		"psycopg2 ~= 2.8.6",
-		"SQLAlchemy ~= 1.3.23",
+		"SQLAlchemy ~= 1.4.7",
 		"SQLAlchemy-Utils ~= 0.37.0",
 
 	]
