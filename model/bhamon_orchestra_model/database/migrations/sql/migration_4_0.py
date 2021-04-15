@@ -2,6 +2,7 @@ import logging
 
 from alembic.operations import Operations
 import dateutil.parser
+import sqlalchemy
 from sqlalchemy.schema import Column, MetaData, Table
 from sqlalchemy.types import String
 
@@ -54,12 +55,12 @@ def convert_datetimes(operations: Operations, table: str, column: str, nullable:
 		operations.add_column(table.name, Column(column + "_converting", UtcDateTime, nullable = True))
 
 	select_query = table.select()
-	table_rows = connection.execute(select_query).fetchall()
+	table_rows = connection.execute(select_query).mappings().fetchall()
 
 	for row in table_rows:
 		if row[column] is not None:
 			update_values = { column + "_converting": dateutil.parser.parse(row[column]) }
-			update_query = table.update().where(table.c.identifier == row.identifier).values(update_values)
+			update_query = sqlalchemy.update(table).where(table.c.identifier == row.identifier).values(update_values)
 
 			if not simulate:
 				connection.execute(update_query)
