@@ -8,14 +8,20 @@ def test_single():
 
 	client = MemoryDatabaseClient()
 	table = "record"
+
 	record = { "id": 1, "key": "value" }
+	record_updated = { "id": 1, "key": "value_updated" }
 
 	assert client.count(table, {}) == 0
 
 	client.insert_one(table, record)
 	assert client.count(table, {}) == 1
+	assert client.find_one(table, {}) == record
 
-	client.delete_one(table, record)
+	client.update_one(table, record, record_updated)
+	assert client.find_one(table, {}) == record_updated
+
+	client.delete_one(table, record_updated)
 	assert client.count(table, {}) == 0
 
 

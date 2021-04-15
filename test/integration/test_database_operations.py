@@ -40,6 +40,7 @@ def test_single(tmpdir, database_type):
 
 	table = "record_simple"
 	record = { "id": 1, "key": "value" }
+	record_updated = { "id": 1, "key": "value_updated" }
 
 	with context.DatabaseContext(tmpdir, database_type, metadata_factory = create_database_metadata) as context_instance:
 		with context_instance.database_client_factory() as database_client:
@@ -50,7 +51,11 @@ def test_single(tmpdir, database_type):
 			assert database_client.count(table, {}) == 1
 			assert database_client.find_one(table, {}) == record
 
-			database_client.delete_one(table, record)
+			database_client.update_one(table, record, record_updated)
+			assert database_client.count(table, {}) == 1
+			assert database_client.find_one(table, {}) == record_updated
+
+			database_client.delete_one(table, record_updated)
 			assert database_client.find_one(table, {}) is None
 			assert database_client.count(table, {}) == 0
 
