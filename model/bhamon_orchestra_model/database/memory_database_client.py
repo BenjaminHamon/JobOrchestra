@@ -1,3 +1,4 @@
+import copy
 import functools
 import logging
 from typing import List, Optional, Tuple
@@ -28,15 +29,15 @@ class MemoryDatabaseClient(DatabaseClient):
 
 		start_index = skip
 		end_index = (skip + limit) if limit is not None else None
-		results = self.database.get(table, [])
-		results = self._apply_order_by(results, order_by)
-		results = [ row for row in results if self._match_filter(row, filter) ]
+		all_table_rows = self.database.get(table, [])
+		all_table_rows = self._apply_order_by(all_table_rows, order_by)
+		results = [ copy.deepcopy(row) for row in all_table_rows if self._match_filter(row, filter) ]
 		return results[ start_index : end_index ]
 
 
 	def find_one(self, table: str, filter: dict) -> Optional[dict]: # pylint: disable = redefined-builtin
 		""" Return a single item (or nothing) from a table, after applying a filter """
-		return next(( row for row in self.database.get(table, []) if self._match_filter(row, filter) ), None)
+		return next(( copy.deepcopy(row) for row in self.database.get(table, []) if self._match_filter(row, filter) ), None)
 
 
 	def insert_one(self, table: str, data: dict) -> None:
@@ -44,7 +45,7 @@ class MemoryDatabaseClient(DatabaseClient):
 
 		if table not in self.database:
 			self.database[table] = []
-		self.database[table].append(data)
+		self.database[table].append(copy.deepcopy(data))
 
 
 	def insert_many(self, table: str, dataset: List[dict]) -> None:
@@ -52,7 +53,7 @@ class MemoryDatabaseClient(DatabaseClient):
 
 		if table not in self.database:
 			self.database[table] = []
-		self.database[table].extend(dataset)
+		self.database[table].extend(copy.deepcopy(dataset))
 
 
 	def update_one(self, table: str, filter: dict, data: dict) -> None: # pylint: disable = redefined-builtin

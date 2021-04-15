@@ -295,6 +295,7 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	# none => running (_recover_execution)
 	worker_local_instance.executors = await worker_local_instance._recover_executors(database_client_instance)
 	local_executor = worker_local_instance.executors[0]
+	run = local_executor["run"]
 
 	assert local_executor["local_status"] == "running"
 	assert run["status"] == "running"
@@ -394,6 +395,7 @@ async def test_process_recovery_after_execution(): # pylint: disable = too-many-
 	# none => running (_recover_execution)
 	worker_local_instance.executors = await worker_local_instance._recover_executors(database_client_instance)
 	local_executor = worker_local_instance.executors[0]
+	run = local_executor["run"]
 
 	assert local_executor["local_status"] == "running"
 
