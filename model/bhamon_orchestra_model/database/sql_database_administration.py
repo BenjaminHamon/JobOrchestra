@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 
 from alembic.operations import Operations
 from alembic.runtime.migration import MigrationContext
+import sqlalchemy
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.engine import Connection
 from sqlalchemy.schema import MetaData
@@ -38,8 +39,8 @@ class SqlDatabaseAdministration(DatabaseAdministration):
 
 	def get_metadata(self) -> dict:
 		try:
-			schema_metadata_query = self.metadata.tables["__metadata__"].select()
-			schema_metadata_rows = self.connection.execute(schema_metadata_query).fetchall()
+			schema_metadata_query = sqlalchemy.select(self.metadata.tables["__metadata__"])
+			schema_metadata_rows = self.connection.execute(schema_metadata_query).mappings().fetchall()
 		except SQLAlchemyError:
 			return None
 
@@ -82,7 +83,7 @@ class SqlDatabaseAdministration(DatabaseAdministration):
 		for key, value in schema_metadata.items():
 			schema_metadata_rows.append({ "key": key, "value": value })
 
-		query = self.metadata.tables["__metadata__"].insert(schema_metadata_rows)
+		query = sqlalchemy.insert(self.metadata.tables["__metadata__"]).values(schema_metadata_rows)
 		if not simulate:
 			self.connection.execute(query)
 
@@ -141,11 +142,11 @@ class SqlDatabaseAdministration(DatabaseAdministration):
 
 			metadata_key_column = self.metadata.tables["__metadata__"].c.key
 
-			version_query = self.metadata.tables["__metadata__"].update().where(metadata_key_column == "version").values({ "value": migration.version })
+			version_query = sqlalchemy.update(self.metadata.tables["__metadata__"]).where(metadata_key_column == "version").values({ "value": migration.version })
 			if not simulate:
 				self.connection.execute(version_query)
 
-			date_query = self.metadata.tables["__metadata__"].update().where(metadata_key_column == "date").values({ "value": migration.date })
+			date_query = sqlalchemy.update(self.metadata.tables["__metadata__"]).where(metadata_key_column == "date").values({ "value": migration.date })
 			if not simulate:
 				self.connection.execute(date_query)
 

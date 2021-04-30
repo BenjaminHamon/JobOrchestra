@@ -24,8 +24,10 @@ class SqlDatabaseClient(DatabaseClient):
 	def count(self, table: str, filter: dict) -> int: # pylint: disable = redefined-builtin
 		""" Return how many items are in a table, after applying a filter """
 
-		where_clause = self._convert_filter(table, filter)
-		query = sqlalchemy.select([ sqlalchemy.func.count() ]).select_from(self.metadata.tables[table]).where(where_clause)
+		query = sqlalchemy.select(sqlalchemy.func.count()).select_from(self.metadata.tables[table])
+		if filter is not None and filter != {}:
+			query = query.where(self._convert_filter(table, filter))
+
 		return self.connection.execute(query).scalar()
 
 
@@ -34,10 +36,14 @@ class SqlDatabaseClient(DatabaseClient):
 			skip: int = 0, limit: Optional[int] = None, order_by: Optional[List[Tuple[str,str]]] = None) -> List[dict]:
 		""" Return a list of items from a table, after applying a filter, with options for limiting and sorting results """
 
-		where_clause = self._convert_filter(table, filter)
-		order_by_clauses = self._convert_order_by_expression(table, order_by)
-		query = self.metadata.tables[table].select().where(where_clause).order_by(*order_by_clauses).offset(skip).limit(limit)
-		result = self.connection.execute(query).fetchall()
+		query = sqlalchemy.select(self.metadata.tables[table])
+		if filter is not None and filter != {}:
+			query = query.where(self._convert_filter(table, filter))
+		if order_by is not None and order_by != []:
+			query = query.order_by(*self._convert_order_by_expression(table, order_by))
+		query = query.offset(skip).limit(limit)
+
+		result = self.connection.execute(query).mappings().fetchall()
 
 		return [ dict(row) for row in result ]
 
@@ -45,9 +51,12 @@ class SqlDatabaseClient(DatabaseClient):
 	def find_one(self, table: str, filter: dict) -> Optional[dict]: # pylint: disable = redefined-builtin
 		""" Return a single item (or nothing) from a table, after applying a filter """
 
-		where_clause = self._convert_filter(table, filter)
-		query = self.metadata.tables[table].select().where(where_clause).limit(1)
-		result = self.connection.execute(query).fetchone()
+		query = sqlalchemy.select(self.metadata.tables[table])
+		if filter is not None and filter != {}:
+			query = query.where(self._convert_filter(table, filter))
+		query = query.limit(1)
+
+		result = self.connection.execute(query).mappings().fetchone()
 
 		return dict(result) if result is not None else None
 
@@ -55,14 +64,14 @@ class SqlDatabaseClient(DatabaseClient):
 	def insert_one(self, table: str, data: dict) -> None:
 		""" Insert a new item into a table """
 
-		query = self.metadata.tables[table].insert(data)
+		query = sqlalchemy.insert(self.metadata.tables[table]).values(data)
 		self.connection.execute(query)
 
 
 	def insert_many(self, table: str, dataset: List[dict]) -> None:
 		""" Insert a list of items into a table """
 
-		query = self.metadata.tables[table].insert(dataset)
+		query = sqlalchemy.insert(self.metadata.tables[table]).values(dataset)
 		self.connection.execute(query)
 
 
@@ -77,8 +86,7 @@ class SqlDatabaseClient(DatabaseClient):
 			return
 
 		filter = { key: row[key] for key in [ column.name for column in self.metadata.tables[table].primary_key.columns ] }
-		where_clause = self._convert_filter(table, filter)
-		query = self.metadata.tables[table].update().where(where_clause).values(data)
+		query = sqlalchemy.update(self.metadata.tables[table]).where(self._convert_filter(table, filter)).values(data)
 		self.connection.execute(query)
 
 
@@ -93,8 +101,7 @@ class SqlDatabaseClient(DatabaseClient):
 			return
 
 		filter = { key: row[key] for key in [ column.name for column in self.metadata.tables[table].primary_key.columns ] }
-		where_clause = self._convert_filter(table, filter)
-		query = self.metadata.tables[table].delete().where(where_clause)
+		query = sqlalchemy.delete(self.metadata.tables[table]).where(self._convert_filter(table, filter))
 		self.connection.execute(query)
 
 
@@ -102,7 +109,7 @@ class SqlDatabaseClient(DatabaseClient):
 		self.connection.close()
 
 
-	def _convert_filter(self, table: str, filter: dict) -> ClauseElement: # pylint: disable = redefined-builtin
+	def _convert_filter(self, table: str, filter: dict) -> Optional[ClauseElement]: # pylint: disable = redefined-builtin
 		all_conditions = []
 
 		for key, value in filter.items():

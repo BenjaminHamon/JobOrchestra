@@ -134,7 +134,7 @@ def test_run_cancel(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, {})
 			context_instance.run_provider.update_status(database_client, run, should_cancel = True)
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
@@ -168,7 +168,7 @@ def test_run_abort(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, {})
 			context_instance.run_provider.update_status(database_client, run, should_abort = True)
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
@@ -212,7 +212,7 @@ def test_run_without_master(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, {})
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] == "running"
 			assert_extensions.wait_for_condition(condition_function)
@@ -256,7 +256,7 @@ def test_run_recovery_on_master(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, {})
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] == "running"
 			assert_extensions.wait_for_condition(condition_function)
@@ -306,7 +306,7 @@ def test_run_recovery_on_worker(tmpdir, database_type):
 		worker_process = context_instance.invoke_worker("worker_01")
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, {})
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] == "running"
 			assert_extensions.wait_for_condition(condition_function)
@@ -587,7 +587,7 @@ def test_job_pipeline_abort(tmpdir, database_type): # pylint: disable = too-many
 		worker_02_process = context_instance.invoke_worker("worker_02")
 
 		with context_instance.database_client_factory() as database_client:
-			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+			run = context_instance.run_provider.create(database_client, project_identifier, job_identifier, {}, {})
 			context_instance.run_provider.update_status(database_client, run, should_abort = True)
 
 			condition_function = lambda: context_instance.run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
@@ -623,7 +623,7 @@ def test_job_pipeline_abort(tmpdir, database_type): # pylint: disable = too-many
 
 
 def run_and_wait(run_provider, database_client, project_identifier, job_identifier):
-	run = run_provider.create(database_client, project_identifier, job_identifier, {}, None)
+	run = run_provider.create(database_client, project_identifier, job_identifier, {}, {})
 
 	condition_function = lambda: run_provider.get(database_client, run["project"], run["identifier"])["status"] not in [ "pending", "running" ]
 	assert_extensions.wait_for_condition(condition_function, timeout_seconds = 30)
