@@ -1,6 +1,5 @@
 import argparse
 import logging
-from typing import Any
 
 import flask
 
@@ -51,7 +50,7 @@ def create_application(environment_instance):
 	authorization_provider_instance = AuthorizationProvider()
 	service_client_instance = ServiceClient(serializer_instance, environment_instance["orchestra_service_url"])
 
-	website_instance = Website(date_time_provider_instance, authorization_provider_instance, service_client_instance)
+	website_instance = Website(application, date_time_provider_instance, authorization_provider_instance, service_client_instance)
 	admin_controller_instance = AdminController(application, service_client_instance)
 	job_controller_instance = JobController(service_client_instance)
 	me_controller_instance = MeController(date_time_provider_instance, service_client_instance)
@@ -78,21 +77,7 @@ def create_application(environment_instance):
 		worker_controller = worker_controller_instance,
 	)
 
-	application.add_url_rule("/me/routes", methods = [ "GET" ], view_func = lambda: list_routes(authorization_provider_instance))
-
 	return application
-
-
-def list_routes(authorization_provider: AuthorizationProvider) -> Any:
-	route_collection = []
-	for rule in flask.current_app.url_map.iter_rules():
-		if "GET" in rule.methods and not rule.rule.startswith("/static/"):
-			if authorization_provider.authorize_request(flask.request.user, "GET", rule.rule):
-				route_collection.append(rule.rule)
-
-	route_collection.sort()
-
-	return flask.jsonify(route_collection)
 
 
 if __name__ == "__main__":

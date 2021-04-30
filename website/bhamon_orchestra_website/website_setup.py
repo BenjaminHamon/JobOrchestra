@@ -60,6 +60,7 @@ def register_routes( # pylint: disable = too-many-arguments
 		user_controller: UserController, worker_controller: WorkerController) -> None:
 
 	add_url_rule(application, "/", [ "GET" ], website.home)
+	add_url_rule(application, "/routes", [ "GET" ], website.list_routes)
 	add_url_rule(application, "/admin", [ "GET" ], admin_controller.index)
 	add_url_rule(application, "/me", [ "GET" ], me_controller.show_profile)
 	add_url_rule(application, "/me/login", [ "GET", "POST" ], me_controller.login)

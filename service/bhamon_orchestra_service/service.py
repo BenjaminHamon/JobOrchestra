@@ -87,11 +87,15 @@ class Service:
 		return self._response_builder.create_data_response(response_data)
 
 
-	def help(self) -> Any: # pylint: disable = redefined-builtin
+	def list_routes(self) -> Any:
 		route_collection = []
 		for rule in self._application.url_map.iter_rules():
 			if not rule.rule.startswith("/static/"):
-				route_collection.append(rule.rule)
-		route_collection.sort()
+				for method in rule.methods:
+					if method in [ "GET", "POST", "PUT", "DELETE" ]:
+						is_authorized = self._authorization_provider.authorize_request(flask.request.user, method, rule.rule)
+						route_collection.append({ "method": method, "path": rule.rule, "is_authorized": is_authorized })
+
+		route_collection.sort(key = lambda x: (x["path"], x["method"]))
 
 		return self._response_builder.create_data_response(route_collection)

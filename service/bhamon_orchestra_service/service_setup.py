@@ -48,7 +48,7 @@ def register_routes( # pylint: disable = too-many-arguments, too-many-statements
 		user_controller: UserController, worker_controller: WorkerController) -> None:
 
 	add_url_rule(application, "/", [ "GET" ], service.home)
-	add_url_rule(application, "/help", [ "GET" ], service.help)
+	add_url_rule(application, "/routes", [ "GET" ], service.list_routes)
 	add_url_rule(application, "/admin/information", [ "GET" ], admin_controller.information)
 	add_url_rule(application, "/admin/service_collection", [ "GET" ], admin_controller.get_service_collection)
 	add_url_rule(application, "/admin/service/<service_identifier>", [ "GET" ], admin_controller.get_service_status)

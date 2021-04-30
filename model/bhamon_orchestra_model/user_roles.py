@@ -4,12 +4,12 @@
 
 
 class Anonymous:
-	""" Automatic role for a user not logged in, with minimal access to web routes (home, help, login, static) """
+	""" Automatic role for a user not logged in, with minimal access to web routes (home, routes, login, static) """
 
 
 	def is_route_authorized(self, method: str, route: str) -> bool:
 		if method == "GET":
-			if route in [ "/", "/help" ]:
+			if route in [ "/", "/routes" ]:
 				return True
 			if route.startswith("/static/"):
 				return True
@@ -27,12 +27,12 @@ class Anonymous:
 
 
 class Default:
-	""" Automatic role for any user logged in, with minimal access to web routes (home, help, me, service proxy, static) """
+	""" Automatic role for any user logged in, with minimal access to web routes (home, routes, me, service proxy, static) """
 
 
 	def is_route_authorized(self, method: str, route: str) -> bool:
 		if method == "GET":
-			if route in [ "/", "/help", "/me", "/service_proxy" ]:
+			if route in [ "/", "/routes", "/me", "/service_proxy" ]:
 				return True
 			if route.startswith("/static/"):
 				return True

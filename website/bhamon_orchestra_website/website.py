@@ -20,9 +20,10 @@ request_logger = logging.getLogger("Request")
 class Website:
 
 
-	def __init__(self, date_time_provider: DateTimeProvider,
+	def __init__(self, application: flask.Flask, date_time_provider: DateTimeProvider,
 			authorization_provider: AuthorizationProvider, service_client: ServiceClient) -> None:
 
+		self._application = application
 		self._date_time_provider = date_time_provider
 		self._authorization_provider = authorization_provider
 		self._service_client = service_client
@@ -83,6 +84,20 @@ class Website:
 
 	def home(self) -> Any: # pylint: disable = no-self-use
 		return flask.render_template("home.html", title = "Home")
+
+
+	def list_routes(self) -> Any:
+		route_collection = []
+		for rule in self._application.url_map.iter_rules():
+			if not rule.rule.startswith("/static/"):
+				for method in rule.methods:
+					if method in [ "GET", "POST", "PUT", "DELETE" ]:
+						is_authorized = self._authorization_provider.authorize_request(flask.request.user, method, rule.rule)
+						route_collection.append({ "method": method, "path": rule.rule, "is_authorized": is_authorized })
+
+		route_collection.sort(key = lambda x: (x["path"], x["method"]))
+
+		return flask.jsonify(route_collection)
 
 
 	def proxy_to_service(self, route: str) -> flask.Response:

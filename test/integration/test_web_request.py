@@ -24,6 +24,18 @@ def get_all_user_parameters():
 	]
 
 
+def get_service_routes(service_uri, authentication):
+	response = requests.get(service_uri + "/routes", auth = authentication, timeout = 10)
+	response.raise_for_status()
+	return response.json()
+
+
+def get_website_routes(website_uri, session):
+	response = session.get(website_uri + "/routes", timeout = 10)
+	response.raise_for_status()
+	return response.json()
+
+
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
 def test_service_response(tmpdir, database_type):
 	""" Test if service responds successfully to a simple request """
@@ -69,10 +81,8 @@ def test_service_routes(tmpdir, database_type, user_identifier, user_roles):
 
 		service_process = context_instance.invoke_service()
 
-		response = requests.get(context_instance.get_service_uri() + "/me/routes", auth = authentication, timeout = 10)
-		response.raise_for_status()
-
-		route_collection = response.json()
+		route_collection = get_service_routes(context_instance.get_service_uri(), authentication)
+		route_collection = [ route["path"] for route in route_collection if route["method"] == "GET" and route["is_authorized"] ]
 
 		for route in route_collection:
 
@@ -157,10 +167,9 @@ def test_website_pages(tmpdir, database_type, user_identifier, user_roles):
 		session = requests.Session()
 		response = session.post(context_instance.get_website_uri() + "/me/login", { "user": authentication[0], "password": authentication[1] }, timeout = 10)
 		response.raise_for_status()
-		response = session.get(context_instance.get_website_uri() + "/me/routes", timeout = 10)
-		response.raise_for_status()
 
-		route_collection = response.json()
+		route_collection = get_website_routes(context_instance.get_website_uri(), session)
+		route_collection = [ route["path"] for route in route_collection if route["method"] == "GET" and route["is_authorized"] ]
 
 		for route in route_collection:
 
@@ -174,7 +183,7 @@ def test_website_pages(tmpdir, database_type, user_identifier, user_roles):
 			route = route.replace("<schedule_identifier>", dataset_instance["schedule"][0]["identifier"])
 			route = route.replace("<user_identifier>", dataset_instance["user"][0]["identifier"])
 			route = route.replace("<worker_identifier>", dataset_instance["worker"][0]["identifier"])
-			route = route.replace("<path:route>", "help")
+			route = route.replace("<path:route>", "").rstrip("/")
 
 			response = session.get(context_instance.get_website_uri() + route, timeout = 10)
 			save_response(os.path.join(str(tmpdir), "website_responses"), route, response)
