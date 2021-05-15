@@ -3,9 +3,9 @@ import re
 
 from typing import List, Optional, Tuple
 
-from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.users.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 

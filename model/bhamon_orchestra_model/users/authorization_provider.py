@@ -2,7 +2,7 @@ import logging
 
 from typing import List, Optional
 
-import bhamon_orchestra_model.user_roles as user_role_classes
+import bhamon_orchestra_model.users.user_roles as user_role_classes
 
 
 logger = logging.getLogger("AuthorizationProvider")

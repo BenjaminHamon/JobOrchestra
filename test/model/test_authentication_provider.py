@@ -3,8 +3,8 @@
 import datetime
 import secrets
 
-from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
+from bhamon_orchestra_model.users.authentication_provider import AuthenticationProvider
 
 from ..fakes.fake_date_time_provider import FakeDateTimeProvider
 

@@ -3,9 +3,9 @@ import logging
 
 import flask
 
-from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
+from bhamon_orchestra_model.users.authorization_provider import AuthorizationProvider
 
 import bhamon_orchestra_website.website_setup as website_setup
 from bhamon_orchestra_website.admin_controller import AdminController

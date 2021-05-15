@@ -8,10 +8,10 @@ from websockets.http import Headers
 from websockets.server import HTTPResponse as HttpResponse
 from websockets.server import WebSocketServerProtocol as BaseWebSocketServerProtocol
 
-from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
-from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.database.database_client import DatabaseClient
-from bhamon_orchestra_model.user_provider import UserProvider
+from bhamon_orchestra_model.users.authentication_provider import AuthenticationProvider
+from bhamon_orchestra_model.users.authorization_provider import AuthorizationProvider
+from bhamon_orchestra_model.users.user_provider import UserProvider
 
 
 logger = logging.getLogger("WebSocket")

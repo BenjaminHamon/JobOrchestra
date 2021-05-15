@@ -4,8 +4,6 @@ import logging
 
 import flask
 
-from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
-from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.job_provider import JobProvider
@@ -13,7 +11,9 @@ from bhamon_orchestra_model.project_provider import ProjectProvider
 from bhamon_orchestra_model.run_provider import RunProvider
 from bhamon_orchestra_model.schedule_provider import ScheduleProvider
 from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
-from bhamon_orchestra_model.user_provider import UserProvider
+from bhamon_orchestra_model.users.authentication_provider import AuthenticationProvider
+from bhamon_orchestra_model.users.authorization_provider import AuthorizationProvider
+from bhamon_orchestra_model.users.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
 import bhamon_orchestra_service.service_setup as service_setup

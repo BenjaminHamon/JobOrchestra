@@ -4,8 +4,8 @@ from typing import Any, Optional
 import flask
 import requests
 
-from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.users.authorization_provider import AuthorizationProvider
 
 import bhamon_orchestra_website.helpers as helpers
 from bhamon_orchestra_website.service_client import ServiceClient

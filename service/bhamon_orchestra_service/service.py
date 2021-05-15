@@ -4,10 +4,10 @@ from typing import Any, Callable
 import flask
 import werkzeug
 
-from bhamon_orchestra_model.authentication_provider import AuthenticationProvider
-from bhamon_orchestra_model.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.database.database_client import DatabaseClient
-from bhamon_orchestra_model.user_provider import UserProvider
+from bhamon_orchestra_model.users.authentication_provider import AuthenticationProvider
+from bhamon_orchestra_model.users.authorization_provider import AuthorizationProvider
+from bhamon_orchestra_model.users.user_provider import UserProvider
 from bhamon_orchestra_service.response_builder import ResponseBuilder
 
 
