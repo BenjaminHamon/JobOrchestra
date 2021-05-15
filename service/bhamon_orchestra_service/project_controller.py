@@ -83,7 +83,7 @@ class ProjectController:
 
 		query_parameters = {
 			"repository": project["services"]["revision_control"]["repository"],
-			"branch": flask.request.args.get("branch", default = None),
+			"reference": flask.request.args.get("reference", default = None),
 			"limit": max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1),
 		}
 
@@ -91,26 +91,26 @@ class ProjectController:
 		return self._response_builder.create_data_response(revision_collection)
 
 
-	def get_revision(self, project_identifier: str, revision_reference: str) -> Any:
+	def get_revision(self, project_identifier: str, reference: str) -> Any:
 		database_client = flask.request.database_client()
 		project = self._project_provider.get(database_client, project_identifier)
 		revision_control_client = self._create_revision_control_client(project["services"]["revision_control"])
 
 		query_parameters = {
 			"repository": project["services"]["revision_control"]["repository"],
-			"revision": revision_reference,
+			"reference": reference,
 		}
 
 		revision = revision_control_client.get_revision(**query_parameters)
 		return self._response_builder.create_data_response(revision)
 
 
-	def get_revision_status(self, project_identifier: str, revision_reference: str) -> Any:
+	def get_revision_status(self, project_identifier: str, reference: str) -> Any:
 		database_client = flask.request.database_client()
 		project = self._project_provider.get(database_client, project_identifier)
 		repository = project["services"]["revision_control"]["repository"]
 		revision_control_client = self._create_revision_control_client(project["services"]["revision_control"])
-		revision = revision_control_client.get_revision(repository, revision_reference)
+		revision = revision_control_client.get_revision(repository, reference)
 		revision_runs = []
 		revision_status = "unknown"
 
@@ -147,7 +147,7 @@ class ProjectController:
 			revision_status = "succeeded"
 
 		response_data = {
-			"reference": revision_reference,
+			"reference": reference,
 			"identifier": revision["identifier"],
 			"identifier_short": revision["identifier_short"],
 			"runs": revision_runs,
@@ -165,7 +165,7 @@ class ProjectController:
 
 		revision_query_parameters = {
 			"repository": repository,
-			"branch": flask.request.args.get("branch", default = None),
+			"reference": flask.request.args.get("reference", default = None),
 			"limit": max(min(flask.request.args.get("revision_limit", default = 20, type = int), 100), 1),
 		}
 

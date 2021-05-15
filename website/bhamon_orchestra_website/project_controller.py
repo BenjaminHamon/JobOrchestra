@@ -41,9 +41,9 @@ class ProjectController:
 
 		if "revision_control" in view_data["project"]["services"]:
 			view_data["revision_collection"] = []
-			for branch in view_data["project"]["services"]["revision_control"]["branches_for_status"]:
-				branch_status = self._service_client.get("/project/" + project_identifier + "/repository/revision/" + branch + "/status")
-				view_data["revision_collection"].append(branch_status)
+			for reference in view_data["project"]["services"]["revision_control"]["references_for_status"]:
+				reference_status = self._service_client.get("/project/" + project_identifier + "/repository/revision/" + reference + "/status")
+				view_data["revision_collection"].append(reference_status)
 
 		job_query_parameters = { "order_by": [ "identifier ascending" ] }
 		worker_query_parameters = { "order_by": [ "identifier ascending" ] }
@@ -56,13 +56,13 @@ class ProjectController:
 
 
 	def show_status(self, project_identifier: str) -> Any: # pylint: disable = too-many-locals
-		branch = flask.request.args.get("branch", default = None)
+		reference = flask.request.args.get("reference", default = None)
 		status_limit = max(min(flask.request.args.get("limit", default = 20, type = int), 100), 1)
 
 		job_query_parameters = { "order_by": [ "identifier ascending" ] }
 
 		project = self._service_client.get("/project/" + project_identifier)
-		branch_collection = project["services"]["revision_control"]["branches_for_status"]
+		reference_collection = project["services"]["revision_control"]["references_for_status"]
 		job_collection = self._service_client.get("/project/" + project_identifier + "/job_collection", parameters = job_query_parameters)
 
 		context = { "filter_collection": [] }
@@ -74,11 +74,11 @@ class ProjectController:
 					"job": job["identifier"],
 				})
 
-		if branch is None:
-			branch = branch_collection[0]
+		if reference is None:
+			reference = reference_collection[0]
 
 		status_parameters = {
-			"branch": branch,
+			"reference": reference,
 			"revision_limit": 20,
 			"run_limit": 1000,
 		}
@@ -95,8 +95,8 @@ class ProjectController:
 
 		view_data = {
 			"project": project,
-			"project_branch": branch,
-			"project_branch_collection": branch_collection,
+			"project_reference": reference,
+			"project_reference_collection": reference_collection,
 			"project_context": context,
 			"project_status": status,
 		}

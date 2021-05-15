@@ -3,14 +3,14 @@ from typing import Any, List, Optional
 
 import requests
 
+from bhamon_orchestra_model.revision_control.revision_control_client import RevisionControlClient
 from bhamon_orchestra_model.serialization.serializer import Serializer
 
 
 logger = logging.getLogger("GitHub")
 
 
-class GitHubClient:
-
+class GitHubClient(RevisionControlClient):
 
 
 	def __init__(self, serializer: Serializer, access_token: Optional[str] = None) -> None:
@@ -41,9 +41,9 @@ class GitHubClient:
 		return [ item["name"] for item in response ]
 
 
-	def get_revision_list(self, repository: str, branch: Optional[str] = None, limit: Optional[int] = None) -> List[dict]:
+	def get_revision_list(self, repository: str, reference: Optional[str] = None, limit: Optional[int] = None) -> List[dict]:
 		route = "/repos/" + repository + "/commits"
-		parameters = { "sha": branch, "per_page": limit }
+		parameters = { "sha": reference, "per_page": limit }
 		parameters = { key: value for key, value in parameters.items() if value is not None }
 		response = self.send_request("GET", route, parameters)
 
@@ -61,8 +61,8 @@ class GitHubClient:
 		return revision_list
 
 
-	def get_revision(self, repository: str, revision: str) -> dict:
-		route = "/repos/" + repository + "/commits/" + revision
+	def get_revision(self, repository: str, reference: str) -> dict:
+		route = "/repos/" + repository + "/commits/" + reference
 		response = self.send_request("GET", route)
 
 		return {
@@ -75,8 +75,8 @@ class GitHubClient:
 		}
 
 
-	def get_revision_url(self, repository: str, revision: str) -> str:
-		return self.website_url + "/" + repository + "/commit/" + revision
+	def get_reference_url(self, repository: str, reference: str) -> str:
+		return self.website_url + "/" + repository + "/commit/" + reference
 
 
 	def send_request(self, method: str, route: str, parameters: Optional[dict] = None, data: Optional[Any] = None) -> Optional[Any]:

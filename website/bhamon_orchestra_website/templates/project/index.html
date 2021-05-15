@@ -20,7 +20,7 @@
 	<table>
 		<thead>
 			<tr>
-				<th>Branch</th>
+				<th>Reference</th>
 				<th>Revision</th>
 				<th>Status</th>
 			</tr>
@@ -28,7 +28,7 @@
 		<tbody>
 			{% for revision in revision_collection %}
 			<tr>
-				<td><a href="{{ url_for('project_controller.show_status', project_identifier = project['identifier'], branch = revision['reference']) }}">{{ revision['reference'] }}</td>
+				<td><a href="{{ url_for('project_controller.show_status', project_identifier = project['identifier'], reference = revision['reference']) }}">{{ revision['reference'] }}</td>
 				<td>{{ revision['identifier_short'] }}</td>
 				<td>
 					<div class="status-group">
