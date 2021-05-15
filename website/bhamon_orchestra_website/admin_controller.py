@@ -28,15 +28,7 @@ class AdminController: # pylint: disable = too-few-public-methods
 			"external_service_collection": None,
 		}
 
-		try:
-			self._service_client.get("/")
-			view_data["service_status"] = { "status": "available" }
-		except requests.HTTPError as exception:
-			view_data["service_status"] = {
-				"status": "unavailable",
-				"status_code": exception.response.status_code,
-				"status_message": helpers.get_error_message(exception.response.status_code),
-			}
+		view_data["service_status"] = self._get_service_status()
 
 		if view_data["service_status"]["status"] == "available":
 			try:
@@ -56,10 +48,24 @@ class AdminController: # pylint: disable = too-few-public-methods
 		}
 
 
+	def _get_service_status(self) -> dict:
+		try:
+			self._service_client.get("/")
+
+			return {
+				"status": "available",
+			}
+
+		except requests.HTTPError as exception:
+			return {
+				"status": "unavailable",
+				"status_code": exception.response.status_code,
+				"status_message": helpers.get_error_message(exception.response.status_code),
+			}
+
+
 	def _get_status_for_external_services(self) -> List[dict]:
 		external_services = self._service_client.get("/admin/service_collection")
-
-		status_collection = []
 		for service in external_services:
-			status_collection.append(self._service_client.get("/admin/service/" + service))
-		return status_collection
+			service.update(self._service_client.get("/admin/service/" + service["identifier"] + "/status"))
+		return external_services
