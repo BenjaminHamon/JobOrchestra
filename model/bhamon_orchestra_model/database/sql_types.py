@@ -7,6 +7,7 @@ class UtcDateTime(sqlalchemy.types.TypeDecorator): # pylint: disable = abstract-
 
 
 	impl = sqlalchemy.types.DateTime(timezone = True)
+	cache_ok = True
 
 
 	def process_bind_param(self, value, dialect):
