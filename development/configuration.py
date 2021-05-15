@@ -65,16 +65,16 @@ def load_development_dependencies():
 
 		"wheel",
 
-		"pylint ~= 2.7.4",
-		"pytest ~= 6.2.3",
-		"pytest-asyncio ~= 0.14.0",
+		"pylint ~= 2.8.2",
+		"pytest ~= 6.2.4",
+		"pytest-asyncio ~= 0.15.1",
 		"pytest-json ~= 0.4.0",
 
-		"alembic ~= 1.5.8",
-		"pymongo ~= 3.11.3",
+		"alembic ~= 1.6.2",
+		"pymongo ~= 3.11.4",
 		"psycopg2 ~= 2.8.6",
-		"SQLAlchemy ~= 1.4.7",
-		"SQLAlchemy-Utils ~= 0.37.0",
+		"SQLAlchemy ~= 1.4.15",
+		"SQLAlchemy-Utils ~= 0.37.2",
 
 	]
 
