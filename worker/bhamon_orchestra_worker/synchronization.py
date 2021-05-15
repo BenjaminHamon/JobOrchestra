@@ -45,7 +45,7 @@ class Synchronization:
 		if self.log_file is None:
 			log_file_path = self._storage.get_log_path(self.run_identifier)
 			if os.path.exists(log_file_path):
-				self.log_file = open(log_file_path, mode = "r", encoding = "utf-8")
+				self.log_file = open(log_file_path, mode = "r", encoding = "utf-8") # pylint: disable = consider-using-with
 
 		# The log cursor is computed on the text size instead of the binary size
 		# to take into account encoding and end-of-lines differences.
@@ -87,7 +87,7 @@ class Synchronization:
 		if self.log_file is None:
 			log_file_path = self._storage.get_log_path(self.run_identifier)
 			if os.path.exists(log_file_path):
-				self.log_file = open(log_file_path, mode = "r", encoding = "utf-8")
+				self.log_file = open(log_file_path, mode = "r", encoding = "utf-8") # pylint: disable = consider-using-with
 
 		if self.log_file is not None:
 			log_lines = self._read_lines(self.log_file, 1024)

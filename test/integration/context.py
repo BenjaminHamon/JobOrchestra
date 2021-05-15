@@ -224,7 +224,7 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 		with open(output_log_file_path, mode = "a", encoding = "utf-8") as stdout_file:
 			with open(error_log_file_path, mode = "a", encoding = "utf-8") as stderr_file:
-				process = subprocess.Popen(command, cwd = workspace, env = process_environment,
+				process = subprocess.Popen(command, cwd = workspace, env = process_environment, # pylint: disable = consider-using-with
 						stdout = stdout_file, stderr = stderr_file, creationflags = subprocess_flags)
 
 		logger.info("New subprocess '%s' (PID: %s)", identifier, process.pid)
