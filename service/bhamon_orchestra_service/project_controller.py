@@ -5,8 +5,9 @@ import flask
 import requests
 
 from bhamon_orchestra_model.project_provider import ProjectProvider
-from bhamon_orchestra_model.revision_control.github import GitHubClient
+from bhamon_orchestra_model.revision_control.github_client import GitHubClient
 from bhamon_orchestra_model.run_provider import RunProvider
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 from bhamon_orchestra_service.response_builder import ResponseBuilder
 
 
@@ -202,5 +203,5 @@ class ProjectController:
 
 	def _create_revision_control_client(self, service: str) -> GitHubClient:
 		if service["type"] == "github":
-			return GitHubClient(self._application.config.get("GITHUB_ACCESS_TOKEN", None))
+			return GitHubClient(JsonSerializer(), self._application.config.get("GITHUB_ACCESS_TOKEN", None))
 		raise ValueError("Unsupported service '%s'" % service["type"])
