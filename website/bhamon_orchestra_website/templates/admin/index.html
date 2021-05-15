@@ -50,9 +50,9 @@
 			<tr>
 				<td>
 					{% if 'website_url' in external_service %}
-					<a href="{{ external_service['website_url'] }}">{{ external_service["service"] }}</a>
+					<a href="{{ external_service['website_url'] }}">{{ external_service['display_name'] }}</a>
 					{% else %}
-					{{ external_service["service"] }}
+					{{ external_service['display_name'] }}
 					{%endif %}
 				</td>
 				<td>

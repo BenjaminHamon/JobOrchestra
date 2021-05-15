@@ -89,6 +89,8 @@ def test_service_routes(tmpdir, database_type, user_identifier, user_roles):
 			# Skip routes with external dependencies
 			if route == "/admin/service/<service_identifier>":
 				continue
+			if route.startswith("/admin/service/<service_identifier>/"):
+				continue
 			if route == "/project/<project_identifier>/repository":
 				continue
 			if route.startswith("/project/<project_identifier>/repository/"):

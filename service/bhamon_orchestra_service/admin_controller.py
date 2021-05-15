@@ -29,8 +29,20 @@ class AdminController:
 
 
 	def get_service_collection(self) -> Any:
-		service_collection = list(sorted(self._external_services.keys()))
+		service_collection = []
+		for service_identifier in list(sorted(self._external_services.keys())):
+			service = self._external_services[service_identifier]
+			service_collection.append(service.get_definition())
 		return self._response_builder.create_data_response(service_collection)
+
+
+	def get_service(self, service_identifier: str) -> Any:
+		service = self._external_services.get(service_identifier, None)
+		if service is None:
+			flask.abort(404)
+
+		service_definition = service.get_definition()
+		return self._response_builder.create_data_response(service_definition)
 
 
 	def get_service_status(self, service_identifier: str) -> Any:
@@ -38,5 +50,5 @@ class AdminController:
 		if service is None:
 			flask.abort(404)
 
-		service_status = service.get_service_status()
+		service_status = service.get_status()
 		return self._response_builder.create_data_response(service_status)
