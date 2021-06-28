@@ -3,7 +3,7 @@ import logging
 import os
 
 import bhamon_development_toolkit.artifacts.filesets as artifact_filesets
-import bhamon_development_toolkit.workspace
+import bhamon_development_toolkit.workspace as workspace
 
 from bhamon_development_toolkit.artifacts.repository import ArtifactRepository
 from bhamon_development_toolkit.artifacts.server_client import create_artifact_server_client
@@ -60,7 +60,9 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 	except KeyError as exception:
 		raise KeyError("Artifact parameter '%s' is required" % exception.args[0]) from exception
 
-	artifact_repository = ArtifactRepository(os.path.join(configuration["artifact_directory"], "repository"), configuration["project_identifier_for_artifact_server"])
+	artifact_repository_path = os.path.join(configuration["artifact_directory"], "repository")
+	artifact_repository = ArtifactRepository(artifact_repository_path, configuration["project_identifier_for_artifact_server"])
+
 	if environment.get("artifact_server_url", None) is not None:
 		artifact_server_url = environment["artifact_server_url"]
 		artifact_server_parameters = environment.get("artifact_server_parameters", {})
@@ -105,8 +107,8 @@ def save_upload_results(artifact_name, artifact_type, result_file_path, simulate
 	}
 
 	if result_file_path:
-		results = bhamon_development_toolkit.workspace.load_results(result_file_path)
+		results = workspace.load_results(result_file_path)
 		results["artifacts"] = results.get("artifacts", [])
 		results["artifacts"].append(artifact_information)
 		if not simulate:
-			bhamon_development_toolkit.workspace.save_results(result_file_path, results)
+			workspace.save_results(result_file_path, results)

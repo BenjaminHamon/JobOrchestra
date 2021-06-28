@@ -4,9 +4,9 @@ import os
 import shutil
 import subprocess
 
-import bhamon_development_toolkit.python.distribution
-import bhamon_development_toolkit.python.system
-import bhamon_development_toolkit.workspace
+import bhamon_development_toolkit.python.distribution as python_distribution
+import bhamon_development_toolkit.python.system as python_system
+import bhamon_development_toolkit.workspace as workspace
 
 
 logger = logging.getLogger("Main")
@@ -33,7 +33,7 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 	if environment.get("python_package_repository_url", None) is not None:
 		repository_url = environment["python_package_repository_url"]
 		repository_parameters = environment.get("python_package_repository_parameters", {})
-		repository_client = bhamon_development_toolkit.python.distribution.create_repository_client(repository_url, repository_parameters, environment)
+		repository_client = python_distribution.create_repository_client(repository_url, repository_parameters, environment)
 
 	package_directory = os.path.join(configuration["artifact_directory"], "distributions")
 	verbose = environment["logging_stream_level"] == "debug"
@@ -103,22 +103,22 @@ def save_upload_results(component, version, result_file_path, simulate):
 	}
 
 	if result_file_path:
-		results = bhamon_development_toolkit.workspace.load_results(result_file_path)
+		results = workspace.load_results(result_file_path)
 		results["distributions"] = results.get("distributions", [])
 		results["distributions"].append(distribution_information)
 		if not simulate:
-			bhamon_development_toolkit.workspace.save_results(result_file_path, results)
+			workspace.save_results(result_file_path, results)
 
 
 def install_for_test(python_executable, python_package_repository, configuration, package_directory, simulate):
 	if len(configuration.get("development_dependencies", [])) > 0:
 		logger.info("Installing development dependencies")
-		bhamon_development_toolkit.python.system.install_packages(python_executable, python_package_repository, configuration.get("development_dependencies", []), simulate)
+		python_system.install_packages(python_executable, python_package_repository, configuration.get("development_dependencies", []), simulate)
 		print("")
 
 	if len(configuration.get("project_dependencies", [])) > 0:
 		logger.info("Installing project dependencies")
-		bhamon_development_toolkit.python.system.install_packages(python_executable, python_package_repository, configuration.get("project_dependencies", []), simulate)
+		python_system.install_packages(python_executable, python_package_repository, configuration.get("project_dependencies", []), simulate)
 		print("")
 
 	logger.info("Installing project packages")
@@ -129,4 +129,4 @@ def install_for_test(python_executable, python_package_repository, configuration
 		archive_path = os.path.join(package_directory, component["name"], archive_name + "-py3-none-any.whl")
 		project_packages.append(archive_path)
 
-	bhamon_development_toolkit.python.system.install_packages(python_executable, None, project_packages, simulate)
+	python_system.install_packages(python_executable, None, project_packages, simulate)
