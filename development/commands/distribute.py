@@ -43,16 +43,16 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 
 	if "setup" in arguments.distribute_commands:
 		for component in configuration["components"]:
-			setup(configuration, component, arguments.simulate)
+			setup(configuration, component, simulate = arguments.simulate)
 		print("")
 	if "package" in arguments.distribute_commands:
 		for component in configuration["components"]:
-			package(environment["python3_executable"], component, configuration["project_version"], package_directory, verbose, arguments.simulate)
+			package(environment["python3_executable"], component, configuration["project_version"], package_directory, verbose, simulate = arguments.simulate)
 			print("")
 	if "upload" in arguments.distribute_commands:
 		for component in configuration["components"]:
-			repository_client.upload(package_directory, component["name"], configuration["project_version"], "-py3-none-any.whl", arguments.simulate)
-			save_upload_results(component, configuration["project_version"], arguments.results, arguments.simulate)
+			repository_client.upload(package_directory, component["name"], configuration["project_version"], "-py3-none-any.whl", simulate = arguments.simulate)
+			save_upload_results(component, configuration["project_version"], arguments.results, simulate = arguments.simulate)
 			print("")
 
 

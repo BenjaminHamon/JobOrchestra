@@ -27,14 +27,14 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 	if not arguments.simulate and os.path.exists(venv_directory):
 		shutil.rmtree(venv_directory)
 
-	python_system.setup_virtual_environment(environment["python3_system_executable"], venv_directory, arguments.simulate)
+	python_system.setup_virtual_environment(environment["python3_system_executable"], venv_directory, simulate = arguments.simulate)
 
 	print("")
 
 	python_executable = os.path.join(venv_directory, "scripts", "python")
 	python_package_repository = environment.get("python_package_repository_web_url", None)
 	package_directory = os.path.join(configuration["artifact_directory"], "distributions")
-	development.commands.distribute.install_for_test(python_executable, python_package_repository, configuration, package_directory, arguments.simulate)
+	development.commands.distribute.install_for_test(python_executable, python_package_repository, configuration, package_directory, simulate = arguments.simulate)
 
 	print("")
 
