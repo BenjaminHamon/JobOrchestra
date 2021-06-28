@@ -21,7 +21,7 @@ def load_configuration(environment):
 	configuration["project_copyright"] = "Copyright (c) 2021 Benjamin Hamon"
 
 	configuration["development_toolkit"] = "git+https://github.com/BenjaminHamon/DevelopmentToolkit@{revision}#subdirectory=toolkit"
-	configuration["development_toolkit_revision"] = "5e12ab4651373b0399201075ea9e78cb0015b091"
+	configuration["development_toolkit_revision"] = "032434c526e880fe1672f59ab4992f4b883ddbff"
 	configuration["development_dependencies"] = load_development_dependencies()
 
 	configuration["components"] = [
