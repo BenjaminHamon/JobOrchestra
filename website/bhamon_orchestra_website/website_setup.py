@@ -8,11 +8,11 @@ import jinja2
 import werkzeug
 
 import bhamon_orchestra_website
+from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.admin_controller import AdminController
-import bhamon_orchestra_website.helpers as helpers
 from bhamon_orchestra_website.job_controller import JobController
 from bhamon_orchestra_website.me_controller import MeController
-import bhamon_orchestra_website.pipeline_view as pipeline_view
+from bhamon_orchestra_website.pipeline_view import build_pipeline_view
 from bhamon_orchestra_website.project_controller import ProjectController
 from bhamon_orchestra_website.run_controller import RunController
 from bhamon_orchestra_website.schedule_controller import ScheduleController
@@ -36,10 +36,10 @@ def configure( # pylint: disable = redefined-builtin, too-many-arguments
 	application.jinja_env.undefined = jinja2.StrictUndefined()
 	application.jinja_env.trim_blocks = True
 	application.jinja_env.lstrip_blocks = True
-	application.jinja_env.filters["build_pipeline_view"] = pipeline_view.build_pipeline_view
-	application.jinja_env.filters["format_date"] = helpers.format_date
-	application.jinja_env.filters["describe_cron_expression"] = helpers.describe_cron_expression
-	application.jinja_env.filters["truncate_text"] = helpers.truncate_text
+	application.jinja_env.filters["build_pipeline_view"] = build_pipeline_view
+	application.jinja_env.filters["format_date"] = website_helpers.format_date
+	application.jinja_env.filters["describe_cron_expression"] = website_helpers.describe_cron_expression
+	application.jinja_env.filters["truncate_text"] = website_helpers.truncate_text
 	application.jinja_env.globals["authorize_view"] = website.authorize_view
 	application.permanent_session_lifetime = datetime.timedelta(days = 7)
 

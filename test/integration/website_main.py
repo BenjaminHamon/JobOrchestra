@@ -6,8 +6,7 @@ import flask
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
 from bhamon_orchestra_model.users.authorization_provider import AuthorizationProvider
-
-import bhamon_orchestra_website.website_setup as website_setup
+from bhamon_orchestra_website import website_setup
 from bhamon_orchestra_website.admin_controller import AdminController
 from bhamon_orchestra_website.job_controller import JobController
 from bhamon_orchestra_website.me_controller import MeController

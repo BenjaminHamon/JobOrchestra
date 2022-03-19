@@ -6,7 +6,7 @@ import dateutil.parser
 import flask
 import requests
 
-import bhamon_orchestra_website.helpers as helpers
+from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.service_client import ServiceClient
 
 
@@ -60,7 +60,7 @@ class AdminController: # pylint: disable = too-few-public-methods
 			return {
 				"status": "unavailable",
 				"status_code": exception.response.status_code,
-				"status_message": helpers.get_error_message(exception.response.status_code),
+				"status_message": website_helpers.get_error_message(exception.response.status_code),
 			}
 
 

@@ -3,7 +3,7 @@ import os
 import uuid
 
 import bhamon_development_toolkit.python.test as python_test
-import bhamon_development_toolkit.workspace as workspace
+from bhamon_development_toolkit import workspace
 
 
 logger = logging.getLogger("Main")

@@ -3,7 +3,7 @@ from typing import Any
 
 import flask
 
-import bhamon_orchestra_website.helpers as helpers
+from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.service_client import ServiceClient
 
 
@@ -19,7 +19,7 @@ class WorkerController:
 
 	def show_collection(self) -> Any:
 		item_total = self._service_client.get("/worker_count")
-		pagination = helpers.get_pagination(item_total, {})
+		pagination = website_helpers.get_pagination(item_total, {})
 
 		query_parameters = {
 			"skip": (pagination["page_number"] - 1) * pagination["item_count"],
@@ -50,7 +50,7 @@ class WorkerController:
 		owner = self._service_client.get("/user/" + view_data["worker"]["owner"])
 		view_data["worker"]["owner_display_name"] = owner["display_name"]
 
-		helpers.add_display_names(view_data["project_collection"], view_data["job_collection"], view_data["run_collection"], [], [ view_data["worker"] ])
+		website_helpers.add_display_names(view_data["project_collection"], view_data["job_collection"], view_data["run_collection"], [], [ view_data["worker"] ])
 
 		return flask.render_template("worker/index.html", title = "Worker " + worker_identifier, **view_data)
 
@@ -58,12 +58,12 @@ class WorkerController:
 	def show_runs(self, worker_identifier: str) -> Any:
 		query_parameters = {
 			"worker": worker_identifier,
-			"project": helpers.none_if_empty(flask.request.args.get("project", default = None)),
-			"status": helpers.none_if_empty(flask.request.args.get("status", default = None)),
+			"project": website_helpers.none_if_empty(flask.request.args.get("project", default = None)),
+			"status": website_helpers.none_if_empty(flask.request.args.get("status", default = None)),
 		}
 
 		item_total = self._service_client.get("/worker/" + worker_identifier + "/run_count", parameters = query_parameters)
-		pagination = helpers.get_pagination(item_total, { "worker_identifier": worker_identifier, **query_parameters })
+		pagination = website_helpers.get_pagination(item_total, { "worker_identifier": worker_identifier, **query_parameters })
 
 		query_parameters.update({
 			"skip": (pagination["page_number"] - 1) * pagination["item_count"],
@@ -78,12 +78,12 @@ class WorkerController:
 			"worker": self._service_client.get("/worker/" + worker_identifier),
 			"project_collection": self._service_client.get("/project_collection", parameters = project_query_parameters),
 			"job_collection": self._service_client.get("/worker/" + worker_identifier + "/job_collection", parameters = job_query_parameters),
-			"status_collection": helpers.get_run_status_collection(),
+			"status_collection": website_helpers.get_run_status_collection(),
 			"run_collection": self._service_client.get("/worker/" + worker_identifier + "/run_collection", parameters = query_parameters),
 			"pagination": pagination,
 		}
 
-		helpers.add_display_names(view_data["project_collection"], view_data["job_collection"], view_data["run_collection"], [], [ view_data["worker"] ])
+		website_helpers.add_display_names(view_data["project_collection"], view_data["job_collection"], view_data["run_collection"], [], [ view_data["worker"] ])
 
 		return flask.render_template("worker/runs.html", title = "Runs", **view_data)
 

@@ -6,8 +6,7 @@ import requests
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.users.authorization_provider import AuthorizationProvider
-
-import bhamon_orchestra_website.helpers as helpers
+from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.service_client import ServiceClient
 
 
@@ -27,7 +26,7 @@ class UserController:
 
 	def show_collection(self) -> Any:
 		item_total = self._service_client.get("/user_count")
-		pagination = helpers.get_pagination(item_total, {})
+		pagination = website_helpers.get_pagination(item_total, {})
 
 		query_parameters = {
 			"skip": (pagination["page_number"] - 1) * pagination["item_count"],
@@ -77,7 +76,8 @@ class UserController:
 				flask.flash("User '%s' was created successfully." % user_identifier, "success")
 				return flask.redirect(flask.url_for("user_controller.show_collection"))
 			except requests.HTTPError as exception:
-				flask.flash("User '%s' could not be created: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
+				error_message = website_helpers.get_error_message(exception.response.status_code)
+				flask.flash("User '%s' could not be created: %s." % (user_identifier, error_message), "error")
 				return flask.render_template("user/create.html", title = "Create User")
 
 		return flask.abort(405)
@@ -102,7 +102,8 @@ class UserController:
 			self._service_client.post("/user/" + user_identifier + "/update_identity", data = request_data)
 			flask.flash("Identity for user '%s' was updated successfully." % user_identifier, "success")
 		except requests.HTTPError as exception:
-			flask.flash("Identity for user '%s' could not be updated: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
+			error_message = website_helpers.get_error_message(exception.response.status_code)
+			flask.flash("Identity for user '%s' could not be updated: %s." % (user_identifier, error_message), "error")
 		return self.edit(user_identifier, request_data)
 
 
@@ -113,7 +114,8 @@ class UserController:
 			self._service_client.post("/user/" + user_identifier + "/update_roles", data = request_data)
 			flask.flash("Roles for user '%s' were updated successfully." % user_identifier, "success")
 		except requests.HTTPError as exception:
-			flask.flash( "Roles for user '%s' could not be updated: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
+			error_message = website_helpers.get_error_message(exception.response.status_code)
+			flask.flash( "Roles for user '%s' could not be updated: %s." % (user_identifier, error_message), "error")
 		return self.edit(user_identifier, request_data)
 
 
@@ -140,7 +142,8 @@ class UserController:
 				flask.flash("Password for user '%s' was set successfully." % user_identifier, "success")
 				return flask.redirect(flask.url_for("user_controller.show", user_identifier = user_identifier))
 			except requests.HTTPError as exception:
-				flask.flash("Password for user '%s' could not be set: %s." % (user_identifier, helpers.get_error_message(exception.response.status_code)), "error")
+				error_message = website_helpers.get_error_message(exception.response.status_code)
+				flask.flash("Password for user '%s' could not be set: %s." % (user_identifier, error_message), "error")
 				user = self._service_client.get("/user/" + user_identifier)
 				return flask.render_template("user/reset_password.html", title = "Reset User Password", user = user)
 
@@ -163,7 +166,8 @@ class UserController:
 				flask.flash("Token secret: '%s'." % token["secret"], "info")
 				return flask.redirect(flask.url_for("user_controller.show", user_identifier = user_identifier))
 			except requests.HTTPError as exception:
-				flask.flash("Token could not be created: %s." % helpers.get_error_message(exception.response.status_code), "error")
+				error_message = website_helpers.get_error_message(exception.response.status_code)
+				flask.flash("Token could not be created: %s." % error_message, "error")
 				user = self._service_client.get("/user/" + user_identifier)
 				return flask.render_template("user/create_token.html", title = "Create User Authentication Token", user = user)
 
@@ -175,5 +179,6 @@ class UserController:
 			self._service_client.post("/user/" + user_identifier + "/token/" + token_identifier + "/delete")
 			flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")
 		except requests.HTTPError as exception:
-			flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, helpers.get_error_message(exception.response.status_code)), "error")
+			error_message = website_helpers.get_error_message(exception.response.status_code)
+			flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, error_message), "error")
 		return flask.redirect(flask.url_for("user_controller.show", user_identifier = user_identifier))

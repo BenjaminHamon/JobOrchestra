@@ -3,7 +3,7 @@ from typing import Any
 
 import flask
 
-import bhamon_orchestra_website.helpers as helpers
+from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.service_client import ServiceClient
 
 
@@ -19,7 +19,7 @@ class ProjectController:
 
 	def show_collection(self) -> Any:
 		item_total = self._service_client.get("/project_count")
-		pagination = helpers.get_pagination(item_total, {})
+		pagination = website_helpers.get_pagination(item_total, {})
 
 		query_parameters = {
 			"skip": (pagination["page_number"] - 1) * pagination["item_count"],
@@ -50,7 +50,7 @@ class ProjectController:
 
 		job_collection = self._service_client.get("/project/" + project_identifier + "/job_collection", parameters = job_query_parameters)
 		worker_collection = self._service_client.get("/worker_collection", parameters = worker_query_parameters)
-		helpers.add_display_names([ view_data["project"] ], job_collection, view_data["run_collection"], [], worker_collection)
+		website_helpers.add_display_names([ view_data["project"] ], job_collection, view_data["run_collection"], [], worker_collection)
 
 		return flask.render_template("project/index.html", title = "Project " + view_data["project"]["display_name"], **view_data)
 

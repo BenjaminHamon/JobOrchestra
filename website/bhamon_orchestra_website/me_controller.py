@@ -6,7 +6,7 @@ import requests
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 
-import bhamon_orchestra_website.helpers as helpers
+from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.service_client import ServiceClient
 
 
@@ -41,7 +41,7 @@ class MeController:
 			except requests.HTTPError as exception:
 				if exception.response.status_code == 403:
 					flask.session.clear()
-				flask.flash("Login failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
+				flask.flash("Login failed: %s." % website_helpers.get_error_message(exception.response.status_code), "error")
 				return flask.render_template("me/login.html", title = "Log In")
 
 		return flask.abort(405)
@@ -65,7 +65,7 @@ class MeController:
 				flask.session.clear()
 				return flask.redirect(flask.url_for("website.home"))
 			except requests.HTTPError as exception:
-				flask.flash("Logout failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
+				flask.flash("Logout failed: %s." % website_helpers.get_error_message(exception.response.status_code), "error")
 				return flask.render_template("me/logout.html", title = "Log Out")
 
 		return flask.abort(405)
@@ -116,7 +116,7 @@ class MeController:
 				flask.flash("Password change succeeded.", "success")
 				return flask.redirect(flask.url_for("me_controller.show_profile"))
 			except requests.HTTPError as exception:
-				flask.flash("Password change failed: %s." % helpers.get_error_message(exception.response.status_code), "error")
+				flask.flash("Password change failed: %s." % website_helpers.get_error_message(exception.response.status_code), "error")
 				return flask.render_template("me/change_password.html", title = "Change Password")
 
 		return flask.abort(405)
@@ -137,7 +137,7 @@ class MeController:
 				flask.flash("Token secret: '%s'." % token["secret"], "info")
 				return flask.redirect(flask.url_for("me_controller.show_profile"))
 			except requests.HTTPError as exception:
-				flask.flash("Token could not be created: %s." % helpers.get_error_message(exception.response.status_code), "error")
+				flask.flash("Token could not be created: %s." % website_helpers.get_error_message(exception.response.status_code), "error")
 				return flask.render_template("me/create_token.html", title = "Create Authentication Token")
 
 		return flask.abort(405)
@@ -148,5 +148,5 @@ class MeController:
 			self._service_client.post("/me/token/" + token_identifier + "/delete")
 			flask.flash("Token '%s' was deleted successfully." % token_identifier, "success")
 		except requests.HTTPError as exception:
-			flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, helpers.get_error_message(exception.response.status_code)), "error")
+			flask.flash("Token '%s' could not be deleted: %s." % (token_identifier, website_helpers.get_error_message(exception.response.status_code)), "error")
 		return flask.redirect(flask.url_for("me_controller.show_profile"))

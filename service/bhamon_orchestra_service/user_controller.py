@@ -4,7 +4,7 @@ from typing import Any
 import flask
 
 
-import bhamon_orchestra_model.datetime_extensions as datetime_extensions
+from bhamon_orchestra_model import datetime_extensions
 from bhamon_orchestra_model.users.authentication_provider import AuthenticationProvider
 from bhamon_orchestra_model.users.user_provider import UserProvider
 from bhamon_orchestra_service.response_builder import ResponseBuilder

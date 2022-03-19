@@ -3,7 +3,7 @@ from typing import Any, Optional
 import flask
 
 from bhamon_orchestra_model.serialization.serializer import Serializer
-import bhamon_orchestra_service.helpers as helpers
+from bhamon_orchestra_service import helpers as service_helpers
 
 
 class ResponseBuilder:
@@ -24,6 +24,6 @@ class ResponseBuilder:
 
 
 	def create_error_response(self, status_code: int) -> Any:
-		status_message = helpers.get_error_message(status_code)
+		status_message = service_helpers.get_error_message(status_code)
 		error_data = { "status_code": status_code, "status_message": status_message }
 		return self.create_data_response(error_data, status_code = status_code)

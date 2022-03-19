@@ -3,7 +3,7 @@ from typing import Any
 
 import flask
 
-import bhamon_orchestra_website.helpers as helpers
+from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.service_client import ServiceClient
 
 
@@ -19,13 +19,13 @@ class RunController:
 
 	def show_collection(self, project_identifier: str) -> Any:
 		query_parameters = {
-			"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
-			"worker": helpers.none_if_empty(flask.request.args.get("worker", default = None)),
-			"status": helpers.none_if_empty(flask.request.args.get("status", default = None)),
+			"job": website_helpers.none_if_empty(flask.request.args.get("job", default = None)),
+			"worker": website_helpers.none_if_empty(flask.request.args.get("worker", default = None)),
+			"status": website_helpers.none_if_empty(flask.request.args.get("status", default = None)),
 		}
 
 		item_total = self._service_client.get("/project/" + project_identifier + "/run_count", parameters = query_parameters)
-		pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier, **query_parameters })
+		pagination = website_helpers.get_pagination(item_total, { "project_identifier": project_identifier, **query_parameters })
 
 		query_parameters.update({
 			"skip": (pagination["page_number"] - 1) * pagination["item_count"],
@@ -40,12 +40,12 @@ class RunController:
 			"project": self._service_client.get("/project/" + project_identifier),
 			"job_collection": self._service_client.get("/project/" + project_identifier + "/job_collection", parameters = job_query_parameters),
 			"worker_collection": self._service_client.get("/worker_collection", parameters = worker_query_parameters),
-			"status_collection": helpers.get_run_status_collection(),
+			"status_collection": website_helpers.get_run_status_collection(),
 			"run_collection": self._service_client.get("/project/" + project_identifier + "/run_collection", parameters = query_parameters),
 			"pagination": pagination,
 		}
 
-		helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], view_data["run_collection"], [], view_data["worker_collection"])
+		website_helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], view_data["run_collection"], [], view_data["worker_collection"])
 
 		return flask.render_template("run/collection.html", title = "Runs", **view_data)
 
