@@ -3,7 +3,7 @@ import logging
 
 from typing import Callable
 
-import websockets
+import websockets.client
 
 from bhamon_orchestra_model.network.connection import NetworkConnection
 
@@ -16,7 +16,7 @@ class WebSocketConnection(NetworkConnection):
 	""" Network connection implementation for WebSocket """
 
 
-	def __init__(self, connection: websockets.WebSocketClientProtocol) -> None:
+	def __init__(self, connection: websockets.client.WebSocketClientProtocol) -> None:
 		self.connection = connection
 
 
@@ -53,7 +53,7 @@ class WebSocketClient:
 
 	async def run_once(self, connection_handler: Callable[[WebSocketConnection],None], **kwargs) -> None:
 		logger.info("Connecting to %s (Uri: '%s')", self.server_identifier, self.server_uri)
-		connection = await websockets.connect(self.server_uri, **kwargs)
+		connection = await websockets.client.connect(self.server_uri, **kwargs)
 
 		try:
 			logger.info("Connected to %s", self.server_identifier)
@@ -76,7 +76,7 @@ class WebSocketClient:
 			try:
 				connection_attempt_counter += 1
 				logger.info("Connecting to %s on %s (Attempt: %s)", self.server_identifier, self.server_uri, connection_attempt_counter)
-				connection = await websockets.connect(self.server_uri, **kwargs)
+				connection = await websockets.client.connect(self.server_uri, **kwargs)
 
 				try:
 					connection_attempt_counter = 0

@@ -27,7 +27,7 @@ parameters.update({
 	],
 
 	"python_requires": "~= 3.7",
-	"install_requires": [ "filelock ~= 3.0.12", "python-dateutil ~= 2.8.1" ],
+	"install_requires": [ "filelock ~= 3.6.0", "python-dateutil ~= 2.8.2", "PyYAML ~= 6.0", "requests ~= 2.27.1" ],
 })
 
 setuptools.setup(**parameters)

@@ -31,7 +31,7 @@ parameters.update({
 	"description": "Website component for Job Orchestra, exposing a web interface for the master",
 	"packages": [ "bhamon_orchestra_website" ],
 	"python_requires": "~= 3.7",
-	"install_requires": [ "cron-descriptor ~= 1.2.24", "flask ~= 1.1.2", "requests ~= 2.25.1" ],
+	"install_requires": [ "cron-descriptor ~= 1.2.24", "Flask ~= 2.0.3", "requests ~= 2.27.1" ],
 	"package_data": { "bhamon_orchestra_website": development.configuration.list_package_data("bhamon_orchestra_website", resource_patterns) },
 })
 
