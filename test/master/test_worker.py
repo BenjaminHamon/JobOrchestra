@@ -4,8 +4,6 @@
 
 from unittest.mock import Mock
 
-import pytest
-
 from bhamon_orchestra_model.database.memory_database_client import MemoryDatabaseClient
 from bhamon_orchestra_model.database.memory_data_storage import MemoryDataStorage
 from bhamon_orchestra_model.run_provider import RunProvider
@@ -34,7 +32,6 @@ class FakeRemoteWorker(RemoteWorker): # pylint: disable = too-few-public-methods
 		return FakeExecutorWatcher(run_identifier)
 
 
-@pytest.mark.asyncio
 async def test_start_execution_success():
 	""" Test _start_execution in normal conditions """
 
@@ -51,7 +48,6 @@ async def test_start_execution_success():
 	await worker_local_instance._start_execution(run, job)
 
 
-@pytest.mark.asyncio
 async def test_abort_execution_success():
 	""" Test _abort_execution in normal conditions """
 
@@ -69,7 +65,6 @@ async def test_abort_execution_success():
 	await worker_local_instance._abort_execution(run)
 
 
-@pytest.mark.asyncio
 async def test_finish_execution_success():
 	""" Test _finish_execution in normal conditions """
 
@@ -87,7 +82,6 @@ async def test_finish_execution_success():
 	await worker_local_instance._finish_execution(run)
 
 
-@pytest.mark.asyncio
 async def test_process_success():
 	""" Test executing a run which succeeds """
 
@@ -159,7 +153,6 @@ async def test_process_success():
 	assert len(worker_local_instance.executors) == 1
 
 
-@pytest.mark.asyncio
 async def test_process_abort():
 	""" Test executing a run which gets aborted """
 
@@ -240,7 +233,6 @@ async def test_process_abort():
 	assert len(worker_local_instance.executors) == 1
 
 
-@pytest.mark.asyncio
 async def test_process_recovery_during_execution(): # pylint: disable = too-many-statements
 	""" Test executing a run which gets recovered after a disconnection and while it is running """
 
@@ -338,7 +330,6 @@ async def test_process_recovery_during_execution(): # pylint: disable = too-many
 	assert len(worker_local_instance.executors) == 1
 
 
-@pytest.mark.asyncio
 async def test_process_recovery_after_execution(): # pylint: disable = too-many-statements
 	""" Test executing a run which gets recovered after a disconnection and after it completed """
 

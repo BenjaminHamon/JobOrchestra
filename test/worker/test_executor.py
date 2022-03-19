@@ -3,14 +3,11 @@
 import os
 from unittest.mock import Mock
 
-import pytest
-
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_worker.executor import Executor
 from bhamon_orchestra_worker.worker_storage import WorkerStorage
 
 
-@pytest.mark.asyncio
 async def test_success(tmpdir):
 	""" Test a run which succeeds """
 
@@ -54,7 +51,6 @@ async def test_success(tmpdir):
 	await executor_instance.dispose()
 
 
-@pytest.mark.asyncio
 async def test_exception(tmpdir):
 	""" Test a run which raises an exception """
 

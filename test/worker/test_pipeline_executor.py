@@ -81,7 +81,6 @@ async def execute_runs(service_client: FakeServiceClient) -> None:
 
 
 
-@pytest.mark.asyncio
 async def test_empty(tmpdir):
 	""" Test executing a pipeline with no jobs """
 
@@ -137,7 +136,6 @@ async def test_empty(tmpdir):
 	service_future.cancel()
 
 
-@pytest.mark.asyncio
 async def test_parallel(tmpdir):
 	""" Test executing a pipeline with parallel jobs """
 
@@ -197,7 +195,6 @@ async def test_parallel(tmpdir):
 	service_future.cancel()
 
 
-@pytest.mark.asyncio
 async def test_sequential(tmpdir):
 	""" Test executing a pipeline with sequential jobs """
 
@@ -257,7 +254,6 @@ async def test_sequential(tmpdir):
 	service_future.cancel()
 
 
-@pytest.mark.asyncio
 async def test_complex(tmpdir):
 	""" Test executing a pipeline with a complex set of jobs """
 
@@ -325,7 +321,6 @@ async def test_complex(tmpdir):
 	service_future.cancel()
 
 
-@pytest.mark.asyncio
 async def test_failure(tmpdir):
 	""" Test executing a pipeline which fails """
 
@@ -386,7 +381,6 @@ async def test_failure(tmpdir):
 	service_future.cancel()
 
 
-@pytest.mark.asyncio
 async def test_abort(tmpdir):
 	""" Test executing a pipeline which gets aborted """
 
@@ -457,7 +451,6 @@ async def test_abort(tmpdir):
 	service_future.cancel()
 
 
-@pytest.mark.asyncio
 async def test_can_trigger_inner_run(tmpdir):
 
 	log_file_path = os.path.join(str(tmpdir), "run.log")

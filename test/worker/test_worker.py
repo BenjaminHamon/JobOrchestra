@@ -13,7 +13,6 @@ from bhamon_orchestra_worker.worker_storage import WorkerStorage
 from ..mock_extensions import AsyncMock, CancellableAsyncMock, MockException
 
 
-@pytest.mark.asyncio
 async def test_run(caplog):
 	""" Test run with dummy dependencies """
 
@@ -37,7 +36,6 @@ async def test_run(caplog):
 	assert sum(1 for record in caplog.records if record.levelno == logging.CRITICAL) == 0
 
 
-@pytest.mark.asyncio
 async def test_run_cancel(caplog):
 	""" Test run getting cancelled """
 
@@ -68,7 +66,6 @@ async def test_run_cancel(caplog):
 	assert sum(1 for record in caplog.records if record.levelno == logging.CRITICAL) == 0
 
 
-@pytest.mark.asyncio
 async def test_run_exception(caplog):
 	""" Test run with a dependency raising an exception """
 
