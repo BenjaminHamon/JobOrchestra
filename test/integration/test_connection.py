@@ -20,6 +20,10 @@ def test_worker_disconnection(tmpdir, database_type):
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
 
+		with context_instance.database_client_factory() as database_client:
+			condition_function = lambda: context_instance.worker_provider.get(database_client, "worker_01") is not None
+			assert_extensions.wait_for_condition(condition_function)
+
 		context_instance.terminate(worker_process["identifier"], worker_process["process"], "Shutdown")
 
 		with context_instance.database_client_factory() as database_client:
@@ -53,6 +57,10 @@ def test_master_disconnection(tmpdir, database_type):
 
 		master_process = context_instance.invoke_master()
 		worker_process = context_instance.invoke_worker("worker_01")
+
+		with context_instance.database_client_factory() as database_client:
+			condition_function = lambda: context_instance.worker_provider.get(database_client, "worker_01") is not None
+			assert_extensions.wait_for_condition(condition_function)
 
 		context_instance.terminate(master_process["identifier"], master_process["process"], "Shutdown")
 
