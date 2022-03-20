@@ -50,21 +50,21 @@ class Messenger:
 
 	def dispose(self) -> None:
 		for message in self._messages_to_send:
-			logger.warning("Cancelling outgoing %s %s", message["type"], message["identifier"])
+			logger.debug("Cancelling outgoing %s %s", message["type"], message["identifier"])
 
 			if message["type"] == "request":
 				message["response"] = { "identifier": message["identifier"], "error": "Cancelled" }
 				self._messages_events[message["identifier"]].set()
 
 		for message in self._messages_to_wait:
-			logger.warning("Cancelling expected response %s", message["identifier"])
+			logger.debug("Cancelling expected response %s", message["identifier"])
 
 			if message["type"] == "request":
 				message["response"] = { "identifier": message["identifier"], "error": "Cancelled" }
 				self._messages_events[message["identifier"]].set()
 
 		for message in self._messages_to_handle:
-			logger.warning("Cancelling handling %s %s", message["type"], message["identifier"])
+			logger.debug("Cancelling handling %s %s", message["type"], message["identifier"])
 
 		self._messages_to_send.clear()
 		self._messages_to_wait.clear()
