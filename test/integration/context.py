@@ -212,7 +212,7 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 	def invoke(self, identifier, module, arguments, workspace):
 		logger.info("Invoking subprocess '%s'", identifier)
 
-		command = [ sys.executable, "-m", module ] + arguments
+		command = [ sys.executable, "-u", "-m", module ] + arguments
 
 		process_environment = os.environ.copy()
 		process_environment["PYTHONPATH"] = os.getcwd()
@@ -232,6 +232,9 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 		self.process_collection.append(process)
 
 		time.sleep(1) # Wait for initialization
+
+		if os.environ.get("ORCHESTRA_SLOW_WORKER") is not None:
+			time.sleep(4)
 
 		return {
 			"identifier": identifier,
