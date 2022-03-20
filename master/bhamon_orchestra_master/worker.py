@@ -86,7 +86,7 @@ class Worker:
 					logger.error("(%s) Lost connection with remote", self.identifier, exc_info = True)
 			except asyncio.CancelledError:
 				pass
-			except Exception as exception: # pylint: disable = broad-except
+			except Exception: # pylint: disable = broad-except
 				logger.error("(%s) Unhandled exception from messenger", self.identifier, exc_info = True)
 
 

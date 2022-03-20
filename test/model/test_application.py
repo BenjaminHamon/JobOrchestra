@@ -17,7 +17,7 @@ def test_run_success():
 		def __init__(self) -> None:
 			self.future = None
 
-		async def run(self) -> None:
+		async def run(self) -> None: # pylint: disable = no-self-use
 			await asyncio.sleep(0.1)
 
 		async def run_as_future(self) -> None:
@@ -43,7 +43,7 @@ def test_run_cancellation():
 		def __init__(self) -> None:
 			self.future = None
 
-		async def run(self) -> None:
+		async def run(self) -> None: # pylint: disable = no-self-use
 			await asyncio.sleep(1)
 
 		async def run_as_future(self) -> None:
@@ -73,7 +73,7 @@ def test_run_exception():
 		def __init__(self) -> None:
 			self.future = None
 
-		async def run(self) -> None:
+		async def run(self) -> None: # pylint: disable = no-self-use
 			raise MockException()
 
 		async def run_as_future(self) -> None:

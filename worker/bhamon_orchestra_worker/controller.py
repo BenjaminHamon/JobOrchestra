@@ -3,8 +3,8 @@ import time
 
 import requests
 
+from bhamon_orchestra_worker import workspace
 from bhamon_orchestra_worker.service_client import ServiceClient
-import bhamon_orchestra_worker.workspace as workspace
 
 
 logger = logging.getLogger("Controller")

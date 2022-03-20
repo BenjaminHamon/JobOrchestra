@@ -21,7 +21,6 @@ def event_loop():
 	loop.close()
 
 
-@pytest.mark.asyncio
 async def test_run_success():
 	process_watcher_instance = ProcessWatcher()
 
@@ -32,7 +31,6 @@ async def test_run_success():
 	assert not process_watcher_instance.is_running()
 
 
-@pytest.mark.asyncio
 async def test_run_failure():
 	process_watcher_instance = ProcessWatcher()
 
@@ -45,7 +43,6 @@ async def test_run_failure():
 	assert not process_watcher_instance.is_running()
 
 
-@pytest.mark.asyncio
 async def test_termination():
 	termination_exit_code = - signal.SIGTERM
 	if platform.system() == "Windows":
@@ -68,7 +65,6 @@ async def test_termination():
 	assert not process_watcher_instance.is_running()
 
 
-@pytest.mark.asyncio
 async def test_output():
 
 	output_lines = []
@@ -81,7 +77,6 @@ async def test_output():
 	assert output_lines == [ "hello" ]
 
 
-@pytest.mark.asyncio
 async def test_output_unicode():
 
 	output_lines = []

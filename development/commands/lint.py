@@ -7,7 +7,7 @@ import uuid
 import jinja2
 
 import bhamon_development_toolkit.python.lint as python_lint
-import bhamon_development_toolkit.workspace as workspace
+from bhamon_development_toolkit import workspace
 
 
 logger = logging.getLogger("Main")

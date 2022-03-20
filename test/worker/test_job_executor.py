@@ -4,8 +4,6 @@ import asyncio
 import os
 from unittest.mock import Mock, patch
 
-import pytest
-
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.serialization.serializer import Serializer
 from bhamon_orchestra_worker.job_executor import JobExecutor
@@ -14,7 +12,6 @@ from bhamon_orchestra_worker.worker_storage import WorkerStorage
 from ..mock_extensions import AsyncMock
 
 
-@pytest.mark.asyncio
 async def test_empty(tmpdir):
 	""" Test executing a job with no commands """
 
@@ -60,7 +57,6 @@ async def test_empty(tmpdir):
 	await executor_instance.dispose()
 
 
-@pytest.mark.asyncio
 async def test_simple(tmpdir):
 	""" Test executing a job with a simple command """
 

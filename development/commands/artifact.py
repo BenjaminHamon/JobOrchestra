@@ -3,7 +3,7 @@ import logging
 import os
 
 import bhamon_development_toolkit.artifacts.filesets as artifact_filesets
-import bhamon_development_toolkit.workspace as workspace
+from bhamon_development_toolkit import workspace
 
 from bhamon_development_toolkit.artifacts.repository import ArtifactRepository
 from bhamon_development_toolkit.artifacts.server_client import create_artifact_server_client

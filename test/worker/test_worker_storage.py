@@ -17,7 +17,7 @@ def test_list_runs(tmpdir):
 
 	assert not worker_storage_instance.run_exists(uuid_run_identifier)
 	assert not worker_storage_instance.run_exists(arbitrary_run_identifier)
-	assert worker_storage_instance.list_runs() == []
+	assert len(worker_storage_instance.list_runs()) == 0
 
 	worker_storage_instance.create_run(uuid_run_identifier)
 	worker_storage_instance.save_request(uuid_run_identifier, {})

@@ -15,8 +15,8 @@ from bhamon_orchestra_model.users.authorization_provider import AuthorizationPro
 from bhamon_orchestra_model.users.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
 
-import bhamon_orchestra_cli.admin_controller as admin_controller
-import bhamon_orchestra_cli.database_controller as database_controller
+from bhamon_orchestra_cli import admin_controller
+from bhamon_orchestra_cli import database_controller
 
 from . import environment
 from . import factory

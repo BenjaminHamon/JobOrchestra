@@ -6,7 +6,7 @@ import subprocess
 
 import bhamon_development_toolkit.python.distribution as python_distribution
 import bhamon_development_toolkit.python.system as python_system
-import bhamon_development_toolkit.workspace as workspace
+from bhamon_development_toolkit import workspace
 
 
 logger = logging.getLogger("Main")

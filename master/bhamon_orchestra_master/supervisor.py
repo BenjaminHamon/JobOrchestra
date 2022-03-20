@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import Callable, List, Type
 
-import websockets
+import websockets.server
 
 from bhamon_orchestra_master.protocol import WebSocketServerProtocol
 from bhamon_orchestra_master.worker import Worker
@@ -49,7 +49,7 @@ class Supervisor:
 					self._worker_provider.update_status(database_client, worker_record, is_active = False, should_disconnect = False)
 
 		logger.info("Listening for workers on '%s:%s'", self._host, self._port)
-		async with websockets.serve(self._try_process_connection, self._host, self._port, create_protocol = self._protocol_factory):
+		async with websockets.server.serve(self._try_process_connection, self._host, self._port, create_protocol = self._protocol_factory):
 			while True:
 				try:
 					with self._database_client_factory() as database_client:

@@ -15,8 +15,7 @@ from bhamon_orchestra_model.users.authentication_provider import AuthenticationP
 from bhamon_orchestra_model.users.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_model.users.user_provider import UserProvider
 from bhamon_orchestra_model.worker_provider import WorkerProvider
-
-import bhamon_orchestra_service.service_setup as service_setup
+from bhamon_orchestra_service import service_setup
 from bhamon_orchestra_service.admin_controller import AdminController
 from bhamon_orchestra_service.job_controller import JobController
 from bhamon_orchestra_service.me_controller import MeController
@@ -24,8 +23,8 @@ from bhamon_orchestra_service.project_controller import ProjectController
 from bhamon_orchestra_service.response_builder import ResponseBuilder
 from bhamon_orchestra_service.run_controller import RunController
 from bhamon_orchestra_service.schedule_controller import ScheduleController
-from bhamon_orchestra_service.user_controller import UserController
 from bhamon_orchestra_service.service import Service
+from bhamon_orchestra_service.user_controller import UserController
 from bhamon_orchestra_service.worker_controller import WorkerController
 
 from . import environment

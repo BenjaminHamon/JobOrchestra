@@ -10,8 +10,8 @@ import pymongo
 import sqlalchemy
 import sqlalchemy_utils
 
+from bhamon_orchestra_model.database import sql_database_model
 from bhamon_orchestra_model.database.file_data_storage import FileDataStorage
-import bhamon_orchestra_model.database.sql_database_model as sql_database_model
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.job_provider import JobProvider
 from bhamon_orchestra_model.project_provider import ProjectProvider

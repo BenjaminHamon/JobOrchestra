@@ -9,7 +9,7 @@ import werkzeug
 
 from bhamon_orchestra_model.date_time_provider import DateTimeProvider
 from bhamon_orchestra_model.users.authorization_provider import AuthorizationProvider
-import bhamon_orchestra_website.helpers as helpers
+from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.service_client import ServiceClient
 
 
@@ -75,7 +75,7 @@ class Website:
 	def handle_error(self, exception: Exception) -> Any: # pylint: disable = no-self-use
 		remote_address = flask.request.environ["REMOTE_ADDR"]
 		status_code = exception.code if isinstance(exception, werkzeug.exceptions.HTTPException) else 500
-		status_message = helpers.get_error_message(status_code)
+		status_message = website_helpers.get_error_message(status_code)
 		request_logger.error("(%s) %s %s (StatusCode: %s)", remote_address, flask.request.method, flask.request.base_url, status_code, exc_info = True)
 		if flask.request.headers.get("Accept") == "application/json":
 			return flask.jsonify({ "status_code": status_code, "status_message": status_message }), status_code

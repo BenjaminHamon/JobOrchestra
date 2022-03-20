@@ -4,9 +4,9 @@ import logging
 from http import HTTPStatus as HttpStatus
 from typing import Any, Awaitable, Callable, Optional
 
-from websockets.http import Headers
-from websockets.server import HTTPResponse as HttpResponse
-from websockets.server import WebSocketServerProtocol as BaseWebSocketServerProtocol
+from websockets.datastructures import Headers
+from websockets.legacy.server import HTTPResponse as HttpResponse
+from websockets.legacy.server import WebSocketServerProtocol as BaseWebSocketServerProtocol
 
 from bhamon_orchestra_model.database.database_client import DatabaseClient
 from bhamon_orchestra_model.users.authentication_provider import AuthenticationProvider

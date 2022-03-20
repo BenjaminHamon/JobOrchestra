@@ -3,7 +3,7 @@ from typing import Any
 
 import flask
 
-import bhamon_orchestra_website.helpers as helpers
+from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.service_client import ServiceClient
 
 
@@ -19,11 +19,11 @@ class ScheduleController:
 
 	def show_collection(self, project_identifier: str) -> Any:
 		query_parameters = {
-			"job": helpers.none_if_empty(flask.request.args.get("job", default = None)),
+			"job": website_helpers.none_if_empty(flask.request.args.get("job", default = None)),
 		}
 
 		item_total = self._service_client.get("/project/" + project_identifier + "/schedule_count", parameters = query_parameters)
-		pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier, **query_parameters })
+		pagination = website_helpers.get_pagination(item_total, { "project_identifier": project_identifier, **query_parameters })
 
 		query_parameters.update({
 			"skip": (pagination["page_number"] - 1) * pagination["item_count"],
@@ -40,7 +40,7 @@ class ScheduleController:
 			"pagination": pagination,
 		}
 
-		helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], [], view_data["schedule_collection"], [])
+		website_helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], [], view_data["schedule_collection"], [])
 
 		return flask.render_template("schedule/collection.html", title = "Schedules", **view_data)
 

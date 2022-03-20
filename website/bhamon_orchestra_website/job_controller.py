@@ -3,7 +3,7 @@ from typing import Any
 
 import flask
 
-import bhamon_orchestra_website.helpers as helpers
+from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.service_client import ServiceClient
 
 
@@ -19,7 +19,7 @@ class JobController:
 
 	def show_collection(self, project_identifier: str) -> Any:
 		item_total = self._service_client.get("/project/" + project_identifier + "/job_count")
-		pagination = helpers.get_pagination(item_total, { "project_identifier": project_identifier })
+		pagination = website_helpers.get_pagination(item_total, { "project_identifier": project_identifier })
 
 		query_parameters = {
 			"skip": (pagination["page_number"] - 1) * pagination["item_count"],
@@ -33,7 +33,7 @@ class JobController:
 			"pagination": pagination,
 		}
 
-		helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], [], [], [])
+		website_helpers.add_display_names([ view_data["project"] ], view_data["job_collection"], [], [], [])
 
 		return flask.render_template("job/collection.html", title = "Jobs", **view_data)
 
@@ -50,7 +50,7 @@ class JobController:
 		}
 
 		view_data["job"]["project_display_name"] = view_data["project"]["display_name"]
-		helpers.add_display_names([ view_data["project"] ], [ view_data["job"] ], view_data["run_collection"], [], view_data["worker_collection"])
+		website_helpers.add_display_names([ view_data["project"] ], [ view_data["job"] ], view_data["run_collection"], [], view_data["worker_collection"])
 
 		return flask.render_template("job/index.html", title = "Job " + view_data["job"]["display_name"], **view_data)
 
