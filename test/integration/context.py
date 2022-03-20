@@ -233,6 +233,9 @@ class OrchestraContext: # pylint: disable = too-many-instance-attributes
 
 		time.sleep(1) # Wait for initialization
 
+		if os.environ.get("ORCHESTRA_SLOW_WORKER") is not None:
+			time.sleep(4)
+
 		return {
 			"identifier": identifier,
 			"process": process,
