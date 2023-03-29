@@ -23,6 +23,7 @@ class GitHubService(Service):
 		self.website_url = "https://github.com"
 		self.service_url = "https://api.github.com"
 		self.status_url = "https://www.githubstatus.com"
+		self.timeout = datetime.timedelta(seconds = 30)
 
 
 	def get_definition(self) -> dict:
@@ -85,7 +86,8 @@ class GitHubService(Service):
 			headers["Content-Type"] = self._serializer.get_content_type()
 			serialized_data = self._serializer.serialize_to_string(data)
 
-		response = requests.request(method, self.service_url + route, headers = headers, params = parameters, data = serialized_data)
+		response = requests.request(method, self.service_url + route,
+			headers = headers, params = parameters, data = serialized_data, timeout = self.timeout.total_seconds())
 
 		response.raise_for_status()
 

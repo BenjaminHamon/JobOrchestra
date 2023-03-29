@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Any, Optional, Tuple
 
@@ -18,6 +19,7 @@ class WebServiceClient(ServiceClient):
 		self._serializer = serializer
 		self.service_url = service_url
 		self.authorization = authorization
+		self.timeout = datetime.timedelta(seconds = 30)
 
 
 	def get_run(self, project_identifier: str, run_identifier: str) -> dict: # pylint: disable = unused-argument
@@ -51,7 +53,8 @@ class WebServiceClient(ServiceClient):
 			headers["Content-Type"] = self._serializer.get_content_type()
 			serialized_data = self._serializer.serialize_to_string(data)
 
-		response = requests.request(method, self.service_url + route, auth = self.authorization, headers = headers, params = parameters, data = serialized_data)
+		response = requests.request(method, self.service_url + route,
+			auth = self.authorization, headers = headers, params = parameters, data = serialized_data, timeout = self.timeout.total_seconds())
 
 		response.raise_for_status()
 

@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Any, List, Optional
 
@@ -19,6 +20,7 @@ class GitHubClient(RevisionControlClient):
 
 		self.website_url = "https://github.com"
 		self.service_url = "https://api.github.com"
+		self.timeout = datetime.timedelta(seconds = 30)
 
 
 	def get_repository(self, repository: str) -> dict:
@@ -91,7 +93,8 @@ class GitHubClient(RevisionControlClient):
 			headers["Content-Type"] = self._serializer.get_content_type()
 			serialized_data = self._serializer.serialize_to_string(data)
 
-		response = requests.request(method, self.service_url + route, headers = headers, params = parameters, data = serialized_data)
+		response = requests.request(method, self.service_url + route,
+			headers = headers, params = parameters, data = serialized_data, timeout = self.timeout.total_seconds())
 
 		response.raise_for_status()
 

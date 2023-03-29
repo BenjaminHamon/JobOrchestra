@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Any, Optional, Tuple
 
@@ -16,6 +17,7 @@ class ServiceClient:
 	def __init__(self, serializer: Serializer, service_url: str) -> None:
 		self._serializer = serializer
 		self.service_url = service_url
+		self.timeout = datetime.timedelta(seconds = 30)
 
 
 	def get(self, route: str, parameters: Optional[dict] = None) -> Optional[Any]:
@@ -48,7 +50,8 @@ class ServiceClient:
 			headers["Content-Type"] = self._serializer.get_content_type()
 			serialized_data = self._serializer.serialize_to_string(data)
 
-		response = requests.request(method, self.service_url + route, auth = authentication, headers = headers, params = parameters, data = serialized_data)
+		response = requests.request(method, self.service_url + route,
+			auth = authentication, headers = headers, params = parameters, data = serialized_data, timeout = self.timeout.total_seconds())
 
 		response.raise_for_status()
 
@@ -68,8 +71,11 @@ class ServiceClient:
 
 		authentication = self._get_authentication()
 
-		response = requests.get(self.service_url + route, auth = authentication, params = parameters)
+		response = requests.get(self.service_url + route,
+			auth = authentication, params = parameters, timeout = self.timeout.total_seconds())
+
 		response.raise_for_status()
+
 		return response
 
 
@@ -86,7 +92,8 @@ class ServiceClient:
 		parameters = flask.request.args
 		data = flask.request.get_data()
 
-		return requests.request(flask.request.method, self.service_url + route, auth = authentication, headers = headers, params = parameters, data = data)
+		return requests.request(flask.request.method, self.service_url + route,
+			auth = authentication, headers = headers, params = parameters, data = data, timeout = self.timeout.total_seconds())
 
 
 	def _get_authentication(self) -> Optional[Tuple[str,str]]: # pylint: disable = no-self-use
