@@ -1,4 +1,4 @@
-# pylint: disable = line-too-long
+# pylint: disable = line-too-long, unnecessary-lambda-assignment
 
 """ Integration tests for schedules """
 

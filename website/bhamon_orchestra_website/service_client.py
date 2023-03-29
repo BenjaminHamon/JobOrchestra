@@ -96,7 +96,7 @@ class ServiceClient:
 			auth = authentication, headers = headers, params = parameters, data = data, timeout = self.timeout.total_seconds())
 
 
-	def _get_authentication(self) -> Optional[Tuple[str,str]]: # pylint: disable = no-self-use
+	def _get_authentication(self) -> Optional[Tuple[str,str]]:
 		if "token" not in flask.session:
 			return None
 		return flask.session["token"]["user_identifier"], flask.session["token"]["secret"]

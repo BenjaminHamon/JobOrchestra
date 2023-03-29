@@ -115,7 +115,7 @@ class SqlDatabaseAdministration(DatabaseAdministration):
 			self.apply_migration(migration, simulate = simulate)
 
 
-	def list_migrations(self) -> List[types.ModuleType]: # pylint: disable = no-self-use
+	def list_migrations(self) -> List[types.ModuleType]:
 		migration_module_base = bhamon_orchestra_model.database.migrations.sql
 		migration_directory = os.path.dirname(migration_module_base.__file__)
 

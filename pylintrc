@@ -13,9 +13,7 @@ disable =
 	consider-using-f-string,
 	duplicate-code,
 	missing-docstring,
-
-# See https://github.com/PyCQA/pylint/issues/3793
-	assigning-non-slot,
+	too-few-public-methods,
 
 [REPORTS]
 score = no

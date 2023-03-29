@@ -38,12 +38,12 @@ class AuthorizationProvider:
 		return False
 
 
-	def authorize_worker(self, user: Optional[dict]) -> bool: # pylint: disable = no-self-use
+	def authorize_worker(self, user: Optional[dict]) -> bool:
 		""" Check if a user is authorized to run a worker """
 		return user is not None and user["is_enabled"] and "Worker" in user["roles"]
 
 
-	def build_user_roles(self, user: Optional[dict]) -> List[object]: # pylint: disable = no-self-use
+	def build_user_roles(self, user: Optional[dict]) -> List[object]:
 		""" Instantiate user role classes based on a user record """
 
 		if user is None:
@@ -67,6 +67,6 @@ class AuthorizationProvider:
 		return user_roles
 
 
-	def get_administrator_roles(self) -> List[str]: # pylint: disable = no-self-use
+	def get_administrator_roles(self) -> List[str]:
 		""" Return the default list of roles for a user with administrator privileges """
 		return [ "Administrator" ]

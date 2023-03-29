@@ -1,3 +1,5 @@
+# pylint: disable = unnecessary-lambda-assignment
+
 """ Integration tests for connection between master and workers """
 
 import pytest

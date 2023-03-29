@@ -215,7 +215,7 @@ class Worker: # pylint: disable = too-few-public-methods
 			executor.abort()
 
 
-	def _retrieve_request(self, run_identifier: str) -> dict: # pylint: disable = no-self-use
+	def _retrieve_request(self, run_identifier: str) -> dict:
 		return self._storage.load_request(run_identifier)
 
 
@@ -232,7 +232,7 @@ class Worker: # pylint: disable = too-few-public-methods
 		executor.synchronization.resume()
 
 
-	def _log_executor_output(self, line: str) -> None: # pylint: disable = no-self-use
+	def _log_executor_output(self, line: str) -> None:
 		for log_handler in logging.root.handlers:
 			log_handler.stream.write(line + "\n")
 			log_handler.flush()

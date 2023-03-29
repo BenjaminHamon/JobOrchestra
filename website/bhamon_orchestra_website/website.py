@@ -31,7 +31,7 @@ class Website:
 		self.session_refresh_interval = datetime.timedelta(days = 1)
 
 
-	def log_request(self) -> None: # pylint: disable = no-self-use
+	def log_request(self) -> None:
 		request_logger.info("(%s) %s %s", flask.request.environ["REMOTE_ADDR"], flask.request.method, flask.request.base_url)
 
 
@@ -72,7 +72,7 @@ class Website:
 		return self._authorization_provider.authorize_view(flask.request.user, view)
 
 
-	def handle_error(self, exception: Exception) -> Any: # pylint: disable = no-self-use
+	def handle_error(self, exception: Exception) -> Any:
 		remote_address = flask.request.environ["REMOTE_ADDR"]
 		status_code = exception.code if isinstance(exception, werkzeug.exceptions.HTTPException) else 500
 		status_message = website_helpers.get_error_message(status_code)
@@ -82,7 +82,7 @@ class Website:
 		return flask.render_template("error.html", title = "Error", status_message = status_message, status_code = status_code), status_code
 
 
-	def home(self) -> Any: # pylint: disable = no-self-use
+	def home(self) -> Any:
 		return flask.render_template("home.html", title = "Home")
 
 

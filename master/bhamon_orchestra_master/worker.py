@@ -283,7 +283,7 @@ class Worker:
 		self._run_provider.append_log_chunk(run["project"], run["identifier"], log_chunk)
 
 
-	def _handle_event(self, executor: dict, event: str) -> None: # pylint: disable = no-self-use
+	def _handle_event(self, executor: dict, event: str) -> None:
 		""" Process an event update """
 		if event == "synchronization_completed":
 			executor["synchronization"] = "done"

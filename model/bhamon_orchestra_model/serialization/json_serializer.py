@@ -62,7 +62,7 @@ class JsonDecoder(json.JSONDecoder):
 		super().__init__(object_hook = self._object_hook, *args, **kwargs)
 
 
-	def _object_hook(self, obj): # pylint: disable = no-self-use
+	def _object_hook(self, obj):
 		for key, value in obj.items():
 			if isinstance(value, str) and datetime_isoformat_regex.search(value) is not None:
 				obj[key] = dateutil.parser.parse(value)

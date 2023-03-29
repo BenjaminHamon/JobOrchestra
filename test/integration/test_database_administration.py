@@ -1,3 +1,5 @@
+# pylint: disable = unnecessary-lambda-assignment
+
 """ Integration tests for database administration """
 
 import importlib
@@ -15,7 +17,7 @@ from . import environment
 
 @pytest.mark.parametrize("database_type", environment.get_all_database_types())
 def test_reinitialization(tmpdir, database_type):
-	""" Test initializating an already initialized database """
+	""" Test initializing an already initialized database """
 
 	metadata_factory = lambda: importlib.import_module("bhamon_orchestra_model.database.sql_database_model").metadata
 

@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+from typing import List
 
 import filelock
 
@@ -62,14 +63,15 @@ def create_application(arguments, authentication):
 		secret = authentication["secret"],
 	)
 
-	executor_command_factory = lambda run_request: [ sys.executable, "-m", "test.integration.executor_main", run_request["run_identifier"] ]
+	def create_executor_command(run_request: dict) -> List[str]:
+		return [ sys.executable, "-m", "test.integration.executor_main", run_request["run_identifier"] ]
 
 	worker_instance = Worker(
 		storage = worker_storage_instance,
 		master_client = master_client_instance,
 		display_name = arguments.identifier,
 		properties = properties,
-		executor_command_factory = executor_command_factory,
+		executor_command_factory = create_executor_command,
 	)
 
 	return worker_instance
