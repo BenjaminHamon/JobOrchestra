@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import dateutil.parser
 import flask
@@ -29,6 +29,10 @@ class Website:
 		self._service_client = service_client
 
 		self.session_refresh_interval = datetime.timedelta(days = 1)
+
+
+	def run(self, address: Optional[str] = None, port: Optional[int] = None, debug: Optional[bool] = None) -> None:
+		self._application.run(host = address, port = port, debug = debug)
 
 
 	def log_request(self) -> None:
