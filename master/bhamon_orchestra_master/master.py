@@ -34,11 +34,11 @@ class Master:
 		self._supervisor = supervisor
 
 
-	async def run(self) -> None:
+	async def run(self, address: str, port: int) -> None:
 		""" Run the master """
 
 		job_scheduler_future = asyncio.ensure_future(self._job_scheduler.run())
-		supervisor_future = asyncio.ensure_future(self._supervisor.run_server())
+		supervisor_future = asyncio.ensure_future(self._supervisor.run_server(address, port))
 
 		try:
 			await asyncio.wait([ job_scheduler_future, supervisor_future ], return_when = asyncio.FIRST_COMPLETED)

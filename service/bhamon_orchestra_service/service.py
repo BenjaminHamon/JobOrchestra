@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import flask
 import werkzeug
@@ -29,6 +29,10 @@ class Service:
 		self._authentication_provider = authentication_provider
 		self._authorization_provider = authorization_provider
 		self._user_provider = user_provider
+
+
+	def run(self, address: Optional[str] = None, port: Optional[int] = None, debug: Optional[bool] = None) -> None:
+		self._application.run(host = address, port = port, debug = debug)
 
 
 	def log_request(self) -> None:

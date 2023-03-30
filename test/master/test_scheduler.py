@@ -19,7 +19,7 @@ def test_abort_run_pending():
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
 	run_provider_instance = RunProvider(None, date_time_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None, None, None)
+	supervisor_instance = Supervisor(None, None, None, None)
 
 	job_scheduler_instance = JobScheduler(
 		database_client_factory = lambda: database_client_instance,
@@ -50,7 +50,7 @@ def test_abort_run_running_connected():
 	date_time_provider_instance = FakeDateTimeProvider()
 	run_provider_instance = RunProvider(None, date_time_provider_instance)
 	worker_instance = Worker("worker_test", None, lambda: database_client_instance, run_provider_instance, None)
-	supervisor_instance = Supervisor(None, None, None, None, None, None)
+	supervisor_instance = Supervisor(None, None, None, None)
 
 	job_scheduler_instance = JobScheduler(
 		database_client_factory = lambda: database_client_instance,
@@ -88,7 +88,7 @@ def test_abort_run_running_disconnected():
 	date_time_provider_instance = FakeDateTimeProvider()
 	run_provider_instance = RunProvider(None, date_time_provider_instance)
 	worker_instance = Worker("worker_test", None, lambda: database_client_instance, run_provider_instance, None)
-	supervisor_instance = Supervisor(None, None, None, None, None, None)
+	supervisor_instance = Supervisor(None, None, None, None)
 
 	job_scheduler_instance = JobScheduler(
 		database_client_factory = lambda: database_client_instance,
@@ -123,7 +123,7 @@ def test_abort_run_completed():
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
 	run_provider_instance = RunProvider(None, date_time_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None, None, None)
+	supervisor_instance = Supervisor(None, None, None, None)
 
 	job_scheduler_instance = JobScheduler(
 		database_client_factory = lambda: database_client_instance,

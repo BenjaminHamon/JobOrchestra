@@ -8,6 +8,9 @@ import jinja2
 import werkzeug
 
 import bhamon_orchestra_website
+from bhamon_orchestra_model.date_time_provider import DateTimeProvider
+from bhamon_orchestra_model.serialization.json_serializer import JsonSerializer
+from bhamon_orchestra_model.users.authorization_provider import AuthorizationProvider
 from bhamon_orchestra_website import helpers as website_helpers
 from bhamon_orchestra_website.admin_controller import AdminController
 from bhamon_orchestra_website.job_controller import JobController
@@ -16,12 +19,37 @@ from bhamon_orchestra_website.pipeline_view import build_pipeline_view
 from bhamon_orchestra_website.project_controller import ProjectController
 from bhamon_orchestra_website.run_controller import RunController
 from bhamon_orchestra_website.schedule_controller import ScheduleController
+from bhamon_orchestra_website.service_client import ServiceClient
 from bhamon_orchestra_website.user_controller import UserController
 from bhamon_orchestra_website.website import Website
 from bhamon_orchestra_website.worker_controller import WorkerController
 
 
 logger = logging.getLogger("WebsiteSetup")
+
+
+def create_application(flask_import_name: str, flask_secret_key, orchestra_service_url: str) -> Website:
+	application = flask.Flask(flask_import_name, static_folder = None)
+	application.secret_key = flask_secret_key
+
+	date_time_provider = DateTimeProvider()
+	serializer = JsonSerializer(indent = 4)
+	authorization_provider = AuthorizationProvider()
+	service_client = ServiceClient(serializer, orchestra_service_url)
+
+	website = Website(application, date_time_provider, authorization_provider, service_client)
+
+	configure(application, website)
+	register_handlers(application, website)
+	register_resources(application)
+	register_root_routes(application, website)
+	register_admin_controllers_and_routes(application, service_client)
+	register_user_controllers_and_routes(application, service_client, authorization_provider, date_time_provider)
+	register_project_controllers_and_routes(application, service_client)
+	register_worker_controllers_and_routes(application, service_client)
+	register_service_proxy_routes(application, website)
+
+	return website
 
 
 def configure( # pylint: disable = redefined-builtin, too-many-arguments
@@ -53,15 +81,26 @@ def register_handlers(application: flask.Flask, website: Website) -> None:
 		application.register_error_handler(exception, website.handle_error)
 
 
-def register_routes( # pylint: disable = too-many-arguments
-		application: flask.Flask, website: Website,
-		admin_controller: AdminController, job_controller: JobController, me_controller: MeController,
-		project_controller: ProjectController, run_controller: RunController, schedule_controller: ScheduleController,
-		user_controller: UserController, worker_controller: WorkerController) -> None:
-
+def register_root_routes(application: flask.Flask, website: Website) -> None:
 	add_url_rule(application, "/", [ "GET" ], website.home)
 	add_url_rule(application, "/routes", [ "GET" ], website.list_routes)
+
+
+def register_admin_controllers_and_routes(
+		application: flask.Flask, service_client: ServiceClient) -> None:
+
+	admin_controller = AdminController(application, service_client)
+
 	add_url_rule(application, "/admin", [ "GET" ], admin_controller.index)
+
+
+def register_user_controllers_and_routes(
+		application: flask.Flask, service_client: ServiceClient,
+		authorization_provider: AuthorizationProvider, date_time_provider: DateTimeProvider) -> None:
+
+	me_controller = MeController(date_time_provider, service_client)
+	user_controller = UserController(date_time_provider, authorization_provider, service_client)
+
 	add_url_rule(application, "/me", [ "GET" ], me_controller.show_profile)
 	add_url_rule(application, "/me/login", [ "GET", "POST" ], me_controller.login)
 	add_url_rule(application, "/me/logout", [ "GET", "POST" ], me_controller.logout)
@@ -69,6 +108,28 @@ def register_routes( # pylint: disable = too-many-arguments
 	add_url_rule(application, "/me/change_password", [ "GET", "POST" ], me_controller.change_password)
 	add_url_rule(application, "/me/token_create", [ "GET", "POST" ], me_controller.create_token)
 	add_url_rule(application, "/me/token/<token_identifier>/delete", [ "POST" ], me_controller.delete_token)
+
+	add_url_rule(application, "/user_collection", [ "GET" ], user_controller.show_collection)
+	add_url_rule(application, "/user_create", [ "GET", "POST" ], user_controller.create)
+	add_url_rule(application, "/user/<user_identifier>", [ "GET" ], user_controller.show)
+	add_url_rule(application, "/user/<user_identifier>/edit", [ "GET" ], user_controller.edit)
+	add_url_rule(application, "/user/<user_identifier>/update_identity", [ "POST" ], user_controller.update_identity)
+	add_url_rule(application, "/user/<user_identifier>/update_roles", [ "POST" ], user_controller.update_roles)
+	add_url_rule(application, "/user/<user_identifier>/enable", [ "POST" ], user_controller.enable)
+	add_url_rule(application, "/user/<user_identifier>/disable", [ "POST" ], user_controller.disable)
+	add_url_rule(application, "/user/<user_identifier>/reset_password", [ "GET", "POST" ], user_controller.reset_password)
+	add_url_rule(application, "/user/<user_identifier>/token_create", [ "GET", "POST" ], user_controller.create_token)
+	add_url_rule(application, "/user/<user_identifier>/token/<token_identifier>/delete", [ "POST" ], user_controller.delete_token)
+
+
+def register_project_controllers_and_routes(
+		application: flask.Flask, service_client: ServiceClient) -> None:
+
+	job_controller = JobController(service_client)
+	project_controller = ProjectController(service_client)
+	run_controller = RunController(service_client)
+	schedule_controller = ScheduleController(service_client)
+
 	add_url_rule(application, "/project_collection", [ "GET" ], project_controller.show_collection)
 	add_url_rule(application, "/project/<project_identifier>", [ "GET" ], project_controller.show)
 	add_url_rule(application, "/project/<project_identifier>/status", [ "GET" ], project_controller.show_status)
@@ -88,23 +149,24 @@ def register_routes( # pylint: disable = too-many-arguments
 	add_url_rule(application, "/project/<project_identifier>/schedule/<schedule_identifier>", [ "GET" ], schedule_controller.show)
 	add_url_rule(application, "/project/<project_identifier>/schedule/<schedule_identifier>/enable", [ "POST" ], schedule_controller.enable)
 	add_url_rule(application, "/project/<project_identifier>/schedule/<schedule_identifier>/disable", [ "POST" ], schedule_controller.disable)
-	add_url_rule(application, "/user_collection", [ "GET" ], user_controller.show_collection)
-	add_url_rule(application, "/user_create", [ "GET", "POST" ], user_controller.create)
-	add_url_rule(application, "/user/<user_identifier>", [ "GET" ], user_controller.show)
-	add_url_rule(application, "/user/<user_identifier>/edit", [ "GET" ], user_controller.edit)
-	add_url_rule(application, "/user/<user_identifier>/update_identity", [ "POST" ], user_controller.update_identity)
-	add_url_rule(application, "/user/<user_identifier>/update_roles", [ "POST" ], user_controller.update_roles)
-	add_url_rule(application, "/user/<user_identifier>/enable", [ "POST" ], user_controller.enable)
-	add_url_rule(application, "/user/<user_identifier>/disable", [ "POST" ], user_controller.disable)
-	add_url_rule(application, "/user/<user_identifier>/reset_password", [ "GET", "POST" ], user_controller.reset_password)
-	add_url_rule(application, "/user/<user_identifier>/token_create", [ "GET", "POST" ], user_controller.create_token)
-	add_url_rule(application, "/user/<user_identifier>/token/<token_identifier>/delete", [ "POST" ], user_controller.delete_token)
+
+
+def register_worker_controllers_and_routes(
+		application: flask.Flask, service_client: ServiceClient) -> None:
+
+	worker_controller = WorkerController(service_client)
+
 	add_url_rule(application, "/worker_collection", [ "GET" ], worker_controller.show_collection)
 	add_url_rule(application, "/worker/<worker_identifier>", [ "GET" ], worker_controller.show)
 	add_url_rule(application, "/worker/<worker_identifier>/runs", [ "GET" ], worker_controller.show_runs)
 	add_url_rule(application, "/worker/<worker_identifier>/disconnect", [ "POST" ], worker_controller.disconnect)
 	add_url_rule(application, "/worker/<worker_identifier>/enable", [ "POST" ], worker_controller.enable)
 	add_url_rule(application, "/worker/<worker_identifier>/disable", [ "POST" ], worker_controller.disable)
+
+
+def register_service_proxy_routes(
+		application: flask.Flask, website: Website,) -> None:
+
 	add_url_rule(application, "/service_proxy", [ "GET", "POST" ], website.proxy_to_service, defaults = { "route": "" })
 	add_url_rule(application, "/service_proxy/<path:route>", [ "GET", "POST" ], website.proxy_to_service)
 

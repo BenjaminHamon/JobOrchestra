@@ -28,7 +28,7 @@ async def test_run(caplog):
 		job_scheduler = job_scheduler_mock,
 		supervisor = supervisor_mock)
 
-	await master_instance.run()
+	await master_instance.run(None, None)
 
 	assert sum(1 for record in caplog.records if record.levelno == logging.WARNING) == 0
 	assert sum(1 for record in caplog.records if record.levelno == logging.ERROR) == 0
@@ -50,7 +50,7 @@ async def test_run_cancel(caplog):
 		job_scheduler = job_scheduler_mock,
 		supervisor = supervisor_mock)
 
-	run_future = asyncio.ensure_future(master_instance.run())
+	run_future = asyncio.ensure_future(master_instance.run(None, None))
 
 	await asyncio.sleep(0.1)
 
@@ -82,7 +82,7 @@ async def test_run_exception(caplog):
 	exception = MockException()
 	job_scheduler_mock.run.side_effect = exception
 
-	await master_instance.run()
+	await master_instance.run(None, None)
 
 	assert sum(1 for record in caplog.records if record.levelno == logging.WARNING) == 0
 	assert sum(1 for record in caplog.records if record.levelno == logging.ERROR) == 1
