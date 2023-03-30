@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Callable, List, Type
+from typing import Any, Callable, List
 
 import websockets.server
 
@@ -25,7 +25,7 @@ class Supervisor:
 	""" Supervisor managing worker connections to the master """
 
 
-	def __init__(self, protocol_factory: Type[WebSocketServerProtocol],
+	def __init__(self, protocol_factory: Callable[[Any], WebSocketServerProtocol],
 			database_client_factory: Callable[[], DatabaseClient], run_provider: RunProvider, worker_provider: WorkerProvider) -> None:
 
 		self._protocol_factory = protocol_factory

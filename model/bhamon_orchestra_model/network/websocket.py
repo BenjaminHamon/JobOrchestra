@@ -1,9 +1,10 @@
 import asyncio
 import logging
 
-from typing import Callable
+from typing import Awaitable, Callable
 
 import websockets.client
+import websockets.exceptions
 
 from bhamon_orchestra_model.network.connection import NetworkConnection
 
@@ -27,7 +28,7 @@ class WebSocketConnection(NetworkConnection):
 
 	async def ping(self) -> None:
 		""" Send a ping """
-		return await self.connection.ping()
+		await self.connection.ping()
 
 
 	async def send(self, data: str) -> None:
@@ -37,7 +38,10 @@ class WebSocketConnection(NetworkConnection):
 
 	async def receive(self) -> str:
 		""" Receive the next message """
-		return await self.connection.recv()
+		data = await self.connection.recv()
+		if not isinstance(data, str):
+			raise TypeError("Received message is not a string value")
+		return data
 
 
 
@@ -51,7 +55,7 @@ class WebSocketClient:
 		self.connection_attempt_delay_collection = [ 10, 10, 10, 10, 10, 60, 60, 60, 300, 3600 ]
 
 
-	async def run_once(self, connection_handler: Callable[[WebSocketConnection],None], **kwargs) -> None:
+	async def run_once(self, connection_handler: Callable[[WebSocketConnection],Awaitable[None]], **kwargs) -> None:
 		logger.info("Connecting to %s (Uri: '%s')", self.server_identifier, self.server_uri)
 		connection = await websockets.client.connect(self.server_uri, **kwargs)
 
@@ -69,7 +73,7 @@ class WebSocketClient:
 				logger.info("Closed connection to %s", self.server_identifier)
 
 
-	async def run_forever(self, connection_handler: Callable[[WebSocketConnection],None], **kwargs) -> None:
+	async def run_forever(self, connection_handler: Callable[[WebSocketConnection],Awaitable[None]], **kwargs) -> None:
 		connection_attempt_counter = 0
 
 		while True:

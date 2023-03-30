@@ -49,7 +49,7 @@ class Service:
 		flask.request.database_client = get_or_create_database_client
 
 
-	def teardown_request_dependencies(self, exception: Exception) -> None: # pylint: disable = unused-argument
+	def teardown_request_dependencies(self, exception: Optional[BaseException]) -> None: # pylint: disable = unused-argument
 		if getattr(flask.request, "database_client_instance", None) is not None:
 			flask.request.database_client_instance.close()
 			flask.request.database_client_instance = None

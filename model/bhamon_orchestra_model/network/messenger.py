@@ -2,7 +2,9 @@ import asyncio
 import logging
 import traceback
 import uuid
-from typing import Callable, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional
+
+import websockets.exceptions
 
 from bhamon_orchestra_model.network.connection import NetworkConnection
 from bhamon_orchestra_model.serialization.serializer import Serializer
@@ -14,8 +16,10 @@ logger = logging.getLogger("Messenger")
 class Messenger:
 
 
-	def __init__(self, serializer: Serializer, identifier: str, connection: NetworkConnection, # pylint: disable = too-many-arguments
-			request_handler: Callable[[dict],None] = None, update_handler: Callable[[dict],None] = None) -> None:
+	def __init__(self, # pylint: disable = too-many-arguments
+	      	serializer: Serializer, identifier: str, connection: NetworkConnection,
+			request_handler: Optional[Callable[[dict],Awaitable[Optional[Any]]]] = None,
+			update_handler: Optional[Callable[[dict],Awaitable[None]]] = None) -> None:
 
 		self.serializer = serializer
 		self.identifier = identifier
@@ -25,10 +29,10 @@ class Messenger:
 
 		self.is_disposed = False
 
-		self._messages_to_send = []
-		self._messages_to_wait = []
-		self._messages_to_handle = []
-		self._messages_events = {}
+		self._messages_to_send: List[dict] = []
+		self._messages_to_wait: List[dict] = []
+		self._messages_to_handle: List[dict] = []
+		self._messages_events: Dict[str,asyncio.Event] = {}
 
 
 	async def run(self) -> None:
@@ -74,7 +78,7 @@ class Messenger:
 		self.is_disposed = True
 
 
-	async def send_request(self, data: dict) -> Optional[dict]:
+	async def send_request(self, data: Optional[Any]) -> Optional[Any]:
 		if self.is_disposed:
 			raise RuntimeError("Messenger is disposed")
 
@@ -92,17 +96,17 @@ class Messenger:
 		return message["response"].get("data", None)
 
 
-	def _send_response(self, identifier: str, data: dict) -> None:
+	def _send_response(self, identifier: str, data: Optional[Any]) -> None:
 		message = { "type": "response", "identifier": identifier, "data": data }
 		self._messages_to_send.append(message)
 
 
-	def _send_response_error(self, identifier: str, error: dict) -> None:
+	def _send_response_error(self, identifier: str, error: Optional[Any]) -> None:
 		message = { "type": "response", "identifier": identifier, "error": error }
 		self._messages_to_send.append(message)
 
 
-	def send_update(self, data: dict) -> None:
+	def send_update(self, data: Optional[Any]) -> None:
 		if self.is_disposed:
 			raise RuntimeError("Messenger is disposed")
 
@@ -113,9 +117,16 @@ class Messenger:
 
 	async def _push(self) -> None:
 		while True:
-			while len(self._messages_to_send) > 0:
-				await self._send_next()
-			await asyncio.sleep(0.1)
+			try:
+				while len(self._messages_to_send) > 0:
+					await self._send_next()
+				await asyncio.sleep(0.1)
+			except websockets.exceptions.ConnectionClosed:
+				raise
+			except asyncio.CancelledError: # pylint: disable = try-except-raise
+				raise
+			except Exception: # pylint: disable = broad-except
+				logger.error("Exception during push", exc_info = True)
 
 
 	async def _send_next(self) -> None:
@@ -133,11 +144,21 @@ class Messenger:
 
 	async def _pull(self) -> None:
 		while True:
-			await self._receive_next()
+			try:
+				await self._receive_next()
+			except websockets.exceptions.ConnectionClosed:
+				raise
+			except asyncio.CancelledError: # pylint: disable = try-except-raise
+				raise
+			except Exception: # pylint: disable = broad-except
+				logger.error("Exception during pull", exc_info = True)
 
 
 	async def _receive_next(self) -> None:
 		message = self.serializer.deserialize_from_string(await self.connection.receive())
+		if not isinstance(message, dict):
+			raise TypeError("Received message is not a dictionary value")
+
 		logger.debug("(%s) < %s %s", self.identifier, message["type"], message["identifier"])
 		self._messages_to_handle.append(message)
 

@@ -1,6 +1,6 @@
 import base64
 import logging
-from typing import Callable
+from typing import Awaitable, Callable
 
 from bhamon_orchestra_model.network.websocket import WebSocketClient
 from bhamon_orchestra_model.network.websocket import WebSocketConnection
@@ -23,7 +23,7 @@ class MasterClient: # pylint: disable = too-few-public-methods
 		self._secret = secret
 
 
-	async def run(self, connection_handler: Callable[[WebSocketConnection],None]) -> None:
+	async def run(self, connection_handler: Callable[[WebSocketConnection],Awaitable[None]]) -> None:
 		websocket_client_instance = WebSocketClient("master", self.master_uri)
 		authentication_data = base64.b64encode(b"%s:%s" % (self._user.encode(), self._secret.encode())).decode()
 

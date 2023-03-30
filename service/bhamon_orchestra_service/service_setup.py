@@ -3,7 +3,7 @@ import logging
 from typing import Callable, List, Optional
 
 import flask
-import werkzeug
+import werkzeug.exceptions
 
 import bhamon_orchestra_service
 from bhamon_orchestra_model.database.database_client import DatabaseClient

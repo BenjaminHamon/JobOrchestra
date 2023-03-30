@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Callable, List, Optional
+from typing import Any, Callable, List, Optional
 
 import websockets
 
@@ -120,7 +120,7 @@ class Worker:
 			await asyncio.sleep(0.1)
 
 
-	async def _execute_remote_command(self, command: str, parameters: Optional[dict] = None) -> Optional[dict]:
+	async def _execute_remote_command(self, command: str, parameters: Optional[dict] = None) -> Optional[Any]:
 		""" Execute a command on the remote worker """
 		return await self._messenger.send_request({ "command": command, "parameters": parameters if parameters is not None else {} })
 
@@ -137,6 +137,8 @@ class Worker:
 
 	async def _update_properties(self, database_client: DatabaseClient) -> None:
 		worker_properties = await self._execute_remote_command("describe")
+		if not isinstance(worker_properties, dict):
+			raise TypeError("Describe command result must be a dict")
 		self._worker_provider.update_properties(database_client, { "identifier": self.identifier }, **worker_properties)
 
 
@@ -145,6 +147,8 @@ class Worker:
 
 		recovered_executors = []
 		runs_to_recover = await self._execute_remote_command("list")
+		if not isinstance(runs_to_recover, list):
+			raise TypeError("Describe command result must be a list")
 		for run_information in runs_to_recover:
 			executor = await self._recover_execution(database_client, **run_information)
 			recovered_executors.append(executor)
@@ -241,7 +245,10 @@ class Worker:
 	async def _retrieve_request(self, run_identifier: str) -> dict:
 		""" Retrieves the run request stored on the remote worker """
 		parameters = { "run_identifier": run_identifier }
-		return await self._execute_remote_command("request", parameters)
+		request = await self._execute_remote_command("request", parameters)
+		if not isinstance(request, dict):
+			raise TypeError("Request command result must be a dict")
+		return request
 
 
 	async def receive_update(self, update: dict) -> None:
