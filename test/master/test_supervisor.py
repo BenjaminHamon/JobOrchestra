@@ -12,7 +12,7 @@ from ..fakes.fake_date_time_provider import FakeDateTimeProvider
 
 
 def test_register_worker_success():
-	""" Test registrating a worker successfully """
+	""" Test registering a worker successfully """
 
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
@@ -32,7 +32,7 @@ def test_register_worker_success():
 
 
 def test_register_worker_already_active():
-	""" Test registrating a worker which is already active """
+	""" Test registering a worker which is already active """
 
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
@@ -50,7 +50,7 @@ def test_register_worker_already_active():
 
 
 def test_register_worker_wrong_user():
-	""" Test registrating a worker which is already owned by another user """
+	""" Test registering a worker which is already owned by another user """
 
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
