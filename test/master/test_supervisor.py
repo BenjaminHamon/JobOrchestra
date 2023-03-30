@@ -17,7 +17,7 @@ def test_register_worker_success():
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
 	worker_provider_instance = WorkerProvider(date_time_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None, None, worker_provider_instance)
+	supervisor_instance = Supervisor(None, None, None, worker_provider_instance)
 
 	worker_identifier = "my_worker"
 	worker_version = "1.0"
@@ -37,7 +37,7 @@ def test_register_worker_already_active():
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
 	worker_provider_instance = WorkerProvider(date_time_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None, None, worker_provider_instance)
+	supervisor_instance = Supervisor(None, None, None, worker_provider_instance)
 
 	worker_identifier = "my_worker"
 	worker_version = "1.0"
@@ -55,7 +55,7 @@ def test_register_worker_wrong_user():
 	database_client_instance = MemoryDatabaseClient()
 	date_time_provider_instance = FakeDateTimeProvider()
 	worker_provider_instance = WorkerProvider(date_time_provider_instance)
-	supervisor_instance = Supervisor(None, None, None, None, None, worker_provider_instance)
+	supervisor_instance = Supervisor(None, None, None, worker_provider_instance)
 
 	worker_identifier = "my_worker"
 	worker_version = "1.0"

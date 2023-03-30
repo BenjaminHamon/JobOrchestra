@@ -25,12 +25,9 @@ class Supervisor:
 	""" Supervisor managing worker connections to the master """
 
 
-	def __init__(self, # pylint: disable = too-many-arguments
-			host: str, port: str, protocol_factory: Type[WebSocketServerProtocol],
+	def __init__(self, protocol_factory: Type[WebSocketServerProtocol],
 			database_client_factory: Callable[[], DatabaseClient], run_provider: RunProvider, worker_provider: WorkerProvider) -> None:
 
-		self._host = host
-		self._port = port
 		self._protocol_factory = protocol_factory
 		self._database_client_factory = database_client_factory
 		self._run_provider = run_provider
@@ -40,7 +37,7 @@ class Supervisor:
 		self.update_interval_seconds = 10
 
 
-	async def run_server(self) -> None:
+	async def run_server(self, address: str, port: int) -> None:
 		""" Run the websocket server to handle worker connections """
 
 		with self._database_client_factory() as database_client:
@@ -48,8 +45,8 @@ class Supervisor:
 				if worker_record["is_active"]:
 					self._worker_provider.update_status(database_client, worker_record, is_active = False, should_disconnect = False)
 
-		logger.info("Listening for workers on '%s:%s'", self._host, self._port)
-		async with websockets.server.serve(self._try_process_connection, self._host, self._port, create_protocol = self._protocol_factory):
+		logger.info("Listening for workers on '%s:%s'", address, port)
+		async with websockets.server.serve(self._try_process_connection, address, port, create_protocol = self._protocol_factory):
 			while True:
 				try:
 					with self._database_client_factory() as database_client:

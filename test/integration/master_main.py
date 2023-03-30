@@ -44,7 +44,7 @@ def main():
 		master_application = create_application(arguments)
 		master_application.apply_configuration(configuration.configure())
 		asyncio_application = AsyncioApplication(application_title, application_version)
-		asyncio_application.run_as_standalone(master_application.run())
+		asyncio_application.run_as_standalone(master_application.run(arguments.address, arguments.port))
 
 
 def parse_arguments():
@@ -82,8 +82,6 @@ def create_application(arguments): # pylint: disable = too-many-locals
 	)
 
 	supervisor_instance = Supervisor(
-		host = arguments.address,
-		port = arguments.port,
 		protocol_factory = protocol_factory,
 		database_client_factory = database_client_factory,
 		worker_provider = worker_provider_instance,
