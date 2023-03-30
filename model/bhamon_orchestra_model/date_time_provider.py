@@ -9,6 +9,6 @@ class DateTimeProvider: # pylint: disable = too-few-public-methods
 	"""
 
 
-	def now(self) -> datetime.datetime: # pylint: disable = no-self-use
+	def now(self) -> datetime.datetime:
 		""" Return the current datetime """
 		return datetime.datetime.now(datetime.timezone.utc).replace(microsecond = 0)

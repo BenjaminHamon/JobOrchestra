@@ -1,6 +1,6 @@
 """ Implementation of authorization checks for all user roles, used by AuthorizationProvider """
 
-# pylint: disable = no-self-use, unused-argument
+# pylint: disable = unused-argument
 
 
 class Anonymous:

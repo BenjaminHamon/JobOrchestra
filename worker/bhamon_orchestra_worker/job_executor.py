@@ -108,6 +108,6 @@ class JobExecutor(Executor):
 		return [ self.format_value(argument, extra_parameters) for argument in command ]
 
 
-	def _log_process_output(self, line: str) -> None: # pylint: disable = no-self-use
+	def _log_process_output(self, line: str) -> None:
 		self.run_logging_handler.stream.write(line + "\n")
 		self.run_logging_handler.flush()

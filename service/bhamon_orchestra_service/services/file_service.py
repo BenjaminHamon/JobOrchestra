@@ -1,3 +1,5 @@
+import datetime
+
 import requests
 
 from bhamon_orchestra_service.services.service import Service
@@ -11,6 +13,8 @@ class FileService(Service):
 		self.display_name = display_name
 		self.website_url = website_url
 
+		self.timeout = datetime.timedelta(seconds = 30)
+
 
 	def get_definition(self) -> dict:
 		return {
@@ -22,7 +26,7 @@ class FileService(Service):
 
 	def get_status(self) -> dict:
 		try:
-			response = requests.get(self.website_url + "/")
+			response = requests.get(self.website_url + "/", timeout = self.timeout.total_seconds())
 			response.raise_for_status()
 
 			return {

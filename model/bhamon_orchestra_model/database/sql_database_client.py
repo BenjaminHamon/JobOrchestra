@@ -147,7 +147,7 @@ class SqlDatabaseClient(DatabaseClient):
 		return sql_order_by
 
 
-	def _get_sqlalchemy_type(self, value): # pylint: disable = no-self-use
+	def _get_sqlalchemy_type(self, value):
 		if isinstance(value, bool):
 			return sqlalchemy.Boolean
 		if isinstance(value, float):

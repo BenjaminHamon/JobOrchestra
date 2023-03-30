@@ -68,7 +68,7 @@ def run(environment, configuration, arguments): # pylint: disable = unused-argum
 		artifact_server_parameters = environment.get("artifact_server_parameters", {})
 		artifact_repository.server_client = create_artifact_server_client(artifact_server_url, artifact_server_parameters, environment)
 
-	fileset_getter = lambda fileset_identifier: configuration["filesets"][fileset_identifier]
+	fileset_getter = lambda fileset_identifier: configuration["filesets"][fileset_identifier] # pylint: disable = unnecessary-lambda-assignment
 
 	if "upload" in arguments.artifact_commands and artifact_repository.server_client is None:
 		raise ValueError("Upload command requires an artifact server")

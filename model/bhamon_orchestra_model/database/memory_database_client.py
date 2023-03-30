@@ -78,7 +78,7 @@ class MemoryDatabaseClient(DatabaseClient):
 		""" Close the database connection """
 
 
-	def _match_filter(self, row: dict, filter: dict) -> bool: # pylint: disable = no-self-use, redefined-builtin
+	def _match_filter(self, row: dict, filter: dict) -> bool: # pylint: disable = redefined-builtin
 		""" Check if an item matches a filter """
 
 		for key, value in filter.items():

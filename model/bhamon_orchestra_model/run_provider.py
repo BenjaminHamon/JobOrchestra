@@ -57,7 +57,7 @@ class RunProvider:
 		return self.convert_to_public(run) if run is not None else None
 
 
-	def create_identifier(self, database_client: DatabaseClient) -> str: # pylint: disable = no-self-use, unused-argument
+	def create_identifier(self, database_client: DatabaseClient) -> str: # pylint: disable = unused-argument
 		return str(uuid.uuid4())
 
 
@@ -167,7 +167,7 @@ class RunProvider:
 			return { "file_name": file_name, "data": file_object.getvalue(), "type": "zip" }
 
 
-	def convert_to_public(self, run: dict) -> dict: # pylint: disable = no-self-use
+	def convert_to_public(self, run: dict) -> dict:
 		keys_to_return = [
 			"identifier", "project", "job", "worker", "parameters", "source", "status",
 			"start_date", "completion_date", "should_cancel", "should_abort", "creation_date", "update_date",

@@ -169,7 +169,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 				path["row"] = max(path["source"]["row"], path["destination"]["row"]) + 0.5
 
 				area = ("middle-row", None, path["row"])
-				all_offsets[area] = (all_offsets.get(area, -1) + 1)
+				all_offsets[area] = all_offsets.get(area, -1) + 1
 				path["offsets"]["middle-row"] = all_offsets[area]
 
 		# Start points
@@ -241,7 +241,7 @@ class PipelineViewBuilder: # pylint: disable = too-few-public-methods
 		return path
 
 
-	def _convert_path_to_svg(self, path: List[Tuple[int,int]]) -> str: # pylint: disable = no-self-use
+	def _convert_path_to_svg(self, path: List[Tuple[int,int]]) -> str:
 		""" Convert an edge path to its SVG representation. """
 
 		svg_commands = []

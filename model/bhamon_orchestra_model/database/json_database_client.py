@@ -161,7 +161,7 @@ class JsonDatabaseClient(DatabaseClient):
 		return [ index for index in all_indexes if index["table"] == table ]
 
 
-	def _match_filter(self, row: dict, filter: dict) -> bool: # pylint: disable = no-self-use, redefined-builtin
+	def _match_filter(self, row: dict, filter: dict) -> bool: # pylint: disable = redefined-builtin
 		""" Check if an item matches a filter """
 
 		for key, value in filter.items():
@@ -193,7 +193,7 @@ class JsonDatabaseClient(DatabaseClient):
 		return row_collection
 
 
-	def _get_value(self, row: dict, key: str) -> Any: # pylint: disable = no-self-use
+	def _get_value(self, row: dict, key: str) -> Any:
 		""" Get a value from the item using its key """
 
 		data = row

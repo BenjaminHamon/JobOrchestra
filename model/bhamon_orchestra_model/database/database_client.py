@@ -56,7 +56,7 @@ class DatabaseClient(abc.ABC):
 		""" Close the database connection """
 
 
-	def _normalize_order_by_expression(self, expression: Optional[List[Tuple[str,str]]]) -> Optional[List[Tuple[str,str]]]: # pylint: disable = no-self-use
+	def _normalize_order_by_expression(self, expression: Optional[List[Tuple[str,str]]]) -> Optional[List[Tuple[str,str]]]:
 		""" Normalize an order-by expression to simplify its interpretation """
 
 		if expression is None:

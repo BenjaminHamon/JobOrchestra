@@ -65,7 +65,7 @@ def load_development_dependencies():
 
 		"wheel",
 
-		"pylint ~= 2.12.2",
+		"pylint ~= 2.17.1",
 		"pytest ~= 7.1.1",
 		"pytest-asyncio ~= 0.18.2",
 		"pytest-json ~= 0.4.0",

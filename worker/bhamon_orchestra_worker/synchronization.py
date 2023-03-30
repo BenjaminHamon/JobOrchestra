@@ -100,7 +100,7 @@ class Synchronization:
 				self.log_file = None
 
 
-	def _read_lines(self, log_file: io.TextIOWrapper, limit: int) -> str: # pylint: disable = no-self-use
+	def _read_lines(self, log_file: io.TextIOWrapper, limit: int) -> str:
 		all_lines = []
 
 		while len(all_lines) < limit:

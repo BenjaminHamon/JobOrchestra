@@ -162,18 +162,18 @@ class AuthenticationProvider:
 		database_client.delete_one(self.table, { "identifier": token_identifier, "user": user_identifier, "type": "token" })
 
 
-	def hash_password(self, password: str, salt: str, function: str, parameters: dict) -> str: # pylint: disable = no-self-use
+	def hash_password(self, password: str, salt: str, function: str, parameters: dict) -> str:
 		if function == "pbkdf2":
 			return hashlib.pbkdf2_hmac(password = password.encode("utf-8"), salt = bytes.fromhex(salt), **parameters).hex()
 		raise ValueError("Unsupported hash function '%s'" % function)
 
 
-	def hash_token(self, token: str, function: str, parameters: dict) -> str: # pylint: disable = no-self-use, unused-argument
+	def hash_token(self, token: str, function: str, parameters: dict) -> str: # pylint: disable = unused-argument
 		if function == "sha256":
 			return hashlib.sha256(bytes.fromhex(token)).hexdigest()
 		raise ValueError("Unsupported hash function '%s'" % function)
 
 
-	def convert_to_public(self, authentication: dict) -> dict: # pylint: disable = no-self-use
+	def convert_to_public(self, authentication: dict) -> dict:
 		keys_to_return = [ "identifier", "user", "type", "description", "expiration_date", "creation_date", "update_date" ]
 		return { key: value for key, value in authentication.items() if key in keys_to_return }
